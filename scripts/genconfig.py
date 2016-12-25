@@ -78,13 +78,12 @@ def check(cfg, src_dir):
   return True
 
 
-def print_build_dir(cfg, build_dir):
+def print_build_tag(cfg):
   arch = cfg['ARCH']
   mcu = cfg['MCU']
   mach = cfg['MACH']
-  name = '-'.join((arch, mcu, mach))
-  path = os.path.join(build_dir, name)
-  print(path)
+  tag = '-'.join((arch, mcu, mach))
+  print(tag)
 
 
 def print_arch_dir(cfg, src_dir):
@@ -120,18 +119,17 @@ def gen_make(cfg, output_file):
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument('config_file', help="input config file")
-  parser.add_argument('-b', '--print-build-dir', action='store_true', default=False, help="print path of build dir")
+  parser.add_argument('-b', '--print-build-tag', action='store_true', default=False, help="print build tag")
   parser.add_argument('-a', '--print-arch-dir', action='store_true', default=False, help="print path of arch dir")
   parser.add_argument('-m', '--print-mach-dir', action='store_true', default=False, help="print path of mach dir")
   parser.add_argument('-c', '--gen-c-header', default=None, help="generate c header file")
   parser.add_argument('-k', '--gen-make', default=None, help="generate make file")
   parser.add_argument('-S', '--src_base-dir', default="src", help="base directory for source")
-  parser.add_argument('-B', '--build-base-dir', default="BUILD", help="base directory for build")
   args = parser.parse_args()
 
   # print commands are silent
   global verbose
-  if args.print_build_dir or args.print_arch_dir or args.print_mach_dir:
+  if args.print_build_tag or args.print_arch_dir or args.print_mach_dir:
     verbose = False
 
   # read config file
@@ -142,9 +140,9 @@ def main():
     cfg = None
 
   # output build dir for makefile
-  if args.print_build_dir:
+  if args.print_build_tag:
     if cfg:
-      print_build_dir(cfg, args.build_base_dir)
+      print_build_tag(cfg)
     else:
       print("INVALID")
   if args.print_arch_dir:
