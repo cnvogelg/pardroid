@@ -3,7 +3,7 @@ all: $(TARGET)
 clean:
 	$(H)rm -rf $(BUILD_DIR)
 
-$(TARGET): $(OBJDIR) $(OBJ) $(BUILD_DIR)/$(TARGET).elf $(BUILD_DIR)/$(TARGET).lss $(BUILD_DIR)/$(TARGET).sym
+$(TARGET): $(OBJDIR) $(OBJ) $(TARGET_ELF) $(TARGET_LSS) $(TARGET_SYM)
 
 $(OBJDIR):
 	$(H)mkdir -p $(OBJDIR)
@@ -11,10 +11,33 @@ $(OBJDIR):
 $(BUILD_DIR):
 	$(H)mkdir -p $(BUILD_DIR)
 
+# size checking
+size: size_code size_data
+
+size_code: $(TARGET_ELF)
+	$(H)SIZE=`$(SIZE) -C $< | grep Program | awk '{ print $$2 }'` ; \
+	if [ $$SIZE -gt $(CONFIG_MAX_ROM) ] ; then \
+		echo "  $$SIZE >  $(CONFIG_MAX_ROM) bytes: code TOO LARGE" ; exit 1 ; \
+	else \
+		echo "  $$SIZE <= $(CONFIG_MAX_ROM) bytes: code ok" ; \
+	fi
+
+size_data: $(TARGET_ELF)
+	$(H)SIZE=`$(SIZE) -C $< | fgrep Data | awk '{ print $$2 }'` ; \
+	if [ $$SIZE -gt $(CONFIG_MAX_RAM) ] ; then \
+		echo "  $$SIZE >  $(CONFIG_MAX_RAM) bytes: sram TOO LARGE" ; exit 1 ; \
+	else \
+		echo "  $$SIZE <= $(CONFIG_MAX_RAM) bytes: sram ok" ; \
+	fi
+
+size_symbols: $(TARGET_ELF)
+	$(H)$(NM) --size-sort --print-size $< | egrep ' [bBdD] '
+
+
 # final hex (flash) file from elf
 %.hex: %.elf
 	@echo "  HEX  $@"
-	$(H)$(OBJCOPY) -O $(FORMAT) -j .data -j .text $< $@
+	$(H)$(OBJCOPY) -O $(CONFIG_FLASH_FORMAT) -j .data -j .text $< $@
 
 # finale eeprom file from elf
 %.eep: %.elf

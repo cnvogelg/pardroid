@@ -19,3 +19,6 @@ TARGET = parbox
 # --- rules ---
 
 include $(BASE_DIR)/scripts/common-rules.mk
+
+# flash rules
+include scripts/flash-$(CONFIG_FLASH_TOOL).mk
