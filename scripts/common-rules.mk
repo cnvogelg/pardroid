@@ -62,7 +62,12 @@ size_symbols: $(TARGET_ELF)
 # compile
 $(OBJDIR)/%.o : %.c
 	@echo "  CC   $<"
-	$(H)$(CC) -c $(CFLAGS) $(CFLAGS_LOCAL) $< -o $@
+	$(H)$(CC) -c $(CFLAGS) $< -o $@
+
+# assemble
+$(OBJDIR)/%.o : %.$(ASM_SUFFIX)
+	@echo "  ASM  $<"
+	$(H)$(CC) -c $(ASFLAGS) $< -o $@
 
 # include dependencies
 -include $(shell mkdir -p $(DEPDIR) 2>/dev/null) $(wildcard $(DEPDIR)/*.d)
