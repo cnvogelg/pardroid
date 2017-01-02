@@ -1,6 +1,6 @@
 
 # common defs
-include $(BASE_DIR)/scripts/common-defs.mk
+include scripts/common-defs.mk
 
 # toolchain
 include scripts/toolchain-$(CONFIG_ARCH).mk
@@ -21,7 +21,7 @@ TARGET = parbox
 
 # --- rules ---
 
-include $(BASE_DIR)/scripts/common-rules.mk
+include scripts/common-rules.mk
 
 # flash rules
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
