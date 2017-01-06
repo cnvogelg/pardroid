@@ -7,6 +7,7 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 
 # c sources
 CSRC = parbox-test.c debug.c pario.c
+ASRC = pario_irq.s
 
 #ASRC += $(ASRC_MACH)
 
