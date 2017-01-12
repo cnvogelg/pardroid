@@ -13,40 +13,36 @@ invalid_conf:
 endif
 
 BUILD_BASE_DIR?=BUILD
-BUILD_DIR=$(BUILD_BASE_DIR)/$(BUILD_TAG)
-
-export BASE_DIR
-export BUILD_TAG
-export BUILD_DIR
-export ARCH_DIR
-export MACH_DIR
+BUILD_DIR:=$(BUILD_BASE_DIR)/$(BUILD_TAG)
 
 # derived config files
 CONFIG_H_FILE=$(BUILD_DIR)/autoconf.h
-export CONFIG_H_FILE
 CONFIG_MAKE_FILE=$(BUILD_DIR)/conf.mk
-export CONFIG_MAKE_FILE
 
 # all config files
 CONFIG_FILES=$(CONFIG_H_FILE) $(CONFIG_MAKE_FILE)
 
+# create build dir
+ifneq "$(MAKECMDGOALS)" "clean"
+create_build_dir := $(shell test -d $(BUILD_DIR) || mkdir -p $(BUILD_DIR))
+create_config_h := $(shell test -f $(CONFIG_H_FILE) || $(GENCONFIG) -c $(CONFIG_H_FILE) $(CONFIG))
+create_config_make := $(shell test -f $(CONFIG_MAKE_FILE) || $(GENCONFIG) -k $(CONFIG_MAKE_FILE) $(CONFIG))
+endif
+
+# toggle verbose
 ifndef VERBOSE
 H=@
 export H
 endif
 
-all: $(CONFIG_FILES)
-	$(H)$(MAKE) -f main.mk all
+# default rule
+all:
 
-.DEFAULT: $(CONFIG_FILES)
-	$(H)$(MAKE) -f main.mk $@
-
-# generate configs
-$(CONFIG_H_FILE): $(BUILD_DIR) $(CONFIG) $(GENCONFIG)
+# re-generate configs
+$(CONFIG_H_FILE): $(CONFIG) $(GENCONFIG)
 	$(H)$(GENCONFIG) -c $@ $(CONFIG)
 
-$(CONFIG_MAKE_FILE): $(BUILD_DIR) $(CONFIG) $(GENCONFIG)
+$(CONFIG_MAKE_FILE): $(CONFIG) $(GENCONFIG)
 	$(H)$(GENCONFIG) -k $@ $(CONFIG)
 
-$(BUILD_DIR):
-	$(H)mkdir -p $(BUILD_DIR)
+include $(CONFIG_MAKE_FILE)
