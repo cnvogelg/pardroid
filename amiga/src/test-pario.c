@@ -11,7 +11,7 @@ int main(int argc, char **argv)
 {
     struct pario_handle *ph;
 
-    puts("parbox-test!");
+    puts("test-pario");
     D(("pario_init\n"));
     ph = pario_init((struct Library *)SysBase);
     if(ph != NULL) {
