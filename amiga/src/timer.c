@@ -12,11 +12,14 @@ struct timer_handle {
   struct Library *sysBase;
   ULONG           initFlags;
   struct MsgPort *timerPort;
+  struct Task    *task;
   APTR            oldExceptCode;
   APTR            oldExceptData;
   ULONG           oldExcept;
   struct timerequest timerReq;
   struct Library *timerBase;
+  ULONG           syncSigMask;
+  BYTE            syncSig;
   volatile UBYTE  timeoutFlag;
 };
 
@@ -39,12 +42,12 @@ struct timer_handle *timer_init(struct Library *SysBase)
     th->initFlags = 1;
 
     /* setup new exception data */
-    struct Task *myTask = FindTask(NULL);
+    th->task = FindTask(NULL);
     th->oldExcept = SetExcept(0, 0xffffffff); /* turn'em off */
-    th->oldExceptCode = myTask->tc_ExceptCode;
-    th->oldExceptData = myTask->tc_ExceptData;
-    myTask->tc_ExceptCode = (APTR)&exc_handler;
-    myTask->tc_ExceptData = th;
+    th->oldExceptCode = th->task->tc_ExceptCode;
+    th->oldExceptData = th->task->tc_ExceptData;
+    th->task->tc_ExceptCode = (APTR)&exc_handler;
+    th->task->tc_ExceptData = th;
 
     /* set timer signal to cause exceptions */
     ULONG sigmask = 1 << th->timerPort->mp_SigBit;
@@ -66,8 +69,15 @@ struct timer_handle *timer_init(struct Library *SysBase)
       /* preset flag */
       th->timeoutFlag = 0xff;
 
-      /* all ok */
-      return th;
+      /* get signal */
+      th->syncSig = AllocSignal(-1);
+      if(th->syncSig != -1) {
+        th->syncSigMask = 1 << th->syncSig;
+        th->initFlags |= 8;
+
+        /* all ok */
+        return th;
+      }
     }
   }
 
@@ -85,6 +95,11 @@ void timer_exit(struct timer_handle *th)
     return;
   }
 
+  /* free signal */
+  if(th->initFlags & 8) {
+    FreeSignal(th->syncSig);
+  }
+
   /* cleanup timer request */
   if(th->initFlags & 4) {
     struct IORequest *req = (struct IORequest *)&th->timerReq;
@@ -94,10 +109,9 @@ void timer_exit(struct timer_handle *th)
 
   /* cleanup task's exception state */
   if(th->initFlags & 2) {
-    struct Task *myTask = FindTask(NULL);
     SetExcept(0, 0xffffffff);    /* turn'em off */
-    myTask->tc_ExceptCode = th->oldExceptCode;
-    myTask->tc_ExceptData = th->oldExceptData;
+    th->task->tc_ExceptCode = th->oldExceptCode;
+    th->task->tc_ExceptData = th->oldExceptData;
     SetExcept(th->oldExcept, 0xffffffff);
   }
 
@@ -117,12 +131,14 @@ volatile UBYTE *timer_get_flag(struct timer_handle *th)
 
 void timer_start(struct timer_handle *th, ULONG secs, ULONG micros)
 {
-  /* wait for last handler */
+  /* wait for exc handler */
   while(!th->timeoutFlag) {
+    Wait(th->syncSigMask);
   };
 
   /* clear timeout flag */
   th->timeoutFlag = 0;
+  SetSignal(0, th->syncSigMask);
 
   /* start new timeout timer */
   th->timerReq.tr_time.tv_secs = secs;
@@ -150,6 +166,9 @@ static ULONG ASM SAVEDS exc_handler(REG(d0,ULONG sigmask), REG(a1,struct timer_h
 
   /* set timeout flag */
   th->timeoutFlag = 0xff;
+
+  /* send sync signal */
+  Signal(th->task, th->syncSigMask);
 
   /* re-enable signal */
   return sigmask;
