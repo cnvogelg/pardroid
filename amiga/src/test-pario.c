@@ -16,6 +16,18 @@ int main(int argc, char **argv)
     ph = pario_init((struct Library *)SysBase);
     if(ph != NULL) {
         D(("pario ok!\n"));
+
+        /* show port */
+        struct pario_port *port = pario_get_port(ph);
+        printf("data port=%08lx  ddr=%08lx\n",
+            port->data_port, port->data_ddr);
+        printf("ctrl port=%08lx  ddr=%08lx\n",
+            port->ctrl_port, port->ctrl_ddr);
+        printf("bits: busy=%02lx pout=%02lx sel=%02lx\n",
+            port->busy_bit, port->pout_bit, port->sel_bit);
+        printf("mask: busy=%02lx pout=%02lx sel=%02lx\n",
+            port->busy_mask, port->pout_mask, port->sel_mask);
+
         /* setup ack irq */
         BYTE ackSig = AllocSignal(-1);
         if(ackSig != -1) {

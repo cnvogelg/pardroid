@@ -13,6 +13,8 @@
 #include "pario.h"
 #include "compiler.h"
 
+extern struct CIA ciaa, ciab;
+
 struct pario_handle {
   /* Note: the first three fields are used from assembler irq handler! */
   struct Library *sysBase; /* +0: sysBase */
@@ -23,12 +25,35 @@ struct pario_handle {
   struct Library *miscBase;
   struct Library *ciaABase;
   struct Interrupt ackIrq;
+
+  struct pario_port port;
 };
 
 #define MiscBase ph->miscBase
 #define CIAABase ph->ciaABase
 
 const char *pario_tag = "pario";
+
+static void setup_port(struct pario_handle *ph)
+{
+  struct pario_port *p = &ph->port;
+
+  /* CIA A - Port B = Parallel Port */
+  p->data_port = &ciaa.ciaprb;
+  p->data_ddr  = &ciaa.ciaddrb;
+
+  /* CIA B - Port A = Control Lines */
+  p->ctrl_port = &ciab.ciapra;
+  p->ctrl_ddr  = &ciab.ciaddra;
+
+  p->busy_bit  = CIAB_PRTRBUSY;
+  p->pout_bit  = CIAB_PRTRPOUT;
+  p->sel_bit   = CIAB_PRTRSEL;
+
+  p->busy_mask = CIAF_PRTRBUSY;
+  p->pout_mask = CIAF_PRTRPOUT;
+  p->sel_mask  = CIAF_PRTRSEL;
+}
 
 struct pario_handle *pario_init(struct Library *SysBase)
 {
@@ -55,6 +80,9 @@ struct pario_handle *pario_init(struct Library *SysBase)
         ph->initFlags = 1;
         if (!AllocMiscResource(MR_PARALLELBITS, pario_tag)) {
           ph->initFlags = 3;
+
+          setup_port(ph);
+
           /* ok */
           return ph;
         }
@@ -85,6 +113,11 @@ void pario_exit(struct pario_handle *ph)
 
   /* free handle */
   FreeMem(ph, sizeof(struct pario_handle));
+}
+
+struct pario_port *pario_get_port(struct pario_handle *ph)
+{
+  return &ph->port;
 }
 
 extern void ASM pario_irq_handler(REG(a1, struct pario_handle *ph));
