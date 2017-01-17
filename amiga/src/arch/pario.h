@@ -12,7 +12,7 @@ struct pario_port {
     UBYTE busy_mask;           /* +20 */
     UBYTE pout_mask;           /* +21 */
     UBYTE sel_mask;            /* +22 */
-    UBYTE dummy2;
+    UBYTE all_mask;            /* +23 */
 };
 
 extern struct pario_handle *pario_init(struct Library *SysBase);

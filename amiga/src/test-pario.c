@@ -20,12 +20,12 @@ int main(int argc, char **argv)
         /* show port */
         struct pario_port *port = pario_get_port(ph);
         printf("data port=%08lx  ddr=%08lx\n",
-            port->data_port, port->data_ddr);
+            (ULONG)port->data_port, (ULONG)port->data_ddr);
         printf("ctrl port=%08lx  ddr=%08lx\n",
-            port->ctrl_port, port->ctrl_ddr);
-        printf("bits: busy=%02lx pout=%02lx sel=%02lx\n",
+            (ULONG)port->ctrl_port, (ULONG)port->ctrl_ddr);
+        printf("bits: busy=%02x pout=%02x sel=%02x\n",
             port->busy_bit, port->pout_bit, port->sel_bit);
-        printf("mask: busy=%02lx pout=%02lx sel=%02lx\n",
+        printf("mask: busy=%02x pout=%02x sel=%02x\n",
             port->busy_mask, port->pout_mask, port->sel_mask);
 
         /* setup ack irq */
@@ -39,7 +39,7 @@ int main(int argc, char **argv)
 
                 puts("waiting for ack...");
                 ULONG myAckMask = 1 << ackSig;
-                printf("my mask %08lx  task %08lx\n", myAckMask, myTask);
+                printf("my mask %08lx  task %08lx\n", myAckMask, (ULONG)myTask);
                 ULONG sigs = Wait(myAckMask | SIGBREAKF_CTRL_C);
                 if(sigs & myAckMask) {
                     puts("GOT ACK!");

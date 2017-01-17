@@ -27,6 +27,11 @@ struct pario_handle {
   struct Interrupt ackIrq;
 
   struct pario_port port;
+
+  UBYTE  old_data_port;
+  UBYTE  old_data_ddr;
+  UBYTE  old_ctrl_port;
+  UBYTE  old_ctrl_ddr;
 };
 
 #define MiscBase ph->miscBase
@@ -53,6 +58,29 @@ static void setup_port(struct pario_handle *ph)
   p->busy_mask = CIAF_PRTRBUSY;
   p->pout_mask = CIAF_PRTRPOUT;
   p->sel_mask  = CIAF_PRTRSEL;
+
+  p->all_mask  = p->busy_mask | p->pout_mask | p->sel_mask;
+
+  /* save old values */
+  ph->old_data_port = *p->data_port;
+  ph->old_data_ddr  = *p->data_ddr;
+  ph->old_ctrl_port = *p->ctrl_port & p->all_mask;
+  ph->old_ctrl_ddr  = *p->ctrl_ddr  & p->all_mask;
+}
+
+static void restore_port(struct pario_handle *ph)
+{
+  struct pario_port *p = &ph->port;
+
+  *p->data_port = ph->old_data_port;
+  *p->data_ddr  = ph->old_data_ddr;
+
+  /* restore only parport control bits */
+  UBYTE other_mask = ~p->all_mask;
+  UBYTE ctrl_port  = *p->ctrl_port & other_mask;
+  UBYTE ctrl_ddr   = *p->ctrl_ddr  & other_mask;
+  *p->ctrl_port = ctrl_port | ph->old_ctrl_port;
+  *p->ctrl_ddr  = ctrl_ddr  | ph->old_ctrl_ddr;
 }
 
 struct pario_handle *pario_init(struct Library *SysBase)
@@ -103,6 +131,8 @@ void pario_exit(struct pario_handle *ph)
     return;
   }
 
+  restore_port(ph);
+
   /* free resources */
   if(ph->initFlags & 1) {
     FreeMiscResource(MR_PARALLELPORT);
@@ -137,16 +167,15 @@ int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE sign
 
   Disable();
   if (!AddICRVector(CIAABase, CIAICRB_FLG, &ph->ackIrq)) {
-
-    D(("ack_irq_handler @%08lx  task @%08lx  sigmask %08lx\n",
-       &pario_irq_handler, ph->sigTask, ph->sigMask));
-
     /* disable pending irqs first */
     AbleICR(CIAABase, CIAICRF_FLG);
   } else {
     error = 1;
   }
   Enable();
+
+  D(("ack_irq_handler @%08lx  task @%08lx  sigmask %08lx\n",
+     &pario_irq_handler, ph->sigTask, ph->sigMask));
 
   if(!error) {
     /* clea irq flag */
@@ -157,6 +186,7 @@ int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE sign
     ph->initFlags |= 4;
   }
 
+  D(("done\n"));
   return error;
 }
 
