@@ -44,8 +44,8 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
 
     ; void pario_init(void)
     ; setup parallel port lines
-    .global  pario_init
-pario_init:
+    .global  proto_low_init
+proto_low_init:
     ; setup data port: INPUT
     ddr_in
     ; setup control lines
@@ -64,8 +64,8 @@ pario_init:
 
     ; u08 pario_get_cmd(void)
     ; return 0 or command byte
-    .global  pario_get_cmd
-pario_get_cmd:
+    .global  proto_low_get_cmd
+proto_low_get_cmd:
     clr     r25
     clr     r24
     sbic_clk
@@ -78,8 +78,8 @@ pario_get_cmd:
     ; void pario_cmd_ping(void)
     ; confirm ping command
     ; CL | WL | CH
-    .global  pario_cmd_ping
-pario_cmd_ping:
+    .global  proto_low_ping
+proto_low_ping:
     rak_lo
     wait_clk_hi
     rak_hi
@@ -87,8 +87,8 @@ pario_cmd_ping:
 
 
     ; CL | WL | ( DO | CH )+ | RS | CH
-    .global  pario_test_write
-pario_test_write:
+    .global  proto_low_test_write
+proto_low_test_write:
     ; confirm to master we are ready
     rak_lo
 
@@ -112,8 +112,8 @@ pario_test_write:
 
 
     ; CL | WL | XI | ( CH | DI )+ | RS | CH | XO
-    .global  pario_test_read
-pario_test_read:
+    .global  proto_low_test_read
+proto_low_test_read:
     rak_lo
 
     ; byte 1

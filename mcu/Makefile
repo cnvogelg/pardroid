@@ -10,13 +10,14 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
 # sources
-SRCS = uart.c util.c uartutil.c pario.S
+BASE_SRCS = uart.c util.c uartutil.c
+PROTO_SRCS = proto_low.S proto.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR)
 VPATH=$(INCLUDES)
 
 # test-fw
-TEST_SRCS = $(SRCS) test-main.c
+TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) test-main.c
 $(eval $(call make-firmware,test-fw,$(TEST_SRCS)))
 
 DEFAULT_FIRMWARE=test-fw
