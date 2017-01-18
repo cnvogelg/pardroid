@@ -15,6 +15,7 @@
 #define DDR_DATA_OUT  0xff
 #define DDR_DATA_IN   0x00
 
+#define CMD_IDLE    0x00
 #define CMD_PING    0x10
 
 struct proto_handle {
@@ -37,9 +38,9 @@ struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th
   ph->timeout_s  = 0;
   ph->timeout_ms = 500;
 
-  /* data: port=0, ddr=0 (IN) */
-  port->data_port = 0;
-  port->data_ddr  = 0;
+  /* data: port=0, ddr=0xff (OUT) */
+  *port->data_port = CMD_IDLE;
+  *port->data_ddr  = 0xff;
   /* control: clk=out(1) rak,pend=in*/
   *port->ctrl_ddr |= port->clk_mask;
   *port->ctrl_ddr &= ~(port->rak_mask | port->pend_mask);
@@ -68,14 +69,12 @@ int proto_ping(struct proto_handle *ph)
 
   /* set CMD_PING */
   *port->data_port = CMD_PING;
-  *port->data_ddr  = DDR_DATA_OUT;
 
-  int result = 0; //proto_low_ping(port, timeout_flag);
+  int result = proto_low_ping(port, timeout_flag);
 
   timer_stop(ph->timer);
 
   /* restore port*/
-  *port->data_ddr  = DDR_DATA_IN;
   *port->data_port = 0;
 
   return result;

@@ -9,7 +9,7 @@
 int main(void)
 {
   uart_init();
-  uart_send_pstring(PSTR("hello, world!\n"));
+  uart_send_pstring(PSTR("parbox:test!\n"));
   pario_init();
   while(1) {
   }
