@@ -122,6 +122,22 @@ set_cmd  MACRO
         ENDM
 
 
+; --- set_data ---
+; set data port
+; \1 = value to set
+set_data MACRO
+        move.b  \1,(a3)
+        ENDM
+
+
+; --- get_data ---
+; get data from port
+; \1 = store value
+get_data MACRO
+        move.b  (a3),\1
+        ENDM
+
+
 ; ----- functions -----------------------------------------------------------
 
 ; --- proto_low_ping ---
@@ -188,7 +204,7 @@ _proto_low_test_write:
         wait_rak_lo     pltw_abort
 
         ; setup test value on data lines
-        move.b  (a2),(a3)
+        set_data        (a2)
         ; signal to slave to read the value
         clk_hi
 
@@ -227,7 +243,7 @@ _proto_low_test_read:
         ; signal read to slave
         clk_hi
         ; read value from data port
-        move.b  (a3),(a2)
+        get_data        (a2)
 
         ddr_out
 
