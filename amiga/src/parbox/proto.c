@@ -6,6 +6,7 @@
 #include "pario.h"
 #include "timer.h"
 #include "proto_low.h"
+#include "proto.h"
 
 /* proto signals */
 #define clk_mask    pout_mask
@@ -14,9 +15,6 @@
 
 #define DDR_DATA_OUT  0xff
 #define DDR_DATA_IN   0x00
-
-#define CMD_IDLE    0x00
-#define CMD_PING    0x10
 
 struct proto_handle {
     struct pario_port   *port;
@@ -38,13 +36,14 @@ struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th
   ph->timeout_s  = 0;
   ph->timeout_ms = 500;
 
-  /* data: port=0, ddr=0xff (OUT) */
-  *port->data_port = CMD_IDLE;
-  *port->data_ddr  = 0xff;
   /* control: clk=out(1) rak,pend=in*/
   *port->ctrl_ddr |= port->clk_mask;
   *port->ctrl_ddr &= ~(port->rak_mask | port->pend_mask);
   *port->ctrl_port |= port->all_mask;
+
+  /* data: port=0, ddr=0xff (OUT) */
+  *port->data_port = CMD_IDLE;
+  *port->data_ddr  = 0xff;
 
   return ph;
 }
@@ -61,21 +60,36 @@ void proto_exit(struct proto_handle *ph)
 int proto_ping(struct proto_handle *ph)
 {
   struct pario_port *port = ph->port;
-
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
-  /* setup timer */
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-
-  /* set CMD_PING */
-  *port->data_port = CMD_PING;
-
   int result = proto_low_ping(port, timeout_flag);
-
   timer_stop(ph->timer);
-
-  /* restore port*/
-  *port->data_port = 0;
 
   return result;
 }
+
+int proto_test_read(struct proto_handle *ph, UBYTE *data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_test_read(port, timeout_flag, data);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_test_write(struct proto_handle *ph, UBYTE *data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_test_write(port, timeout_flag, data);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
