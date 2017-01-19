@@ -40,6 +40,21 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
     .endm
 
+    ; some macros to control a pin for debug purposes
+#ifdef CONFIG_DEBUG_PIN
+    .macro debug_lo
+    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    .endm
+    .macro debug_hi
+    sbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    .endm
+#else
+    .macro debug_lo
+    .endm
+    .macro debug_hi
+    .endm
+#endif
+
     .section    text
 
     ; void pario_init(void)
@@ -98,12 +113,14 @@ proto_low_test_write:
     ; get data and save as result
     data_in
     mov     r24, r18
+    debug_hi
 
     ; byte 2
     ; wait clk
     wait_clk_lo
     data_in
     mov     r25, r18
+    debug_lo
 
     ; end sync
     wait_clk_hi
@@ -121,11 +138,13 @@ proto_low_test_read:
     ddr_out
     mov     r18, r25
     data_out
+    debug_hi
 
     ; byte 2
     wait_clk_lo
     mov     r18, r24
     data_out
+    debug_lo
 
     ; end sync
     wait_clk_hi

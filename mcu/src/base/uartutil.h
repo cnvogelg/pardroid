@@ -27,6 +27,8 @@
 #ifndef UARTUTIL_H
 #define UARTUTIL_H
 
+#include "arch.h"
+
 // send a c string from PROGMEM
 void uart_send_pstring(rom_pchar data);
 // send a c string
