@@ -86,12 +86,12 @@
     ; regs: r19, r20
     .macro data_out
     mov     r19, r18                        ; 1
-    in      r20, _SFR_IO_ADDR(DDRD)         ; 1
+    in      r20, _SFR_IO_ADDR(PIND)         ; 1
     andi    r20, 0x3f                       ; 1
     andi    r19, 0xc0                       ; 1
     or      r19, r20                        ; 1
-    out     _SFR_IO_ADDR(DDRC), r18         ; 1
-    out     _SFR_IO_ADDR(DDRD), r19         ; 1
+    out     _SFR_IO_ADDR(PORTC), r18        ; 1
+    out     _SFR_IO_ADDR(PORTD), r19        ; 1
     .endm                                   ; = 7 (!)
 
     ; data_in
@@ -100,8 +100,8 @@
     ; out: r18
     ; regs: r19
     .macro data_in
-    in      r18, _SFR_IO_ADDR(DDRC)         ; 1
-    in      r19, _SFR_IO_ADDR(DDRD)         ; 1
+    in      r18, _SFR_IO_ADDR(PINC)         ; 1
+    in      r19, _SFR_IO_ADDR(PIND)         ; 1
     andi    r18, 0x3f                       ; 1
     andi    r19, 0xc0                       ; 1
     or      r18, r19                        ; 1

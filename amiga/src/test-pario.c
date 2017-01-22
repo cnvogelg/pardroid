@@ -28,6 +28,31 @@ int main(int argc, char **argv)
         printf("mask: busy=%02x pout=%02x sel=%02x\n",
             port->busy_mask, port->pout_mask, port->sel_mask);
 
+        /* write some bytes */
+        puts("writing bytes");
+        *port->data_ddr = 0xff;
+        for(int i=0;i<256;i++) {
+            *port->data_port=i;
+        }
+        *port->data_ddr = 0x00;
+        puts("done");
+
+        /* write signals */
+        puts("toggle control");
+        *port->ctrl_ddr |= port->all_mask;
+        for(int i=0;i<100;i++) {
+            *port->ctrl_port |= port->busy_mask;
+            *port->ctrl_port &= ~port->busy_mask;
+
+            *port->ctrl_port |= port->pout_mask;
+            *port->ctrl_port &= ~port->pout_mask;
+
+            *port->ctrl_port |= port->sel_mask;
+            *port->ctrl_port &= ~port->sel_mask;
+        }
+        *port->ctrl_ddr &= ~port->all_mask;
+        puts("done");
+
         /* setup ack irq */
         BYTE ackSig = AllocSignal(-1);
         if(ackSig != -1) {
