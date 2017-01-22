@@ -17,9 +17,12 @@ CFLAGS_INCLUDES = -I$(BUILD_DIR) $(patsubst %,-I%,$(INCLUDES))
 CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_INCLUDES) $(CFLAGS_ARCH) $(CFLAGS_LST) $(CFLAGS_DEPS)
 
 # setup ASFLAGS
-ASFLAGS_LST = -Wa,-amdhlns=$(OBJ_DIR)/$(notdir $(<:%.$(ASM_SUFFIX)=%.lst))
+ASFLAGS_LST = -Wa,-amdhlns=$(OBJ_DIR)/$(notdir $(<:%.S=%.lst))
 
 ASFLAGS = $(ASFLAGS_COMMON) $(CFLAGS_INCLUDES) $(ASFLAGS_ARCH) $(ASFLAGS_LST) $(CFLAGS_DEPS)
+
+LDFLAGS = -Wl,-Map=$$(@:%.elf=%.map),--cref
+LDFLAGS += -lm -lc
 
 # ----- firmware -----
 # list of firmwares, created by make-firmware

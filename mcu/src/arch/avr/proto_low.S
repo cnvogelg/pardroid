@@ -55,7 +55,7 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     .endm
 #endif
 
-    .section    text
+    .section .text
 
     ; void pario_init(void)
     ; setup parallel port lines
@@ -151,4 +151,6 @@ proto_low_test_read:
     ddr_in
     rak_hi
     ret
+
+    .end
 

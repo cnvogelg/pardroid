@@ -1,3 +1,4 @@
+OS := $(shell uname -s)
 ifeq "$(OS)" "Darwin"
 LDR_PORT ?= $(shell ls /dev/cu.usbserial-* | tail -n 1)
 else
@@ -11,6 +12,9 @@ AVRDUDE_WRITE_FUSE   = -U lfuse:w:$(CONFIG_AVRDUDE_LFUSE):m -U hfuse:w:$(CONFIG_
 
 # combine flags
 AVRDUDE_LDR_FLAGS += -p $(CONFIG_AVRDUDE_MCU) -c $(CONFIG_AVRDUDE_PROGRAMMER)
+ifeq "$(CONFIG_AVRDUDE_HAS_PORT)" "y"
+AVRDUDE_LDR_FLAGS += -P $(LDR_PORT) -b $(CONFIG_AVRDUDE_BAUD)
+endif
 ifdef AVRDUDE_DEBUG
 AVRDUDE_LDR_FLAGS += -v -v -v -v
 endif

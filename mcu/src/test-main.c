@@ -6,11 +6,17 @@
 #include "uartutil.h"
 #include "proto.h"
 #include "debug.h"
+#include "mach.h"
+
+#include <util/delay.h>
 
 int main(void)
 {
+  mach_init_hw();
+
   uart_init();
   uart_send_pstring(PSTR("parbox-test!\n"));
+  _delay_ms(300);
 
   DC('+');
   proto_init();
@@ -18,6 +24,10 @@ int main(void)
 
   while(1) {
     proto_handle();
+
+    _delay_ms(500);
+    DC('.');
   }
+
   return 0;
 }
