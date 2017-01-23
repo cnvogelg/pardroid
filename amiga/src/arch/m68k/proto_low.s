@@ -21,11 +21,13 @@
 ;      a4 = data ddr
 ;      a5 = ctrl port
 setup_port_regs  MACRO
+        moveq   #0,d2
+        moveq   #0,d3
         move.b  PO_BUSY_BIT(a0),d2
         move.b  PO_POUT_BIT(a0),d3
-        lea     PO_DATA_PORT(a0),a3
-        lea     PO_DATA_DDR(a0),a4
-        lea     PO_CTRL_PORT(a0),a5
+        move.l  PO_DATA_PORT(a0),a3
+        move.l  PO_DATA_DDR(a0),a4
+        move.l  PO_CTRL_PORT(a0),a5
         ; read current ctrl val
         move.b  (a5),d4
         ENDM
