@@ -34,7 +34,7 @@ struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th
   ph->port = port;
   ph->timer = th;
   ph->timeout_s  = 0;
-  ph->timeout_ms = 500;
+  ph->timeout_ms = 500000UL;
 
   /* control: clk=out(1) rak,pend=in*/
   *port->ctrl_ddr |= port->clk_mask;

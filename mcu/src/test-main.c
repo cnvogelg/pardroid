@@ -24,9 +24,10 @@ int main(void)
 
   while(1) {
     proto_handle();
-
+#if 0
     _delay_ms(500);
     DC('.');
+#endif
   }
 
   return 0;

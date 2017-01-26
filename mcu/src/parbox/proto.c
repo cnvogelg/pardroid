@@ -39,7 +39,7 @@ void proto_handle(void)
       break;
 
     case CMD_INVALID:
-      DS("invalid"); DNL;
+      //DS("invalid"); DNL;
       break;
 
     default:

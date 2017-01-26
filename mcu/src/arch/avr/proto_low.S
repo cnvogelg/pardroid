@@ -7,20 +7,20 @@
     ; RAK = BUSY
 
     .macro sbic_clk
-    sbic    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
+    sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     .endm
 
     .macro sbis_clk
-    sbis    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
+    sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     .endm
 
     .macro wait_clk_lo
-l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
+l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     rjmp     l\@
     .endm
 
     .macro wait_clk_hi
-l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
+l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     rjmp     l\@
     .endm
 
