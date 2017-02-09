@@ -3,7 +3,7 @@
 #include "proto.h"
 #include "debug.h"
 
-static u16 test_data;
+static u08 test_data[2];
 
 void proto_init(void)
 {
@@ -26,7 +26,7 @@ void proto_handle(void)
 
     case CMD_TEST_READ:
       // master wants to read 2 bytes
-      DS("tr:"); DW(test_data);
+      DS("tr:"); DB(test_data[0]); DB(test_data[1]);
       proto_low_test_read(test_data);
       DNL;
       break;
@@ -34,8 +34,8 @@ void proto_handle(void)
     case CMD_TEST_WRITE:
       // master wants to write 2 bytes
       DS("tw:");
-      test_data = proto_low_test_write();
-      DW(test_data); DNL;
+      proto_low_test_write(test_data);
+      DB(test_data[0]); DB(test_data[1]); DNL;
       break;
 
     case CMD_INVALID:

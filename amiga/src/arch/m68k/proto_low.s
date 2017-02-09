@@ -45,6 +45,18 @@ check_rak_hi  MACRO
         ENDM
 
 
+; --- check_rak_lo ---
+; check if RAK is high otherwise rts with error
+; \1 end label
+check_rak_lo  MACRO
+        btst    d2,(a5)
+        beq.s   \@
+        moveq   #RET_SLAVE_ERROR,d0
+        bra     \1
+\@:
+        ENDM
+
+
 ; --- clk_lo ---
 ; set CLK signal to low
 clk_lo  MACRO
@@ -167,14 +179,15 @@ _proto_low_ping:
         ; (we wait for the slave to react/sync)
         wait_rak_lo     plp_abort
 
-        ; -- work: trigger action
+        ; now we are in sync with slave
+        ; we are now in work phase
+        ; but ping does nothing here
+
+        ; -- final sync
         ; now raise CLK again
         clk_hi
-
-        ; -- final sync with slave
-        ; wait for RAK to return to high again
-        ; (slave done)
-        wait_rak_hi     plp_end
+        ; slave returns hi if command was ok otherwise
+        wait_rak_hi  plp_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -205,11 +218,22 @@ _proto_low_test_write:
         clk_lo
         wait_rak_lo     pltw_abort
 
+        ; -- first byte
         ; setup test value on data lines
-        set_data        (a2)
+        set_data        (a2)+
         ; signal to slave to read the value
         clk_hi
 
+        ; -- second byte
+        set_data        (a2)+
+        clk_lo
+
+        ; done, read slave state
+        ; if slave already pulled high then an error was found
+        check_rak_lo    pltw_abort
+
+        ; final sync
+        clk_hi
         ; wait for slave done
         wait_rak_hi     pltw_end
 
@@ -240,15 +264,27 @@ _proto_low_test_read:
         clk_lo
         wait_rak_lo     pltr_abort
 
+        ; switch data direction - read
         ddr_in
 
+        ; first byte
         ; signal read to slave
         clk_hi
         ; read value from data port
-        get_data        (a2)
+        get_data        (a2)+
 
+        ; second bytes
+        clk_lo
+        get_data        (a2)+
+
+        ; done - write to port again
         ddr_out
 
+        ; read status
+        check_rak_lo    pltr_abort
+
+        ; final sync
+        clk_hi
         wait_rak_hi     pltr_end
 
         ; ok

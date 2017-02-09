@@ -95,15 +95,24 @@ proto_low_get_cmd:
     ; CL | WL | CH
     .global  proto_low_ping
 proto_low_ping:
+    ; when we enter here the clk from master is already low
+    ; now signal rak lo to the master. we are now in sync
     rak_lo
+
+    ; ping only finishes with a last clk hi transition
     wait_clk_hi
+    ; confirm it
     rak_hi
     ret
 
 
     ; CL | WL | ( DO | CH )+ | RS | CH
+    ; r24,r25 = char buf[2]
     .global  proto_low_test_write
 proto_low_test_write:
+    ; move buffer pointer to Z
+    movw    r30, r24
+
     ; confirm to master we are ready
     rak_lo
 
@@ -112,14 +121,15 @@ proto_low_test_write:
     wait_clk_hi
     ; get data and save as result
     data_in
-    mov     r24, r18
+    ; store in buffer
+    st      Z+, r18
     debug_hi
 
     ; byte 2
     ; wait clk
     wait_clk_lo
     data_in
-    mov     r25, r18
+    st      Z+, r18
     debug_lo
 
     ; end sync
@@ -129,20 +139,24 @@ proto_low_test_write:
 
 
     ; CL | WL | XI | ( CH | DI )+ | RS | CH | XO
+    ; r24,r25 = char buf[2]
     .global  proto_low_test_read
 proto_low_test_read:
+    ; move buffer pointer to Z
+    movw    r30, r24
+
     rak_lo
 
     ; byte 1
     wait_clk_hi
     ddr_out
-    mov     r18, r25
+    ld      r18, Z+
     data_out
     debug_hi
 
     ; byte 2
     wait_clk_lo
-    mov     r18, r24
+    ld      r18, Z+
     data_out
     debug_lo
 
