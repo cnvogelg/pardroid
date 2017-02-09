@@ -1,3 +1,9 @@
+#ifndef PROTO_H
+#define PROTO_H
+
+#include "pario.h"
+#include "timer.h"
+
 struct proto_handle;
 
 #define CMD_IDLE 0
@@ -8,3 +14,5 @@ extern void proto_exit(struct proto_handle *ph);
 extern int proto_ping(struct proto_handle *ph);
 extern int proto_test_read(struct proto_handle *ph, UBYTE *data);
 extern int proto_test_write(struct proto_handle *ph, UBYTE *data);
+
+#endif

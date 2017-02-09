@@ -13,8 +13,11 @@ VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
-PARBOX_SRCS = proto_low.s proto.c
+PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c
+
+PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
+PARBOX_SRCS += parbox.c
 
 # test-pario
 TEST_PARIO_SRCS = test-pario.c $(PARIO_SRCS) $(BASE_SRCS)
@@ -25,8 +28,12 @@ TEST_TIMER_SRCS = test-timer.c $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 
 # test-proto
-TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PARBOX_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
+TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
+
+# parbox-test
+PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS)
+$(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
 
 # rules
 include scripts/common-rules.mk

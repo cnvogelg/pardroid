@@ -1,3 +1,6 @@
+#ifndef PARIO_H
+#define PARIO_H
+
 struct pario_handle;
 
 struct pario_port {
@@ -22,3 +25,5 @@ extern int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BY
 extern void pario_cleanup_ack_irq(struct pario_handle *ph);
 
 extern struct pario_port *pario_get_port(struct pario_handle *ph);
+
+#endif

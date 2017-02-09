@@ -1,3 +1,5 @@
+#ifndef DEBUG_H
+#define DEBUG_H
 
 /* VBCC */
 void __KPutCh(__reg("a6") void *, __reg("d0") UBYTE ch) = "\tjsr\t-516(a6)";
@@ -13,4 +15,6 @@ extern void KPrintF(char *, ...);
 
 #define D(x)
 
-#endif
+#endif /* CONFIG_DEBUG */
+
+#endif /* DEBUG_H */

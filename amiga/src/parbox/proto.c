@@ -3,10 +3,9 @@
 #include "autoconf.h"
 #include "compiler.h"
 #include "debug.h"
-#include "pario.h"
-#include "timer.h"
-#include "proto_low.h"
+
 #include "proto.h"
+#include "proto_low.h"
 
 /* proto signals */
 #define clk_mask    pout_mask
