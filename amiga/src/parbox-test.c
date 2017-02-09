@@ -15,7 +15,6 @@ static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
-  ULONG once;
   char *test;
   ULONG *delay;
 } params_t;
@@ -33,6 +32,8 @@ typedef struct test {
   const char   *error;
   const char   *section;
 } test_t;
+
+/* ----- tests ----- */
 
 static int test_ping(parbox_handle_t *pb, test_t *t)
 {
@@ -184,6 +185,15 @@ static test_t *pick_test(const char *name)
   return NULL;
 }
 
+static void show_tests(void)
+{
+  test_t *t = all_tests;
+  while(t->name != NULL) {
+    Printf("%-16s  %s\n", t->name, t->description);
+    t++;
+  }
+}
+
 int dosmain(void)
 {
   struct RDArgs *args;
@@ -200,13 +210,14 @@ int dosmain(void)
   /* pick test function */
   test_t *test = pick_test(params.test);
   if(test == NULL) {
-    PutStr("No test found!\n");
+    PutStr("Test not found! Available tests are:\n");
+    show_tests();
   } else {
     /* setup parbox */
     res = parbox_init(&pb, (struct Library *)SysBase);
     if(res == PARBOX_OK) {
 
-      /* run tests */
+      /* run test */
       res = run_test(&pb, test);
 
       parbox_exit(&pb);
