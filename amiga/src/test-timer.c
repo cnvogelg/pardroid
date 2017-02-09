@@ -1,54 +1,53 @@
 #include <proto/exec.h>
+#include <proto/dos.h>
 #include <dos/dos.h>
-
-#include <stdio.h>
 
 #include "autoconf.h"
 #include "debug.h"
 #include "timer.h"
 
-int main(int argc, char **argv)
+int dosmain(void)
 {
     struct timer_handle *th;
 
-    puts("test-timer");
+    PutStr("test-timer\n");
     th = timer_init((struct Library *)SysBase);
     if(th != NULL) {
-        puts("got timer");
+        PutStr("got timer\n");
 
         /* test how fast eclock reads are */
         ULONG e1 = timer_get_eclock(th);
         ULONG e2 = timer_get_eclock(th);
-        printf("eclock: e1=%08lx e2=%08lx\n", e1, e2);
+        Printf("eclock: e1=%08lx e2=%08lx\n", e1, e2);
 
         /* test timer: busy wait for timeout */
         volatile UBYTE *flag = timer_get_flag(th);
-        puts("start timer");
+        PutStr("start timer\n");
         timer_start(th, 0, 100000UL);
         ULONG i = 0;
         while(!*flag) {
             i++;
         }
-        printf("dong: %lu\n", i);
+        Printf("dong: %lu\n", i);
 
         /* test stop timer */
-        puts("start timer");
+        PutStr("start timer\n");
         timer_start(th, 0, 100000UL);
-        puts("stop timer");
+        PutStr("stop timer\n");
         timer_stop(th);
 
-        puts("start again");
+        PutStr("start again\n");
         timer_start(th, 0, 100000UL);
         i = 0;
         while(!*flag) {
             i++;
         }
-        printf("dong: %lu\n", i);
+        Printf("dong: %lu\n", i);
 
         timer_exit(th);
-        puts("done");
+        PutStr("done\n");
     } else {
-        puts("no timer");
+        PutStr("no timer\n");
     }
     return 0;
 }

@@ -11,13 +11,13 @@
 #include "parbox.h"
 #include "proto.h"
 
-static const char *TEMPLATE = "L=Loop/S,O=Once/S,Test/K,V=Verbose/S,C=Count/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,V=Verbose/S";
 typedef struct {
   ULONG loop;
+  ULONG *num;
   ULONG once;
   char *test;
   ULONG verbose;
-  ULONG *count;
 } params_t;
 static params_t params;
 
@@ -43,19 +43,12 @@ static test_t all_tests[] = {
 static int run_test(parbox_handle_t *pb, test_t *test)
 {
   /* determine number of runs */
-  ULONG num = 0;
-  if(params.once) {
-    num = 1;
-  }
-  else if(params.loop) {
+  ULONG num = 1;
+  if(params.loop) {
     num = 0;
   }
-  else if(params.count) {
-    num = *params.count;
-  }
-  else {
-    PutStr("Invalid test repeats given!\n");
-    return RETURN_ERROR;
+  else if(params.num) {
+    num = *params.num;
   }
 
   /* report test */
@@ -81,7 +74,7 @@ static test_t *pick_test(const char *name)
   return NULL;
 }
 
-int main(int argc, char **argv)
+int dosmain(void)
 {
   struct RDArgs *args;
   parbox_handle_t pb;

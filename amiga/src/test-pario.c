@@ -1,17 +1,16 @@
 #include <proto/exec.h>
+#include <proto/dos.h>
 #include <dos/dos.h>
-
-#include <stdio.h>
 
 #include "autoconf.h"
 #include "debug.h"
 #include "pario.h"
 
-int main(int argc, char **argv)
+int dosmain(void)
 {
     struct pario_handle *ph;
 
-    puts("test-pario");
+    PutStr("test-pario\n");
     D(("pario_init\n"));
     ph = pario_init((struct Library *)SysBase);
     if(ph != NULL) {
@@ -19,26 +18,26 @@ int main(int argc, char **argv)
 
         /* show port */
         struct pario_port *port = pario_get_port(ph);
-        printf("data port=%08lx  ddr=%08lx\n",
+        Printf("data port=%08lx  ddr=%08lx\n",
             (ULONG)port->data_port, (ULONG)port->data_ddr);
-        printf("ctrl port=%08lx  ddr=%08lx\n",
+        Printf("ctrl port=%08lx  ddr=%08lx\n",
             (ULONG)port->ctrl_port, (ULONG)port->ctrl_ddr);
-        printf("bits: busy=%02x pout=%02x sel=%02x\n",
-            port->busy_bit, port->pout_bit, port->sel_bit);
-        printf("mask: busy=%02x pout=%02x sel=%02x\n",
-            port->busy_mask, port->pout_mask, port->sel_mask);
+        Printf("bits: busy=%02lx pout=%02lx sel=%02lx\n",
+            (ULONG)port->busy_bit, (ULONG)port->pout_bit, (ULONG)port->sel_bit);
+        Printf("mask: busy=%02lx pout=%02lx sel=%02lx\n",
+            (ULONG)port->busy_mask, (ULONG)port->pout_mask, (ULONG)port->sel_mask);
 
         /* write some bytes */
-        puts("writing bytes");
+        PutStr("writing bytes\n");
         *port->data_ddr = 0xff;
         for(int i=0;i<256;i++) {
             *port->data_port=i;
         }
         *port->data_ddr = 0x00;
-        puts("done");
+        PutStr("done\n");
 
         /* write signals */
-        puts("toggle control");
+        PutStr("toggle control\n");
         *port->ctrl_ddr |= port->all_mask;
         for(int i=0;i<100;i++) {
             *port->ctrl_port |= port->busy_mask;
@@ -51,40 +50,40 @@ int main(int argc, char **argv)
             *port->ctrl_port &= ~port->sel_mask;
         }
         *port->ctrl_ddr &= ~port->all_mask;
-        puts("done");
+        PutStr("done\n");
 
         /* setup ack irq */
         BYTE ackSig = AllocSignal(-1);
         if(ackSig != -1) {
-            puts("got signal");
+            PutStr("got signal\n");
             struct Task *myTask = FindTask(NULL);
             int error = pario_setup_ack_irq(ph, myTask, ackSig);
             if(error == 0) {
-                puts("setup irq");
+                PutStr("setup irq\n");
 
-                puts("waiting for ack...");
+                PutStr("waiting for ack...\n");
                 ULONG myAckMask = 1 << ackSig;
-                printf("my mask %08lx  task %08lx\n", myAckMask, (ULONG)myTask);
+                Printf("my mask %08lx  task %08lx\n", myAckMask, (ULONG)myTask);
                 ULONG sigs = Wait(myAckMask | SIGBREAKF_CTRL_C);
                 if(sigs & myAckMask) {
-                    puts("GOT ACK!");
+                    PutStr("GOT ACK!\n");
                 } else {
-                    puts("no ack!");
+                    PutStr("no ack!\n");
                 }
 
-                puts("cleanup irq");
+                PutStr("cleanup irq\n");
                 pario_cleanup_ack_irq(ph);
             } else {
-                puts("failed irq setup");
+                PutStr("failed irq setup\n");
             }
-            puts("free signal");
+            PutStr("free signal\n");
             FreeSignal(ackSig);
         }
-        puts("pario exit");
+        PutStr("pario exit\n");
         pario_exit(ph);
-        puts("done");
+        PutStr("done\n");
     } else {
-        puts("error setting up pario!");
+        PutStr("error setting up pario!\n");
     }
     return 0;
 }

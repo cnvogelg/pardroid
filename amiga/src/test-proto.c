@@ -1,7 +1,6 @@
 #include <proto/exec.h>
+#include <proto/dos.h>
 #include <dos/dos.h>
-
-#include <stdio.h>
 
 #include "autoconf.h"
 #include "compiler.h"
@@ -10,37 +9,37 @@
 #include "timer.h"
 #include "proto.h"
 
-int main(int argc, char **argv)
+int dosmain(void)
 {
     struct pario_handle *ph;
     struct timer_handle *th;
 
-    puts("test-proto");
+    PutStr("test-proto\n");
     ph = pario_init((struct Library *)SysBase);
     if(ph != NULL) {
         struct pario_port *port = pario_get_port(ph);
-        puts("timer_init");
+        PutStr("timer_init\n");
         th = timer_init((struct Library *)SysBase);
         if(th != NULL) {
             /* setup proto low */
-            puts("proto_init");
+            PutStr("proto_init\n");
             struct proto_handle *ph = proto_init(port, th);
             if(ph != NULL) {
-                puts("proto_ping");
+                PutStr("proto_ping\n");
                 int error = proto_ping(ph);
-                printf("-> %d\n", error);
-                puts("done");
+                Printf("-> %ld\n", (LONG)error);
+                PutStr("done\n");
                 proto_exit(ph);
             } else {
-                puts("error setting up proto!");
+                PutStr("error setting up proto!\n");
             }
             timer_exit(th);
         } else {
-            puts("error setting up timer!");
+            PutStr("error setting up timer!\n");
         }
         pario_exit(ph);
     } else {
-        puts("error setting up pario!");
+        PutStr("error setting up pario!\n");
     }
     return 0;
 }

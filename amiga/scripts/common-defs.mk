@@ -35,9 +35,9 @@ PROGRAMS += $1
 .PHONY: $1
 $1: $(BIN_DIR)/$1
 
-$(BIN_DIR)/$1: $(call map-src-to-tgt,$2)
+$(BIN_DIR)/$1: $(call map-src-to-tgt,$2 $(PRG_SRCS))
 	@echo "  LD   $$(@F)"
-	$(H)$(CC) $(LDFLAGS) -o $$@ $$+
+	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+
 endef
 
 # create dirs
