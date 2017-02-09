@@ -92,3 +92,18 @@ int proto_test_write(struct proto_handle *ph, UBYTE *data)
   return result;
 }
 
+const char *proto_perror(int res)
+{
+  switch(res) {
+    case PROTO_RET_OK:
+      return "OK";
+    case PROTO_RET_RAK_INVALID:
+      return "RAK invalid";
+    case PROTO_RET_TIMEOUT:
+      return "timeout";
+    case PROTO_RET_SLAVE_ERROR:
+      return "slave error";
+    default:
+      return "unknown";
+  }
+}
