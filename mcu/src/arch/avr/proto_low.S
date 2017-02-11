@@ -115,13 +115,10 @@ proto_low_ping:
     ret
 
 
-    ; CL | WL | ( DO | CH )+ | RS | CH
-    ; r24,r25 = char buf[2]
+    ; u16 proto_low_test_write(void)
+    ; r24,r25 = wrote val
     .global  proto_low_test_write
 proto_low_test_write:
-    ; move buffer pointer to Z
-    movw    r30, r24
-
     ; confirm to master we are ready
     rak_lo
 
@@ -131,14 +128,14 @@ proto_low_test_write:
     ; get data and save as result
     data_in
     ; store in buffer
-    st      Z+, r18
+    mov     r24, r18
     debug_hi
 
     ; byte 2
     ; wait clk
     wait_clk_lo
     data_in
-    st      Z+, r18
+    mov     r25, r18
     debug_lo
 
     ; end sync
@@ -147,25 +144,22 @@ proto_low_test_write:
     ret
 
 
-    ; CL | WL | XI | ( CH | DI )+ | RS | CH | XO
-    ; r24,r25 = char buf[2]
+    ; void proto_low_test_read(u16 v)
+    ; r24,r25 = read val
     .global  proto_low_test_read
 proto_low_test_read:
-    ; move buffer pointer to Z
-    movw    r30, r24
-
     rak_lo
 
     ; byte 1
     wait_clk_hi
     ddr_out
-    ld      r18, Z+
+    mov     r18, r24
     data_out
     debug_hi
 
     ; byte 2
     wait_clk_lo
-    ld      r18, Z+
+    mov     r18, r25
     data_out
     debug_lo
 

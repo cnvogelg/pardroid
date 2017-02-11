@@ -80,25 +80,25 @@ int proto_reset(struct proto_handle *ph)
   return result;
 }
 
-int proto_test_read(struct proto_handle *ph, UBYTE *data)
+int proto_test_read(struct proto_handle *ph, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_test_read(port, timeout_flag, data);
+  int result = proto_low_test_read(port, timeout_flag, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_test_write(struct proto_handle *ph, UBYTE *data)
+int proto_test_write(struct proto_handle *ph, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_test_write(port, timeout_flag, data);
+  int result = proto_low_test_write(port, timeout_flag, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;

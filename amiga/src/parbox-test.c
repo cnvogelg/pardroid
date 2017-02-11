@@ -61,9 +61,9 @@ static int test_reset(parbox_handle_t *pb, test_t *t)
 
 static int test_write(parbox_handle_t *pb, test_t *t)
 {
-  UBYTE b[2] = { 0x47, 0x11 };
+  UWORD v = 0x4711;
 
-  int res = proto_test_write(pb->proto, b);
+  int res = proto_test_write(pb->proto, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -74,9 +74,9 @@ static int test_write(parbox_handle_t *pb, test_t *t)
 
 static int test_read(parbox_handle_t *pb, test_t *t)
 {
-  UBYTE b[2];
+  UWORD v;
 
-  int res = proto_test_read(pb->proto, b);
+  int res = proto_test_read(pb->proto, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
@@ -87,12 +87,10 @@ static int test_read(parbox_handle_t *pb, test_t *t)
 
 static int test_rw(parbox_handle_t *pb, test_t *t)
 {
-  UBYTE b[2];
-  b[0] = (UBYTE)(t->iter & 0xff);
-  b[1] = (UBYTE)(0xff - b[0]);
+  UWORD v = (UWORD)t->iter;
 
   /* write */
-  int res = proto_test_write(pb->proto, b);
+  int res = proto_test_write(pb->proto, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -100,8 +98,8 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
   }
 
   /* read back */
-  UBYTE r[2];
-  res = proto_test_read(pb->proto, r);
+  UWORD r;
+  res = proto_test_read(pb->proto, &r);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
@@ -109,13 +107,8 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
   }
 
   /* check */
-  if(b[0] != r[0]) {
-    t->error = "byte 0 mismatch";
-    t->section = "compare";
-    return 1;
-  }
-  if(b[1] != r[1]) {
-    t->error = "byte 1 mismatch";
+  if(v != r) {
+    t->error = "value mismatch";
     t->section = "compare";
     return 1;
   }

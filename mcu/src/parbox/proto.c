@@ -4,7 +4,7 @@
 #include "debug.h"
 #include "mach.h"
 
-static u08 test_data[2];
+static u16 test_data;
 
 void proto_init(void)
 {
@@ -34,16 +34,16 @@ void proto_handle(void)
 
     case CMD_TEST_READ:
       // master wants to read 2 bytes
-      DS("tr:"); DB(test_data[0]); DB(test_data[1]);
+      DS("tr:"); DW(test_data);
       proto_low_test_read(test_data);
-      DNL;
+      DC('.'); DNL;
       break;
 
     case CMD_TEST_WRITE:
       // master wants to write 2 bytes
       DS("tw:");
-      proto_low_test_write(test_data);
-      DB(test_data[0]); DB(test_data[1]); DNL;
+      test_data = proto_low_test_write();
+      DW(test_data); DC('.'); DNL;
       break;
 
     case CMD_INVALID:
