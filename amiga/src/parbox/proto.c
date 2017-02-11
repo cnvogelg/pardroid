@@ -41,7 +41,7 @@ struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th
   *port->ctrl_port |= port->all_mask;
 
   /* data: port=0, ddr=0xff (OUT) */
-  *port->data_port = CMD_IDLE;
+  *port->data_port = PROTO_CMD_IDLE;
   *port->data_ddr  = 0xff;
 
   return ph;
@@ -62,7 +62,19 @@ int proto_ping(struct proto_handle *ph)
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_ping(port, timeout_flag);
+  int result = proto_low_ping(port, timeout_flag, PROTO_CMD_PING);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_reset(struct proto_handle *ph)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_ping(port, timeout_flag, PROTO_CMD_RESET);
   timer_stop(ph->timer);
 
   return result;

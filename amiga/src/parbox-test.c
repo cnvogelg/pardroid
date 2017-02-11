@@ -47,6 +47,18 @@ static int test_ping(parbox_handle_t *pb, test_t *t)
   }
 }
 
+static int test_reset(parbox_handle_t *pb, test_t *t)
+{
+  int res = proto_reset(pb->proto);
+  if(res == 0) {
+    return 0;
+  } else {
+    t->error = proto_perror(res);
+    t->section = "reset";
+    return res;
+  }
+}
+
 static int test_write(parbox_handle_t *pb, test_t *t)
 {
   UBYTE b[2] = { 0x47, 0x11 };
@@ -114,6 +126,7 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
 /* define tests */
 static test_t all_tests[] = {
   { test_ping, "ping", "ping parbox device" },
+  { test_reset, "reset", "reset parbox device" },
   { test_read, "r", "read 2 test bytes" },
   { test_write, "w", "write 2 test bytes" },
   { test_rw, "rw", "read/write 2 test bytes" },

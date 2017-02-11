@@ -132,7 +132,7 @@ set_cmd_idle  MACRO
 ; set a command byte to data port
 ; \1 = cmd constant
 set_cmd  MACRO
-        move.b  #\1,(a3)
+        move.b  \1,(a3)
         ENDM
 
 
@@ -160,6 +160,7 @@ get_data MACRO
 ;   in:
 ;       a0      struct pario_port *port
 ;       a1      volatile UBYTE *timeout_flag
+;       d0      CMD_PING constant
 ;   out:
 ;       d0      return code
 _proto_low_ping:
@@ -172,7 +173,7 @@ _proto_low_ping:
         ; check RAK to be high or abort
         check_rak_hi    plp_end
         ; set cmd to data port
-        set_cmd         CMD_PING
+        set_cmd         d0
         ; set CLK to low (active) to trigger command at slave
         clk_lo
         ; busy wait with timeout for RAK to go low
@@ -214,7 +215,7 @@ _proto_low_test_write:
 
         ; sync with slave
         check_rak_hi    pltw_end
-        set_cmd         CMD_TEST_WRITE
+        set_cmd         #CMD_TEST_WRITE
         clk_lo
         wait_rak_lo     pltw_abort
 
@@ -260,7 +261,7 @@ _proto_low_test_read:
 
         ; sync with slave
         check_rak_hi    pltr_end
-        set_cmd         CMD_TEST_READ
+        set_cmd         #CMD_TEST_READ
         clk_lo
         wait_rak_lo     pltr_abort
 

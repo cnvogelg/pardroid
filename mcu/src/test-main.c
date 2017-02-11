@@ -23,6 +23,7 @@ int main(void)
   DC('-');
 
   while(1) {
+    mach_wdt_reset();
     proto_handle();
 #if 0
     _delay_ms(500);

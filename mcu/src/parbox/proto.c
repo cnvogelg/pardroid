@@ -2,6 +2,7 @@
 #include "proto_low.h"
 #include "proto.h"
 #include "debug.h"
+#include "mach.h"
 
 static u08 test_data[2];
 
@@ -22,6 +23,13 @@ void proto_handle(void)
       // alive ping from master
       DS("ping"); DNL;
       proto_low_ping();
+      break;
+
+    case CMD_RESET:
+      DS("reset"); DNL;
+      proto_low_ping();
+      DS("restart"); DNL;
+      mach_sys_reset();
       break;
 
     case CMD_TEST_READ:

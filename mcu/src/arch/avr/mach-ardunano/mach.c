@@ -1,12 +1,17 @@
 
+#include <avr/wdt.h>
 #include <avr/interrupt.h>
 
 void mach_init_hw(void)
 {
   // disable watchdog
   cli();
-  MCUSR &= ~_BV(WDRF);
-  WDTCSR |= _BV(WDCE) | _BV(WDE);
-  WDTCSR = 0;
+  wdt_enable(WDTO_500MS);
   sei();
+}
+
+void mach_sys_reset(void)
+{
+  wdt_enable(WDTO_15MS);
+  while(1) { /* wait for the end */ }
 }
