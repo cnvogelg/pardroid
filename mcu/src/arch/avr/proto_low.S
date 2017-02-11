@@ -40,13 +40,21 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
     .endm
 
-    ; some macros to control a pin for debug purposes
+    .macro pend_hi
+    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
+    .endm
+
+    .macro pend_lo
+    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
+    .endm
+
+    ; if needed use select pin as a debug line
 #ifdef CONFIG_DEBUG_PIN
     .macro debug_lo
-    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
     .endm
     .macro debug_hi
-    sbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
     .endm
 #else
     .macro debug_lo
@@ -64,16 +72,17 @@ proto_low_init:
     ; setup data port: INPUT
     ddr_in
     ; setup control lines
-    ; DDR INPUT: strobe, select, pout
+    ; DDR INPUT: strobe, pout
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
-    cbi     _SFR_IO_ADDR(PAR_SELECT_DDR), PAR_SELECT_BIT
     cbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
-    ; DDR OUTPUT: ack, busy
+    ; DDR OUTPUT: ack, busy, select
+    sbi     _SFR_IO_ADDR(PAR_SELECT_DDR), PAR_SELECT_BIT
     sbi     _SFR_IO_ADDR(PAR_ACK_DDR), PAR_ACK_BIT
     sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
     ; set OUTPUT levels
     ack_hi
     rak_hi
+    pend_hi
     ret
 
 
