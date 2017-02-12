@@ -74,7 +74,7 @@
     .macro ddr_in
     clr     r18                             ; 1
     in      r19, _SFR_IO_ADDR(DDRD)         ; 1
-    andi    r19, 0xc0                       ; 1
+    andi    r19, 0x3f                       ; 1
     out     _SFR_IO_ADDR(DDRC), r18         ; 1
     out     _SFR_IO_ADDR(DDRD), r19         ; 1
     .endm                                   ; = 5

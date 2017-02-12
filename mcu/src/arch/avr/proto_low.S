@@ -128,14 +128,14 @@ proto_low_test_write:
     ; get data and save as result
     data_in
     ; store in buffer
-    mov     r24, r18
+    mov     r25, r18
     debug_hi
 
     ; byte 2
     ; wait clk
     wait_clk_lo
     data_in
-    mov     r25, r18
+    mov     r24, r18
     debug_lo
 
     ; end sync
@@ -153,14 +153,14 @@ proto_low_test_read:
     ; byte 1
     wait_clk_hi
     ddr_out
-    mov     r18, r24
-    data_out
+    mov     r18, r25
+    ;data_out
     debug_hi
 
     ; byte 2
     wait_clk_lo
-    mov     r18, r25
-    data_out
+    mov     r18, r24
+    ;data_out
     debug_lo
 
     ; end sync

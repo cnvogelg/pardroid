@@ -9,6 +9,7 @@ static u16 test_data;
 void proto_init(void)
 {
   proto_low_init();
+  test_data = 0x4812;
 }
 
 void proto_handle(void)
