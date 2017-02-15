@@ -31,6 +31,7 @@ typedef struct test {
   ULONG         iter;
   const char   *error;
   const char   *section;
+  char          extra[40];
 } test_t;
 
 /* ----- tests ----- */
@@ -149,14 +150,20 @@ static int run_test(parbox_handle_t *pb, test_t *test)
 
   int res;
   if(num == 1) {
-    /* single run */
+    /* init test state */
     test->iter = 0;
+    test->error = NULL;
+    test->section = NULL;
+    test->extra[0] = 0;
+
+    /* single run */
     res = test->func(pb, test);
     if(res == 0) {
       PutStr("Ok.\n");
     }
     else {
-      Printf("Result: %ld  %s  in  '%s'\n", (LONG)res, test->error, test->section);
+      Printf("Result: %ld  %s  in  '%s': %s\n", (LONG)res,
+        test->error, test->section, test->extra);
     }
   }
   else {
@@ -171,8 +178,13 @@ static int run_test(parbox_handle_t *pb, test_t *test)
         break;
       }
 
-      /* test func */
+      /* init test state */
       test->iter = cnt++;
+      test->error = NULL;
+      test->section = NULL;
+      test->extra[0] = 0;
+
+      /* test func */
       res = test->func(pb, test);
       if(res == 0) {
         if((cnt & 0xff == 0) || force) {
@@ -181,7 +193,8 @@ static int run_test(parbox_handle_t *pb, test_t *test)
         }
       }
       else {
-        Printf("%06ld: %ld  %s  in  '%s'\n", cnt, (LONG)res, test->error, test->section);
+        Printf("%06ld: %ld  %s  in  '%s': %s\n", cnt, (LONG)res,
+          test->error, test->section, test->extra);
         force = 1;
         num_failed++;
       }
