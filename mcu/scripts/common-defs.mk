@@ -35,19 +35,6 @@ map-src-to-tgt = $(patsubst %.c,$(OBJ_DIR)/%.o,$(filter %.c,$1)) \
 
 map-bin = $(patsubst %,$(BIN_DIR)/%,$1)
 
-# size-check
-# $1 = size file
-# $2 = max value
-# $3 = name to print
-define size-check
-SIZE=`cat $1` ; \
-if [ $$$$SIZE -gt $2 ] ; then \
-	echo "$3:  $$$$SIZE >  $2 bytes: TOO LARGE" ; exit 1 ; \
-else \
-	echo "$3:  $$$$SIZE <= $2 bytes: ok" ; \
-fi
-endef
-
 # make-program rules
 # $1 = program name
 # $2 = srcs for program
@@ -58,17 +45,13 @@ FIRMWARES += $1
 
 $1: $(call map-bin,$1.elf $1.hex $1.lss $1.sym)
 
-$1-size: $(call map-bin,$1.size_sym $1.size_code $1.size_data)
+$1-sym: $(call map-bin,$1.sym_size)
+	$(H)cat $$<
 
-$1-check-code: $(call map-bin,$1.size_code)
-	$(H)$(call size-check,$$<,$(CONFIG_MAX_RAM),$$(<F))
+$1-check: $(call map-bin,$1.elf)
+	$(H)$(SIZE) -A $$< | scripts/checksize.py $(CONFIG_MAX_ROM) $(CONFIG_MAX_RAM)
 
-$1-check-data: $(call map-bin,$1.size_data)
-	$(H)$(call size-check,$$<,$(CONFIG_MAX_ROM),$$(<F))
-
-$1-check: $1-check-code $1-check-data
-
-$1-prog: $(call map-bin,$1.hex)
+$1-prog: $(call map-bin,$1.hex) $1-check
 	$(call prog,$$<,$$(<F))
 
 $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)

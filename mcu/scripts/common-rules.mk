@@ -1,7 +1,7 @@
 # all rule
 all: $(FIRMWARES)
 
-size: $(patsubst %,%-size,$(FIRMWARES))
+sym: $(patsubst %,%-sym,$(FIRMWARES))
 
 check: $(patsubst %,%-check,$(FIRMWARES))
 
@@ -9,20 +9,6 @@ prog: $(DEFAULT_FIRMWARE)-prog
 
 clean:
 	$(H)rm -rf $(BUILD_DIR)
-
-# size checking
-%.size_code: %.elf
-	@echo "  SIZE $(@F)"
-	$(H)$(SIZE) -C $< | grep Program | awk '{ print $$2 }' > $@
-
-%.size_data: %.elf
-	@echo "  SIZE $(@F)"
-	$(H)$(SIZE) -C $< | grep Data | awk '{ print $$2 }' > $@
-
-%.size_sym: %.elf
-	@echo "  SIZE $(@F)"
-	$(H)$(NM) --size-sort --print-size $< | egrep ' [bBdD] ' > $@
-
 
 # final hex (flash) file from elf
 %.hex: %.elf
@@ -43,6 +29,11 @@ clean:
 %.sym: %.elf
 	@echo "  SYM  $(@F)"
 	$(H)$(NM) -n $< > $@
+
+# symbol size
+%.sym_size: %.elf
+	@echo "  SYM  $(@F)"
+	$(H)$(NM) --size-sort --print-size $< | egrep ' [bBdD] ' > $@
 
 
 # compile
