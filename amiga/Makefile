@@ -11,7 +11,7 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
 VPATH=$(INCLUDES)
 
-BASE_SRCS = debug.c sprintf.s
+BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
 PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c

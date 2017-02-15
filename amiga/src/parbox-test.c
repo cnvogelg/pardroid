@@ -3,6 +3,7 @@
 #include <dos/dos.h>
 
 #include <string.h>
+#include <stdio.h>
 
 #include "autoconf.h"
 #include "compiler.h"
@@ -11,12 +12,13 @@
 #include "parbox.h"
 #include "proto.h"
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
   char *test;
   ULONG *delay;
+  ULONG *bias;
 } params_t;
 static params_t params;
 
@@ -89,6 +91,9 @@ static int test_read(parbox_handle_t *pb, test_t *t)
 static int test_rw(parbox_handle_t *pb, test_t *t)
 {
   UWORD v = (UWORD)t->iter;
+  if(params.bias != NULL) {
+    v += *params.bias;
+  }
 
   /* write */
   int res = proto_test_write(pb->proto, &v);
@@ -111,6 +116,7 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
   if(v != r) {
     t->error = "value mismatch";
     t->section = "compare";
+    sprintf(t->extra, "w=%04x r=%04x", v, r);
     return 1;
   }
 
