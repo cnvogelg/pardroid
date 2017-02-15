@@ -154,13 +154,13 @@ proto_low_test_read:
     wait_clk_hi
     ddr_out
     mov     r18, r25
-    ;data_out
+    data_out
     debug_hi
 
     ; byte 2
     wait_clk_lo
     mov     r18, r24
-    ;data_out
+    data_out
     debug_lo
 
     ; end sync
