@@ -265,20 +265,22 @@ _proto_low_test_read:
         clk_lo
         wait_rak_lo     pltr_abort
 
-        ; switch data direction - read
+        ; switch: port read
         ddr_in
+        clk_hi
 
         ; first byte
         ; signal read to slave
-        clk_hi
+        clk_lo
         ; read value from data port
         get_data        (a2)+
 
         ; second bytes
-        clk_lo
+        clk_hi
         get_data        (a2)+
 
-        ; done - write to port again
+        ; switch: port write
+        clk_lo
         ddr_out
 
         ; read status

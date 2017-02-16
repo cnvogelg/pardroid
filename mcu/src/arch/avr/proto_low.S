@@ -150,24 +150,32 @@ proto_low_test_write:
 proto_low_test_read:
     rak_lo
 
-    ; byte 1
-    mov     r18, r25
-    data_out_prepare
+    ; data: write
     wait_clk_hi
     ddr_out
-    data_out_set
     debug_hi
 
-    ; byte 2
-    mov     r18, r24
+    ; byte 1
+    mov     r18, r25
     data_out_prepare
     wait_clk_lo
     data_out_set
     debug_lo
 
+    ; byte 2
+    mov     r18, r24
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+    debug_hi
+
+    ; data: read
+    wait_clk_lo
+    ddr_in
+    debug_lo
+
     ; end sync
     wait_clk_hi
-    ddr_in
     rak_hi
     ret
 
