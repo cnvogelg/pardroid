@@ -151,16 +151,18 @@ proto_low_test_read:
     rak_lo
 
     ; byte 1
+    mov     r18, r25
+    data_out_prepare
     wait_clk_hi
     ddr_out
-    mov     r18, r25
-    data_out
+    data_out_set
     debug_hi
 
     ; byte 2
-    wait_clk_lo
     mov     r18, r24
-    data_out
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
     debug_lo
 
     ; end sync
