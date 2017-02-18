@@ -115,10 +115,12 @@ proto_low_ping:
     ret
 
 
-    ; u16 proto_low_test_write(void)
+    ; ----- proto_low_reg_write -----
+    ; master wants to write a u16 register value
+    ; u16 proto_low_reg_write(void)
     ; r24,r25 = wrote val
-    .global  proto_low_test_write
-proto_low_test_write:
+    .global  proto_low_reg_write
+proto_low_reg_write:
     ; confirm to master we are ready
     rak_lo
 
@@ -144,10 +146,12 @@ proto_low_test_write:
     ret
 
 
-    ; void proto_low_test_read(u16 v)
+    ; ----- proto_low_reg_read
+    ; master wants to read a u16 register value
+    ; void proto_low_reg_read(u16 v)
     ; r24,r25 = read val
-    .global  proto_low_test_read
-proto_low_test_read:
+    .global  proto_low_reg_read
+proto_low_reg_read:
     rak_lo
 
     ; data: write

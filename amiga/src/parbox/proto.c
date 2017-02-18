@@ -80,25 +80,33 @@ int proto_reset(struct proto_handle *ph)
   return result;
 }
 
-int proto_test_read(struct proto_handle *ph, UWORD *data)
+int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  UBYTE cmd = reg + PROTO_CMD_REG_READ_BASE;
+  if(reg >= NUM_REG) {
+    return PROTO_RET_INVALID_REG;
+  }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_test_read(port, timeout_flag, (UBYTE *)data);
+  int result = proto_low_reg_read(port, timeout_flag, cmd, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_test_write(struct proto_handle *ph, UWORD *data)
+int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  UBYTE cmd = reg + PROTO_CMD_REG_WRITE_BASE;
+  if(reg >= NUM_REG) {
+    return PROTO_RET_INVALID_REG;
+  }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_test_write(port, timeout_flag, (UBYTE *)data);
+  int result = proto_low_reg_write(port, timeout_flag, cmd, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
@@ -115,6 +123,8 @@ const char *proto_perror(int res)
       return "timeout";
     case PROTO_RET_SLAVE_ERROR:
       return "slave error";
+    case PROTO_RET_INVALID_REG:
+      return "invalid register";
     default:
       return "unknown";
   }

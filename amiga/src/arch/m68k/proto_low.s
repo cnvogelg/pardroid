@@ -7,8 +7,8 @@
         include         "proto.i"
 
         xdef            _proto_low_ping
-        xdef            _proto_low_test_write
-        xdef            _proto_low_test_read
+        xdef            _proto_low_reg_write
+        xdef            _proto_low_reg_read
 
 ; ----- macros --------------------------------------------------------------
 
@@ -204,20 +204,21 @@ plp_abort:
         bra.s   plp_end
 
 
-; --- proto_low_test_write ---
+; --- proto_low_reg_write ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to byte
+;      d0 = cmd byte
 ; out: d0 = result
-_proto_low_test_write:
+_proto_low_reg_write:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
         ; sync with slave
-        check_rak_hi    pltw_end
-        set_cmd         #CMD_TEST_WRITE
+        check_rak_hi    plrw_end
+        set_cmd         d0
         clk_lo
-        wait_rak_lo     pltw_abort
+        wait_rak_lo     plrw_abort
 
         ; -- first byte
         ; setup test value on data lines
@@ -231,39 +232,40 @@ _proto_low_test_write:
 
         ; done, read slave state
         ; if slave already pulled high then an error was found
-        check_rak_lo    pltw_abort
+        check_rak_lo    plrw_abort
 
         ; final sync
         clk_hi
         ; wait for slave done
-        wait_rak_hi     pltw_end
+        wait_rak_hi     plrw_end
 
         ; ok
         moveq   #RET_OK,d0
-pltw_end:
+plrw_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6
         rts
-pltw_abort:
+plrw_abort:
         ; ensure CLK is hi
         clk_hi
-        bra.s    pltw_end
+        bra.s    plrw_end
 
 
-; --- proto_low_test_read ---
+; --- proto_low_reg_read ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to test byte
+;      d0 = cmd byte
 ; out: d0 = result
-_proto_low_test_read:
+_proto_low_reg_read:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
         ; sync with slave
-        check_rak_hi    pltr_end
-        set_cmd         #CMD_TEST_READ
+        check_rak_hi    plrr_end
+        set_cmd         d0
         clk_lo
-        wait_rak_lo     pltr_abort
+        wait_rak_lo     plrr_abort
 
         ; switch: port read
         ddr_in
@@ -284,19 +286,19 @@ _proto_low_test_read:
         ddr_out
 
         ; read status
-        check_rak_lo    pltr_abort
+        check_rak_lo    plrr_abort
 
         ; final sync
         clk_hi
-        wait_rak_hi     pltr_end
+        wait_rak_hi     plrr_end
 
         ; ok
         moveq   #RET_OK,d0
-pltr_end:
+plrr_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6
         rts
-pltr_abort:
+plrr_abort:
         ; ensure CLK is hi
         clk_hi
-        bra.s    pltr_end
+        bra.s    plrr_end

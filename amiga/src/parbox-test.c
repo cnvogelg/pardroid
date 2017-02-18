@@ -66,7 +66,7 @@ static int test_write(parbox_handle_t *pb, test_t *t)
 {
   UWORD v = 0x4711;
 
-  int res = proto_test_write(pb->proto, &v);
+  int res = proto_reg_write(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -79,7 +79,7 @@ static int test_read(parbox_handle_t *pb, test_t *t)
 {
   UWORD v;
 
-  int res = proto_test_read(pb->proto, &v);
+  int res = proto_reg_read(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
@@ -96,7 +96,7 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
   }
 
   /* write */
-  int res = proto_test_write(pb->proto, &v);
+  int res = proto_reg_write(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -105,7 +105,7 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
 
   /* read back */
   UWORD r;
-  res = proto_test_read(pb->proto, &r);
+  res = proto_reg_read(pb->proto, REG_TEST, &r);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
