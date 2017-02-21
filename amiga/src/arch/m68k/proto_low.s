@@ -9,6 +9,8 @@
         xdef            _proto_low_ping
         xdef            _proto_low_reg_write
         xdef            _proto_low_reg_read
+        xdef            _proto_low_msg_write
+        xdef            _proto_low_msg_read
 
 ; ----- macros --------------------------------------------------------------
 
@@ -302,3 +304,170 @@ plrr_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s    plrr_end
+
+
+; --- proto_low_msg_write ---
+; in:  a0 = port ptr
+;      a1 = timeout byte ptr
+;      a2 = ptr to ptroto_msg
+;      d0 = cmd
+; out: d0 = result
+_proto_low_msg_write:
+        movem.l d2-d7/a2-a6,-(sp)
+        setup_port_regs
+
+        ; sync with slave
+        check_rak_hi    plrw_end
+        set_cmd         d0
+        clk_lo
+
+        ; prepare size while waiting for slave
+        moveq           #0,d1
+        move.w          4(a2),d1
+        move.w          d1,d5
+        lsr.w           #8,d5
+
+        ; wait for slave sync
+        wait_rak_lo     plrw_abort
+
+        ; send size
+        set_data        d5 ; hi byte
+        clk_hi
+        set_data        d1 ; lo byte
+        clk_lo
+
+        ; empty message?
+        tst.w           d1
+        beq.s           plmw_done
+        subq.w          #1,d1 ; for dbra
+
+        ; get buffer
+        move.l          (a2),a0
+
+        ; early abort by slave? (e.g. too large)
+        check_rak_lo    plmw_abort
+
+        ; data block loop
+plmw_loop:
+        ; odd byte
+        set_data        (a0)+
+        clk_hi
+        ; even byte
+        set_data        (a0)+
+        clk_lo
+
+        dbra            d1,plmw_loop
+
+        ; done, read slave state
+        ; if slave already pulled high then an error was found
+        check_rak_lo    plmw_abort
+
+plmw_done:
+        ; final sync
+        clk_hi
+        ; wait for slave done
+        wait_rak_hi     plmw_end
+
+        ; ok
+        moveq   #RET_OK,d0
+plmw_end:
+        set_cmd_idle
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plmw_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s    plmw_end
+
+
+; --- proto_low_msg_read ---
+; in:  a0 = port ptr
+;      a1 = timeout byte ptr
+;      a2 = ptr to proto_msg
+;      d0 = cmd byte
+; out: d0 = result
+_proto_low_msg_read:
+        movem.l d2-d7/a2-a6,-(sp)
+        setup_port_regs
+
+        ; sync with slave
+        check_rak_hi    plmr_end
+        set_cmd         d0
+        clk_lo
+
+        ; prepare size regs
+        moveq           #0,d5
+        moveq           #0,d6
+
+        ; final slave sync
+        wait_rak_lo     plmr_abort
+
+        ; switch: port read
+        ddr_in
+        clk_hi
+
+        ; read size
+        clk_lo
+        get_data        d5 ; hi
+        clk_hi
+        get_data        d6 ; lo
+
+        ; combine size lo/hi -> d5
+        lsl.w           #8,d5
+        or.w            d6,d5
+        ; store real size: proto_msg->num_words
+        move.w          d5,4(a2)
+        ; check size
+        tst.w           d5 ; empty message
+        beq.s           plmr_done_ok
+        cmp.w           6(a2),d5 ; proto_msg->max_words
+        bls.s           plmr_ok
+
+        ; size invalid - run a fake loop a do not store data
+        moveq           #RET_MSG_TOO_LARGE,d0
+        subq.w          #1,d5
+plmr_fake_loop:
+        clk_lo
+        get_data        d1
+        clk_hi
+        get_data        d1
+        dbra            d5,plmr_fake_loop
+        bra.s           plmr_done
+
+plmr_ok:
+        ; size valid - run a copy loop and store data
+        subq.w          #1,d5
+        move.l          (a2),a0 ; data buffer
+        ; data copy loop
+plmr_copy_loop:
+        ; odd byte
+        clk_lo
+        get_data        (a0)+
+        ; even byte
+        clk_hi
+        get_data        (a0)+
+        dbra            d5,plmr_copy_loop
+plmr_done_ok:
+        ; ok
+        moveq   #RET_OK,d0
+
+plmr_done:
+        ; switch: port write
+        clk_lo
+        ddr_out
+
+        ; read final slave status
+        check_rak_lo    plmr_abort
+
+        ; final sync
+        clk_hi
+        wait_rak_hi     plmr_end
+plmr_end:
+        set_cmd_idle
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plmr_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s           plmr_end
+

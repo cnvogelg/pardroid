@@ -62,7 +62,7 @@ static int test_reset(parbox_handle_t *pb, test_t *t)
   }
 }
 
-static int test_write(parbox_handle_t *pb, test_t *t)
+static int test_reg_write(parbox_handle_t *pb, test_t *t)
 {
   UWORD v = 0x4711;
 
@@ -75,7 +75,7 @@ static int test_write(parbox_handle_t *pb, test_t *t)
   return 0;
 }
 
-static int test_read(parbox_handle_t *pb, test_t *t)
+static int test_reg_read(parbox_handle_t *pb, test_t *t)
 {
   UWORD v;
 
@@ -88,7 +88,7 @@ static int test_read(parbox_handle_t *pb, test_t *t)
   return 0;
 }
 
-static int test_rw(parbox_handle_t *pb, test_t *t)
+static int test_reg_write_read(parbox_handle_t *pb, test_t *t)
 {
   UWORD v = (UWORD)t->iter;
   if(params.bias != NULL) {
@@ -123,13 +123,77 @@ static int test_rw(parbox_handle_t *pb, test_t *t)
   return 0;
 }
 
+static int test_msg_empty(parbox_handle_t *pb, test_t *t)
+{
+  proto_msg_t msg = { NULL, 0, 0 };
+  int res = proto_msg_write(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "write";
+    return res;
+  }
+
+  res = proto_msg_read(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "read";
+    return res;
+  }
+
+  if(msg.num_words != 0) {
+    t->error = "not empty";
+    t->section = "compare";
+    sprintf(t->extra, "%04x", msg.num_words);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int test_msg_tiny(parbox_handle_t *pb, test_t *t)
+{
+  ULONG data = 0xdeadbeef;
+  proto_msg_t msg = { (UBYTE *)&data, 2, 2 };
+  int res = proto_msg_write(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "write";
+    return res;
+  }
+
+  res = proto_msg_read(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "read";
+    return res;
+  }
+
+  if(msg.num_words != 2) {
+    t->error = "not two words";
+    t->section = "compare";
+    sprintf(t->extra, "%04x", msg.num_words);
+    return 1;
+  }
+
+  if(data != 0xdeadbeef) {
+    t->error = "invalid value";
+    t->section = "compare";
+    sprintf(t->extra, "%08lx", data);
+    return 1;
+  }
+
+  return 0;
+}
+
 /* define tests */
 static test_t all_tests[] = {
   { test_ping, "ping", "ping parbox device" },
   { test_reset, "reset", "reset parbox device" },
-  { test_read, "r", "read 2 test bytes" },
-  { test_write, "w", "write 2 test bytes" },
-  { test_rw, "rw", "read/write 2 test bytes" },
+  { test_reg_read, "pr", "read test register word" },
+  { test_reg_write, "pw", "write test register word" },
+  { test_reg_write_read, "pwr", "write/read test register word" },
+  { test_msg_empty, "me", "write/read empty message"},
+  { test_msg_tiny, "mt", "write/read tiny 4 byte message"},
   { NULL, NULL, NULL }
 };
 

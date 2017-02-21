@@ -112,6 +112,38 @@ int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
   return result;
 }
 
+int proto_msg_write(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  UBYTE cmd = chn + PROTO_CMD_MSG_WRITE;
+  if(chn >= NUM_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_msg_write(port, timeout_flag, cmd, msg);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_msg_read(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  UBYTE cmd = chn + PROTO_CMD_MSG_READ;
+  if(chn >= NUM_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_msg_read(port, timeout_flag, cmd, msg);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
 const char *proto_perror(int res)
 {
   switch(res) {
@@ -125,6 +157,10 @@ const char *proto_perror(int res)
       return "slave error";
     case PROTO_RET_INVALID_REG:
       return "invalid register";
+    case PROTO_RET_INVALID_CHANNEL:
+      return "invalid channel";
+    case PROTO_RET_MSG_TOO_LARGE:
+      return "message too large";
     default:
       return "unknown";
   }
