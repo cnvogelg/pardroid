@@ -57,26 +57,26 @@
     ; set data direction to output
     ; in: -
     ; out: -
-    ; regs: r21, r22
+    ; regs: r18, r19
     .macro ddr_out
-    ldi     r21, 0x3f                       ; 1
-    in      r22, _SFR_IO_ADDR(DDRD)         ; 1
-    ori     r22, 0xc0                       ; 1
-    out     _SFR_IO_ADDR(DDRC), r21         ; 1
-    out     _SFR_IO_ADDR(DDRD), r22         ; 1
+    ldi     r18, 0x3f                       ; 1
+    in      r19, _SFR_IO_ADDR(DDRD)         ; 1
+    ori     r19, 0xc0                       ; 1
+    out     _SFR_IO_ADDR(DDRC), r18         ; 1
+    out     _SFR_IO_ADDR(DDRD), r19         ; 1
     .endm                                   ; = 5
 
     ; ddr_in
     ; set data direction to input
     ; in: -
     ; out: -
-    ; regs: r21, r22
+    ; regs: r18, r19
     .macro ddr_in
-    clr     r21                             ; 1
-    in      r22, _SFR_IO_ADDR(DDRD)         ; 1
-    andi    r22, 0x3f                       ; 1
-    out     _SFR_IO_ADDR(DDRC), r21         ; 1
-    out     _SFR_IO_ADDR(DDRD), r22         ; 1
+    clr     r18                             ; 1
+    in      r19, _SFR_IO_ADDR(DDRD)         ; 1
+    andi    r19, 0x3f                       ; 1
+    out     _SFR_IO_ADDR(DDRC), r18         ; 1
+    out     _SFR_IO_ADDR(DDRD), r19         ; 1
     .endm                                   ; = 5
 
     ; data_out

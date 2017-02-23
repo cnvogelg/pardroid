@@ -84,7 +84,7 @@ int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_REG_READ_BASE;
+  UBYTE cmd = reg + PROTO_CMD_REG_READ;
   if(reg >= NUM_REG) {
     return PROTO_RET_INVALID_REG;
   }
@@ -100,7 +100,7 @@ int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_REG_WRITE_BASE;
+  UBYTE cmd = reg + PROTO_CMD_REG_WRITE;
   if(reg >= NUM_REG) {
     return PROTO_RET_INVALID_REG;
   }

@@ -4,7 +4,11 @@
 #include "debug.h"
 #include "mach.h"
 
+#define MAX_TEST_MSG_SIZE 8
+
 static u16 test_data;
+static u16 test_size;
+static u08 test_msg[MAX_TEST_MSG_SIZE];
 
 void proto_init(void)
 {
@@ -23,9 +27,31 @@ static void reg_write(u08 reg)
 static void reg_read(u08 reg)
 {
   // master wants to reead a u16
-  DS("tr:"); DB(reg); DC('='); DW(test_data);
+  DS("rr:"); DB(reg); DC('='); DW(test_data);
   proto_low_reg_read(test_data);
   DC('.'); DNL;
+}
+
+static void const_read(u08 reg)
+{
+  // master wants to reead a u16
+  DS("cr:"); DB(reg); DC('='); DW(test_data);
+  proto_low_reg_read(test_data);
+  DC('.'); DNL;
+}
+
+static void msg_read(u08 chan)
+{
+  DS("mr:"); DB(chan); DC('='); DW(test_size);
+  proto_low_msg_read(test_size, test_msg);
+  DC('.'); DNL;
+}
+
+static void msg_write(u08 chan)
+{
+  DS("mw:"); DB(chan); DC('=');
+  test_size = proto_low_msg_write(test_size, test_msg);
+  DW(test_size); DC('.'); DNL;
 }
 
 void proto_handle(void)
@@ -53,17 +79,28 @@ void proto_handle(void)
       break;
 
     default:
-      // register write?
-      if((cmd >= CMD_REG_WRITE_BASE) && (cmd <= CMD_REG_WRITE_LAST)) {
-        reg_write(cmd - CMD_REG_WRITE_BASE);
-      }
-      // register read?
-      else if((cmd >= CMD_REG_READ_BASE) && (cmd <= CMD_REG_READ_LAST)) {
-        reg_read(cmd - CMD_REG_READ_BASE);
-      }
-      // unknown?
-      else {
-        DS("?:"); DB(cmd); DNL;
+      {
+        u08 cmd_base = cmd & CMD_MASK;
+        switch(cmd_base) {
+          case CMD_REG_WRITE:
+            reg_write(cmd - cmd_base);
+            break;
+          case CMD_REG_READ:
+            reg_read(cmd - cmd_base);
+            break;
+          case CMD_MSG_WRITE:
+            msg_write(cmd - cmd_base);
+            break;
+          case CMD_MSG_READ:
+            msg_read(cmd - cmd_base);
+            break;
+          case CMD_CONST_READ:
+            const_read(cmd - cmd_base);
+            break;
+          default:
+            DS("?:"); DB(cmd); DNL;
+            break;
+        }
       }
       break;
   }

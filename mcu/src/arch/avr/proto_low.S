@@ -183,5 +183,147 @@ proto_low_reg_read:
     rak_hi
     ret
 
-    .end
 
+    ; ----- proto_low_msg_write -----
+    ; master wants to write a message
+    ; u16 proto_low_msg_write(u16 max_words, u08 *buffer)
+    ; in:  r25,r24 = max_words we can receive
+    ; in:  r23,r22 = buffer ptr
+    ; out: r25,r24 = num_words received
+    .global  proto_low_msg_write
+proto_low_msg_write:
+    ; Z is buffer pointer
+    movw    r30,r22
+
+    ; confirm to master we are ready
+    rak_lo
+
+    ; -- read size: hi/lo=r23:r22
+    ; hi
+    wait_clk_hi
+    data_in
+    mov     r23,r18
+    debug_hi
+    ; lo
+    wait_clk_lo
+    data_in
+    mov     r22,r18
+    debug_lo
+
+    ; empty size?
+    or      r18,r23
+    breq    1f
+
+    ; check size
+    cp      r22,r24
+    cpc     r23,r25
+    brsh    0f ; bail out: too large
+
+    ; save result size
+    movw    r24,r22
+    ; set end address: r23:r22
+    add     r22,r30
+    adc     r23,r31
+
+    ; copy loop
+2:
+    ; check end
+    cp      r30,r22
+    cpc     r31,r23
+    breq    3f
+
+    ; odd byte
+    wait_clk_hi
+    data_in
+    st      Z+,r18
+    debug_hi
+    ; even byte
+    wait_clk_lo
+    data_in
+    st      Z+,r18
+    debug_lo
+
+    rjmp    2b
+
+1:
+    ; empty message
+    clr     r25
+    clr     r24
+3:
+    ; done sending
+    debug_hi
+    ; end sync
+    wait_clk_hi
+0:
+    rak_hi
+    debug_lo
+    ret
+
+
+    ; ----- proto_low_msg_read -----
+    ; master wants to read a message
+    ; void proto_low_msg_read(u16 num_words, const u08 *buffer)
+    ; in:  r25,r24 = max_words we can receive
+    ; in:  r23,r22 = buffer ptr
+    ; out: -
+    .global  proto_low_msg_read
+proto_low_msg_read:
+    ; Z is buffer pointer
+    movw    r30,r22
+
+    ; data: write
+    wait_clk_hi
+    ddr_out
+    debug_hi
+
+    ; size: hi
+    mov     r18,r25
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
+    debug_lo
+    ; size: lo
+    mov     r18, r24
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+    debug_hi
+
+    ; set end address: r24:r25
+    add     r24,r30
+    adc     r25,r31
+
+    ; copy loop
+0:
+    ; check end
+    cp      r30,r24
+    cpc     r31,r25
+    breq    1f
+
+    ; odd byte
+    ld      r18,Z+
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
+    debug_lo
+
+    ; even byte
+    ld      r18,Z+
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+    debug_hi
+
+    rjmp    0b
+1:
+    ; data: read
+    wait_clk_lo
+    ddr_in
+    debug_lo
+
+    ; end sync
+    wait_clk_hi
+    rak_hi
+    ret
+
+    .end

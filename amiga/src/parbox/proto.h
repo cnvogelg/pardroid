@@ -16,10 +16,9 @@ struct proto_handle;
 #define PROTO_CMD_RESET           0x1f
 #define PROTO_CMD_MSG_WRITE       0x20
 #define PROTO_CMD_MSG_READ        0x30
-#define PROTO_CMD_REG_WRITE_BASE  0x50
-#define PROTO_CMD_REG_WRITE_LAST  0x6f
-#define PROTO_CMD_REG_READ_BASE   0xd0
-#define PROTO_CMD_REG_READ_LAST   0xef
+#define PROTO_CMD_REG_WRITE       0x40
+#define PROTO_CMD_REG_READ        0x50
+#define PROTO_CMD_CONST_READ      0x60
 
 #define PROTO_RET_OK              0
 #define PROTO_RET_RAK_INVALID     1
