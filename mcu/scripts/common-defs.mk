@@ -40,6 +40,8 @@ map-bin = $(patsubst %,$(BIN_DIR)/%,$1)
 # make-program rules
 # $1 = program name
 # $2 = srcs for program
+# $3 = max rom size
+# $4 = extra ld flags
 define make-firmware
 FIRMWARES += $1
 
@@ -54,14 +56,14 @@ $1-code: $(call map-bin,$1.code_size)
 	$(H)cat $$<
 
 $1-check: $(call map-bin,$1.elf)
-	$(H)$(SIZE) -A $$< | scripts/checksize.py $(CONFIG_MAX_ROM) $(CONFIG_MAX_RAM)
+	$(H)$(SIZE) -A $$< | scripts/checksize.py $3 $(CONFIG_MAX_RAM) $1
 
 $1-prog: $(call map-bin,$1.hex) $1-check
 	$(call prog,$$<,$$(<F))
 
 $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)
 	@echo "  LD   $$(@F)"
-	$(H)$(CC) $(CFLAGS) $$^ -o $$@ $(LDFLAGS)
+	$(H)$(CC) $(CFLAGS) $$^ -o $$@ $(LDFLAGS) $4
 endef
 
 # create dirs

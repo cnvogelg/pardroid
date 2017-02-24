@@ -11,14 +11,20 @@ include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
 # sources
 BASE_SRCS = uart.c uartutil.c mach.c
-PARBOX_SRCS = proto_low.S proto.c
+PROTO_SRCS = proto_low.S proto.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
 VPATH=$(INCLUDES)
 
 # test-fw
-TEST_SRCS = $(BASE_SRCS) $(PARBOX_SRCS) test-main.c
-$(eval $(call make-firmware,test-fw,$(TEST_SRCS)))
+TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) test-main.c
+$(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
+
+ifdef CONFIG_BOOTLOADER
+# bootloader
+BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c
+$(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
+endif
 
 DEFAULT_FIRMWARE=test-fw
 

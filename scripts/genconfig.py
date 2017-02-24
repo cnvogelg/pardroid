@@ -113,7 +113,12 @@ def gen_make(cfg, output_file):
     for k in sorted(cfg.keys()):
       v = cfg[k]
       k = "CONFIG_" + k
-      print("{}={}".format(k, v), file=fh)
+      if v in ('y', 'Y'):
+        print("{}=1".format(k), file=fh)
+      elif v in ('n', 'N'):
+        pass
+      else:
+        print("{}={}".format(k, v), file=fh)
 
 
 def main():
