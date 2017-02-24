@@ -10,7 +10,7 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
 # sources
-BASE_SRCS = uart.c util.c uartutil.c mach.c
+BASE_SRCS = uart.c uartutil.c mach.c
 PARBOX_SRCS = proto_low.S proto.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox

@@ -30,13 +30,7 @@
 // init uart and rts/cts
 void uart_init(void);
 
-// is rx data available?
-u08 uart_read_data_available(void);
-
-// read a byte (from buffer) (with cts handshaking)
-u08 uart_read(void);
-
-// write a byte (with rts handshaking)
+// write a byte to serial
 void uart_send(u08 data);
 
 #endif

@@ -30,6 +30,9 @@
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#define BAUD CONFIG_BAUD_RATE
+#include <util/setbaud.h>
+
 #include "uart.h"
 
 #ifdef UBRR0H
@@ -68,90 +71,23 @@
 #endif
 #endif
 
-// calc ubbr from baud rate
-#define UART_UBRR   F_CPU/16/CONFIG_BAUD_RATE-1
-
-#define UART_RX_BUF_SIZE 16
-#define UART_RX_SET_CTS_POS  2
-#define UART_RX_CLR_CTS_POS  13
-static volatile u08 uart_rx_buf[UART_RX_BUF_SIZE];
-static volatile u08 uart_rx_start = 0;
-static volatile u08 uart_rx_end = 0;
-static volatile u08 uart_rx_size = 0;
-
 void uart_init(void)
 {
-  cli();
-
-  // disable first
-  UCSRB = 0;
-
-  // baud rate
-  UBRRH = (u08)((UART_UBRR)>>8);
-  UBRRL = (u08)((UART_UBRR)&0xff);
-
-  UCSRB = 0x98; // 0x18  enable tranceiver and transmitter, RX interrupt
-  UCSRC = 0x86; // 0x86 -> use UCSRC, 8 bit, 1 stop, no parity, asynch. mode
-
-  sei();
-
-  uart_rx_start = 0;
-  uart_rx_end = 0;
-  uart_rx_size = 0;
-}
-
-// receiver interrupt
-#ifdef USART1_RX_vect
-ISR(USART1_RX_vect)
+  UBRRH = UBRRH_VALUE;
+  UBRRL = UBRRL_VALUE;
+#ifdef U2X
+#if USE_2X
+  UCSRA |= (1 << U2X);
 #else
-#ifdef USART_RXC_vect
-ISR(USART_RXC_vect)
-#else
-ISR(USART_RX_vect)
+  UCSRA &= ~(1 << U2X);
 #endif
 #endif
-{
-  u08 data = UDR;
-  uart_rx_buf[uart_rx_end] = data;
-
-  uart_rx_end++;
-  if(uart_rx_end == UART_RX_BUF_SIZE)
-    uart_rx_end = 0;
-
-  uart_rx_size++;
-}
-
-u08 uart_read_data_available(void)
-{
-  return uart_rx_start != uart_rx_end;
-}
-
-u08 uart_read(void)
-{
-  // wait for buffe to be filled
-  while(uart_rx_start==uart_rx_end);
-
-  // read buffer
-  cli();
-
-  u08 data = uart_rx_buf[uart_rx_start];
-
-  uart_rx_start++;
-  if(uart_rx_start == UART_RX_BUF_SIZE)
-    uart_rx_start = 0;
-
-  uart_rx_size--;
-
-  sei();
-  return data;
 }
 
 void uart_send(u08 data)
 {
   // wait for transmitter to become ready
   while(!( UCSRA & (1<<UDRE)));
-
   // send byte
   UDR = data;
 }
-

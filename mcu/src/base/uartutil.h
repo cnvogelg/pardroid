@@ -39,24 +39,11 @@ void uart_send_data(u08 *data,u08 size);
 void uart_send_crlf(void);
 // send a Space
 void uart_send_spc(void);
-// send time stamp
-void uart_send_time_stamp_spc(u32 ts);
-// send rate in KB/s
-void uart_send_rate_kbs(u16 kbs);
-// send a delta in decimal
-void uart_send_delta(u32 delta);
 
 // send a hex byte
 void uart_send_hex_byte(u08 data);
 // send a hex word
 void uart_send_hex_word(u16 data);
-// send a hex dword
-void uart_send_hex_dword(u32 data);
-
-#ifdef DEBUG
-// send free stack
-void uart_send_free_stack(void);
-#endif
 
 #endif
 

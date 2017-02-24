@@ -29,7 +29,6 @@
 #include "arch.h"
 
 #include "uart.h"
-#include "util.h"
 #include "uartutil.h"
 
 void uart_send_pstring(rom_pchar data)
@@ -69,56 +68,22 @@ void uart_send_spc(void)
   uart_send((u08)' ');
 }
 
-static u08 buf[12];
-
-void uart_send_time_stamp_spc(u32 ts)
+static u08 nybble_to_hex(u08 in)
 {
-  dword_to_dec(ts, buf, 10, 4);
-  buf[11] = ' ';
-  uart_send_data(buf,12);
+  if(in<10)
+    return '0' + in;
+  else
+    return 'A' + in - 10;
 }
 
-void uart_send_rate_kbs(u16 kbs)
+void uart_send_hex_byte(u08 in)
 {
-  dword_to_dec(kbs, buf, 6, 2);
-  uart_send_data(buf,7);
-  uart_send_pstring(PSTR(" KB/s"));
+  uart_send(nybble_to_hex(in >> 4));
+  uart_send(nybble_to_hex(in & 0xf));
 }
 
-void uart_send_delta(u32 delta)
+void uart_send_hex_word(u16 in)
 {
-  // huge -> show upper hex
-  if(delta > 0xffff) {
-    buf[0] = '!';
-    word_to_hex((u16)(delta >> 16), buf+1);
-  }
-  // for too large numbers use hex
-  else if(delta > 9999) {
-    buf[0] = '>';
-    word_to_hex(delta, buf+1);
-  }
-  // for smaller numbers use decimal
-  else {
-    buf[0] = '+';
-    dword_to_dec(delta, buf+1, 4, 4);
-  }
-  uart_send_data(buf,5);
-}
-
-void uart_send_hex_byte(u08 data)
-{
-  byte_to_hex(data,buf);
-  uart_send_data(buf,2);
-}
-
-void uart_send_hex_word(u16 data)
-{
-  word_to_hex(data,buf);
-  uart_send_data(buf,4);
-}
-
-void uart_send_hex_dword(u32 data)
-{
-  dword_to_hex(data,buf);
-  uart_send_data(buf,8);
+  uart_send_hex_byte((u08)(in>>8));
+  uart_send_hex_byte((u08)(in&0xff));
 }

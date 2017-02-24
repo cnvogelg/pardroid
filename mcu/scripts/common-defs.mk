@@ -9,6 +9,7 @@ DEP_DIR=$(OBJ_DIR)
 # setup CFLAGS
 CFLAGS_COMMON = -std=c99 -fno-common -Wall -Werror -Wstrict-prototypes
 CFLAGS_COMMON += -Wall -Werror -Wstrict-prototypes
+CFLAGS_COMMON += -ffunction-sections -fdata-sections
 
 CFLAGS_LST = -Wa,-adhlns=$(OBJ_DIR)/$(notdir $(<:%.c=%.lst))
 CFLAGS_DEPS = -MMD
@@ -23,6 +24,7 @@ ASFLAGS = $(ASFLAGS_COMMON) $(CFLAGS_INCLUDES) $(ASFLAGS_ARCH) $(ASFLAGS_LST) $(
 
 LDFLAGS = -Wl,-Map=$$(@:%.elf=%.map),--cref
 LDFLAGS += -lm -lc
+LDFLAGS += -Wl,--gc-sections
 
 # ----- firmware -----
 # list of firmwares, created by make-firmware
