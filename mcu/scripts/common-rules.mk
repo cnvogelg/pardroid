@@ -3,6 +3,8 @@ all: $(FIRMWARES)
 
 sym: $(patsubst %,%-sym,$(FIRMWARES))
 
+code: $(patsubst %,%-code,$(FIRMWARES))
+
 check: $(patsubst %,%-check,$(FIRMWARES))
 
 prog: $(DEFAULT_FIRMWARE)-prog
@@ -35,6 +37,10 @@ clean:
 	@echo "  SYM  $(@F)"
 	$(H)$(NM) --size-sort --print-size $< | egrep ' [bBdD] ' > $@
 
+# code size
+%.code_size: %.elf
+	@echo "  CSI  $(@F)"
+	$(H)$(NM) --size-sort --print-size $< | egrep ' [tT] ' > $@
 
 # compile
 $(OBJ_DIR)/%.o : %.c

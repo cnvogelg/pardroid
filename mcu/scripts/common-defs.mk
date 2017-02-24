@@ -48,6 +48,9 @@ $1: $(call map-bin,$1.elf $1.hex $1.lss $1.sym)
 $1-sym: $(call map-bin,$1.sym_size)
 	$(H)cat $$<
 
+$1-code: $(call map-bin,$1.code_size)
+	$(H)cat $$<
+
 $1-check: $(call map-bin,$1.elf)
 	$(H)$(SIZE) -A $$< | scripts/checksize.py $(CONFIG_MAX_ROM) $(CONFIG_MAX_RAM)
 
