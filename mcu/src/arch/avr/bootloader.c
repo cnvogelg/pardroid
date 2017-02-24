@@ -28,7 +28,7 @@ static void run_app(u08 rstFlags)
 }
 
 // remove irq vector table
-int main(void) __attribute__ ((OS_main)) __attribute__ ((section (".init9")));
+int main(void) __attribute__ ((OS_main)) __attribute__ ((section (".vectors")));
 int main(void)
 {
   // raw init
