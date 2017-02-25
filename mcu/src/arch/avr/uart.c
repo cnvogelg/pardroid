@@ -51,6 +51,10 @@
 #define DOR    DOR0
 #define PE     UPE0
 
+#define U2X    U2X0
+#define RXEN   RXEN0
+#define TXEN   TXEN0
+
 #else
 #ifdef UBRR1H
 
@@ -68,20 +72,28 @@
 #define DOR    DOR1
 #define PE     UPE1
 
+#define U2X    U2X1
+#define RXEN   RXEN1
+#define TXEN   TXEN1
+
 #endif
 #endif
 
 void uart_init(void)
 {
+  // disable
+  UCSRB = 0;
+
   UBRRH = UBRRH_VALUE;
   UBRRL = UBRRL_VALUE;
-#ifdef U2X
 #if USE_2X
-  UCSRA |= (1 << U2X);
+  UCSRA = (1 << U2X);
 #else
-  UCSRA &= ~(1 << U2X);
+  UCSRA = 0;
 #endif
-#endif
+
+  UCSRB = (1 << TXEN);
+  UCSRC = 0x86;
 }
 
 void uart_send(u08 data)
