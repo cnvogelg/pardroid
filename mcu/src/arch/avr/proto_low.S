@@ -221,7 +221,12 @@ proto_low_msg_write:
 
     ; save result size
     movw    r24,r22
-    ; set end address: r23:r22
+
+    ; double size: convert to bytes
+    add     r22,r22
+    adc     r23,r23
+
+    ; add start address: end address: r23:r22
     add     r22,r30
     adc     r23,r31
 
@@ -271,6 +276,9 @@ proto_low_msg_read:
     ; Z is buffer pointer
     movw    r30,r22
 
+    ; confirm to master we are ready
+    rak_lo
+
     ; data: write
     wait_clk_hi
     ddr_out
@@ -288,6 +296,10 @@ proto_low_msg_read:
     wait_clk_hi
     data_out_set
     debug_hi
+
+    ; convert size to bytes
+    add     r24,r24
+    adc     r25,r25
 
     ; set end address: r24:r25
     add     r24,r30
