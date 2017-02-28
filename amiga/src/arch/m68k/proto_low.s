@@ -189,8 +189,8 @@ _proto_low_no_value:
         ; -- final sync
         ; now raise CLK again
         clk_hi
-        ; slave returns hi if command was ok otherwise
-        wait_rak_hi  plp_end
+        ; expect slave to raise rak, too
+        check_rak_hi    plp_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -232,14 +232,10 @@ _proto_low_write_word:
         set_data        (a2)+
         clk_lo
 
-        ; done, read slave state
-        ; if slave already pulled high then an error was found
-        check_rak_lo    plrw_abort
-
         ; final sync
         clk_hi
         ; wait for slave done
-        wait_rak_hi     plrw_end
+        check_rak_hi    plrw_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -287,12 +283,9 @@ _proto_low_read_word:
         clk_lo
         ddr_out
 
-        ; read status
-        check_rak_lo    plrr_abort
-
         ; final sync
         clk_hi
-        wait_rak_hi     plrr_end
+        check_rak_hi    plrr_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -344,9 +337,6 @@ _proto_low_write_block:
         ; get buffer
         move.l          (a2),a0
 
-        ; early abort by slave? (e.g. too large)
-        check_rak_lo    plmw_abort
-
         ; data block loop
 plmw_loop:
         ; odd byte
@@ -358,15 +348,10 @@ plmw_loop:
 
         dbra            d1,plmw_loop
 
-        ; done, read slave state
-        ; if slave already pulled high then an error was found
-        check_rak_lo    plmw_abort
-
 plmw_done:
         ; final sync
         clk_hi
-        ; wait for slave done
-        wait_rak_hi     plmw_end
+        check_rak_hi    plmw_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -456,12 +441,9 @@ plmr_done:
         clk_lo
         ddr_out
 
-        ; read final slave status
-        check_rak_lo    plmr_abort
-
         ; final sync
         clk_hi
-        wait_rak_hi     plmr_end
+        check_rak_hi    plmr_end
 plmr_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6
