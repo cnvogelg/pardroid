@@ -12,13 +12,14 @@
 #include "parbox.h"
 #include "proto.h"
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N,Size/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
   char *test;
   ULONG *delay;
   ULONG *bias;
+  ULONG *size;
 } params_t;
 static params_t params;
 
@@ -185,6 +186,87 @@ static int test_msg_tiny(parbox_handle_t *pb, test_t *t)
   return 0;
 }
 
+static int test_msg_size(parbox_handle_t *pb, test_t *t)
+{
+  /* get buffer size */
+  ULONG size = 256;
+  if(params.size != 0) {
+    size = *params.size;
+    if(size < 2) {
+      size = 2;
+    }
+    if(size & 1 == 1) {
+      size++;
+    }
+  }
+  UWORD words = size >> 1;
+
+  /* set start byte value */
+  UBYTE start = (UBYTE)t->iter;
+  if(params.bias != 0) {
+    start = (UBYTE)*params.bias;
+  }
+
+  /* get mem */
+  UBYTE *mem = AllocVec(size, MEMF_PUBLIC);
+  if(mem == 0) {
+    t->error = "out of mem";
+    t->section = "init";
+    return 1;
+  }
+
+  /* fill buffer */
+  UBYTE data = start;
+  for(ULONG i=0;i<size;i++) {
+    mem[i] = data++;
+  }
+
+  /* send buffer */
+  proto_msg_t msg = { mem, words, words };
+  int res = proto_msg_write(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "write";
+    return res;
+  }
+
+  /* clear mem */
+  for(ULONG i=0;i<size;i++) {
+    mem[i] = 0;
+  }
+
+  /* receive buffer */
+  res = proto_msg_read(pb->proto, 0, &msg);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "read";
+    return res;
+  }
+
+  /* check buf size */
+  if(msg.num_words != words) {
+    t->error = "size mismatch";
+    t->section = "compare";
+    sprintf(t->extra, "w=%04x r=%04x", words, msg.num_words);
+    return 1;
+  }
+
+  /* check buf */
+  data = start;
+  for(ULONG i=0;i<size;i++) {
+    if(mem[i] != data) {
+      t->error = "value mismatch";
+      t->section = "compare";
+      sprintf(t->extra, "@%08lx: w=%02x r=%02x", i, (UWORD)data, (UWORD)mem[i]);
+      return 1;
+    }
+    data++;
+  }
+
+  FreeVec(mem);
+  return 0;
+}
+
 /* define tests */
 static test_t all_tests[] = {
   { test_ping, "ping", "ping parbox device" },
@@ -194,6 +276,7 @@ static test_t all_tests[] = {
   { test_reg_write_read, "pwr", "write/read test register word" },
   { test_msg_empty, "me", "write/read empty message"},
   { test_msg_tiny, "mt", "write/read tiny 4 byte message"},
+  { test_msg_size, "ms", "write/read messages of given size"},
   { NULL, NULL, NULL }
 };
 
