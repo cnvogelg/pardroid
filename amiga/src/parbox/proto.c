@@ -62,7 +62,7 @@ int proto_ping(struct proto_handle *ph)
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_ping(port, timeout_flag, PROTO_CMD_PING);
+  int result = proto_low_no_value(port, timeout_flag, PROTO_CMD_PING);
   timer_stop(ph->timer);
 
   return result;
@@ -74,7 +74,7 @@ int proto_reset(struct proto_handle *ph)
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_ping(port, timeout_flag, PROTO_CMD_RESET);
+  int result = proto_low_no_value(port, timeout_flag, PROTO_CMD_RESET);
   timer_stop(ph->timer);
 
   return result;
@@ -90,7 +90,7 @@ int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_reg_read(port, timeout_flag, cmd, (UBYTE *)data);
+  int result = proto_low_read_word(port, timeout_flag, cmd, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
@@ -106,7 +106,7 @@ int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_reg_write(port, timeout_flag, cmd, (UBYTE *)data);
+  int result = proto_low_write_word(port, timeout_flag, cmd, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
@@ -122,7 +122,7 @@ int proto_msg_write(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_msg_write(port, timeout_flag, cmd, msg);
+  int result = proto_low_write_block(port, timeout_flag, cmd, msg);
   timer_stop(ph->timer);
 
   return result;
@@ -138,7 +138,7 @@ int proto_msg_read(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_msg_read(port, timeout_flag, cmd, msg);
+  int result = proto_low_read_block(port, timeout_flag, cmd, msg);
   timer_stop(ph->timer);
 
   return result;

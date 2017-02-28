@@ -13,7 +13,7 @@ static void reg_write(u08 reg)
 {
   // master wants to write a u16
   DS("rw:"); DB(reg); DC('=');
-  u16 val = proto_low_reg_write();
+  u16 val = proto_low_write_word();
   DW(val);
   proto_api_set_reg(reg, val);
   DC('.'); DNL;
@@ -25,7 +25,7 @@ static void reg_read(u08 reg)
   DS("rr:"); DB(reg); DC('=');
   u16 val = proto_api_get_reg(reg);
   DW(val);
-  proto_low_reg_read(val);
+  proto_low_read_word(val);
   DC('.'); DNL;
 }
 
@@ -35,7 +35,7 @@ static void const_read(u08 reg)
   DS("cr:"); DB(reg); DC('=');
   u16 val = proto_api_get_const(reg);
   DW(val);
-  proto_low_reg_read(val);
+  proto_low_read_word(val);
   DC('.'); DNL;
 }
 
@@ -45,7 +45,7 @@ static void msg_read(u08 chan)
   u16 size = 0;
   u08 *buf = proto_api_get_read_msg(&size);
   DW(size);
-  proto_low_msg_read(size, buf);
+  proto_low_read_block(size, buf);
   DC('.'); DNL;
 }
 
@@ -55,7 +55,7 @@ static void msg_write(u08 chan)
   u16 max_size = 0;
   u08 *buf = proto_api_get_write_msg(&max_size);
   DW(max_size); DC(':');
-  u16 size = proto_low_msg_write(max_size, buf);
+  u16 size = proto_low_write_block(max_size, buf);
   DW(size);
   proto_api_set_write_msg_size(size);
   DC('.'); DNL;
@@ -75,7 +75,7 @@ void proto_handle(void)
     case CMD_PING:
       // alive ping from master
       DS("ping"); DNL;
-      proto_low_ping();
+      proto_low_no_value();
       break;
 
     case CMD_BOOTLOADER:
@@ -87,7 +87,7 @@ void proto_handle(void)
 
     case CMD_RESET:
       DS("reset"); DNL;
-      proto_low_ping();
+      proto_low_no_value();
       DS("restart"); DNL;
       mach_sys_reset();
       break;

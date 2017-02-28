@@ -99,28 +99,29 @@ proto_low_get_cmd:
     ret
 
 
-    ; void pario_cmd_ping(void)
-    ; confirm ping command
+    ; ----- proto_low_no_value -----
+    ; void proto_low_no_value(void)
+    ; confirm command with no value
     ; CL | WL | CH
-    .global  proto_low_ping
-proto_low_ping:
+    .global  proto_low_no_value
+proto_low_no_value:
     ; when we enter here the clk from master is already low
     ; now signal rak lo to the master. we are now in sync
     rak_lo
 
-    ; ping only finishes with a last clk hi transition
+    ; command finishes with a last clk hi transition
     wait_clk_hi
     ; confirm it
     rak_hi
     ret
 
 
-    ; ----- proto_low_reg_write -----
+    ; ----- proto_low_write_word -----
     ; master wants to write a u16 register value
-    ; u16 proto_low_reg_write(void)
+    ; u16 proto_low_write_word(void)
     ; r24,r25 = wrote val
-    .global  proto_low_reg_write
-proto_low_reg_write:
+    .global  proto_low_write_word
+proto_low_write_word:
     ; confirm to master we are ready
     rak_lo
 
@@ -146,12 +147,12 @@ proto_low_reg_write:
     ret
 
 
-    ; ----- proto_low_reg_read
+    ; ----- proto_low_read_word -----
     ; master wants to read a u16 register value
-    ; void proto_low_reg_read(u16 v)
+    ; void proto_low_read_word(u16 v)
     ; r24,r25 = read val
-    .global  proto_low_reg_read
-proto_low_reg_read:
+    .global  proto_low_read_word
+proto_low_read_word:
     rak_lo
 
     ; data: write
@@ -184,14 +185,14 @@ proto_low_reg_read:
     ret
 
 
-    ; ----- proto_low_msg_write -----
+    ; ----- proto_low_write_block -----
     ; master wants to write a message
-    ; u16 proto_low_msg_write(u16 max_words, u08 *buffer)
+    ; u16 proto_low_write_block(u16 max_words, u08 *buffer)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
     ; out: r25,r24 = num_words received
-    .global  proto_low_msg_write
-proto_low_msg_write:
+    .global  proto_low_write_block
+proto_low_write_block:
     ; Z is buffer pointer
     movw    r30,r22
 
@@ -265,14 +266,14 @@ proto_low_msg_write:
     ret
 
 
-    ; ----- proto_low_msg_read -----
+    ; ----- proto_low_read_block -----
     ; master wants to read a message
-    ; void proto_low_msg_read(u16 num_words, const u08 *buffer)
+    ; void proto_low_read_block(u16 num_words, const u08 *buffer)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
     ; out: -
-    .global  proto_low_msg_read
-proto_low_msg_read:
+    .global  proto_low_read_block
+proto_low_read_block:
     ; Z is buffer pointer
     movw    r30,r22
 

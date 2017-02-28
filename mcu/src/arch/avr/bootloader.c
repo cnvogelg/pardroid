@@ -68,7 +68,7 @@ int main(void)
   }
 
   // reply to bootloader command
-  proto_low_ping();
+  proto_low_no_value();
   uart_send('B');
 
   // enter main loop

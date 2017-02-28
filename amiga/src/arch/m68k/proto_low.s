@@ -6,11 +6,11 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_ping
-        xdef            _proto_low_reg_write
-        xdef            _proto_low_reg_read
-        xdef            _proto_low_msg_write
-        xdef            _proto_low_msg_read
+        xdef            _proto_low_no_value
+        xdef            _proto_low_write_word
+        xdef            _proto_low_read_word
+        xdef            _proto_low_write_block
+        xdef            _proto_low_read_block
 
 ; ----- macros --------------------------------------------------------------
 
@@ -156,8 +156,8 @@ get_data MACRO
 
 ; ----- functions -----------------------------------------------------------
 
-; --- proto_low_ping ---
-; handle ping command
+; --- proto_low_no_value ---
+; a simple command that does not transfer any value
 ;
 ;   in:
 ;       a0      struct pario_port *port
@@ -165,7 +165,7 @@ get_data MACRO
 ;       d0      CMD_PING constant
 ;   out:
 ;       d0      return code
-_proto_low_ping:
+_proto_low_no_value:
         movem.l d2-d7/a2-a6,-(sp)
 
         ; setup regs with port values and read old ctrl value
@@ -206,13 +206,13 @@ plp_abort:
         bra.s   plp_end
 
 
-; --- proto_low_reg_write ---
+; --- proto_low_write_word ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to byte
 ;      d0 = cmd byte
 ; out: d0 = result
-_proto_low_reg_write:
+_proto_low_write_word:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
@@ -253,13 +253,13 @@ plrw_abort:
         bra.s    plrw_end
 
 
-; --- proto_low_reg_read ---
+; --- proto_low_read_word ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to test byte
 ;      d0 = cmd byte
 ; out: d0 = result
-_proto_low_reg_read:
+_proto_low_read_word:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
@@ -306,13 +306,13 @@ plrr_abort:
         bra.s    plrr_end
 
 
-; --- proto_low_msg_write ---
+; --- proto_low_write_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to ptroto_msg
 ;      d0 = cmd
 ; out: d0 = result
-_proto_low_msg_write:
+_proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
@@ -380,13 +380,13 @@ plmw_abort:
         bra.s    plmw_end
 
 
-; --- proto_low_msg_read ---
+; --- proto_low_read_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to proto_msg
 ;      d0 = cmd byte
 ; out: d0 = result
-_proto_low_msg_read:
+_proto_low_read_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
