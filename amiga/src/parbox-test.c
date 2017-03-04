@@ -12,7 +12,7 @@
 #include "parbox.h"
 #include "proto.h"
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N,Size/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N,Size/K/N,ExtraSize/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
@@ -20,6 +20,7 @@ typedef struct {
   ULONG *delay;
   ULONG *bias;
   ULONG *size;
+  ULONG *extra_size;
 } params_t;
 static params_t params;
 
@@ -126,25 +127,25 @@ static int test_reg_write_read(parbox_handle_t *pb, test_t *t)
 
 static int test_msg_empty(parbox_handle_t *pb, test_t *t)
 {
-  proto_msg_t msg = { NULL, 0, 0 };
-  int res = proto_msg_write(pb->proto, 0, &msg);
+  int res = proto_msg_write_single(pb->proto, 0, 0, 0);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
     return res;
   }
 
-  res = proto_msg_read(pb->proto, 0, &msg);
+  ULONG size = 0;
+  res = proto_msg_read_single(pb->proto, 0, 0, &size);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
     return res;
   }
 
-  if(msg.num_words != 0) {
+  if(size != 0) {
     t->error = "not empty";
     t->section = "compare";
-    sprintf(t->extra, "%04x", msg.num_words);
+    sprintf(t->extra, "%04lx", size);
     return 1;
   }
 
@@ -154,25 +155,25 @@ static int test_msg_empty(parbox_handle_t *pb, test_t *t)
 static int test_msg_tiny(parbox_handle_t *pb, test_t *t)
 {
   ULONG data = 0xdeadbeef;
-  proto_msg_t msg = { (UBYTE *)&data, 2, 2 };
-  int res = proto_msg_write(pb->proto, 0, &msg);
+  int res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
     return res;
   }
 
-  res = proto_msg_read(pb->proto, 0, &msg);
+  ULONG size = 2;
+  res = proto_msg_read_single(pb->proto, 0, (UBYTE *)&data, &size);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
     return res;
   }
 
-  if(msg.num_words != 2) {
+  if(size != 2) {
     t->error = "not two words";
     t->section = "compare";
-    sprintf(t->extra, "%04x", msg.num_words);
+    sprintf(t->extra, "%04lx", size);
     return 1;
   }
 
@@ -186,7 +187,7 @@ static int test_msg_tiny(parbox_handle_t *pb, test_t *t)
   return 0;
 }
 
-static int test_msg_size(parbox_handle_t *pb, test_t *t)
+static ULONG get_default_size(void)
 {
   /* get buffer size */
   ULONG size = 256;
@@ -199,44 +200,85 @@ static int test_msg_size(parbox_handle_t *pb, test_t *t)
       size++;
     }
   }
-  UWORD words = size >> 1;
+  return size;
+}
 
+static UBYTE get_start_byte(void)
+{
   /* set start byte value */
-  UBYTE start = (UBYTE)t->iter;
+  UBYTE start = 0;
   if(params.bias != 0) {
     start = (UBYTE)*params.bias;
   }
+  return start;
+}
 
-  /* get mem */
-  UBYTE *mem = AllocVec(size, MEMF_PUBLIC);
-  if(mem == 0) {
+static ULONG get_extra_size(void)
+{
+  ULONG size = 0;
+  if(params.extra_size != 0) {
+    size = *params.extra_size;
+  }
+  return size;
+}
+
+static void fill_buffer(ULONG size, UBYTE *mem)
+{
+  /* fill buffer */
+  UBYTE data = get_start_byte();
+  for(ULONG i=0;i<size;i++) {
+    mem[i] = data++;
+  }
+}
+
+static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
+{
+  /* check buf */
+  ULONG result = size;
+  for(ULONG i=0;i<size;i++) {
+    if(mem1[i] != mem2[i]) {
+      result = i;
+      break;
+    }
+  }
+  return result;
+}
+
+static int test_msg_size(parbox_handle_t *pb, test_t *t)
+{
+  ULONG size = get_default_size();
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
     t->error = "out of mem";
     t->section = "init";
     return 1;
   }
 
-  /* fill buffer */
-  UBYTE data = start;
-  for(ULONG i=0;i<size;i++) {
-    mem[i] = data++;
+  ULONG size_r = size + get_extra_size();
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if(mem_r == 0) {
+    FreeVec(mem_w);
+    t->error = "out of mem";
+    t->section = "init";
+    return 1;
   }
 
+  fill_buffer(size, mem_w);
+
+  ULONG words = size>>1;
+
   /* send buffer */
-  proto_msg_t msg = { mem, words, words };
-  int res = proto_msg_write(pb->proto, 0, &msg);
+  int res = proto_msg_write_single(pb->proto, 0, mem_w, words);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
     return res;
   }
 
-  /* clear mem */
-  for(ULONG i=0;i<size;i++) {
-    mem[i] = 0;
-  }
-
   /* receive buffer */
-  res = proto_msg_read(pb->proto, 0, &msg);
+  ULONG got_words = size_r>>1;
+  res = proto_msg_read_single(pb->proto, 0, mem_r, &got_words);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
@@ -244,26 +286,114 @@ static int test_msg_size(parbox_handle_t *pb, test_t *t)
   }
 
   /* check buf size */
-  if(msg.num_words != words) {
+  if(got_words != words) {
     t->error = "size mismatch";
     t->section = "compare";
-    sprintf(t->extra, "w=%04x r=%04x", words, msg.num_words);
+    sprintf(t->extra, "w=%04lx r=%04lx", words, got_words);
     return 1;
   }
 
   /* check buf */
-  data = start;
-  for(ULONG i=0;i<size;i++) {
-    if(mem[i] != data) {
-      t->error = "value mismatch";
-      t->section = "compare";
-      sprintf(t->extra, "@%08lx: w=%02x r=%02x", i, (UWORD)data, (UWORD)mem[i]);
-      return 1;
-    }
-    data++;
+  ULONG pos = check_buffer(size, mem_w, mem_r);
+  if(pos < size) {
+    t->error = "value mismatch";
+    t->section = "compare";
+    sprintf(t->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
+    return 1;
   }
 
-  FreeVec(mem);
+  FreeVec(mem_w);
+  FreeVec(mem_r);
+  return 0;
+}
+
+static int test_msg_size_chunks(parbox_handle_t *pb, test_t *t)
+{
+  ULONG size = get_default_size();
+  if(size < 4) {
+    size = 4;
+  }
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
+    t->error = "out of mem";
+    t->section = "init";
+    return 1;
+  }
+
+  ULONG size_r = size + get_extra_size();
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if(mem_r == 0) {
+    FreeVec(mem_w);
+    t->error = "out of mem";
+    t->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w);
+
+  ULONG words = size>>1;
+  ULONG c1_words = words>>1;
+  ULONG c2_words = words - c1_words;
+  UBYTE *c1_buf = mem_w;
+  UBYTE *c2_buf = mem_w + (c1_words << 1);
+
+  /* send buffer */
+  ULONG msgiov_w[] = {
+    words,
+    c1_words,
+    (ULONG)c1_buf,
+    c2_words,
+    (ULONG)c2_buf,
+    0
+  };
+  int res = proto_msg_write(pb->proto, 0, msgiov_w);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "write";
+    return res;
+  }
+
+  ULONG words_r = size_r>>1;
+  c1_buf = mem_r;
+  c2_buf = mem_r + (c1_words << 1);
+  c2_words = words_r - c1_words;
+
+  /* receive buffer */
+  ULONG msgiov_r[] = {
+    words_r,
+    c1_words,
+    (ULONG)c1_buf,
+    c2_words,
+    (ULONG)c2_buf,
+    0
+  };
+  res = proto_msg_read(pb->proto, 0, msgiov_r);
+  if(res != 0) {
+    t->error = proto_perror(res);
+    t->section = "read";
+    return res;
+  }
+
+  /* check buf size */
+  if(msgiov_r[0] != words) {
+    t->error = "size mismatch";
+    t->section = "compare";
+    sprintf(t->extra, "w=%04lx r=%04lx", words, msgiov_r[0]);
+    return 1;
+  }
+
+  /* check buf */
+  ULONG pos = check_buffer(size, mem_w, mem_r);
+  if(pos < size) {
+    t->error = "value mismatch";
+    t->section = "compare";
+    sprintf(t->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
+    return 1;
+  }
+
+  FreeVec(mem_w);
+  FreeVec(mem_r);
   return 0;
 }
 
@@ -277,6 +407,7 @@ static test_t all_tests[] = {
   { test_msg_empty, "me", "write/read empty message"},
   { test_msg_tiny, "mt", "write/read tiny 4 byte message"},
   { test_msg_size, "ms", "write/read messages of given size"},
+  { test_msg_size_chunks, "msc", "write/read messages of given size in two chunks"},
   { NULL, NULL, NULL }
 };
 

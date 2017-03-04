@@ -3,7 +3,6 @@
 
 #include "pario.h"
 #include "timer.h"
-#include "proto_low.h"
 
 struct proto_handle;
 
@@ -37,8 +36,11 @@ extern int proto_reset(struct proto_handle *ph);
 extern int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data);
 extern int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data);
 
-extern int proto_msg_write(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg);
-extern int proto_msg_read(struct proto_handle *ph, UBYTE chn, struct proto_msg *msg);
+extern int proto_msg_write(struct proto_handle *ph, UBYTE chn, ULONG *msgiov);
+extern int proto_msg_read(struct proto_handle *ph, UBYTE chn, ULONG *msgiov);
+
+extern int proto_msg_write_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG num_words);
+extern int proto_msg_read_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG *max_words);
 
 extern const char *proto_perror(int res);
 
