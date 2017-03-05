@@ -10,11 +10,20 @@
 
 #include <util/delay.h>
 
-#define MAX_TEST_MSG_SIZE 128
+#define MAX_TEST_MSG_SIZE 1024
 
 static u16 test_reg;
 static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
+
+u16 bla(u16 a, u16 b)
+{
+  if(a > b) {
+    return a+b;
+  } else {
+    return a+1;
+  }
+}
 
 void proto_api_set_reg(u08 reg,u16 val)
 {
@@ -47,7 +56,7 @@ u08 *proto_api_get_read_msg(u16 *size)
 
 u08 *proto_api_get_write_msg(u16 *max_size)
 {
-  *max_size = MAX_TEST_MSG_SIZE;
+  *max_size = MAX_TEST_MSG_SIZE >> 1;
   return test_msg;
 }
 

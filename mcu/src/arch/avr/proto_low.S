@@ -213,13 +213,18 @@ proto_low_write_block:
 
     ; empty size?
     or      r18,r23
-    breq    1f
+    breq    .wb_empty
 
-    ; check size
-    cp      r22,r24
-    cpc     r23,r25
-    brsh    0f ; bail out: too large
+    ; check size: too large?
+    clt
+    cp      r24,r22
+    cpc     r25,r23
+    brsh    .wb_size_ok
 
+    ; size invalid - set T flag
+    set
+
+.wb_size_ok:
     ; save result size
     movw    r24,r22
 
@@ -231,12 +236,15 @@ proto_low_write_block:
     add     r22,r30
     adc     r23,r31
 
+    ; if size is invalid use a fake loop
+    brts    .wb_fake_loop
+
     ; copy loop
-2:
+.wb_loop:
     ; check end
     cp      r30,r22
     cpc     r31,r23
-    breq    3f
+    breq    .wb_end
 
     ; odd byte
     wait_clk_hi
@@ -249,18 +257,35 @@ proto_low_write_block:
     st      Z+,r18
     debug_lo
 
-    rjmp    2b
+    rjmp    .wb_loop
 
-1:
+    ; non copy fake loop
+.wb_fake_loop:
+    ; check end
+    cp      r30,r22
+    cpc     r31,r23
+    breq    .wb_end
+
+    ; odd byte
+    wait_clk_hi
+    adiw    r30,1
+    debug_hi
+    ; even byte
+    wait_clk_lo
+    adiw    r30,1
+    debug_lo
+
+    rjmp    .wb_fake_loop
+
+.wb_empty:
     ; empty message
     clr     r25
     clr     r24
-3:
+.wb_end:
     ; done sending
     debug_hi
     ; end sync
     wait_clk_hi
-0:
     rak_hi
     debug_lo
     ret
@@ -307,11 +332,11 @@ proto_low_read_block:
     adc     r25,r31
 
     ; copy loop
-0:
+.rb_loop:
     ; check end
     cp      r30,r24
     cpc     r31,r25
-    breq    1f
+    breq    .rb_end
 
     ; odd byte
     ld      r18,Z+
@@ -327,8 +352,8 @@ proto_low_read_block:
     data_out_set
     debug_hi
 
-    rjmp    0b
-1:
+    rjmp    .rb_loop
+.rb_end:
     ; data: read
     wait_clk_lo
     ddr_in
