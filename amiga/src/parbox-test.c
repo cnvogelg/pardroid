@@ -12,7 +12,9 @@
 #include "parbox.h"
 #include "proto.h"
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Bias/K/N,Size/K/N,ExtraSize/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
+   "Bias/K/N,Size/K/N,"
+   "AddSize/K/N,SubSize/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
@@ -20,7 +22,8 @@ typedef struct {
   ULONG *delay;
   ULONG *bias;
   ULONG *size;
-  ULONG *extra_size;
+  ULONG *add_size;
+  ULONG *sub_size;
 } params_t;
 static params_t params;
 
@@ -213,11 +216,13 @@ static UBYTE get_start_byte(void)
   return start;
 }
 
-static ULONG get_extra_size(void)
+static ULONG get_size(ULONG size)
 {
-  ULONG size = 0;
-  if(params.extra_size != 0) {
-    size = *params.extra_size;
+  if(params.add_size != 0) {
+    size += *params.add_size;
+  }
+  if(params.sub_size != 0) {
+    size -= *params.sub_size;
   }
   return size;
 }
@@ -255,7 +260,7 @@ static int test_msg_size(parbox_handle_t *pb, test_t *t)
     return 1;
   }
 
-  ULONG size_r = size + get_extra_size();
+  ULONG size_r = get_size(size);
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
   if(mem_r == 0) {
     FreeVec(mem_w);
@@ -321,7 +326,7 @@ static int test_msg_size_chunks(parbox_handle_t *pb, test_t *t)
     return 1;
   }
 
-  ULONG size_r = size + get_extra_size();
+  ULONG size_r = get_size(size);
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
   if(mem_r == 0) {
     FreeVec(mem_w);

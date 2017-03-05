@@ -121,6 +121,10 @@ int proto_msg_write(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
     return PROTO_RET_INVALID_CHANNEL;
   }
 
+  if(msgiov[0] > 0xffff) {
+    return PROTO_RET_MSG_TOO_LARGE;
+  }
+
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_write_block(port, timeout_flag, cmd, msgiov);
   timer_stop(ph->timer);
@@ -135,6 +139,10 @@ int proto_msg_read(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
   UBYTE cmd = chn + PROTO_CMD_MSG_READ;
   if(chn >= NUM_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
+  }
+
+  if(msgiov[0] > 0xffff) {
+    return PROTO_RET_MSG_TOO_LARGE;
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
