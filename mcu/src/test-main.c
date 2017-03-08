@@ -25,7 +25,20 @@ u16 bla(u16 a, u16 b)
   }
 }
 
-void proto_api_set_reg(u08 reg,u16 val)
+// ro registers
+const u16 reg_ro_table[] ROM_ATTR = {
+  1,
+  2
+};
+
+u08 reg_ro_size(void)
+{
+  return sizeof(reg_ro_table)/2;
+}
+
+// register ops
+
+void proto_api_set_rw_reg(u08 reg,u16 val)
 {
   if(reg == 0) {
     test_size = val;
@@ -34,7 +47,7 @@ void proto_api_set_reg(u08 reg,u16 val)
   }
 }
 
-u16  proto_api_get_reg(u08 reg)
+u16  proto_api_get_rw_reg(u08 reg)
 {
   if(reg == 0) {
     return test_size;
@@ -43,24 +56,25 @@ u16  proto_api_get_reg(u08 reg)
   }
 }
 
-u16  proto_api_get_const(u08 num)
-{
-  return 0x4711;
-}
+// msg ops
 
-u08 *proto_api_get_read_msg(u16 *size)
+u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
 {
   *size = test_size;
   return test_msg;
 }
 
-u08 *proto_api_get_write_msg(u16 *max_size)
+void proto_api_done_read_msg(u08 chan)
+{
+}
+
+u08 *proto_api_prepare_write_msg(u08 chan, u16 *max_size)
 {
   *max_size = MAX_TEST_MSG_SIZE >> 1;
   return test_msg;
 }
 
-void proto_api_set_write_msg_size(u16 size)
+void proto_api_done_write_msg(u08 chan, u16 size)
 {
   test_size = size;
 }

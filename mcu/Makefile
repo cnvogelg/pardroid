@@ -2,6 +2,8 @@ BASE_DIR=..
 # config
 CONFIG?=configs/ardunano.config
 include $(BASE_DIR)/scripts/gencfg.mk
+# version
+include ../version.mk
 # common defs
 include scripts/common-defs.mk
 # toolchain
@@ -11,7 +13,7 @@ include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
 # sources
 BASE_SRCS = uart.c uartutil.c mach.c
-PROTO_SRCS = proto_low.S proto.c
+PROTO_SRCS = proto_low.S proto.c reg_ro.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
 VPATH=$(INCLUDES)
@@ -22,7 +24,7 @@ $(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
 
 ifdef CONFIG_BOOTLOADER
 # bootloader
-BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c
+BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c flash.c
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
 endif
 

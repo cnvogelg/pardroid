@@ -1,12 +1,31 @@
 #include <avr/wdt.h>
+#include <avr/boot.h>
 
 #include "autoconf.h"
 #include "types.h"
 #include "arch.h"
 
+#include "bootloader.h"
 #include "uart.h"
 #include "proto.h"
 #include "proto_low.h"
+#include "flash.h"
+
+static u08 status;
+static u16 page_addr;
+static u08 page_buf[SPM_PAGESIZE];
+
+// ro registers
+const u16 reg_ro_table[] ROM_ATTR = {
+  0x8000 | (VERSION_MAJOR << 8) | VERSION_MINOR,  /* 0: bootloader version */
+  CONFIG_ARCH_ID << 12 | CONFIG_MCU_ID << 8 | CONFIG_MACH_ID, /* 1: arch + mcu + mach */
+  SPM_PAGESIZE                                    /* 2: page size */
+};
+
+u08 reg_ro_size(void)
+{
+  return sizeof(reg_ro_table)/2;
+}
 
 // from optiboot
 static void run_app(u08 rstFlags) __attribute__ ((naked));
@@ -78,32 +97,48 @@ int main(void)
   }
 }
 
-void proto_api_set_reg(u08 reg,u16 val)
+// registers
+
+void proto_api_set_rw_reg(u08 reg, u16 val)
 {
 }
 
-u16  proto_api_get_reg(u08 reg)
+u16  proto_api_get_rw_reg(u08 reg)
 {
   return 0;
 }
 
-u16  proto_api_get_const(u08 num)
+// msg i/o is used to transfer page data - channel is ignored in bootloader
+
+u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
 {
-  return 0x4711;
+  *size = SPM_PAGESIZE;
+  uart_send('r');
+  flash_read_page(page_addr, page_buf);
+  return page_buf;
 }
 
-u08 *proto_api_get_read_msg(u16 *size)
+void proto_api_done_read_msg(u08 chan)
 {
-  *size = 0;
-  return 0;
+  uart_send('.');
 }
 
-u08 *proto_api_get_write_msg(u16 *max_size)
+u08 *proto_api_prepare_write_msg(u08 chan, u16 *max_size)
 {
-  *max_size = 0;
-  return 0;
+  *max_size = SPM_PAGESIZE;
+  uart_send('w');
+  return page_buf;
 }
 
-void proto_api_set_write_msg_size(u16 size)
+void proto_api_done_write_msg(u08 chan, u16 size)
 {
+  if(size == SPM_PAGESIZE) {
+    uart_send('(');
+    flash_program_page(page_addr, page_buf);
+    uart_send(')');
+    status = BOOT_STATUS_OK;
+  } else {
+    uart_send('?');
+    status = BOOT_STATUS_INVALID_PAGE_SIZE;
+  }
 }

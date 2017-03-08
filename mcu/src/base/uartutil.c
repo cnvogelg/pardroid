@@ -34,7 +34,7 @@
 void uart_send_pstring(rom_pchar data)
 {
   while(1) {
-    u08 c = read_rom_pchar(data);
+    u08 c = read_rom_char(data);
     if(c == 0) {
       break;
     }

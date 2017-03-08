@@ -9,31 +9,31 @@ void proto_init(void)
   proto_low_init();
 }
 
-static void reg_write(u08 reg)
+static void rw_reg_write(u08 reg)
 {
   // master wants to write a u16
   DS("rw:"); DB(reg); DC('=');
   u16 val = proto_low_write_word();
   DW(val);
-  proto_api_set_reg(reg, val);
+  proto_api_set_rw_reg(reg, val);
   DC('.'); DNL;
 }
 
-static void reg_read(u08 reg)
+static void rw_reg_read(u08 reg)
 {
   // master wants to reead a u16
   DS("rr:"); DB(reg); DC('=');
-  u16 val = proto_api_get_reg(reg);
+  u16 val = proto_api_get_rw_reg(reg);
   DW(val);
   proto_low_read_word(val);
   DC('.'); DNL;
 }
 
-static void const_read(u08 reg)
+static void ro_reg_read(u08 reg)
 {
   // master wants to reead a u16
-  DS("cr:"); DB(reg); DC('=');
-  u16 val = proto_api_get_const(reg);
+  DS("or:"); DB(reg); DC('=');
+  u16 val = proto_api_get_ro_reg(reg);
   DW(val);
   proto_low_read_word(val);
   DC('.'); DNL;
@@ -43,9 +43,10 @@ static void msg_read(u08 chan)
 {
   DS("mr:"); DB(chan); DC('=');
   u16 size = 0;
-  u08 *buf = proto_api_get_read_msg(&size);
+  u08 *buf = proto_api_prepare_read_msg(chan, &size);
   DW(size);
   proto_low_read_block(size, buf);
+  proto_api_done_read_msg(chan);
   DC('.'); DNL;
 }
 
@@ -53,11 +54,11 @@ static void msg_write(u08 chan)
 {
   DS("mw:"); DB(chan); DC('=');
   u16 max_size = 0;
-  u08 *buf = proto_api_get_write_msg(&max_size);
+  u08 *buf = proto_api_prepare_write_msg(chan, &max_size);
   DW(max_size); DC(':');
   u16 size = proto_low_write_block(max_size, buf);
   DW(size);
-  proto_api_set_write_msg_size(size);
+  proto_api_done_write_msg(chan, size);
   DC('.'); DNL;
 }
 
@@ -95,21 +96,22 @@ void proto_handle(void)
     default:
       {
         u08 cmd_base = cmd & CMD_MASK;
+        u08 num = cmd - cmd_base;
         switch(cmd_base) {
-          case CMD_REG_WRITE:
-            reg_write(cmd - cmd_base);
+          case CMD_RW_REG_WRITE:
+            rw_reg_write(num);
             break;
-          case CMD_REG_READ:
-            reg_read(cmd - cmd_base);
+          case CMD_RW_REG_READ:
+            rw_reg_read(num);
             break;
           case CMD_MSG_WRITE:
-            msg_write(cmd - cmd_base);
+            msg_write(num);
             break;
           case CMD_MSG_READ:
-            msg_read(cmd - cmd_base);
+            msg_read(num);
             break;
-          case CMD_CONST_READ:
-            const_read(cmd - cmd_base);
+          case CMD_RO_REG_READ:
+            ro_reg_read(num);
             break;
           default:
             DS("?:"); DB(cmd); DNL;
