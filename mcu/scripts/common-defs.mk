@@ -68,6 +68,14 @@ $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)
 	$(H)$(CC) $(CFLAGS) $$^ -o $$@ $(LDFLAGS) $4
 endef
 
+# make-pablo
+# $1 = program name
+define make-pablo
+.PHONY: $1-pablo
+
+$1-pablo: $(call map-bin,$1.pbl)
+endef
+
 # create dirs
 ifneq "$(MAKECMDGOALS)" "clean"
 create_dir = $(shell test -d $1 || mkdir -p $1)

@@ -9,6 +9,8 @@ check: $(patsubst %,%-check,$(FIRMWARES))
 
 prog: $(DEFAULT_FIRMWARE)-prog
 
+pablo: $(DEFAULT_FIRMWARE)-pablo
+
 clean:
 	$(H)rm -rf $(BUILD_DIR)
 
@@ -16,6 +18,16 @@ clean:
 %.hex: %.elf
 	@echo "  HEX  $(@F)"
 	$(H)$(OBJCOPY) -O $(CONFIG_FLASH_FORMAT) -j .data -j .text $< $@
+
+# final hex (flash) file from elf
+%.bin: %.elf
+	@echo "  BIN  $(@F)"
+	$(H)$(OBJCOPY) -O binary -j .data -j .text $< $@
+
+# generate pablo flash image
+%.pbl: %.bin
+	@echo "  PBL  $(@F)"
+	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $@
 
 # finale eeprom file from elf
 %.eep: %.elf
