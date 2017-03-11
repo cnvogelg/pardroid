@@ -82,15 +82,23 @@ int main(void)
   // check if bootloader command is set - if not enter app
   u08 cmd = proto_low_get_cmd();
   if(cmd != CMD_BOOTLOADER) {
-    uart_send('!');
-    run_app(rst_flag);
+    // check crc
+    uart_send('B');
+    u16 crc = flash_check_crc();
+    if(crc == 0) {
+      // try to run app if valid
+      uart_send('L');
+      run_app(rst_flag);
+    }
+  }
+  else {
+    // reply to bootloader command
+    uart_send('-');
+    proto_low_no_value();
   }
 
-  // reply to bootloader command
-  proto_low_no_value();
-  uart_send('B');
-
   // enter main loop
+  uart_send(':');
   while(1) {
     wdt_reset();
     proto_handle();
@@ -101,11 +109,18 @@ int main(void)
 
 void proto_api_set_rw_reg(u08 reg, u16 val)
 {
+  if(reg == 0) {
+    page_addr = val;
+  }
 }
 
 u16  proto_api_get_rw_reg(u08 reg)
 {
-  return 0;
+  if(reg == 0) {
+    return page_addr;
+  } else {
+    return 0;
+  }
 }
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader

@@ -1,5 +1,8 @@
 #include <avr/boot.h>
 #include <avr/pgmspace.h>
+#include <util/crc16.h>
+
+#include "autoconf.h"
 
 #if (SPM_PAGESIZE <= 255)
 typedef uint16_t pagesize_t;
@@ -28,4 +31,14 @@ void flash_read_page(uint16_t address, uint8_t *data)
   for (pagesize_t i=0; i<SPM_PAGESIZE; i++) {
     *data++ = pgm_read_byte(address++);
   }
+}
+
+uint16_t flash_check_crc(void)
+{
+  uint16_t crc = 0xffff;
+  uint16_t addr = 0;
+  while(addr < CONFIG_MAX_ROM) {
+    crc = _crc_ccitt_update(crc, pgm_read_byte(addr++));
+  }
+  return crc;
 }

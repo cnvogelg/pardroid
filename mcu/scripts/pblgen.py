@@ -8,7 +8,7 @@ import struct
 
 # crc16_ccitt as implemented in libavrc
 def crc16_ccitt(buf):
-  crc = 0
+  crc = 0xffff
   for d in buf:
     lo8 = crc & 0xff
     hi8 = (crc >> 8) & 0xff
@@ -53,6 +53,12 @@ footer_data = struct.pack("<H", check_sum)
 # rom data
 rom_data = in_data + footer_data
 
+# re-check crcr
+new_crc = crc16_ccitt(rom_data)
+if new_crc != 0:
+  print("INVALID CRC!")
+  sys.exit(1)
+
 # pablo header
 pbl_hdr = b'PBL1' + struct.pack(">I", max_size)
 
@@ -61,6 +67,9 @@ with open(out_pbl, "wb") as fh:
   fh.write(pbl_hdr)
   fh.write(rom_data)
 
+# write message
 out_file = os.path.basename(out_pbl)
 print("%-16s  CRC16=%04x" % (out_file, check_sum))
+
+# done
 sys.exit(0)
