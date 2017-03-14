@@ -29,7 +29,7 @@ mach_tag = int(sys.argv[3][2:],16)
 version_tag = int(sys.argv[4][2:],16)
 out_pbl = sys.argv[5]
 
-# pablo footer in ROM:
+# pablo footer in ROM (little endian):
 # ROMEND-2: crc16_ccitt (0..ROMEND-2)
 # ROMEND-4: mach_tag
 # ROMEND-6: version_tag
@@ -77,8 +77,13 @@ if len(rom_data) != max_size:
   print("INVALID SIZE!")
   sys.exit(1)
 
-# add pablo file header
-pbl_hdr = b'PBL1' + struct.pack(">I", max_size)
+# add pablo file header (big endian):
+# +0: PBL1          magic
+# +4: size (ULONG)  size of ROM image
+# +8: version       version tag
+# +10: mach tag     machine identification
+# #12: total
+pbl_hdr = b'PBL1' + struct.pack(">IHH", max_size, version_tag, mach_tag)
 
 # write imaget
 with open(out_pbl, "wb") as fh:
