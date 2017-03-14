@@ -1,5 +1,6 @@
 #include <avr/wdt.h>
 #include <avr/boot.h>
+#include <avr/pgmspace.h>
 
 #include "autoconf.h"
 #include "types.h"
@@ -17,9 +18,10 @@ static u08 page_buf[SPM_PAGESIZE];
 
 // ro registers
 const u16 reg_ro_table[] ROM_ATTR = {
-  0x8000 | (VERSION_MAJOR << 8) | VERSION_MINOR,  /* 0: bootloader version */
-  CONFIG_ARCH_ID << 12 | CONFIG_MCU_ID << 8 | CONFIG_MACH_ID, /* 1: arch + mcu + mach */
-  SPM_PAGESIZE                                    /* 2: page size */
+  0x8000 | VERSION_TAG,                           /* 0: bootloader version */
+  MACH_TAG,                                       /* 1: mach tag */
+  SPM_PAGESIZE,                                   /* 2: page size */
+  CONFIG_MAX_ROM                                  /* 3: rom size */
 };
 
 u08 reg_ro_size(void)
@@ -86,9 +88,14 @@ int main(void)
     uart_send('B');
     u16 crc = flash_check_crc();
     if(crc == 0) {
-      // try to run app if valid
       uart_send('L');
-      run_app(rst_flag);
+      // ensure that mach_tag matches in pablo footer
+      u16 rom_mach_tag = pgm_read_word(CONFIG_MAX_ROM-4);
+      if(rom_mach_tag == MACH_TAG) {
+        uart_send('O');
+        // run app if valid
+        run_app(rst_flag);
+      }
     }
   }
   else {

@@ -27,7 +27,7 @@ clean:
 # generate pablo flash image
 %.pbl: %.bin
 	@echo "  PBL  $(@F)"
-	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $@
+	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(MACH_TAG) $(VERSION_TAG) $@
 
 # finale eeprom file from elf
 %.eep: %.elf

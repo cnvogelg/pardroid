@@ -11,6 +11,13 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 # flash rules
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
+# generate machine tag
+MACH_TAG=$(shell scripts/machtag.py $(CONFIG_ARCH_ID) $(CONFIG_MCU_ID) $(CONFIG_MACH_ID))
+CFLAGS_DEFINES += -DMACH_TAG=$(MACH_TAG)
+# generate version tag
+VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
+CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
+
 # sources
 BASE_SRCS = uart.c uartutil.c mach.c
 PROTO_SRCS = proto_low.S proto.c reg_ro.c

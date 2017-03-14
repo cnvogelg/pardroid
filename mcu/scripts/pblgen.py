@@ -19,23 +19,30 @@ def crc16_ccitt(buf):
   return crc
 
 # get params
-if len(sys.argv) != 4:
-  print("Usage: <in.bin> <max_size> <out.pbl>")
+if len(sys.argv) != 6:
+  print("Usage: <in.bin> <max_size> <mach_tag> <version_tag> <out.pbl>")
   sys.exit(1)
 
 in_bin = sys.argv[1]
 max_size = int(sys.argv[2])
-out_pbl = sys.argv[3]
+mach_tag = int(sys.argv[3][2:],16)
+version_tag = int(sys.argv[4][2:],16)
+out_pbl = sys.argv[5]
 
-# pablo header
-hdr_size = 2
+# pablo footer in ROM:
+# ROMEND-2: crc16_ccitt (0..ROMEND-2)
+# ROMEND-4: mach_tag
+# ROMEND-6: version_tag
+hdr_size = 6
+
+# free program range
 max_free = max_size - hdr_size
 
 # read input binary
 with open(in_bin, "rb") as fh:
   in_data = fh.read()
 
-# total size
+# total size of program
 n = len(in_data)
 if n > max_free:
   print("TOO LARGE:", n, ">", max_free)
@@ -43,23 +50,34 @@ if n > max_free:
 
 # pad image to full size
 if n < max_free:
-  in_data += (max_free - n) * b'\xff'
+  rom_data = in_data + (max_free - n) * b'\xff'
+else:
+  rom_data = in_data
+
+# append pablo footer without crc
+pablo_footer = struct.pack("<HH", version_tag, mach_tag)
+rom_data += pablo_footer
 
 # calc checksum
-check_sum = crc16_ccitt(in_data)
+check_sum = crc16_ccitt(rom_data)
 
-# create rom footer
-footer_data = struct.pack("<H", check_sum)
+# append crc
+crc = struct.pack("<H", check_sum)
 # rom data
-rom_data = in_data + footer_data
+rom_data += crc
 
-# re-check crcr
+# re-check crc
 new_crc = crc16_ccitt(rom_data)
 if new_crc != 0:
   print("INVALID CRC!")
   sys.exit(1)
 
-# pablo header
+# re-check size
+if len(rom_data) != max_size:
+  print("INVALID SIZE!")
+  sys.exit(1)
+
+# add pablo file header
 pbl_hdr = b'PBL1' + struct.pack(">I", max_size)
 
 # write imaget
@@ -69,7 +87,8 @@ with open(out_pbl, "wb") as fh:
 
 # write message
 out_file = os.path.basename(out_pbl)
-print("%-16s  CRC16=%04x" % (out_file, check_sum))
+print("%-16s  SIZE=%06x  CRC16=%04x  VER=%04x  MACH=%04x" % \
+  (out_file, max_size, check_sum, version_tag, mach_tag))
 
 # done
 sys.exit(0)
