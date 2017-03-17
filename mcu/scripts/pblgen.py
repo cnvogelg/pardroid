@@ -13,7 +13,7 @@ def crc16_ccitt(buf):
     lo8 = crc & 0xff
     hi8 = (crc >> 8) & 0xff
     d ^= lo8
-    d ^= d << 4
+    d ^= (d << 4) & 0xff
     a = d << 8 | hi8
     crc = (a ^ (d >> 4) ^ (d << 3)) & 0xffff
   return crc

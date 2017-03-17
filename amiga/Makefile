@@ -8,7 +8,7 @@ include scripts/common-defs.mk
 include scripts/toolchain-$(CONFIG_ARCH).mk
 
 # paths
-INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
+INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo
 VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
@@ -34,6 +34,10 @@ $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
 # parbox-test
 PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS)
 $(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
+
+# pablo
+PABLO_SRCS = pablo.c pblfile.c $(PARBOX_SRCS)
+$(eval $(call make-program,pablo,$(PABLO_SRCS)))
 
 # rules
 include scripts/common-rules.mk
