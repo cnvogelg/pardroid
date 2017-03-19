@@ -37,7 +37,7 @@ PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS)
 $(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
 
 # pablo
-PABLO_SRCS = pablo.c pblfile.c bootloader.c $(PARBOX_SRCS)
+PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c $(PARBOX_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 
 # rules

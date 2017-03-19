@@ -13,6 +13,7 @@
 #include "flash.h"
 #include "pablo.h"
 #include "reg_ro.h"
+#include "machtag.h"
 
 static u08 status;
 static u16 page_addr;
@@ -20,7 +21,7 @@ static u08 page_buf[SPM_PAGESIZE];
 
 // ro registers
 static const u16 ro_version ROM_ATTR = 0x8000 | VERSION_TAG;
-static const u16 ro_mach_tag ROM_ATTR = MACH_TAG;
+static const u16 ro_mach_tag ROM_ATTR = MACHTAG;
 static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
 static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
 REG_RO_TABLE_BEGIN
@@ -95,7 +96,7 @@ int main(void)
       uart_send('L');
       // ensure that mach_tag matches in pablo footer
       u16 rom_mach_tag = pablo_get_mach_tag();
-      if(rom_mach_tag == MACH_TAG) {
+      if(rom_mach_tag == MACHTAG) {
         uart_send('O');
         // run app if valid
         run_app(rst_flag);

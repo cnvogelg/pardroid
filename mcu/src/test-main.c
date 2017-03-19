@@ -9,6 +9,7 @@
 #include "mach.h"
 #include "pablo.h"
 #include "reg_ro.h"
+#include "machtag.h"
 
 #include <util/delay.h>
 
@@ -90,6 +91,16 @@ static void rom_info(void)
   uart_send_hex_word(mt);
   uart_send_pstring(PSTR(" version="));
   uart_send_hex_word(ver);
+  uart_send_crlf();
+
+  // decode machtag
+  rom_pchar arch,mcu,mach;
+  machtag_decode(mt, &arch, &mcu, &mach);
+  uart_send_pstring(arch);
+  uart_send('-');
+  uart_send_pstring(mcu);
+  uart_send('-');
+  uart_send_pstring(mach);
   uart_send_crlf();
 }
 

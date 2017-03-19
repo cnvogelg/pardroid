@@ -9,6 +9,8 @@ check: $(patsubst %,%-check,$(FIRMWARES))
 
 prog: $(DEFAULT_FIRMWARE)-prog
 
+prog-full: $(DEFAULT_FIRMWARE)-prog-full
+
 pablo: $(DEFAULT_FIRMWARE)-pablo
 
 clean:
@@ -25,14 +27,14 @@ clean:
 	$(H)$(OBJCOPY) -O binary -j .data -j .text $< $@
 
 # generate pablo flash image
-%.img: %.bin
+%.img: %.bin $(BIN_DIR)/mt
 	@echo "  IMG  $(@F)"
-	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(MACH_TAG) $(VERSION_TAG) $@
+	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(shell $(BIN_DIR)/mt) $(VERSION_TAG) $@
 
 # generate pablo flash image
-%.pbl: %.img
+%.pbl: %.img $(BIN_DIR)/mt
 	@echo "  PBL  $(@F)"
-	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(MACH_TAG) $(VERSION_TAG) $@
+	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(shell $(BIN_DIR)/mt) $(VERSION_TAG) $@
 
 # finale eeprom file from elf
 %.eep: %.elf
@@ -69,6 +71,13 @@ $(OBJ_DIR)/%.o : %.S
 	@echo "  ASM  $<"
 	$(H)$(CC) -c $(ASFLAGS) $< -o $@
 
+
+# machtag magic (build with HOST CC)
+$(BIN_DIR)/mt: scripts/mt.c
+	@echo "  MACHTAG  $(MACHTAG)"
+	$(H)$(HOST_CC) -o $@  -DMACHTAG=$(MACHTAG) -I../common/src $<
+
+mt: $(BIN_DIR)/mt
 
 # include dependencies
 ifneq "$(MAKECMDGOALS)" "clean"

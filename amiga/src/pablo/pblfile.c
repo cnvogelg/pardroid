@@ -2,6 +2,8 @@
 #include <proto/dos.h>
 #include <dos/dos.h>
 
+#include "arch.h"
+#include "types.h"
 #include "pblfile.h"
 #include "machtag.h"
 
@@ -90,9 +92,9 @@ int pblfile_check(pblfile_t *pf)
   }
 
   int result = 0;
-  UWORD arch = pf->mach_tag & MACHTAG_ARCH_MASK;
+  UWORD arch = pf->mach_tag & MT_ARCH_MASK;
   switch(arch) {
-    case MACHTAG_ARCH_AVR:
+    case MT_ARCH_AVR:
     {
       UWORD crc = crc16_ccitt(pf->data, pf->rom_size);
       result = (crc == 0) ? PBLFILE_OK : PBLFILE_ERROR_CRC;

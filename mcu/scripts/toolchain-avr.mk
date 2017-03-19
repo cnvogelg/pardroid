@@ -4,6 +4,8 @@ OBJDUMP = avr-objdump
 SIZE = avr-size
 NM = avr-nm
 
+HOST_CC = gcc
+
 CFLAGS_ARCH := -mmcu=$(CONFIG_MCU) -DF_CPU=$(CONFIG_MCU_FREQ)
 CFLAGS_ARCH += -Os
 CFLAGS_ARCH += -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums
