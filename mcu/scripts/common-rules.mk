@@ -25,9 +25,14 @@ clean:
 	$(H)$(OBJCOPY) -O binary -j .data -j .text $< $@
 
 # generate pablo flash image
-%.pbl: %.bin
-	@echo "  PBL  $(@F)"
+%.img: %.bin
+	@echo "  IMG  $(@F)"
 	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(MACH_TAG) $(VERSION_TAG) $@
+
+# generate pablo flash image
+%.pbl: %.img
+	@echo "  PBL  $(@F)"
+	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(MACH_TAG) $(VERSION_TAG) $@
 
 # finale eeprom file from elf
 %.eep: %.elf

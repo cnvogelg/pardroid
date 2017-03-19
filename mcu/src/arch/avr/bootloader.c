@@ -11,6 +11,7 @@
 #include "proto.h"
 #include "proto_low.h"
 #include "flash.h"
+#include "pablo.h"
 
 static u08 status;
 static u16 page_addr;
@@ -86,11 +87,11 @@ int main(void)
   if(cmd != CMD_BOOTLOADER) {
     // check crc
     uart_send('B');
-    u16 crc = flash_check_crc();
+    u16 crc = pablo_check_rom_crc();
     if(crc == 0) {
       uart_send('L');
       // ensure that mach_tag matches in pablo footer
-      u16 rom_mach_tag = pgm_read_word(CONFIG_MAX_ROM-4);
+      u16 rom_mach_tag = pablo_get_mach_tag();
       if(rom_mach_tag == MACH_TAG) {
         uart_send('O');
         // run app if valid

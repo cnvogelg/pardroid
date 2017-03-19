@@ -7,6 +7,7 @@
 #include "proto.h"
 #include "debug.h"
 #include "mach.h"
+#include "pablo.h"
 
 #include <util/delay.h>
 
@@ -79,12 +80,31 @@ void proto_api_done_write_msg(u08 chan, u16 size)
   test_size = size;
 }
 
+static void rom_info(void)
+{
+  // show pablo infos
+  u16 crc = pablo_check_rom_crc();
+  u16 mt  = pablo_get_mach_tag();
+  u16 ver = pablo_get_rom_version();
+  uart_send_pstring(PSTR("crc="));
+  uart_send_hex_word(crc);
+  uart_send_pstring(PSTR(" machtag="));
+  uart_send_hex_word(mt);
+  uart_send_pstring(PSTR(" version="));
+  uart_send_hex_word(ver);
+  uart_send_crlf();
+}
+
 int main(void)
 {
   mach_init_hw();
 
   uart_init();
-  uart_send_pstring(PSTR("parbox-test!\n"));
+  uart_send_pstring(PSTR("parbox-test!"));
+  uart_send_crlf();
+
+  rom_info();
+
   _delay_ms(300);
 
   DC('+');

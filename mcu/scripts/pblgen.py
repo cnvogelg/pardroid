@@ -77,17 +77,8 @@ if len(rom_data) != max_size:
   print("INVALID SIZE!")
   sys.exit(1)
 
-# add pablo file header (big endian):
-# +0: PBL1          magic
-# +4: size (ULONG)  size of ROM image
-# +8: version       version tag
-# +10: mach tag     machine identification
-# #12: total
-pbl_hdr = b'PBL1' + struct.pack(">IHH", max_size, version_tag, mach_tag)
-
 # write imaget
 with open(out_pbl, "wb") as fh:
-  fh.write(pbl_hdr)
   fh.write(rom_data)
 
 # write message

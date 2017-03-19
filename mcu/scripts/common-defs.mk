@@ -49,8 +49,6 @@ FIRMWARES += $1
 
 .PHONY: $1 $1-size $1-check-code $1-check-data $1-check $1-prog
 
-$1: $(call map-bin,$1.elf $1.hex $1.lss $1.sym)
-
 $1-sym: $(call map-bin,$1.sym_size)
 	$(H)cat $$<
 
@@ -59,9 +57,6 @@ $1-code: $(call map-bin,$1.code_size)
 
 $1-check: $(call map-bin,$1.elf)
 	$(H)$(SIZE) -A $$< | scripts/checksize.py $3 $(CONFIG_MAX_RAM) $1
-
-$1-prog: $(call map-bin,$1.hex) $1-check
-	$(call prog,$$<,$$(<F))
 
 $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)
 	@echo "  LD   $$(@F)"
@@ -73,7 +68,26 @@ endef
 define make-pablo
 .PHONY: $1-pablo
 
-$1-pablo: $(call map-bin,$1.pbl)
+$1: $(call map-bin,$1.pbl $1.lss $1.sym) $1-check
+
+# only prog .hex file without pablo footer!
+# (pablo bootloader will not launch it!)
+$1-prog-fast: $(call map-bin,$1.hex) $1-check
+	$(call prog-firmware,$$<,$$(<F))
+
+$1-prog: $(call map-bin,$1.img) $1-check
+	$(call prog-firmware,$$<,$$(<F))
+endef
+
+# make-bootloader
+# $1 = program name
+define make-bootloader
+.PHONY: $1-pablo
+
+$1: $(call map-bin,$1.hex $1.lss $1.sym) $1-check
+
+$1-prog: $(call map-bin,$1.hex) $1-check
+	$(call prog-bootloader,$$<,$$(<F))
 endef
 
 # create dirs

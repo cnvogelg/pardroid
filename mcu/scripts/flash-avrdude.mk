@@ -41,7 +41,15 @@ read-flash:
 # prog rule for firmware
 # $1 = firmware.hex file
 # $2 = short name
-define prog
-	@echo "  AVRDUDE  $2"
+define prog-firmware
+	@echo "  PROG  $2"
+	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
+endef
+
+# prog rule for firmware
+# $1 = firmware.hex file
+# $2 = short name
+define prog-bootloader
+	@echo "  PROG  $2"
 	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
 endef
