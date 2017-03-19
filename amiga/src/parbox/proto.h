@@ -3,44 +3,36 @@
 
 #include "pario.h"
 #include "timer.h"
+#include "proto_shared.h"
+
+#define PROTO_RET_OK                0
+#define PROTO_RET_RAK_INVALID       1
+#define PROTO_RET_TIMEOUT           2
+#define PROTO_RET_SLAVE_ERROR       3
+#define PROTO_RET_MSG_TOO_LARGE     4
+#define PROTO_RET_INVALID_CHANNEL   15
+#define PROTO_RET_INVALID_REG       14
+
+#define PROTO_RET_MASK              0xf
 
 struct proto_handle;
+typedef struct proto_handle proto_handle_t;
 
-#define NUM_REG             16
-#define NUM_CHANNEL         16
-#define REG_TEST            0
+extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th);
+extern void proto_exit(proto_handle_t *ph);
 
-#define PROTO_CMD_IDLE            0x00
-#define PROTO_CMD_PING            0x10
-#define PROTO_CMD_RESET           0x1f
-#define PROTO_CMD_MSG_WRITE       0x20
-#define PROTO_CMD_MSG_READ        0x30
-#define PROTO_CMD_REG_WRITE       0x40
-#define PROTO_CMD_REG_READ        0x50
-#define PROTO_CMD_CONST_READ      0x60
+extern int proto_cmd(proto_handle_t *ph, UBYTE cmd);
 
-#define PROTO_RET_OK              0
-#define PROTO_RET_RAK_INVALID     1
-#define PROTO_RET_TIMEOUT         2
-#define PROTO_RET_SLAVE_ERROR     3
-#define PROTO_RET_MSG_TOO_LARGE   4
-#define PROTO_RET_INVALID_CHANNEL 98
-#define PROTO_RET_INVALID_REG     99
+extern int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
+extern int proto_reg_rw_write(proto_handle_t *ph, UBYTE reg, UWORD *data);
 
-extern struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th);
-extern void proto_exit(struct proto_handle *ph);
+extern int proto_reg_ro_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
 
-extern int proto_ping(struct proto_handle *ph);
-extern int proto_reset(struct proto_handle *ph);
+extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
+extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 
-extern int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data);
-extern int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data);
-
-extern int proto_msg_write(struct proto_handle *ph, UBYTE chn, ULONG *msgiov);
-extern int proto_msg_read(struct proto_handle *ph, UBYTE chn, ULONG *msgiov);
-
-extern int proto_msg_write_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG num_words);
-extern int proto_msg_read_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG *max_words);
+extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG num_words);
+extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG *max_words);
 
 extern const char *proto_perror(int res);
 

@@ -12,23 +12,26 @@
 #include "proto_low.h"
 #include "flash.h"
 #include "pablo.h"
+#include "reg_ro.h"
 
 static u08 status;
 static u16 page_addr;
 static u08 page_buf[SPM_PAGESIZE];
 
 // ro registers
-const u16 reg_ro_table[] ROM_ATTR = {
-  0x8000 | VERSION_TAG,                           /* 0: bootloader version */
-  MACH_TAG,                                       /* 1: mach tag */
-  SPM_PAGESIZE,                                   /* 2: page size */
-  CONFIG_MAX_ROM                                  /* 3: rom size */
-};
-
-u08 reg_ro_size(void)
-{
-  return sizeof(reg_ro_table)/2;
-}
+static const u16 ro_version ROM_ATTR = 0x8000 | VERSION_TAG;
+static const u16 ro_mach_tag ROM_ATTR = MACH_TAG;
+static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
+static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
+REG_RO_TABLE_BEGIN
+  REG_RO_TABLE_ENTRY(ro_version),               /* 0: bl version */
+  REG_RO_TABLE_ENTRY(ro_mach_tag),              /* 1: bl mach tag */
+  REG_RO_TABLE_ENTRY(ro_page_size),             /* 2: page size */
+  REG_RO_TABLE_ENTRY(ro_rom_size),              /* 3: rom size */
+  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-2),    /* 4: rom crc */
+  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-4),    /* 5: rom mach tag */
+  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-6)     /* 6: rom version */
+REG_RO_TABLE_END
 
 // from optiboot
 static void run_app(u08 rstFlags) __attribute__ ((naked));
@@ -84,7 +87,7 @@ int main(void)
 
   // check if bootloader command is set - if not enter app
   u08 cmd = proto_low_get_cmd();
-  if(cmd != CMD_BOOTLOADER) {
+  if(cmd != PROTO_CMD_BOOTLOADER) {
     // check crc
     uart_send('B');
     u16 crc = pablo_check_rom_crc();

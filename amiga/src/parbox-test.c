@@ -12,6 +12,8 @@
 #include "parbox.h"
 #include "proto.h"
 
+#define REG_TEST 0
+
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
    "Bias/K/N,Size/K/N,"
    "AddSize/K/N,SubSize/K/N";
@@ -45,7 +47,7 @@ typedef struct test {
 
 static int test_ping(parbox_handle_t *pb, test_t *t)
 {
-  int res = proto_ping(pb->proto);
+  int res = proto_cmd(pb->proto, PROTO_CMD_PING);
   if(res == 0) {
     return 0;
   } else {
@@ -57,7 +59,7 @@ static int test_ping(parbox_handle_t *pb, test_t *t)
 
 static int test_reset(parbox_handle_t *pb, test_t *t)
 {
-  int res = proto_reset(pb->proto);
+  int res = proto_cmd(pb->proto, PROTO_CMD_RESET);
   if(res == 0) {
     return 0;
   } else {
@@ -71,7 +73,7 @@ static int test_reg_write(parbox_handle_t *pb, test_t *t)
 {
   UWORD v = 0x4711;
 
-  int res = proto_reg_write(pb->proto, REG_TEST, &v);
+  int res = proto_reg_rw_write(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -84,7 +86,7 @@ static int test_reg_read(parbox_handle_t *pb, test_t *t)
 {
   UWORD v;
 
-  int res = proto_reg_read(pb->proto, REG_TEST, &v);
+  int res = proto_reg_rw_read(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";
@@ -101,7 +103,7 @@ static int test_reg_write_read(parbox_handle_t *pb, test_t *t)
   }
 
   /* write */
-  int res = proto_reg_write(pb->proto, REG_TEST, &v);
+  int res = proto_reg_rw_write(pb->proto, REG_TEST, &v);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "write";
@@ -110,7 +112,7 @@ static int test_reg_write_read(parbox_handle_t *pb, test_t *t)
 
   /* read back */
   UWORD r;
-  res = proto_reg_read(pb->proto, REG_TEST, &r);
+  res = proto_reg_rw_read(pb->proto, REG_TEST, &r);
   if(res != 0) {
     t->error = proto_perror(res);
     t->section = "read";

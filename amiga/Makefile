@@ -9,6 +9,7 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo
+INCLUDES+=../common/src
 VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
@@ -36,7 +37,7 @@ PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS)
 $(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
 
 # pablo
-PABLO_SRCS = pablo.c pblfile.c $(PARBOX_SRCS)
+PABLO_SRCS = pablo.c pblfile.c bootloader.c $(PARBOX_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 
 # rules

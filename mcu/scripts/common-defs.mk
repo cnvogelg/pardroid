@@ -70,12 +70,7 @@ define make-pablo
 
 $1: $(call map-bin,$1.pbl $1.lss $1.sym) $1-check
 
-# only prog .hex file without pablo footer!
-# (pablo bootloader will not launch it!)
-$1-prog-fast: $(call map-bin,$1.hex) $1-check
-	$(call prog-firmware,$$<,$$(<F))
-
-$1-prog: $(call map-bin,$1.img) $1-check
+$1-prog: $(call map-bin,$1.hex) $1-check
 	$(call prog-firmware,$$<,$$(<F))
 endef
 

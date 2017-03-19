@@ -66,27 +66,27 @@ void proto_handle(void)
 {
   u08 cmd = proto_low_get_cmd();
   switch(cmd) {
-    case CMD_IDLE:
+    case PROTO_CMD_IDLE:
       // nothing to do for now. return
       break;
-    case CMD_INVALID:
+    case PROTO_CMD_INVALID:
       //DS("invalid"); DNL;
       break;
 
-    case CMD_PING:
+    case PROTO_CMD_PING:
       // alive ping from master
       DS("ping"); DNL;
       proto_low_no_value();
       break;
 
-    case CMD_BOOTLOADER:
+    case PROTO_CMD_BOOTLOADER:
       // immediately reset to bootloader
       // do not complete ping protocol here as it is done in bootloader
       DS("bootloader"); DNL;
       mach_sys_reset();
       break;
 
-    case CMD_RESET:
+    case PROTO_CMD_RESET:
       DS("reset"); DNL;
       proto_low_no_value();
       DS("restart"); DNL;
@@ -95,22 +95,22 @@ void proto_handle(void)
 
     default:
       {
-        u08 cmd_base = cmd & CMD_MASK;
+        u08 cmd_base = cmd & PROTO_CMD_MASK;
         u08 num = cmd - cmd_base;
         switch(cmd_base) {
-          case CMD_RW_REG_WRITE:
+          case PROTO_CMD_RW_REG_WRITE:
             rw_reg_write(num);
             break;
-          case CMD_RW_REG_READ:
+          case PROTO_CMD_RW_REG_READ:
             rw_reg_read(num);
             break;
-          case CMD_MSG_WRITE:
+          case PROTO_CMD_MSG_WRITE:
             msg_write(num);
             break;
-          case CMD_MSG_READ:
+          case PROTO_CMD_MSG_READ:
             msg_read(num);
             break;
-          case CMD_RO_REG_READ:
+          case PROTO_CMD_RO_REG_READ:
             ro_reg_read(num);
             break;
           default:

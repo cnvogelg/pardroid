@@ -23,6 +23,7 @@ BASE_SRCS = uart.c uartutil.c mach.c pablo.c
 PROTO_SRCS = proto_low.S proto.c reg_ro.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
+INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-fw

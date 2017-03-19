@@ -22,9 +22,9 @@ struct proto_handle {
     ULONG                timeout_ms;
 };
 
-struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th)
+proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th)
 {
-  struct proto_handle *ph;
+  proto_handle_t *ph;
 
   ph = AllocMem(sizeof(struct proto_handle), MEMF_CLEAR);
   if(ph == NULL) {
@@ -47,7 +47,7 @@ struct proto_handle *proto_init(struct pario_port *port, struct timer_handle *th
   return ph;
 }
 
-void proto_exit(struct proto_handle *ph)
+void proto_exit(proto_handle_t *ph)
 {
   if(ph == NULL) {
     return;
@@ -56,36 +56,24 @@ void proto_exit(struct proto_handle *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
-int proto_ping(struct proto_handle *ph)
+int proto_cmd(proto_handle_t *ph, UBYTE cmd)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_no_value(port, timeout_flag, PROTO_CMD_PING);
+  int result = proto_low_no_value(port, timeout_flag, cmd);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_reset(struct proto_handle *ph)
+int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_no_value(port, timeout_flag, PROTO_CMD_RESET);
-  timer_stop(ph->timer);
-
-  return result;
-}
-
-int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data)
-{
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_REG_READ;
-  if(reg >= NUM_REG) {
+  UBYTE cmd = reg + PROTO_CMD_RW_REG_READ;
+  if(reg >= PROTO_MAX_RW_REG) {
     return PROTO_RET_INVALID_REG;
   }
 
@@ -96,12 +84,12 @@ int proto_reg_read(struct proto_handle *ph, UBYTE reg, UWORD *data)
   return result;
 }
 
-int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
+int proto_reg_rw_write(proto_handle_t *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_REG_WRITE;
-  if(reg >= NUM_REG) {
+  UBYTE cmd = reg + PROTO_CMD_RW_REG_WRITE;
+  if(reg >= PROTO_MAX_RW_REG) {
     return PROTO_RET_INVALID_REG;
   }
 
@@ -112,12 +100,28 @@ int proto_reg_write(struct proto_handle *ph, UBYTE reg, UWORD *data)
   return result;
 }
 
-int proto_msg_write(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
+int proto_reg_ro_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  UBYTE cmd = reg + PROTO_CMD_RO_REG_READ;
+  if(reg >= PROTO_MAX_RO_REG) {
+    return PROTO_RET_INVALID_REG;
+  }
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_read_word(port, timeout_flag, cmd, (UBYTE *)data);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   UBYTE cmd = chn + PROTO_CMD_MSG_WRITE;
-  if(chn >= NUM_CHANNEL) {
+  if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
 
@@ -132,12 +136,12 @@ int proto_msg_write(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
   return result;
 }
 
-int proto_msg_read(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
+int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   UBYTE cmd = chn + PROTO_CMD_MSG_READ;
-  if(chn >= NUM_CHANNEL) {
+  if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
 
@@ -152,7 +156,7 @@ int proto_msg_read(struct proto_handle *ph, UBYTE chn, ULONG *msgiov)
   return result;
 }
 
-int proto_msg_write_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG num_words)
+int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG num_words)
 {
   ULONG msgiov[] = {
     num_words, /* total size */
@@ -163,7 +167,7 @@ int proto_msg_write_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG
   return proto_msg_write(ph, chn, msgiov);
 }
 
-int proto_msg_read_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG *max_words)
+int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG *max_words)
 {
   ULONG msgiov[] = {
     *max_words, /* total size */
@@ -179,7 +183,7 @@ int proto_msg_read_single(struct proto_handle *ph, UBYTE chn, UBYTE *buf, ULONG 
 
 const char *proto_perror(int res)
 {
-  switch(res) {
+  switch(res & PROTO_RET_MASK) {
     case PROTO_RET_OK:
       return "OK";
     case PROTO_RET_RAK_INVALID:
@@ -195,6 +199,6 @@ const char *proto_perror(int res)
     case PROTO_RET_MSG_TOO_LARGE:
       return "message too large";
     default:
-      return "unknown";
+      return "?";
   }
 }

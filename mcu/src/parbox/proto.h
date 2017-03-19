@@ -1,23 +1,6 @@
 #ifndef PROTO_H
 
-// registers
-#define MAX_RW_REG          32
-#define MAX_RO_REG          32
-#define MAX_CHANNEL         16
-
-// command codes
-#define CMD_IDLE            0x00
-#define CMD_PING            0x10
-#define CMD_BOOTLOADER      0x11
-#define CMD_RESET           0x1f
-#define CMD_MSG_WRITE       0x20
-#define CMD_MSG_READ        0x30
-#define CMD_RW_REG_WRITE    0x40
-#define CMD_RW_REG_READ     0x60
-#define CMD_RO_REG_READ     0x80
-#define CMD_INVALID         0xff
-
-#define CMD_MASK            0xf0
+#include "proto_shared.h"
 
 extern void proto_init(void);
 extern void proto_handle(void);

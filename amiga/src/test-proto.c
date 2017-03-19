@@ -26,7 +26,7 @@ int dosmain(void)
             struct proto_handle *ph = proto_init(port, th);
             if(ph != NULL) {
                 PutStr("proto_ping\n");
-                int error = proto_ping(ph);
+                int error = proto_cmd(ph, PROTO_CMD_PING);
                 Printf("-> %ld\n", (LONG)error);
                 PutStr("done\n");
                 proto_exit(ph);

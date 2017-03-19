@@ -8,6 +8,7 @@
 
 #include "parbox.h"
 #include "pblfile.h"
+#include "bootloader.h"
 
 static const char *TEMPLATE =
    "Flash/S,"
@@ -93,7 +94,21 @@ int dosmain(void)
     /* setup parbox */
     int pb_res = parbox_init(&pb, (struct Library *)SysBase);
     if(pb_res == PARBOX_OK) {
-      PutStr("Welcome to pablo!\n");
+      bootinfo_t bi;
+
+      PutStr("Entering bootloader...");
+      int bl_res = bootloader_enter(&pb, &bi);
+      if(bl_res == BOOTLOADER_RET_OK) {
+        PutStr("ok\n");
+        /* yay! */
+      }
+      else {
+        /* bootloader failed */
+        PutStr(bootloader_perror(bl_res));
+        PutStr(", ");
+        PutStr(proto_perror(bl_res));
+        PutStr("\n");
+      }
 
       parbox_exit(&pb);
     } else {

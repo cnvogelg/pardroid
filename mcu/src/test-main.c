@@ -8,6 +8,7 @@
 #include "debug.h"
 #include "mach.h"
 #include "pablo.h"
+#include "reg_ro.h"
 
 #include <util/delay.h>
 
@@ -27,15 +28,12 @@ u16 bla(u16 a, u16 b)
 }
 
 // ro registers
-const u16 reg_ro_table[] ROM_ATTR = {
-  1,
-  2
-};
-
-u08 reg_ro_size(void)
-{
-  return sizeof(reg_ro_table)/2;
-}
+const u16 val_one ROM_ATTR = 1;
+const u16 val_two ROM_ATTR = 2;
+REG_RO_TABLE_BEGIN
+  REG_RO_TABLE_ENTRY(val_one),
+  REG_RO_TABLE_ENTRY(val_two)
+REG_RO_TABLE_END
 
 // register ops
 
