@@ -5,10 +5,13 @@
 #include "autoconf.h"
 #include "compiler.h"
 #include "debug.h"
+#include "types.h"
+#include "arch.h"
 
 #include "parbox.h"
 #include "pblfile.h"
 #include "bootloader.h"
+#include "machtag.h"
 
 static const char *TEMPLATE =
    "Flash/S,"
@@ -41,6 +44,48 @@ static int check_args(void)
   }
 
   return 0;
+}
+
+static void show_bootinfo(bootinfo_t *bi)
+{
+  Printf("Flash ROM:  size=%08lx, page=%04lx\n",
+    bi->rom_size, (ULONG)bi->page_size);
+
+  UBYTE bl_hi = (UBYTE)(bi->bl_version >> 8) & 0x7f;
+  UBYTE bl_lo = (UBYTE)(bi->bl_version & 0xff);
+  char *arch,*mcu,*mach;
+  machtag_decode(bi->bl_mach_tag, &arch, &mcu, &mach);
+  Printf("Bootloader: %ld.%ld, %s-%s-%s (%04lx)\n",
+    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)bi->bl_mach_tag);
+}
+
+static void show_fw_info(bootinfo_t *bi)
+{
+  if(bi->fw_mach_tag != bi->bl_mach_tag) {
+    PutStr("Firmware:   not found.\n");
+  } else {
+    UBYTE fw_hi = (UBYTE)(bi->fw_version >> 8) & 0x7f;
+    UBYTE fw_lo = (UBYTE)(bi->fw_version & 0xff);
+    char *arch,*mcu,*mach;
+    machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach);
+    Printf("Firmware:   %ld.%ld, %s-%s-%s (%04lx)  crc=%04lx\n",
+      (ULONG)fw_hi, (ULONG)fw_lo, arch, mcu, mach, (ULONG)bi->fw_mach_tag,
+      (ULONG)bi->fw_crc);
+  }
+}
+
+static void show_error(int bl_res)
+{
+  PutStr("BL Error: ");
+  PutStr(bootloader_perror(bl_res));
+  PutStr(", (Proto=");
+  PutStr(proto_perror(bl_res));
+  PutStr(")\n");
+}
+
+static void update_cb_func(bl_update_t *bu)
+{
+  Printf("%08lx: %ld/%ld\r", bu->addr, bu->cur_page, bu->num_pages);
 }
 
 int dosmain(void)
@@ -100,14 +145,57 @@ int dosmain(void)
       int bl_res = bootloader_enter(&pb, &bi);
       if(bl_res == BOOTLOADER_RET_OK) {
         PutStr("ok\n");
-        /* yay! */
+        show_bootinfo(&bi);
+        show_fw_info(&bi);
+
+        // flash?
+        if(params.flash) {
+          PutStr("Flashing...\n");
+          bl_res = bootloader_flash(&pb, &bi, &pf, update_cb_func);
+          if(bl_res == BOOTLOADER_RET_OK) {
+            PutStr("\nDone\n");
+
+            // after flashing re-read fw infos
+            bl_res = bootloader_update_fw_info(&pb, &bi);
+            if(bl_res == BOOTLOADER_RET_OK) {
+              show_fw_info(&bi);
+            } else {
+              PutStr("Read Info Aborted: ");
+              show_error(bl_res);
+            }
+          } else {
+            PutStr("\nAborted: ");
+            show_error(bl_res);
+          }
+        }
+
+        // verify?
+        if((bl_res == BOOTLOADER_RET_OK) && (params.verify || params.flash)) {
+          PutStr("Verifying...");
+          bl_res = bootloader_verify(&pb, &bi, &pf, update_cb_func);
+          if(bl_res == BOOTLOADER_RET_OK) {
+            PutStr("\nDone\n");
+          } else {
+            PutStr("\nAborted: ");
+            show_error(bl_res);
+          }
+        }
+
+        // leave bootloader? - only if no error occurred
+        if(bl_res == BOOTLOADER_RET_OK) {
+          PutStr("Leaving bootloader...");
+          bl_res = bootloader_leave(&pb);
+          if(bl_res == BOOTLOADER_RET_OK) {
+            PutStr("ok\n");
+          } else {
+            show_error(bl_res);
+          }
+        } else {
+          PutStr("Staying in bootloader due to errors!\n");
+        }
       }
       else {
-        /* bootloader failed */
-        PutStr(bootloader_perror(bl_res));
-        PutStr(", ");
-        PutStr(proto_perror(bl_res));
-        PutStr("\n");
+        show_error(bl_res);
       }
 
       parbox_exit(&pb);

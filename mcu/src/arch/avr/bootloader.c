@@ -137,9 +137,11 @@ u16  proto_api_get_rw_reg(u08 reg)
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader
 
+#define PAGE_WORDS (SPM_PAGESIZE >> 1)
+
 u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
 {
-  *size = SPM_PAGESIZE;
+  *size = PAGE_WORDS;
   uart_send('r');
   flash_read_page(page_addr, page_buf);
   return page_buf;
@@ -152,14 +154,14 @@ void proto_api_done_read_msg(u08 chan)
 
 u08 *proto_api_prepare_write_msg(u08 chan, u16 *max_size)
 {
-  *max_size = SPM_PAGESIZE;
+  *max_size = PAGE_WORDS;
   uart_send('w');
   return page_buf;
 }
 
 void proto_api_done_write_msg(u08 chan, u16 size)
 {
-  if(size == SPM_PAGESIZE) {
+  if(size == PAGE_WORDS) {
     uart_send('(');
     flash_program_page(page_addr, page_buf);
     uart_send(')');
