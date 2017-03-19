@@ -9,6 +9,7 @@ endif
 AVRDUDE ?= avrdude
 AVRDUDE_WRITE_FLASH  = -U flash:w:$1
 AVRDUDE_WRITE_FUSE   = -U lfuse:w:$(CONFIG_AVRDUDE_LFUSE):m -U hfuse:w:$(CONFIG_AVRDUDE_HFUSE):m
+AVRDUDE_LOCK_BOOTLOADER = -U lock:w:0x0F:m
 
 # combine flags
 AVRDUDE_FLAGS += -p $(CONFIG_AVRDUDE_MCU) -c $(CONFIG_AVRDUDE_PROGRAMMER)
@@ -51,5 +52,5 @@ endef
 # $2 = short name
 define prog-bootloader
 	@echo "  PROG  $2"
-	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH)
+	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FLASH) $(AVRDUDE_LOCK_BOOTLOADER)
 endef
