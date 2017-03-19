@@ -16,26 +16,19 @@
 static const char *TEMPLATE =
    "Flash/S,"
    "Verify/S,"
-   "Info/S,"
-   "Reset/S,"
+   "Stay/S,"
    "FileName"
    ;
 typedef struct {
   ULONG flash;
   ULONG verify;
-  ULONG info;
-  ULONG reset;
+  ULONG stay;
   char  *file_name;
 } params_t;
 static params_t params;
 
 static int check_args(void)
 {
-  if(!params.flash && !params.verify && !params.info && !params.reset) {
-    PutStr("No command given!\n");
-    return 1;
-  }
-
   if(params.flash || params.verify) {
     if(!params.file_name) {
       PutStr("No file given!\n");
@@ -44,6 +37,17 @@ static int check_args(void)
   }
 
   return 0;
+}
+
+static void show_file_info(const char *file_name, pblfile_t *pf)
+{
+  Printf("PBL File:   size=%08lx, name='%s'\n", pf->rom_size, file_name);
+  UBYTE bl_hi = (UBYTE)(pf->version >> 8);
+  UBYTE bl_lo = (UBYTE)(pf->version & 0xff);
+  char *arch,*mcu,*mach;
+  machtag_decode(pf->mach_tag, &arch, &mcu, &mach);
+  Printf("PBL File:   %ld.%ld, %s-%s-%s (%04lx)\n",
+    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)pf->mach_tag);
 }
 
 static void show_bootinfo(bootinfo_t *bi)
@@ -83,9 +87,112 @@ static void show_error(int bl_res)
   PutStr(")\n");
 }
 
-static void update_cb_func(bl_update_t *bu)
+static int flash_func(bl_flash_data_t *fd, void *user_data)
 {
-  Printf("%08lx: %ld/%ld\r", bu->addr, bu->cur_page, bu->num_pages);
+  pblfile_t *pf = (pblfile_t *)user_data;
+
+  Printf("%08lx/%08lx\r", fd->addr, fd->max_addr);
+
+  fd->buffer = pf->data + fd->addr;
+
+  return BOOTLOADER_RET_OK;
+}
+
+static int do_flash(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+{
+  int bl_res;
+
+  PutStr("Flashing...\n");
+  bl_res = bootloader_flash(pb, bi, flash_func, pf);
+  if(bl_res == BOOTLOADER_RET_OK) {
+    PutStr("\nDone\n");
+
+    // after flashing re-read fw infos
+    bl_res = bootloader_update_fw_info(pb, bi);
+    if(bl_res == BOOTLOADER_RET_OK) {
+      show_fw_info(bi);
+    } else {
+      PutStr("Read Info Aborted: ");
+      show_error(bl_res);
+    }
+  } else {
+    PutStr("\nAborted: ");
+    show_error(bl_res);
+  }
+
+  return bl_res;
+}
+
+struct my_verify_data {
+  pblfile_t  *pf;
+  UBYTE      *page_buf;
+  UWORD       page_size;
+};
+
+static int pre_verify_func(bl_flash_data_t *fd, void *user_data)
+{
+  struct my_verify_data *md = (struct my_verify_data *)user_data;
+
+  Printf("%08lx/%08lx\r", fd->addr, fd->max_addr);
+
+  /* always read into page buffer */
+  fd->buffer = md->page_buf;
+
+  return BOOTLOADER_RET_OK;
+}
+
+static int post_verify_func(bl_flash_data_t *fd, void *user_data)
+{
+  struct my_verify_data *md = (struct my_verify_data *)user_data;
+
+  /* compare page buffer with pblfile */
+  UBYTE *file_buf = md->pf->data + fd->addr;
+  UBYTE *page_buf = md->page_buf;
+  int failed = 0;
+  for(UWORD i=0;i<md->page_size;i++) {
+    if(file_buf[i] != page_buf[i]) {
+      Printf("@%08lx: %02lx != %02lx\n",
+          fd->addr+i, (ULONG)file_buf[i], (ULONG)page_buf[i]);
+      failed++;
+    }
+  }
+
+  if(failed == 0) {
+    return BOOTLOADER_RET_OK;
+  } else {
+    return BOOTLOADER_RET_DATA_MISMATCH;
+  }
+}
+
+static int do_verify(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+{
+  int bl_res;
+
+  PutStr("Verifying...");
+
+  /* alloc page buffer */
+  UBYTE *page_buf = AllocVec(bi->page_size, MEMF_CLEAR);
+  if(page_buf == 0) {
+    return BOOTLOADER_RET_NO_PAGE_DATA;
+  }
+
+  struct my_verify_data md;
+  md.pf = pf;
+  md.page_buf = page_buf;
+  md.page_size = bi->page_size;
+
+  bl_res = bootloader_read(pb, bi, pre_verify_func, post_verify_func, &md);
+  if(bl_res == BOOTLOADER_RET_OK) {
+    PutStr("\nDone\n");
+  } else {
+    PutStr("\nAborted: ");
+    show_error(bl_res);
+  }
+
+  /* free page buffer */
+  FreeVec(page_buf);
+
+  return bl_res;
 }
 
 int dosmain(void)
@@ -114,15 +221,15 @@ int dosmain(void)
   if(file_name != 0) {
     file_result = pblfile_load(file_name, &pf);
     if(file_result == PBLFILE_OK) {
-      Printf("Loaded '%s':\n  size=%06lx, version=%04lx, mach_tag=%04lx\n",
-        file_name, pf.rom_size, (ULONG)pf.version, (ULONG)pf.mach_tag);
+      show_file_info(file_name, &pf);
 
       /* check data */
+      PutStr("Checking file contents...");
       file_result = pblfile_check(&pf);
       if(file_result == PBLFILE_OK) {
-        PutStr("Data: ok.\n");
+        PutStr("ok.\n");
       } else {
-        Printf("Data: INVALID: %s\n", pblfile_perror(file_result));
+        Printf("INVALID: %s\n", pblfile_perror(file_result));
         pblfile_free(&pf);
         res = RETURN_ERROR;
       }
@@ -148,41 +255,32 @@ int dosmain(void)
         show_bootinfo(&bi);
         show_fw_info(&bi);
 
-        // flash?
-        if(params.flash) {
-          PutStr("Flashing...\n");
-          bl_res = bootloader_flash(&pb, &bi, &pf, update_cb_func);
+        // check a file
+        if(file_name != 0) {
+          PutStr("Matching flash file...");
+          bl_res = bootloader_check_file(&bi, &pf);
           if(bl_res == BOOTLOADER_RET_OK) {
-            PutStr("\nDone\n");
-
-            // after flashing re-read fw infos
-            bl_res = bootloader_update_fw_info(&pb, &bi);
-            if(bl_res == BOOTLOADER_RET_OK) {
-              show_fw_info(&bi);
-            } else {
-              PutStr("Read Info Aborted: ");
-              show_error(bl_res);
-            }
+            PutStr("ok\n");
           } else {
-            PutStr("\nAborted: ");
             show_error(bl_res);
           }
+        }
+
+        // flash?
+        if((bl_res == BOOTLOADER_RET_OK) && params.flash) {
+          bl_res = do_flash(&pb, &bi, &pf);
         }
 
         // verify?
         if((bl_res == BOOTLOADER_RET_OK) && (params.verify || params.flash)) {
-          PutStr("Verifying...");
-          bl_res = bootloader_verify(&pb, &bi, &pf, update_cb_func);
-          if(bl_res == BOOTLOADER_RET_OK) {
-            PutStr("\nDone\n");
-          } else {
-            PutStr("\nAborted: ");
-            show_error(bl_res);
-          }
+          bl_res = do_verify(&pb, &bi, &pf);
         }
 
         // leave bootloader? - only if no error occurred
-        if(bl_res == BOOTLOADER_RET_OK) {
+        if(params.stay) {
+          PutStr("Staying in bootloader as requested\n");
+        }
+        else if(bl_res == BOOTLOADER_RET_OK) {
           PutStr("Leaving bootloader...");
           bl_res = bootloader_leave(&pb);
           if(bl_res == BOOTLOADER_RET_OK) {
@@ -191,7 +289,7 @@ int dosmain(void)
             show_error(bl_res);
           }
         } else {
-          PutStr("Staying in bootloader due to errors!\n");
+          PutStr("Staying in bootloader: due to errors!\n");
         }
       }
       else {

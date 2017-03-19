@@ -47,22 +47,35 @@ typedef struct bootinfo bootinfo_t;
 #define BOOTLOADER_RET_FAILED_SET_ADDR      0x80
 #define BOOTLOADER_RET_WRITE_PAGE_ERROR     0x90
 #define BOOTLOADER_RET_READ_PAGE_ERROR      0xa0
+#define BOOTLOADER_RET_NO_PAGE_DATA         0xb0
+#define BOOTLOADER_RET_DATA_MISMATCH        0xc0
 
 /* update callback for flash/verify ops */
-struct bl_update {
+struct bl_flash_data {
   ULONG   addr;
-  ULONG   cur_page;
-  ULONG   num_pages;
+  ULONG   max_addr;
+  UBYTE   *buffer;
+  UWORD   buffer_size;
 };
-typedef struct bl_update bl_update_t;
-typedef void (*bl_update_cb)(bl_update_t *bu);
+typedef struct bl_flash_data bl_flash_data_t;
+typedef struct bl_flash_data bl_read_data_t;
+
+typedef int (*bl_flash_cb_t)(bl_flash_data_t *data, void *user_data);
+typedef int (*bl_read_cb_t)(bl_read_data_t *data, void *user_data);
 
 extern int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi);
 extern int bootloader_leave(parbox_handle_t *pb);
+
 extern int bootloader_update_fw_info(parbox_handle_t *pb, bootinfo_t *bi);
 extern int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf);
-extern int bootloader_flash(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf, bl_update_cb bu);
-extern int bootloader_verify(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf, bl_update_cb bu);
+
+extern int bootloader_flash(parbox_handle_t *pb, bootinfo_t *bi,
+                            bl_flash_cb_t pre_callback,
+                            void *user_data);
+extern int bootloader_read(parbox_handle_t *pb, bootinfo_t *bi,
+                           bl_read_cb_t pre_callback,
+                           bl_read_cb_t post_callback,
+                           void *user_data);
 
 extern const char *bootloader_perror(int res);
 

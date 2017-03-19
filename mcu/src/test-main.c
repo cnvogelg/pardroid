@@ -19,15 +19,6 @@ static u16 test_reg;
 static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
-u16 bla(u16 a, u16 b)
-{
-  if(a > b) {
-    return a+b;
-  } else {
-    return a+1;
-  }
-}
-
 // ro registers
 const u16 val_one ROM_ATTR = 1;
 const u16 val_two ROM_ATTR = 2;

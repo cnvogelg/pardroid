@@ -14,7 +14,7 @@ void flash_program_page(uint16_t address, const uint8_t *data)
   eeprom_busy_wait();
   boot_page_erase(address);
   boot_spm_busy_wait ();
-  const uint16_t *buf = (const uint16_t *)data;
+  const uint8_t *buf = data;
   for (pagesize_t i=0; i<SPM_PAGESIZE; i+=2) {
     uint16_t w = *buf++;
     w += (*buf++) << 8;

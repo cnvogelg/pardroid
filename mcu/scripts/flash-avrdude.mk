@@ -37,7 +37,7 @@ read-fuse:
 	@rm -f lfuse.txt hfuse.txt efuse.txt
 
 read-flash:
-	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:r:flash.hex:i
+	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:r:flash.img:r
 
 # prog rule for firmware
 # $1 = firmware.hex file
