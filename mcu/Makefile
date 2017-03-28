@@ -1,6 +1,7 @@
 BASE_DIR=..
 # config
-CONFIG?=configs/ardunano.config
+CONFIG?=configs/pbnano.config
+ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config
 include $(BASE_DIR)/scripts/gencfg.mk
 # version
 include ../version.mk
@@ -19,8 +20,11 @@ CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG)
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
 CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 
+# dist tag
+DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
+
 # sources
-BASE_SRCS = uart.c uartutil.c mach.c pablo.c
+BASE_SRCS = uart.c uartutil.c system.c pablo.c
 PROTO_SRCS = proto_low.S proto.c reg_ro.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox

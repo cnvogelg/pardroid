@@ -2,15 +2,15 @@
 #include <avr/wdt.h>
 #include <avr/interrupt.h>
 
-void mach_init_hw(void)
+void system_init(void)
 {
-  // disable watchdog
+  // default watchdog: 500ms
   cli();
   wdt_enable(WDTO_500MS);
   sei();
 }
 
-void mach_sys_reset(void)
+void system_sys_reset(void)
 {
   wdt_enable(WDTO_15MS);
   while(1) { /* wait for the end */ }

@@ -1,5 +1,6 @@
 # read config at get build dir
 GENCONFIG=$(BASE_DIR)/scripts/genconfig.py
+CONFIG_BASE=$(notdir $(basename $(CONFIG)))
 CONF_VALS:=$(shell $(GENCONFIG) -bam $(CONFIG))
 BUILD_TAG=$(word 1,$(CONF_VALS))
 ARCH_DIR=$(word 2,$(CONF_VALS))
@@ -13,7 +14,9 @@ invalid_conf:
 endif
 
 BUILD_BASE_DIR?=BUILD
-BUILD_DIR:=$(BUILD_BASE_DIR)/$(BUILD_TAG)
+BUILD_DIR:=$(BUILD_BASE_DIR)/$(CONFIG_BASE)
+
+DIST_DIR?=DIST
 
 # derived config files
 CONFIG_H_FILE=$(BUILD_DIR)/autoconf.h
@@ -23,7 +26,7 @@ CONFIG_MAKE_FILE=$(BUILD_DIR)/conf.mk
 CONFIG_FILES=$(CONFIG_H_FILE) $(CONFIG_MAKE_FILE)
 
 # create build dir
-ifneq "$(MAKECMDGOALS)" "clean"
+ifeq "$(filter clean clean-all,$(MAKECMDGOALS))" ""
 create_build_dir := $(shell test -d $(BUILD_DIR) || mkdir -p $(BUILD_DIR))
 create_config_h := $(shell test -f $(CONFIG_H_FILE) || $(GENCONFIG) -c $(CONFIG_H_FILE) $(CONFIG))
 create_config_make := $(shell test -f $(CONFIG_MAKE_FILE) || $(GENCONFIG) -k $(CONFIG_MAKE_FILE) $(CONFIG))

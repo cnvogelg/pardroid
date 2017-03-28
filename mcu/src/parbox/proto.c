@@ -2,7 +2,7 @@
 #include "proto_low.h"
 #include "proto.h"
 #include "debug.h"
-#include "mach.h"
+#include "system.h"
 
 void proto_init(void)
 {
@@ -83,14 +83,14 @@ void proto_handle(void)
       // immediately reset to bootloader
       // do not complete ping protocol here as it is done in bootloader
       DS("bootloader"); DNL;
-      mach_sys_reset();
+      system_sys_reset();
       break;
 
     case PROTO_CMD_RESET:
       DS("reset"); DNL;
       proto_low_no_value();
       DS("restart"); DNL;
-      mach_sys_reset();
+      system_sys_reset();
       break;
 
     default:

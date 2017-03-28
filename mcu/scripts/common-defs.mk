@@ -31,6 +31,7 @@ LDFLAGS += -Wl,--gc-sections
 # ----- firmware -----
 # list of firmwares, created by make-firmware
 FIRMWARES :=
+DIST_FILES :=
 
 # map-src-to-tgt
 # $1 = src files
@@ -38,6 +39,7 @@ map-src-to-tgt = $(patsubst %.c,$(OBJ_DIR)/%.o,$(filter %.c,$1)) \
 				 $(patsubst %.S,$(OBJ_DIR)/%.o,$(filter %.S,$1))
 
 map-bin = $(patsubst %,$(BIN_DIR)/%,$1)
+map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 
 # make-program rules
 # $1 = program name
@@ -47,7 +49,7 @@ map-bin = $(patsubst %,$(BIN_DIR)/%,$1)
 define make-firmware
 FIRMWARES += $1
 
-.PHONY: $1 $1-size $1-check-code $1-check-data $1-check $1-prog
+.PHONY: $1-sym $1-code $1-check
 
 $1-sym: $(call map-bin,$1.sym_size)
 	$(H)cat $$<
@@ -66,7 +68,9 @@ endef
 # make-pablo
 # $1 = program name
 define make-pablo
-.PHONY: $1-pablo
+DIST_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
+
+.PHONY: $1 $1-prog $1-prog-full
 
 $1: $(call map-bin,$1.pbl $1.lss $1.sym) $1-check
 
@@ -75,22 +79,40 @@ $1-prog: $(call map-bin,$1.hex) $1-check
 
 $1-prog-full: $(call map-bin,$1.img) $1-check
 	$(call prog-firmware,$$<,$$(<F))
+
+$1-dist: $(call map-bin,$1-$(CONFIG_BASE_NAME).hex)
+
+$(DIST_DIR)/$1-$(DIST_TAG).pbl: $(BIN_DIR)/$1.pbl
+	@echo "  DIST  $$(@F)"
+	$(H)cp $$< $$@
 endef
 
 # make-bootloader
 # $1 = program name
 define make-bootloader
-.PHONY: $1-pablo
+DIST_FILES += $(call map-dist,$1-$(DIST_TAG).hex)
+
+.PHONY: $1 $1-prog
 
 $1: $(call map-bin,$1.hex $1.lss $1.sym) $1-check
 
 $1-prog: $(call map-bin,$1.hex) $1-check
 	$(call prog-bootloader,$$<,$$(<F))
+
+$(DIST_DIR)/$1-$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
+	@echo "  DIST  $$(@F)"
+	$(H)cp $$< $$@
 endef
 
 # create dirs
-ifneq "$(MAKECMDGOALS)" "clean"
+ifeq "$(filter clean clean-all,$(MAKECMDGOALS))" ""
 create_dir = $(shell test -d $1 || mkdir -p $1)
 create_obj_dir := $(call create_dir,$(OBJ_DIR))
 create_bin_dir := $(call create_dir,$(BIN_DIR))
 endif
+
+# dist dir creation
+ifneq "$(filter dist dist-all,$(MAKECMDGOALS))" ""
+dist_dir := $(call create_dir,$(DIST_DIR))
+endif
+

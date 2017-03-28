@@ -3,6 +3,9 @@ all: $(PROGRAMS)
 clean:
 	$(H)rm -rf $(BUILD_DIR)
 
+clean-all:
+	$(H)rm -rf $(BUILD_BASE_DIR)
+
 # compile
 $(OBJ_DIR)/%.o : %.c
 	@echo "  CC   $<"

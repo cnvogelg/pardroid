@@ -16,6 +16,23 @@ pablo: $(DEFAULT_FIRMWARE)-pablo
 clean:
 	$(H)rm -rf $(BUILD_DIR)
 
+clean-all:
+	$(H)rm -rf $(BUILD_BASE_DIR)
+
+# distribution
+dist: $(DIST_FILES)
+
+# for all configs
+all-configs:
+	@for a in $(ALL_CONFIGS) ; do \
+		$(MAKE) CONFIG=$$a || exit 1 ; \
+	done
+
+dist-configs:
+	@for a in $(ALL_CONFIGS) ; do \
+		$(MAKE) CONFIG=$$a dist || exit 1 ; \
+	done
+
 # final hex (flash) file from elf
 %.hex: %.elf
 	@echo "  HEX  $(@F)"

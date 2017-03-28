@@ -6,7 +6,7 @@
 #include "uartutil.h"
 #include "proto.h"
 #include "debug.h"
-#include "mach.h"
+#include "system.h"
 #include "pablo.h"
 #include "reg_ro.h"
 #include "machtag.h"
@@ -97,7 +97,7 @@ static void rom_info(void)
 
 int main(void)
 {
-  mach_init_hw();
+  system_init();
 
   uart_init();
   uart_send_pstring(PSTR("parbox-test!"));
@@ -114,7 +114,7 @@ int main(void)
   test_reg = 0x4812;
 
   while(1) {
-    mach_wdt_reset();
+    system_wdt_reset();
     proto_handle();
 #if 0
     _delay_ms(500);
