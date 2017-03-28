@@ -8,7 +8,7 @@ ifeq "$(DEBUG)" "1"
 	dummy:=$(info debug enabled)
 	EXTRA_CONFIG+=configs/debug.config
 endif
-ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config
+ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config configs/avrnetio.config
 
 include $(BASE_DIR)/scripts/gencfg.mk
 # version

@@ -18,13 +18,16 @@
 
 // mcus
 #define MT_MCU_ATMEGA328        MT_MCU_BUILD(1)
+#define MT_MCU_ATMEGA32         MT_MCU_BUILD(2)
 
 // machines
 #define MT_MACH_ARDUNANO        MT_MACH_BUILD(1)
+#define MT_MACH_AVRNETIO        MT_MACH_BUILD(2)
 
 // tags
 #define MACHTAG_AVR_ATMEGA328_ARDUNANO     MT_BUILD(MT_ARCH_AVR, MT_MCU_ATMEGA328, MT_MACH_ARDUNANO)
 #define MACHTAG_AVR_ATMEGA328_ARDUNANO_1   MT_BUILDE(MT_ARCH_AVR, MT_MCU_ATMEGA328, MT_MACH_ARDUNANO, 1)
+#define MACHTAG_AVR_ATMEGA32_AVRNETIO      MT_BUILD(MT_ARCH_AVR, MT_MCU_ATMEGA32, MT_MACH_AVRNETIO)
 
 /* functions */
 extern void machtag_decode(u16 mt, rom_pchar *arch, rom_pchar *mcu, rom_pchar *mach, u08 *extra);

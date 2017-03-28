@@ -25,6 +25,7 @@ dist: $(DIST_FILES)
 # for all configs
 all-configs:
 	@for a in $(ALL_CONFIGS) ; do \
+		echo "--- $$a ---" ; \
 		$(MAKE) CONFIG=$$a || exit 1 ; \
 	done
 

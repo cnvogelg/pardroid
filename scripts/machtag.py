@@ -11,10 +11,12 @@ machtags = {
     "avr" : {
         "id" : 1,
         "cpus" : {
-            "atmega328" : 1
+            "atmega328" : 1,
+            "atmega32" : 2
         },
         "machs" : {
-            "ardunano" : 1
+            "ardunano" : 1,
+            "avrnetio" : 2
         }
     }
 }

@@ -68,7 +68,7 @@ int main(void)
 #ifdef MCUSR
   rst_flag = MCUSR;
   MCUSR = 0;
-#elif MCUCSR
+#elif defined(MCUCSR)
   rst_flag = MCUCSR;
   MCUCSR = 0;
 #else
