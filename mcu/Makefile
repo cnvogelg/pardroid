@@ -1,7 +1,15 @@
 BASE_DIR=..
-# config
+
+# config setup
 CONFIG?=configs/pbnano.config
+FLASH_CONFIG?=configs/flash.config
+EXTRA_CONFIG=$(FLASH_CONFIG) $(USER_CONFIG)
+ifeq "$(DEBUG)" "1"
+	dummy:=$(info debug enabled)
+	EXTRA_CONFIG+=configs/debug.config
+endif
 ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config
+
 include $(BASE_DIR)/scripts/gencfg.mk
 # version
 include ../version.mk

@@ -1,5 +1,5 @@
 # read config at get build dir
-ALL_CONFIG_FILES=$(CONFIG)
+ALL_CONFIG_FILES=$(CONFIG) $(EXTRA_CONFIG)
 GENCONFIG=$(BASE_DIR)/scripts/genconfig.py
 CONFIG_BASE=$(notdir $(basename $(CONFIG)))
 CONF_VALS:=$(shell $(GENCONFIG) -bam $(ALL_CONFIG_FILES))
