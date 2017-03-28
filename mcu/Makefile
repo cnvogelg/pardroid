@@ -9,6 +9,7 @@ ifeq "$(DEBUG)" "1"
 	EXTRA_CONFIG+=configs/debug.config
 endif
 ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config configs/avrnetio.config
+ALL_CONFIGS+=configs/teensy20.config
 
 include $(BASE_DIR)/scripts/gencfg.mk
 # version

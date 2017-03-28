@@ -12,11 +12,13 @@ machtags = {
         "id" : 1,
         "cpus" : {
             "atmega328" : 1,
-            "atmega32" : 2
+            "atmega32" : 2,
+            "atmega32u4" : 3
         },
         "machs" : {
             "ardunano" : 1,
-            "avrnetio" : 2
+            "avrnetio" : 2,
+            "teensy20" : 3
         }
     }
 }
