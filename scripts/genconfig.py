@@ -14,11 +14,10 @@ def log(*args):
     print(*args)
 
 
-def read_config(cfg_file):
+def read_config(cfg_file, cfg):
   if not os.path.exists(cfg_file):
     log("config file does not exist: {}".format(cfg_file))
     return
-  cfg = {}
   regex = re.compile(r'^CONFIG_[A-Z_]+$')
   with open(cfg_file, 'r') as fh:
     for line in fh:
@@ -39,7 +38,6 @@ def read_config(cfg_file):
           return
         key = key[len('CONFIG_'):]
         cfg[key] = value
-  return cfg
 
 
 def get_arch_dir(cfg):
@@ -123,7 +121,7 @@ def gen_make(cfg, output_file):
 
 def main():
   parser = argparse.ArgumentParser()
-  parser.add_argument('config_file', help="input config file")
+  parser.add_argument('config_files', nargs='+', help="input config file(s)")
   parser.add_argument('-b', '--print-build-tag', action='store_true', default=False, help="print build tag")
   parser.add_argument('-a', '--print-arch-dir', action='store_true', default=False, help="print path of arch dir")
   parser.add_argument('-m', '--print-mach-dir', action='store_true', default=False, help="print path of mach dir")
@@ -138,7 +136,9 @@ def main():
     verbose = False
 
   # read config file
-  cfg = read_config(args.config_file)
+  cfg = {}
+  for f in args.config_files:
+    read_config(f, cfg)
 
   # some basic checks on config
   if cfg and not check(cfg, args.src_base_dir):

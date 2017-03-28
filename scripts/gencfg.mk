@@ -1,7 +1,8 @@
 # read config at get build dir
+ALL_CONFIG_FILES=$(CONFIG)
 GENCONFIG=$(BASE_DIR)/scripts/genconfig.py
 CONFIG_BASE=$(notdir $(basename $(CONFIG)))
-CONF_VALS:=$(shell $(GENCONFIG) -bam $(CONFIG))
+CONF_VALS:=$(shell $(GENCONFIG) -bam $(ALL_CONFIG_FILES))
 BUILD_TAG=$(word 1,$(CONF_VALS))
 ARCH_DIR=$(word 2,$(CONF_VALS))
 MACH_DIR=$(word 3,$(CONF_VALS))
@@ -10,7 +11,7 @@ MACH_DIR=$(word 3,$(CONF_VALS))
 ifeq "$(BUILD_TAG)" "INVALID"
 .PHONY: invalid_conf
 invalid_conf:
-	@$(GENCONFIG) $(CONFIG)
+	@$(GENCONFIG) $(ALL_CONFIG_FILES)
 endif
 
 BUILD_BASE_DIR?=BUILD
@@ -28,8 +29,8 @@ CONFIG_FILES=$(CONFIG_H_FILE) $(CONFIG_MAKE_FILE)
 # create build dir
 ifeq "$(filter clean clean-all,$(MAKECMDGOALS))" ""
 create_build_dir := $(shell test -d $(BUILD_DIR) || mkdir -p $(BUILD_DIR))
-create_config_h := $(shell test -f $(CONFIG_H_FILE) || $(GENCONFIG) -c $(CONFIG_H_FILE) $(CONFIG))
-create_config_make := $(shell test -f $(CONFIG_MAKE_FILE) || $(GENCONFIG) -k $(CONFIG_MAKE_FILE) $(CONFIG))
+create_config_h := $(shell test -f $(CONFIG_H_FILE) || $(GENCONFIG) -c $(CONFIG_H_FILE) $(ALL_CONFIG_FILES))
+create_config_make := $(shell test -f $(CONFIG_MAKE_FILE) || $(GENCONFIG) -k $(CONFIG_MAKE_FILE) $(ALL_CONFIG_FILES))
 endif
 
 # toggle verbose
@@ -42,10 +43,10 @@ endif
 all:
 
 # re-generate configs
-$(CONFIG_H_FILE): $(CONFIG) $(GENCONFIG)
-	$(H)$(GENCONFIG) -c $@ $(CONFIG)
+$(CONFIG_H_FILE): $(ALL_CONFIG_FILES) $(GENCONFIG)
+	$(H)$(GENCONFIG) -c $@ $(ALL_CONFIG_FILES)
 
-$(CONFIG_MAKE_FILE): $(CONFIG) $(GENCONFIG)
-	$(H)$(GENCONFIG) -k $@ $(CONFIG)
+$(CONFIG_MAKE_FILE): $(ALL_CONFIG_FILES) $(GENCONFIG)
+	$(H)$(GENCONFIG) -k $@ $(ALL_CONFIG_FILES)
 
 include $(CONFIG_MAKE_FILE)
