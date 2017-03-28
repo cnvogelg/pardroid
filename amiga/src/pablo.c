@@ -45,9 +45,10 @@ static void show_file_info(const char *file_name, pblfile_t *pf)
   UBYTE bl_hi = (UBYTE)(pf->version >> 8);
   UBYTE bl_lo = (UBYTE)(pf->version & 0xff);
   char *arch,*mcu,*mach;
-  machtag_decode(pf->mach_tag, &arch, &mcu, &mach);
-  Printf("PBL File:   %ld.%ld, %s-%s-%s (%04lx)\n",
-    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)pf->mach_tag);
+  UBYTE extra;
+  machtag_decode(pf->mach_tag, &arch, &mcu, &mach, &extra);
+  Printf("PBL File:   %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
+    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)extra, (ULONG)pf->mach_tag);
 }
 
 static void show_bootinfo(bootinfo_t *bi)
@@ -58,9 +59,10 @@ static void show_bootinfo(bootinfo_t *bi)
   UBYTE bl_hi = (UBYTE)(bi->bl_version >> 8) & 0x7f;
   UBYTE bl_lo = (UBYTE)(bi->bl_version & 0xff);
   char *arch,*mcu,*mach;
-  machtag_decode(bi->bl_mach_tag, &arch, &mcu, &mach);
-  Printf("Bootloader: %ld.%ld, %s-%s-%s (%04lx)\n",
-    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)bi->bl_mach_tag);
+  UBYTE extra;
+  machtag_decode(bi->bl_mach_tag, &arch, &mcu, &mach, &extra);
+  Printf("Bootloader: %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
+    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)extra, (ULONG)bi->bl_mach_tag);
 }
 
 static void show_fw_info(bootinfo_t *bi)
@@ -71,9 +73,10 @@ static void show_fw_info(bootinfo_t *bi)
     UBYTE fw_hi = (UBYTE)(bi->fw_version >> 8) & 0x7f;
     UBYTE fw_lo = (UBYTE)(bi->fw_version & 0xff);
     char *arch,*mcu,*mach;
-    machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach);
-    Printf("Firmware:   %ld.%ld, %s-%s-%s (%04lx)  crc=%04lx\n",
-      (ULONG)fw_hi, (ULONG)fw_lo, arch, mcu, mach, (ULONG)bi->fw_mach_tag,
+    UBYTE extra;
+    machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach, &extra);
+    Printf("Firmware:   %ld.%ld, %s-%s-%s-%ld (%04lx)  crc=%04lx\n",
+      (ULONG)fw_hi, (ULONG)fw_lo, arch, mcu, mach, (ULONG)extra, (ULONG)bi->fw_mach_tag,
       (ULONG)bi->fw_crc);
   }
 }

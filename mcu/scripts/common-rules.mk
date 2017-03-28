@@ -44,14 +44,14 @@ dist-configs:
 	$(H)$(OBJCOPY) -O binary -j .data -j .text $< $@
 
 # generate pablo flash image
-%.img: %.bin $(BIN_DIR)/mt
+%.img: %.bin
 	@echo "  IMG  $(@F)"
-	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(shell $(BIN_DIR)/mt) $(VERSION_TAG) $@
+	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(MACHTAG_ID) $(VERSION_TAG) $@
 
 # generate pablo flash image
-%.pbl: %.img $(BIN_DIR)/mt
+%.pbl: %.img
 	@echo "  PBL  $(@F)"
-	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(shell $(BIN_DIR)/mt) $(VERSION_TAG) $@
+	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(MACHTAG_ID) $(VERSION_TAG) $@
 
 # finale eeprom file from elf
 %.eep: %.elf
@@ -88,15 +88,7 @@ $(OBJ_DIR)/%.o : %.S
 	@echo "  ASM  $<"
 	$(H)$(CC) -c $(ASFLAGS) $< -o $@
 
-
-# machtag magic (build with HOST CC)
-$(BIN_DIR)/mt: scripts/mt.c
-	@echo "  MACHTAG  $(MACHTAG)"
-	$(H)$(HOST_CC) -o $@  -DMACHTAG=$(MACHTAG) -I../common/src $<
-
-mt: $(BIN_DIR)/mt
-
 # include dependencies
-ifneq "$(MAKECMDGOALS)" "clean"
+ifeq "$(filter clean clean-all,$(MAKECMDGOALS))" ""
 -include $(shell mkdir -p $(DEP_DIR) 2>/dev/null) $(wildcard $(DEP_DIR)/*.d)
 endif

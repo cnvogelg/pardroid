@@ -13,8 +13,11 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
 
 # machtag
-MACHTAG=$(shell echo MACHTAG_$(CONFIG_ARCH)_$(CONFIG_MCU)_$(CONFIG_MACH) | tr a-z A-Z)
-CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG)
+MACHTAG=$(BASE_DIR)/scripts/machtag.py
+MT_VALS:=$(shell $(MACHTAG) -vd $(CONFIG_ARCH) $(CONFIG_MCU) $(CONFIG_MACH) $(CONFIG_MACH_VARIANT))
+MACHTAG_ID=$(word 1,$(MT_VALS))
+MACHTAG_SYMBOL=$(word 2,$(MT_VALS))
+CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG_SYMBOL)
 
 # generate version tag
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))

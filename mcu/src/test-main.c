@@ -86,12 +86,15 @@ static void rom_info(void)
 
   // decode machtag
   rom_pchar arch,mcu,mach;
-  machtag_decode(mt, &arch, &mcu, &mach);
+  u08 extra;
+  machtag_decode(mt, &arch, &mcu, &mach, &extra);
   uart_send_pstring(arch);
   uart_send('-');
   uart_send_pstring(mcu);
   uart_send('-');
   uart_send_pstring(mach);
+  uart_send('-');
+  uart_send_hex_byte(extra);
   uart_send_crlf();
 }
 
