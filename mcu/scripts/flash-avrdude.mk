@@ -52,7 +52,7 @@ endif
 ifeq "$(CONFIG_AVRDUDE_DEBUG)" "1"
 AVRDUDE_FLAGS += -v -v -v -v
 else
-AVRDUDE_QUIET = -q
+AVRDUDE_QUIET = -q -q
 endif
 
 read-sig:
@@ -67,7 +67,12 @@ read-flash:
 	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) -U flash:r:flash.img:r
 
 write-fuses:
+ifneq "$(AVRDUDE_WRITE_FUSE)" ""
 	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FUSE)
+else
+	@echo "nothing to write. no fuses configured"
+endif
+
 
 # prog rule for firmware
 # $1 = firmware.hex file
