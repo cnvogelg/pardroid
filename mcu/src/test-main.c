@@ -20,11 +20,15 @@ static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
 // ro registers
-const u16 val_one ROM_ATTR = 1;
-const u16 val_two ROM_ATTR = 2;
+const u16 val_word ROM_ATTR = 1;
+const u08 val_byte ROM_ATTR = 2;
+u16 val_ram_word = 3;
+u08 val_ram_byte = 4;
 REG_RO_TABLE_BEGIN
-  REG_RO_TABLE_ENTRY(val_one),
-  REG_RO_TABLE_ENTRY(val_two)
+  REG_RO_TABLE_ROM_W(val_word),
+  REG_RO_TABLE_ROM_B(val_byte),
+  REG_RO_TABLE_RAM_W(val_ram_word),
+  REG_RO_TABLE_RAM_B(val_ram_byte)
 REG_RO_TABLE_END
 
 // register ops

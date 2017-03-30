@@ -25,13 +25,13 @@ static const u16 ro_mach_tag ROM_ATTR = MACHTAG;
 static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
 static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
 REG_RO_TABLE_BEGIN
-  REG_RO_TABLE_ENTRY(ro_version),               /* 0: bl version */
-  REG_RO_TABLE_ENTRY(ro_mach_tag),              /* 1: bl mach tag */
-  REG_RO_TABLE_ENTRY(ro_page_size),             /* 2: page size */
-  REG_RO_TABLE_ENTRY(ro_rom_size),              /* 3: rom size */
-  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-2),    /* 4: rom crc */
-  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-4),    /* 5: rom mach tag */
-  REG_RO_TABLE_ENTRY_ADDR(CONFIG_MAX_ROM-6)     /* 6: rom version */
+  REG_RO_TABLE_ROM_W(ro_version),               /* 0: bl version */
+  REG_RO_TABLE_ROM_W(ro_mach_tag),              /* 1: bl mach tag */
+  REG_RO_TABLE_ROM_W(ro_page_size),             /* 2: page size */
+  REG_RO_TABLE_ROM_W(ro_rom_size),              /* 3: rom size */
+  REG_RO_TABLE_ROM_W_PTR(CONFIG_MAX_ROM-2),     /* 4: rom crc */
+  REG_RO_TABLE_ROM_W_PTR(CONFIG_MAX_ROM-4),     /* 5: rom mach tag */
+  REG_RO_TABLE_ROM_W_PTR(CONFIG_MAX_ROM-6)      /* 6: rom version */
 REG_RO_TABLE_END
 
 // from optiboot
