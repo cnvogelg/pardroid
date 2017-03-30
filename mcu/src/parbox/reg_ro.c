@@ -12,13 +12,14 @@ u16 reg_ro_get(u08 num)
     /* invalid reg */
     return 0;
   } else {
-    u16 ptr = read_rom_word(&reg_ro_table[num].ptr);
     u08 flags = read_rom_char(&reg_ro_table[num].flags);
     if(flags & REG_RO_FLAG_FUNC) {
+        rom_pchar ptr = read_rom_rom_ptr(&reg_ro_table[num].ptr.func);
         reg_ro_func_t f = (reg_ro_func_t)ptr;
         return f();
     }
     else if(flags & REG_RO_FLAG_RAM) {
+        ram_pchar ptr = read_rom_ram_ptr(&reg_ro_table[num].ptr.ram);
         if(flags & REG_RO_FLAG_BYTE) {
             u08 *vptr = (u08 *)ptr;
             return *vptr;
@@ -28,6 +29,7 @@ u16 reg_ro_get(u08 num)
         }
     }
     else {
+        rom_pchar ptr = read_rom_rom_ptr(&reg_ro_table[num].ptr.rom);
         if(flags & REG_RO_FLAG_BYTE) {
             u08 val = read_rom_char(ptr);
             return val;
