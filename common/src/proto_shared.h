@@ -23,7 +23,12 @@
 // ro register definitions
 #define PROTO_RO_REG_VERSION      0
 #define PROTO_RO_REG_MACHTAG      1
-#define PROTO_RO_REG_PEND_MASK    2
-#define PROTO_RO_REG_PEND_TOTAL   3
+#define PROTO_RO_REG_FW_ID        2
+#define PROTO_RO_REG_NUM_RO_RW    3
+#define PROTO_RO_REG_PEND_MASK    4
+#define PROTO_RO_REG_PEND_TOTAL   5
 
-#define PROTO_RO_REG_USER         4
+#define PROTO_RO_REG_USER         6
+
+// firmware ids
+#define PROTO_FWID_TEST           1

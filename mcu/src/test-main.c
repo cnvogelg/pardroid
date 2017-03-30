@@ -9,6 +9,7 @@
 #include "system.h"
 #include "pablo.h"
 #include "reg_ro.h"
+#include "reg_ro_def.h"
 #include "machtag.h"
 #include "pend.h"
 
@@ -20,24 +21,25 @@ static u16 test_reg;
 static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
-// ro registers
-static const u16 ro_version ROM_ATTR = VERSION_TAG;
-static const u16 ro_machtag ROM_ATTR = MACHTAG;
+// ----- ro registers -----
+// test values
 static const u16 ro_rom_word ROM_ATTR = 1;
 static const u08 ro_rom_byte ROM_ATTR = 2;
 static u16 ro_ram_word = 3;
 static u08 ro_ram_byte = 4;
+static u16 ro_func(void) {
+  return 5;
+}
+
+REG_RO_PROTO_APPID(PROTO_FWID_TEST)
 REG_RO_TABLE_BEGIN
-  /* proto regs */
-  REG_RO_TABLE_ROM_W(ro_version),
-  REG_RO_TABLE_ROM_W(ro_machtag),
-  REG_RO_TABLE_RAM_W(pend_mask),
-  REG_RO_TABLE_RAM_W(pend_total),
+  REG_RO_PROTO_DEFAULTS
   /* user regs */
   REG_RO_TABLE_ROM_W(ro_rom_word),
   REG_RO_TABLE_ROM_B(ro_rom_byte),
   REG_RO_TABLE_RAM_W(ro_ram_word),
-  REG_RO_TABLE_RAM_B(ro_ram_byte)
+  REG_RO_TABLE_RAM_B(ro_ram_byte),
+  REG_RO_TABLE_FUNC(ro_func)
 REG_RO_TABLE_END
 
 // register ops

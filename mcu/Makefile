@@ -38,13 +38,14 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 # sources
 BASE_SRCS = uart.c uartutil.c system.c pablo.c
 PROTO_SRCS = proto_low.S proto.c reg_ro.c
+PROTO_EXT_SRCS = pend.c reg_ro_def.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
 INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-fw
-TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) test-main.c machtag.c pend.c
+TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS) test-main.c machtag.c
 $(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
 $(eval $(call make-pablo,test-fw))
 
