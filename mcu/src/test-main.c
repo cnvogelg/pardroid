@@ -10,6 +10,7 @@
 #include "pablo.h"
 #include "reg_ro.h"
 #include "machtag.h"
+#include "pend.h"
 
 #include <util/delay.h>
 
@@ -20,15 +21,23 @@ static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
 // ro registers
-const u16 val_word ROM_ATTR = 1;
-const u08 val_byte ROM_ATTR = 2;
-u16 val_ram_word = 3;
-u08 val_ram_byte = 4;
+static const u16 ro_version ROM_ATTR = VERSION_TAG;
+static const u16 ro_machtag ROM_ATTR = MACHTAG;
+static const u16 ro_rom_word ROM_ATTR = 1;
+static const u08 ro_rom_byte ROM_ATTR = 2;
+static u16 ro_ram_word = 3;
+static u08 ro_ram_byte = 4;
 REG_RO_TABLE_BEGIN
-  REG_RO_TABLE_ROM_W(val_word),
-  REG_RO_TABLE_ROM_B(val_byte),
-  REG_RO_TABLE_RAM_W(val_ram_word),
-  REG_RO_TABLE_RAM_B(val_ram_byte)
+  /* proto regs */
+  REG_RO_TABLE_ROM_W(ro_version),
+  REG_RO_TABLE_ROM_W(ro_machtag),
+  REG_RO_TABLE_RAM_W(pend_mask),
+  REG_RO_TABLE_RAM_W(pend_total),
+  /* user regs */
+  REG_RO_TABLE_ROM_W(ro_rom_word),
+  REG_RO_TABLE_ROM_B(ro_rom_byte),
+  REG_RO_TABLE_RAM_W(ro_ram_word),
+  REG_RO_TABLE_RAM_B(ro_ram_byte)
 REG_RO_TABLE_END
 
 // register ops
@@ -116,6 +125,7 @@ int main(void)
 
   DC('+');
   proto_init();
+  pend_init();
   DC('-');
 
   test_reg = 0x4812;
@@ -123,6 +133,7 @@ int main(void)
   while(1) {
     system_wdt_reset();
     proto_handle();
+    pend_handle();
 #if 0
     _delay_ms(500);
     DC('.');

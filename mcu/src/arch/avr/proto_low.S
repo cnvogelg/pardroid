@@ -65,7 +65,8 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
 
     .section .text
 
-    ; void pario_init(void)
+    ; ----- proto_low_init -----
+    ; void proto_low_init(void)
     ; setup parallel port lines
     .global  proto_low_init
 proto_low_init:
@@ -86,7 +87,34 @@ proto_low_init:
     ret
 
 
-    ; u08 pario_get_cmd(void)
+    ; ----- ack/pend signals -----
+    ; void proto_low_ack_lo(void)
+    .global  proto_low_ack_lo
+proto_low_ack_lo:
+    ack_lo
+    ret
+
+    ; void proto_low_ack_hi(void)
+    .global  proto_low_ack_hi
+proto_low_ack_hi:
+    ack_hi
+    ret
+
+    ; void proto_low_pend_lo(void)
+    .global  proto_low_pend_lo
+proto_low_pend_lo:
+    pend_lo
+    ret
+
+    ; void proto_low_pend_hi(void)
+    .global  proto_low_pend_hi
+proto_low_pend_hi:
+    pend_hi
+    ret
+
+
+    ; ----- proto_low_get_cmd -----
+    ; u08 proto_low_get_cmd(void)
     ; return 0 or command byte
     .global  proto_low_get_cmd
 proto_low_get_cmd:

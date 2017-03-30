@@ -19,3 +19,11 @@
 #define PROTO_CMD_INVALID         0xff
 
 #define PROTO_CMD_MASK            0xf0
+
+// ro register definitions
+#define PROTO_RO_REG_VERSION      0
+#define PROTO_RO_REG_MACHTAG      1
+#define PROTO_RO_REG_PEND_MASK    2
+#define PROTO_RO_REG_PEND_TOTAL   3
+
+#define PROTO_RO_REG_USER         4

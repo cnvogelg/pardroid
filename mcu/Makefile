@@ -44,7 +44,7 @@ INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-fw
-TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) test-main.c machtag.c
+TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) test-main.c machtag.c pend.c
 $(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
 $(eval $(call make-pablo,test-fw))
 
