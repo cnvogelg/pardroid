@@ -418,7 +418,7 @@ static test_t all_tests[] = {
   { NULL, NULL, NULL }
 };
 
-static int run_test(parbox_handle_t *pb, test_t *test)
+static int run_test(parbox_handle_t *pb, test_t *test, int silent)
 {
   /* determine number of runs */
   ULONG num = 1;
@@ -436,8 +436,10 @@ static int run_test(parbox_handle_t *pb, test_t *test)
   }
 
   /* report test */
-  Printf("Test: %s, Count: %ld, Delay: %ld  [%s]\n",
-    test->name, num, delay, test->description);
+  if(!silent) {
+    Printf("Test: %s, Count: %ld, Delay: %ld  [%s]\n",
+      test->name, num, delay, test->description);
+  }
 
   int res;
   if(num == 1) {
@@ -450,9 +452,15 @@ static int run_test(parbox_handle_t *pb, test_t *test)
     /* single run */
     res = test->func(pb, test);
     if(res == 0) {
-      PutStr("Ok.\n");
+      if(!silent) {
+        PutStr("Ok.\n");
+      }
     }
     else {
+      if(silent) {
+        Printf("Test: %s, Count: %ld, Delay: %ld  [%s]\n",
+          test->name, num, delay, test->description);
+      }
       Printf("Result: %ld  %s  in  '%s': %s\n", (LONG)res,
         test->error, test->section, test->extra);
     }
@@ -506,6 +514,27 @@ static int run_test(parbox_handle_t *pb, test_t *test)
   return res == 0 ? RETURN_OK : RETURN_WARN;
 }
 
+static int run_all_tests(parbox_handle_t *pb, int silent)
+{
+  ULONG cnt;
+  ULONG num_failed;
+  int final_res = RETURN_OK;
+
+  PutStr("----- All Tests -----\n");
+  test_t *t = all_tests;
+  while(t->name != NULL) {
+    int res = run_test(pb, t, silent);
+    if(res != RETURN_OK) {
+      num_failed++;
+      final_res = res;
+    }
+    t++;
+    cnt++;
+  }
+  Printf("All Total: %ld, Failed: %ld\n", cnt, num_failed);
+  return final_res;
+}
+
 static test_t *pick_test(const char *name)
 {
   /* default */
@@ -532,6 +561,54 @@ static void show_tests(void)
   }
 }
 
+static int test_main(parbox_handle_t *pb)
+{
+  /* run a single test? */
+  if(params.test) {
+    /* pick test function */
+    test_t *test = pick_test(params.test);
+    if(test == NULL) {
+      PutStr("Test not found! Available tests are:\n");
+      show_tests();
+      return RETURN_WARN;
+    } else {
+      /* run single test */
+      return run_test(pb, test, 0);
+    }
+  }
+  /* run all tests */
+  else {
+    /* loop all tests */
+    if(params.loop) {
+      params.loop = 0;
+      /* loop */
+      ULONG cnt = 0;
+      ULONG num_failed = 0;
+      int final_res = RETURN_OK;
+      while(1) {
+        /* break? */
+        if(SetSignal(0L,SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C) {
+          PutStr("Abort.\n");
+          break;
+        }
+
+        int res = run_all_tests(pb, 1);
+        if(res != RETURN_OK) {
+          final_res = res;
+          num_failed++;
+        }
+
+        cnt++;
+      }
+      Printf("Loop All Total: %ld, Failed: %ld\n", cnt, num_failed);
+    }
+    /* run all tests a single time */
+    else {
+      return run_all_tests(pb, 0);
+    }
+  }
+}
+
 int dosmain(void)
 {
   struct RDArgs *args;
@@ -545,24 +622,16 @@ int dosmain(void)
 
   int res = RETURN_ERROR;
 
-  /* pick test function */
-  test_t *test = pick_test(params.test);
-  if(test == NULL) {
-    PutStr("Test not found! Available tests are:\n");
-    show_tests();
+  /* setup parbox */
+  res = parbox_init(&pb, (struct Library *)SysBase);
+  if(res == PARBOX_OK) {
+
+    res = test_main(&pb);
+
+    parbox_exit(&pb);
   } else {
-    /* setup parbox */
-    res = parbox_init(&pb, (struct Library *)SysBase);
-    if(res == PARBOX_OK) {
-
-      /* run test */
-      res = run_test(&pb, test);
-
-      parbox_exit(&pb);
-    } else {
-      PutStr(parbox_perror(res));
-      PutStr(" -> ABORT\n");
-    }
+    PutStr(parbox_perror(res));
+    PutStr(" -> ABORT\n");
   }
 
   /* Finally free args */
