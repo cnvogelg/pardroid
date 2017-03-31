@@ -516,8 +516,8 @@ static int run_test(parbox_handle_t *pb, test_t *test, int silent)
 
 static int run_all_tests(parbox_handle_t *pb, int silent)
 {
-  ULONG cnt;
-  ULONG num_failed;
+  ULONG cnt = 0;
+  ULONG num_failed = 0;
   int final_res = RETURN_OK;
 
   PutStr("----- All Tests -----\n");

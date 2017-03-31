@@ -130,23 +130,15 @@ int main(void)
 
   rom_info();
 
-  _delay_ms(300);
-
   DC('+');
   proto_init();
   pend_init();
   DC('-');
 
-  test_reg = 0x4812;
-
   while(1) {
     system_wdt_reset();
     proto_handle();
     pend_handle();
-#if 0
-    _delay_ms(500);
-    DC('.');
-#endif
   }
 
   return 0;
