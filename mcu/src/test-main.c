@@ -10,6 +10,7 @@
 #include "pablo.h"
 #include "reg_ro.h"
 #include "reg_ro_def.h"
+#include "reg_rw.h"
 #include "machtag.h"
 #include "pend.h"
 
@@ -17,8 +18,6 @@
 
 #define MAX_TEST_MSG_SIZE 1024
 
-static u16 test_reg;
-static u16 test_size;
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
 // ----- ro registers -----
@@ -42,25 +41,33 @@ REG_RO_TABLE_BEGIN
   REG_RO_TABLE_FUNC(ro_func)
 REG_RO_TABLE_END
 
-// register ops
-
-void proto_api_set_rw_reg(u08 reg,u16 val)
+// ----- rw registers -----
+// test values
+static u16 test_reg = 0x4812;
+static u08 test_byte = 0x42;
+static u16 test_size;
+static u16 test_reg_check(u16 val)
 {
-  if(reg == 0) {
-    test_size = val;
+  if(val < 0x8000) {
+    return val;
   } else {
-    test_reg = val;
+    return 0x8000;
+  }
+}
+static u16 test_byte_check(u16 val)
+{
+  if(val < 0x80) {
+    return val;
+  } else {
+    return 0x80;
   }
 }
 
-u16  proto_api_get_rw_reg(u08 reg)
-{
-  if(reg == 0) {
-    return test_size;
-  } else {
-    return test_reg;
-  }
-}
+REG_RW_TABLE_BEGIN
+  REG_RW_TABLE_RAM_W(test_size),
+  REG_RW_TABLE_RAM_W_FUNC(test_reg, test_reg_check),
+  REG_RW_TABLE_RAM_B_FUNC(test_byte, test_byte_check)
+REG_RW_TABLE_END
 
 // msg ops
 

@@ -37,7 +37,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # sources
 BASE_SRCS = uart.c uartutil.c system.c pablo.c
-PROTO_SRCS = proto_low.S proto.c reg_ro.c
+PROTO_SRCS = proto_low.S proto.c reg_ro.c reg_rw.c
 PROTO_EXT_SRCS = pend.c reg_ro_def.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox

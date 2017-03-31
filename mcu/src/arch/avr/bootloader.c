@@ -13,6 +13,7 @@
 #include "flash.h"
 #include "pablo.h"
 #include "reg_ro.h"
+#include "reg_rw.h"
 #include "machtag.h"
 
 static u08 status;
@@ -33,6 +34,12 @@ REG_RO_TABLE_BEGIN
   REG_RO_TABLE_ROM_W_PTR(CONFIG_MAX_ROM-4),     /* 5: rom mach tag */
   REG_RO_TABLE_ROM_W_PTR(CONFIG_MAX_ROM-6)      /* 6: rom version */
 REG_RO_TABLE_END
+
+// rw registers
+REG_RW_TABLE_BEGIN
+  REG_RW_TABLE_RAM_W(page_addr)                 /* 0: page addr */
+REG_RW_TABLE_END
+
 
 // from optiboot
 static void run_app(u08 rstFlags) __attribute__ ((naked));
@@ -114,24 +121,6 @@ int main(void)
   while(1) {
     wdt_reset();
     proto_handle();
-  }
-}
-
-// registers
-
-void proto_api_set_rw_reg(u08 reg, u16 val)
-{
-  if(reg == 0) {
-    page_addr = val;
-  }
-}
-
-u16  proto_api_get_rw_reg(u08 reg)
-{
-  if(reg == 0) {
-    return page_addr;
-  } else {
-    return 0;
   }
 }
 
