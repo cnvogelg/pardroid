@@ -39,7 +39,7 @@ static int test_run_single(test_t *test, test_param_t *param, int silent, int nu
     param->iter = 0;
 
     /* single run */
-    int res = test->func(test, param);
+    res = test->func(test, param);
     if(res == 0) {
       if(!silent) {
         PutStr("Ok.\n");
@@ -70,7 +70,7 @@ static int test_run_single(test_t *test, test_param_t *param, int silent, int nu
       param->iter = cnt++;
 
       /* test func */
-      int res = test->func(test, param);
+      res = test->func(test, param);
       if(res == 0) {
         if((cnt & 0xff == 0) || force) {
           Printf("%06ld: ok\r", cnt);
