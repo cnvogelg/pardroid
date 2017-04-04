@@ -8,7 +8,7 @@ include scripts/common-defs.mk
 include scripts/toolchain-$(CONFIG_ARCH).mk
 
 # paths
-INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo
+INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo src/test
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
 
@@ -16,6 +16,7 @@ BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
 PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c
+TEST_SRCS = test.c
 
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
 PARBOX_SRCS += parbox.c
@@ -33,7 +34,7 @@ TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_
 $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
 
 # parbox-test
-PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS)
+PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
 $(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
 
 # pablo
