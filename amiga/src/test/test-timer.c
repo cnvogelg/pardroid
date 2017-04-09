@@ -54,6 +54,21 @@ int dosmain(void)
         }
         Printf("dong: %lu\n", i);
 
+        /* test sig timer */
+        BYTE signal = timer_sig_init(th);
+        if(signal != -1) {
+            ULONG sigmask = 1 << signal;
+            Printf("sig timer: sigmask=%08lx\n", sigmask);
+
+            timer_sig_start(th, 0, 1000000UL);
+            Wait(sigmask);
+            PutStr("got timer");
+
+            timer_sig_exit(th);
+        } else {
+            PutStr("No sig timer!!\n");
+        }
+
         timer_exit(th);
         PutStr("done\n");
     } else {
