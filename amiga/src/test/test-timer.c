@@ -16,9 +16,19 @@ int dosmain(void)
         PutStr("got timer\n");
 
         /* test how fast eclock reads are */
-        ULONG e1 = timer_get_eclock(th);
-        ULONG e2 = timer_get_eclock(th);
-        Printf("eclock: e1=%08lx e2=%08lx\n", e1, e2);
+        time_stamp_t e1;
+        time_stamp_t e2;
+        ULONG ef = timer_get_eclock(th, &e1);
+        Delay(100);
+        timer_get_eclock(th, &e2);
+        Printf("efreq: %ld\n", ef);
+        Printf("eclock: e1=%08lx.%08lx e2=%08lx.%08lx\n", e1.hi, e1.lo, e2.hi, e2.lo);
+        timer_delta(th, &e2, &e1);
+        Printf("eclock: diff=%08lx.%08lx\n", e2.hi, e2.lo);
+        ULONG us = timer_eclock_to_us(th, &e2);
+        Printf("us: %ld\n", us);
+        ULONG bps = timer_calc_bps(th, &e2, 500UL);
+        Printf("bps: %ld\n", bps);
 
         /* test timer: busy wait for timeout */
         volatile UBYTE *flag = timer_get_flag(th);

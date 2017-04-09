@@ -19,6 +19,7 @@ struct timer_handle {
   ULONG           oldExcept;
   struct timerequest timerReq;
   struct Library *timerBase;
+  ULONG           eClockFreq;
   ULONG           syncSigMask;
   BYTE            syncSig;
   volatile UBYTE  timeoutFlag;
@@ -153,11 +154,30 @@ void timer_stop(struct timer_handle *th)
   AbortIO((struct IORequest*)&th->timerReq);
 }
 
-ULONG timer_get_eclock(struct timer_handle *th)
+ULONG timer_get_eclock(struct timer_handle *th, time_stamp_t *val)
 {
-  struct EClockVal val;
-  ReadEClock(&val);
-  return val.ev_lo;
+  struct EClockVal *eval = (struct EClockVal *)val;
+  th->eClockFreq = ReadEClock(eval);
+  return th->eClockFreq;
+}
+
+void timer_delta(struct timer_handle *th, time_stamp_t *end, time_stamp_t *begin)
+{
+  struct timeval *tend = (struct timeval *)end;
+  struct timeval *tbegin = (struct timeval *)begin;
+  SubTime(tend, tbegin);
+}
+
+ULONG timer_eclock_to_us(struct timer_handle *th, time_stamp_t *et)
+{
+  unsigned long long a = *((unsigned long long *)et);
+  return (ULONG)(a * 1000000UL / th->eClockFreq);
+}
+
+ULONG timer_calc_bps(struct timer_handle *th, time_stamp_t *delta, ULONG bytes)
+{
+  unsigned long long d = *((unsigned long long *)delta);
+  return (ULONG)(d * bytes / th->eClockFreq);
 }
 
 static ULONG ASM SAVEDS exc_handler(REG(d0,ULONG sigmask), REG(a1,struct timer_handle *th))
