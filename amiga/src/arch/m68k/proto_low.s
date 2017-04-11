@@ -7,6 +7,7 @@
         include         "proto.i"
 
         xdef            _proto_low_action
+        xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
         xdef            _proto_low_write_block
@@ -204,6 +205,64 @@ pla_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s   pla_end
+
+
+; --- proto_low_action_bench ---
+; the proto_low_action routine instrumented with benchmark callbacks
+;
+;   in:
+;       a0      struct pario_port *port
+;       a1      volatile UBYTE *timeout_flag
+;       a2      callback struct
+;       d0      CMD_PING constant
+;   out:
+;       d0      return code
+_proto_low_action_bench:
+        movem.l d2-d7/a2-a6,-(sp)
+
+        ; setup regs with port values and read old ctrl value
+        setup_port_regs
+
+        ; retrieve pointer for callback
+        move.l          (a2),a0
+
+        ; -- sync with slave
+        ; check RAK to be high or abort
+        check_rak_hi    plab_end
+        ; set cmd to data port
+        set_cmd         d0
+        ; set CLK to low (active) to trigger command at slave
+        clk_lo
+        ; callback 0: set clock low
+        moveq           #0,d0
+        jsr             (a0)
+        ; busy wait with timeout for RAK to go low
+        ; (we wait for the slave to react/sync)
+        wait_rak_lo     plab_abort
+        ; callback 1: got rak lo
+        moveq           #1,d0
+        jsr             (a0)
+
+        ; -- final sync
+        ; now raise CLK again
+        clk_hi
+        ; expect slave to raise rak, too
+        check_rak_hi    plab_end
+        ; callback 2: got rak hi
+        moveq           #2,d0
+        jsr             (a0)
+        ; ok
+        moveq   #RET_OK,d0
+plab_end:
+        ; restore cmd
+        set_cmd_idle
+
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plab_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s   plab_end
 
 
 ; --- proto_low_write_word ---

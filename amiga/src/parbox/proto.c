@@ -68,6 +68,49 @@ int proto_action(proto_handle_t *ph, UBYTE cmd)
   return result;
 }
 
+static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))
+{
+  struct timer_handle *th = (struct timer_handle *)cb->user_data;
+  time_stamp_t *ts = (time_stamp_t *)&cb->timestamps[id];
+  timer_get_eclock(th, ts);
+}
+
+int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2])
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  struct cb_data cbd = {
+    bench_cb,
+    ph->timer
+  };
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_action_bench(port, timeout_flag, &cbd, cmd);
+  timer_stop(ph->timer);
+
+  /* calc deltas */
+  if(result == PROTO_RET_OK) {
+    time_stamp_t *t0 = (time_stamp_t *)&cbd.timestamps[0];
+    time_stamp_t *t1 = (time_stamp_t *)&cbd.timestamps[1];
+    time_stamp_t *t2 = (time_stamp_t *)&cbd.timestamps[2];
+    timer_delta(ph->timer, t1, t2);
+    timer_delta(ph->timer, t0, t1);
+
+    start->lo = t0->lo;
+    start->hi = t0->hi;
+    deltas[0] = t1->lo;
+    deltas[1] = t2->lo;
+  } else {
+    start->lo = 0;
+    start->hi = 0;
+    deltas[0] = 0;
+    deltas[1] = 1;
+  }
+
+  return result;
+}
+
 int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;

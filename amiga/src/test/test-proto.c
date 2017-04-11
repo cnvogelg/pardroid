@@ -29,6 +29,14 @@ int dosmain(void)
                 int error = proto_action(ph, PROTO_CMD_PING);
                 Printf("-> %ld\n", (LONG)error);
                 PutStr("done\n");
+
+                PutStr("bench ping\n");
+                ULONG deltas[2];
+                time_stamp_t start;
+                error = proto_action_bench(ph, PROTO_CMD_PING, &start, deltas);
+                Printf("-> %ld, start=%ld.%ld delta=%ld, %ld\n",
+                    (LONG)error, start.hi, start.lo, deltas[0], deltas[1]);
+
                 proto_exit(ph);
             } else {
                 PutStr("error setting up proto!\n");

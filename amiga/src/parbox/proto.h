@@ -22,6 +22,7 @@ extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *
 extern void proto_exit(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE cmd);
+extern int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2]);
 
 extern int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
 extern int proto_reg_rw_write(proto_handle_t *ph, UBYTE reg, UWORD *data);
