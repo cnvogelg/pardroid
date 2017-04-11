@@ -6,7 +6,7 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_no_value
+        xdef            _proto_low_action
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
         xdef            _proto_low_write_block
@@ -156,7 +156,7 @@ get_data MACRO
 
 ; ----- functions -----------------------------------------------------------
 
-; --- proto_low_no_value ---
+; --- proto_low_action ---
 ; a simple command that does not transfer any value
 ;
 ;   in:
@@ -165,7 +165,7 @@ get_data MACRO
 ;       d0      CMD_PING constant
 ;   out:
 ;       d0      return code
-_proto_low_no_value:
+_proto_low_action:
         movem.l d2-d7/a2-a6,-(sp)
 
         ; setup regs with port values and read old ctrl value
@@ -173,14 +173,14 @@ _proto_low_no_value:
 
         ; -- sync with slave
         ; check RAK to be high or abort
-        check_rak_hi    plp_end
+        check_rak_hi    pla_end
         ; set cmd to data port
         set_cmd         d0
         ; set CLK to low (active) to trigger command at slave
         clk_lo
         ; busy wait with timeout for RAK to go low
         ; (we wait for the slave to react/sync)
-        wait_rak_lo     plp_abort
+        wait_rak_lo     pla_abort
 
         ; now we are in sync with slave
         ; we are now in work phase
@@ -190,20 +190,20 @@ _proto_low_no_value:
         ; now raise CLK again
         clk_hi
         ; expect slave to raise rak, too
-        check_rak_hi    plp_end
+        check_rak_hi    pla_end
 
         ; ok
         moveq   #RET_OK,d0
-plp_end:
+pla_end:
         ; restore cmd
         set_cmd_idle
 
         movem.l (sp)+,d2-d7/a2-a6
         rts
-plp_abort:
+pla_abort:
         ; ensure CLK is hi
         clk_hi
-        bra.s   plp_end
+        bra.s   pla_end
 
 
 ; --- proto_low_write_word ---

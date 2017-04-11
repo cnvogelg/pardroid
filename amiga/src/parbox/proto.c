@@ -56,13 +56,13 @@ void proto_exit(proto_handle_t *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
-int proto_cmd(proto_handle_t *ph, UBYTE cmd)
+int proto_action(proto_handle_t *ph, UBYTE cmd)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_no_value(port, timeout_flag, cmd);
+  int result = proto_low_action(port, timeout_flag, cmd);
   timer_stop(ph->timer);
 
   return result;

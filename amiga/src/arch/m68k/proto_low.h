@@ -1,9 +1,9 @@
 #ifndef PROTO_LOW_H
 #define PROTO_LOW_H
 
-extern ASM int proto_low_no_value(REG(a0, struct pario_port *port),
-                                  REG(a1, volatile UBYTE *timeout_flag),
-                                  REG(d0, UBYTE cmd));
+extern ASM int proto_low_action(REG(a0, struct pario_port *port),
+                                REG(a1, volatile UBYTE *timeout_flag),
+                                REG(d0, UBYTE cmd));
 
 extern ASM int proto_low_read_word(REG(a0, struct pario_port *port),
                                    REG(a1, volatile UBYTE *timeout_flag),

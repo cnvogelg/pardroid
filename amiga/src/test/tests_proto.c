@@ -31,7 +31,7 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size)
 int test_ping(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
-  int res = proto_cmd(pb->proto, PROTO_CMD_PING);
+  int res = proto_action(pb->proto, PROTO_CMD_PING);
   if(res == 0) {
     return 0;
   } else {
@@ -44,7 +44,7 @@ int test_ping(test_t *t, test_param_t *p)
 int test_reset(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
-  int res = proto_cmd(pb->proto, PROTO_CMD_RESET);
+  int res = proto_action(pb->proto, PROTO_CMD_RESET);
   if(res == 0) {
     return 0;
   } else {
