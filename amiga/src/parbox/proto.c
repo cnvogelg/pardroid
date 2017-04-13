@@ -56,6 +56,12 @@ void proto_exit(proto_handle_t *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
+int proto_is_pending(proto_handle_t *ph)
+{
+  struct pario_port *port = ph->port;
+  return proto_low_read_pending(port);
+}
+
 int proto_action(proto_handle_t *ph, UBYTE cmd)
 {
   struct pario_port *port = ph->port;

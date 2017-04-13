@@ -1,11 +1,12 @@
 ; --- proto signals ---
 ; POUT = /CLK  (Amiga out)
 ; BUSY = /RAK  (Amiga in)
-; SEL  = ?
+; SEL  = /PEND (Amiga in)
 
         include         "pario.i"
         include         "proto.i"
 
+        xdef            _proto_low_read_pending
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
@@ -156,6 +157,26 @@ get_data MACRO
 
 
 ; ----- functions -----------------------------------------------------------
+
+; --- proto_low_read_pending ---
+; check if the pending read line is still active
+;
+;   in:
+;       a0      struct pario_port *port
+;   out:
+;       d0      0: not pending, 1: pending
+_proto_low_read_pending:
+        move.b  PO_SEL_BIT(a0),d1
+        move.l  PO_CTRL_PORT(a0),a1
+        btst    d1,(a1)
+        ; is low active
+        beq.s   plrp_active
+        moveq   #0,d0
+        rts
+plrp_active:
+        moveq   #1,d0
+        rts
+
 
 ; --- proto_low_action ---
 ; a simple command that does not transfer any value
