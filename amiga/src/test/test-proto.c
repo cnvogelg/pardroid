@@ -26,14 +26,14 @@ int dosmain(void)
             struct proto_handle *ph = proto_init(port, th);
             if(ph != NULL) {
                 PutStr("proto_ping\n");
-                int error = proto_action(ph, PROTO_CMD_PING);
+                int error = proto_action(ph, PROTO_ACTION_PING);
                 Printf("-> %ld\n", (LONG)error);
                 PutStr("done\n");
 
                 PutStr("bench ping\n");
                 ULONG deltas[2];
                 time_stamp_t start;
-                error = proto_action_bench(ph, PROTO_CMD_PING, &start, deltas);
+                error = proto_action_bench(ph, PROTO_ACTION_PING, &start, deltas);
                 Printf("-> %ld, start=%ld.%ld delta=%ld, %ld\n",
                     (LONG)error, start.hi, start.lo, deltas[0], deltas[1]);
 

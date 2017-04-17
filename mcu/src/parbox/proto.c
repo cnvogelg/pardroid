@@ -9,6 +9,12 @@ void proto_init(void)
   proto_low_init();
 }
 
+static void action(u08 num)
+{
+  DS("a:"); DB(num); DNL;
+  proto_api_action(num);
+}
+
 static void rw_reg_write(u08 reg)
 {
   // master wants to write a u16
@@ -72,32 +78,14 @@ void proto_handle(void)
     case PROTO_CMD_INVALID:
       //DS("invalid"); DNL;
       break;
-
-    case PROTO_CMD_PING:
-      // alive ping from master
-      DS("ping"); DNL;
-      proto_low_no_value();
-      break;
-
-    case PROTO_CMD_BOOTLOADER:
-      // immediately reset to bootloader
-      // do not complete ping protocol here as it is done in bootloader
-      DS("bootloader"); DNL;
-      system_sys_reset();
-      break;
-
-    case PROTO_CMD_RESET:
-      DS("reset"); DNL;
-      proto_low_no_value();
-      DS("restart"); DNL;
-      system_sys_reset();
-      break;
-
     default:
       {
         u08 cmd_base = cmd & PROTO_CMD_MASK;
         u08 num = cmd - cmd_base;
         switch(cmd_base) {
+          case PROTO_CMD_ACTION:
+            action(num);
+            break;
           case PROTO_CMD_RW_REG_WRITE:
             rw_reg_write(num);
             break;

@@ -6,6 +6,8 @@ extern void proto_init(void);
 extern void proto_handle(void);
 
 // define these in your code
+extern void proto_api_action(u08 num);
+
 extern void proto_api_set_rw_reg(u08 reg,u16 val);
 extern u16  proto_api_get_rw_reg(u08 reg);
 extern u16  proto_api_get_ro_reg(u08 num);

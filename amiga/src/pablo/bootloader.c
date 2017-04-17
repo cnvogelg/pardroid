@@ -15,13 +15,13 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
   proto_handle_t *ph = pb->proto;
 
   /* first ping device */
-  res = proto_action(ph, PROTO_CMD_PING);
+  res = proto_action(ph, PROTO_ACTION_PING);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_PING | res;
   }
 
   /* try to enter bootloader (ignored if already running */
-  res = proto_action(ph, PROTO_CMD_BOOTLOADER);
+  res = proto_action(ph, PROTO_ACTION_BOOTLOADER);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_BOOTLOADER | res;
   }
@@ -227,7 +227,7 @@ int bootloader_leave(parbox_handle_t *pb)
   proto_handle_t *ph = pb->proto;
 
   /* reset device */
-  res = proto_action(ph, PROTO_CMD_RESET);
+  res = proto_action(ph, PROTO_ACTION_RESET);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_BOOTLOADER | res;
   }
@@ -235,7 +235,7 @@ int bootloader_leave(parbox_handle_t *pb)
   /* try multiple times to ping the device */
   for(int i=0;i<5;i++) {
     /* ping device */
-    res = proto_action(ph, PROTO_CMD_PING);
+    res = proto_action(ph, PROTO_ACTION_PING);
     if(res == PROTO_RET_OK) {
       break;
     }

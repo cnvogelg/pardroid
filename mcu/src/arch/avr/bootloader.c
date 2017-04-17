@@ -14,11 +14,17 @@
 #include "pablo.h"
 #include "reg_ro.h"
 #include "reg_rw.h"
+#include "action.h"
 #include "machtag.h"
 
 static u08 status;
 static u16 page_addr;
 static u08 page_buf[SPM_PAGESIZE];
+
+// action
+ACTION_TABLE_BEGIN
+  ACTION_PROTO_DEFAULTS
+ACTION_TABLE_END
 
 // ro registers
 static const u16 ro_version ROM_ATTR = 0x8000 | VERSION_TAG;
@@ -95,7 +101,7 @@ int main(void)
 
   // check if bootloader command is set - if not enter app
   u08 cmd = proto_low_get_cmd();
-  if(cmd != PROTO_CMD_BOOTLOADER) {
+  if(cmd != PROTO_ACTION_BOOTLOADER) {
     // check crc
     uart_send('B');
     u16 crc = pablo_check_rom_crc();
@@ -113,7 +119,7 @@ int main(void)
   else {
     // reply to bootloader command
     uart_send('-');
-    proto_low_no_value();
+    proto_low_action();
   }
 
   // enter main loop

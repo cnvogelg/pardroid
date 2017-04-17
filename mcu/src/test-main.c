@@ -12,6 +12,7 @@
 #include "reg_ro_def.h"
 #include "reg_rw.h"
 #include "reg_rw_def.h"
+#include "action.h"
 #include "machtag.h"
 #include "pend.h"
 
@@ -20,6 +21,11 @@
 #define MAX_TEST_MSG_SIZE 1024
 
 static u08 test_msg[MAX_TEST_MSG_SIZE];
+
+// ----- actions -----
+ACTION_TABLE_BEGIN
+  ACTION_PROTO_DEFAULTS
+ACTION_TABLE_END
 
 // ----- ro registers -----
 // test values

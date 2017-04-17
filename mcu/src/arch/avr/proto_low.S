@@ -127,12 +127,12 @@ proto_low_get_cmd:
     ret
 
 
-    ; ----- proto_low_no_value -----
-    ; void proto_low_no_value(void)
+    ; ----- proto_low_action -----
+    ; void proto_low_action(void)
     ; confirm command with no value
     ; CL | WL | CH
-    .global  proto_low_no_value
-proto_low_no_value:
+    .global  proto_low_action
+proto_low_action:
     ; when we enter here the clk from master is already low
     ; now signal rak lo to the master. we are now in sync
     rak_lo

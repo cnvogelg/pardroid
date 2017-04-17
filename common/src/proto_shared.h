@@ -10,10 +10,10 @@
 #define PROTO_CMD_IDLE            0x00
 
 #define PROTO_CMD_ACTION          0x10
-#define PROTO_CMD_PING            0x10
-#define PROTO_CMD_BOOTLOADER      0x11
-#define PROTO_CMD_RESET           0x12
-#define PROTO_CMD_USER_ACTION     0x13
+#define PROTO_ACTION_PING         0x10
+#define PROTO_ACTION_BOOTLOADER   0x11
+#define PROTO_ACTION_RESET        0x12
+#define PROTO_ACTION_USER         0x13
 
 #define PROTO_CMD_MSG_WRITE       0x20
 #define PROTO_CMD_MSG_READ        0x30
