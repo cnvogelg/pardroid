@@ -17,7 +17,6 @@ extern u16 ro_num_regs(void);
   REG_RO_TABLE_ROM_W(ro_machtag), \
   REG_RO_TABLE_ROM_W(ro_fw_id), \
   REG_RO_TABLE_FUNC(ro_num_regs), \
-  REG_RO_TABLE_RAM_W(pend_mask), \
   REG_RO_TABLE_RAM_W(pend_total),
 
 #endif

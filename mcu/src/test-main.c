@@ -11,6 +11,7 @@
 #include "reg_ro.h"
 #include "reg_ro_def.h"
 #include "reg_rw.h"
+#include "reg_rw_def.h"
 #include "machtag.h"
 #include "pend.h"
 
@@ -43,30 +44,26 @@ REG_RO_TABLE_END
 
 // ----- rw registers -----
 // test values
-static u16 test_reg = 0x4812;
+static u16 test_word = 0x4812;
 static u08 test_byte = 0x42;
 static u16 test_size;
-static u16 test_reg_check(u16 val)
+static void set_test_size(u16 val)
 {
-  if(val < 0x8000) {
-    return val;
-  } else {
-    return 0x8000;
+  if(val <= (MAX_TEST_MSG_SIZE / 2)) {
+    test_size = val;
   }
 }
-static u16 test_byte_check(u16 val)
+static u16 get_test_size(void)
 {
-  if(val < 0x80) {
-    return val;
-  } else {
-    return 0x80;
-  }
+  return test_size;
 }
 
 REG_RW_TABLE_BEGIN
-  REG_RW_TABLE_RAM_W(test_size),
-  REG_RW_TABLE_RAM_W_FUNC(test_reg, test_reg_check),
-  REG_RW_TABLE_RAM_B_FUNC(test_byte, test_byte_check)
+  REG_RW_PROTO_DEFAULTS
+  /* user regs */
+  REG_RW_TABLE_FUNC(get_test_size, set_test_size),
+  REG_RW_TABLE_RAM_W(test_word),
+  REG_RW_TABLE_RAM_B(test_byte)
 REG_RW_TABLE_END
 
 // msg ops

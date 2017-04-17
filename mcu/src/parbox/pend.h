@@ -8,12 +8,11 @@
 extern void pend_init(void);
 extern void pend_handle(void);
 
-extern u08 pend_add_req(u08 channel);
-extern u08 pend_rem_req(u08 channel);
-extern u08 pend_clear_reqs(u08 channel);
+extern u08 pend_add_req(void);
+extern u08 pend_rem_req(void);
+extern u08 pend_clear_reqs(void);
 
 /* read only(!) values */
-extern u16 pend_mask;
 extern u16 pend_total;
 
 #endif
