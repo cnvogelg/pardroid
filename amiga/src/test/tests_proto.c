@@ -392,3 +392,66 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   FreeVec(mem_r);
   return 0;
 }
+
+int test_pend(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  /* assume nothing is pending */
+  int pf = proto_is_pending(pb->proto);
+  if(pf) {
+    p->error = "pending active";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* sim pend_req_add */
+  int res = proto_action(pb->proto, PROTO_ACTION_USER);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "req_add";
+    return res;
+  }
+
+  /* issue a ping to ensure req add was processed */
+  res = proto_action(pb->proto, PROTO_ACTION_PING);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "ping1";
+    return res;
+  }
+
+  /* assume pending is set */
+  pf = proto_is_pending(pb->proto);
+  if(!pf) {
+    p->error = "pending inactive";
+    p->section = "main";
+    return 1;
+  }
+
+  /* sim pend_req_rem */
+  res = proto_action(pb->proto, PROTO_ACTION_USER + 1);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "req_add";
+    return res;
+  }
+
+  /* issue a ping to ensure req rem was processed */
+  res = proto_action(pb->proto, PROTO_ACTION_PING);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "ping1";
+    return res;
+  }
+
+  /* assume pending is cleared again */
+  pf = proto_is_pending(pb->proto);
+  if(pf) {
+    p->error = "pending active";
+    p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}

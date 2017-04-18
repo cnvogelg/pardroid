@@ -50,11 +50,12 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
 
     ; if needed use select pin as a debug line
 #ifdef CONFIG_DEBUG_PIN
+    /* lo is active, hi is inactive */
     .macro debug_lo
-    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
+    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
     .endm
     .macro debug_hi
-    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
+    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
     .endm
 #else
     .macro debug_lo

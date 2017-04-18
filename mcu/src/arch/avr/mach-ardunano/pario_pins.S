@@ -5,7 +5,7 @@
     DATA 6 ... 7     PD 6 ... 7     same      IN/OUT
 
     /STROBE          PD 2           PD3       IN (INT0 / INT1)
-    SELECT           PD 3           PB1       IN
+    SELECT           PD 3           PB1       OUT
     BUSY             PD 4           same      OUT
     POUT             PD 5           same      IN
     /ACK             PB 0           same      OUT
@@ -18,7 +18,7 @@
 #define PAR_STROBE_PIN          PIND
 #define PAR_STROBE_DDR          DDRD
 
-// SELECT (IN) (B1)
+// SELECT (OUT) (B1)
 #define PAR_SELECT_BIT          1
 #define PAR_SELECT_MASK         _BV(PAR_SELECT_BIT)
 #define PAR_SELECT_PORT         PORTB

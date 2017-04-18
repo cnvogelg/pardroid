@@ -30,6 +30,7 @@ u08 pend_add_req(void)
   /* if no pending then trigger ack */
   if(pend_total == 0) {
     proto_low_ack_lo();
+    proto_low_pend_lo();
     ack_raised = 1;
   }
   /* account request */
@@ -41,6 +42,9 @@ u08 pend_rem_req(void)
 {
   if(pend_total == 0) {
     return PEND_RET_INVALID;
+  }
+  if(pend_total == 1) {
+    proto_low_pend_hi();
   }
   pend_total--;
   return PEND_RET_OK;

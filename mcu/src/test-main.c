@@ -22,9 +22,23 @@
 
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
+static void sim_pend_add_req(void)
+{
+  DS("pend_add_req"); DNL;
+  pend_add_req();
+}
+
+static void sim_pend_rem_req(void)
+{
+  DS("pend_rem_req"); DNL;
+  pend_rem_req();
+}
+
 // ----- actions -----
 ACTION_TABLE_BEGIN
   ACTION_PROTO_DEFAULTS
+  ACTION_TABLE_FUNC(sim_pend_add_req),
+  ACTION_TABLE_FUNC(sim_pend_rem_req)
 ACTION_TABLE_END
 
 // ----- ro registers -----
