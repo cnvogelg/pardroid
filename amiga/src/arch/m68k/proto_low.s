@@ -155,6 +155,15 @@ get_data MACRO
         move.b  (a3),\1
         ENDM
 
+; --- call_callback ---
+; \1 = id
+call_cb MACRO
+        moveq   \1,d0
+        movem.l a0-a1,-(sp)
+        jsr     (a0)
+        movem.l (sp)+,a0-a1
+        ENDM
+
 
 ; ----- functions -----------------------------------------------------------
 
@@ -254,24 +263,26 @@ _proto_low_action_bench:
         set_cmd         d0
         ; set CLK to low (active) to trigger command at slave
         clk_lo
+
         ; callback 0: set clock low
-        moveq           #0,d0
-        jsr             (a0)
+        call_cb         #0
+
         ; busy wait with timeout for RAK to go low
         ; (we wait for the slave to react/sync)
         wait_rak_lo     plab_abort
+
         ; callback 1: got rak lo
-        moveq           #1,d0
-        jsr             (a0)
+        call_cb         #1
 
         ; -- final sync
         ; now raise CLK again
         clk_hi
         ; expect slave to raise rak, too
         check_rak_hi    plab_end
+
         ; callback 2: got rak hi
-        moveq           #2,d0
-        jsr             (a0)
+        call_cb         #2
+
         ; ok
         moveq   #RET_OK,d0
 plab_end:

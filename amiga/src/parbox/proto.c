@@ -96,23 +96,16 @@ int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG
   timer_stop(ph->timer);
 
   /* calc deltas */
-  if(result == PROTO_RET_OK) {
-    time_stamp_t *t0 = (time_stamp_t *)&cbd.timestamps[0];
-    time_stamp_t *t1 = (time_stamp_t *)&cbd.timestamps[1];
-    time_stamp_t *t2 = (time_stamp_t *)&cbd.timestamps[2];
-    timer_delta(ph->timer, t1, t2);
-    timer_delta(ph->timer, t0, t1);
+  time_stamp_t *t0 = (time_stamp_t *)&cbd.timestamps[0];
+  time_stamp_t *t1 = (time_stamp_t *)&cbd.timestamps[1];
+  time_stamp_t *t2 = (time_stamp_t *)&cbd.timestamps[2];
+  timer_delta(ph->timer, t1, t2);
+  timer_delta(ph->timer, t0, t1);
 
-    start->lo = t0->lo;
-    start->hi = t0->hi;
-    deltas[0] = t1->lo;
-    deltas[1] = t2->lo;
-  } else {
-    start->lo = 0;
-    start->hi = 0;
-    deltas[0] = 0;
-    deltas[1] = 1;
-  }
+  start->lo = t0->lo;
+  start->hi = t0->hi;
+  deltas[0] = t1->lo;
+  deltas[1] = t2->lo;
 
   return result;
 }
