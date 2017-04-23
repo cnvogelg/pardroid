@@ -10,14 +10,11 @@ extern ASM int proto_low_action(REG(a0, struct pario_port *port),
 /* benchmark data  */
 struct cb_data;
 typedef ASM void (*bench_cb_t)(REG(d0, int id), REG(a2, struct cb_data *cb));
-struct cb_ts {
-  ULONG        hi;
-  ULONG        lo;
-};
+typedef unsigned long long cb_ts_t;
 struct cb_data {
   bench_cb_t    callback;
   void         *user_data;
-  struct cb_ts  timestamps[3];
+  cb_ts_t       timestamps[3];
 };
 
 extern ASM int proto_low_action_bench(REG(a0, struct pario_port *port),

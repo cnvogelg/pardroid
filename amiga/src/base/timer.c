@@ -156,30 +156,42 @@ void timer_stop(struct timer_handle *th)
   AbortIO((struct IORequest*)&th->timerReq);
 }
 
-ULONG timer_get_eclock(struct timer_handle *th, time_stamp_t *val)
+ULONG timer_eclock_get(struct timer_handle *th, time_stamp_t *val)
 {
   struct EClockVal *eval = (struct EClockVal *)val;
   th->eClockFreq = ReadEClock(eval);
   return th->eClockFreq;
 }
 
-void timer_delta(struct timer_handle *th, time_stamp_t *end, time_stamp_t *begin)
+void timer_eclock_delta(time_stamp_t *end, time_stamp_t *begin, time_stamp_t *delta)
 {
-  struct timeval *tend = (struct timeval *)end;
-  struct timeval *tbegin = (struct timeval *)begin;
-  SubTime(tend, tbegin);
+  *delta = *end - *begin;
 }
 
-ULONG timer_eclock_to_us(struct timer_handle *th, time_stamp_t *et)
+ULONG timer_eclock_to_us(struct timer_handle *th, time_stamp_t *delta)
 {
-  unsigned long long a = *((unsigned long long *)et);
-  return (ULONG)(a * 1000000UL / th->eClockFreq);
+  return (ULONG)(*delta * 1000000UL / th->eClockFreq);
 }
 
-ULONG timer_calc_bps(struct timer_handle *th, time_stamp_t *delta, ULONG bytes)
+ULONG timer_eclock_to_bps(struct timer_handle *th, time_stamp_t *delta, ULONG bytes)
 {
-  unsigned long long d = *((unsigned long long *)delta);
-  return (ULONG)(d * bytes / th->eClockFreq);
+  return (ULONG)(*delta * bytes / th->eClockFreq);
+}
+
+union conv {
+  time_stamp_t ts;
+  struct {
+    ULONG hi;
+    ULONG lo;
+  } hilo;
+};
+
+void timer_eclock_split(time_stamp_t *val, ULONG *hi, ULONG *lo)
+{
+  union conv c;
+  c.ts = *val;
+  *hi = c.hilo.hi;
+  *lo = c.hilo.lo;
 }
 
 static ULONG ASM SAVEDS exc_handler(REG(d0,ULONG sigmask), REG(a1,struct timer_handle *th))

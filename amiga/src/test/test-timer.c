@@ -18,16 +18,24 @@ int dosmain(void)
         /* test how fast eclock reads are */
         time_stamp_t e1;
         time_stamp_t e2;
-        ULONG ef = timer_get_eclock(th, &e1);
+        ULONG ef = timer_eclock_get(th, &e1);
         Delay(100);
-        timer_get_eclock(th, &e2);
+        timer_eclock_get(th, &e2);
         Printf("efreq: %ld\n", ef);
-        Printf("eclock: e1=%08lx.%08lx e2=%08lx.%08lx\n", e1.hi, e1.lo, e2.hi, e2.lo);
-        timer_delta(th, &e2, &e1);
-        Printf("eclock: diff=%08lx.%08lx\n", e2.hi, e2.lo);
-        ULONG us = timer_eclock_to_us(th, &e2);
+
+        ULONG hi1, lo1, hi2, lo2;
+        timer_eclock_split(&e1, &hi1, &lo1);
+        timer_eclock_split(&e2, &hi2, &lo2);
+        Printf("eclock: e1=%08lx.%08lx e2=%08lx.%08lx\n", hi1, lo1, hi2, lo2);
+
+        time_stamp_t delta;
+        timer_eclock_delta(&e2, &e1, &delta);
+        ULONG hid, lod;
+        timer_eclock_split(&delta, &hid, &lod);
+        Printf("eclock: diff=%08lx.%08lx\n", hid, lod);
+        ULONG us = timer_eclock_to_us(th, &delta);
         Printf("us: %ld\n", us);
-        ULONG bps = timer_calc_bps(th, &e2, 500UL);
+        ULONG bps = timer_eclock_to_bps(th, &delta, 100UL);
         Printf("bps: %ld\n", bps);
 
         /* test timer: busy wait for timeout */

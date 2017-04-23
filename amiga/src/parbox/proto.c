@@ -77,8 +77,8 @@ int proto_action(proto_handle_t *ph, UBYTE cmd)
 static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))
 {
   struct timer_handle *th = (struct timer_handle *)cb->user_data;
-  time_stamp_t *ts = (time_stamp_t *)&cb->timestamps[id];
-  timer_get_eclock(th, ts);
+  time_stamp_t *ts = &cb->timestamps[id];
+  timer_eclock_get(th, ts);
 }
 
 int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2])
@@ -96,16 +96,18 @@ int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG
   timer_stop(ph->timer);
 
   /* calc deltas */
-  time_stamp_t *t0 = (time_stamp_t *)&cbd.timestamps[0];
-  time_stamp_t *t1 = (time_stamp_t *)&cbd.timestamps[1];
-  time_stamp_t *t2 = (time_stamp_t *)&cbd.timestamps[2];
-  timer_delta(ph->timer, t1, t2);
-  timer_delta(ph->timer, t0, t1);
+  time_stamp_t *t0 = &cbd.timestamps[0];
+  time_stamp_t *t1 = &cbd.timestamps[1];
+  time_stamp_t *t2 = &cbd.timestamps[2];
+  time_stamp_t d1;
+  time_stamp_t d2;
+  timer_eclock_delta(t1, t0, &d1);
+  timer_eclock_delta(t2, t1, &d2);
 
-  start->lo = t0->lo;
-  start->hi = t0->hi;
-  deltas[0] = t1->lo;
-  deltas[1] = t2->lo;
+  *start = *t0;
+  ULONG dummy;
+  timer_eclock_split(&d1, &dummy, &deltas[0]);
+  timer_eclock_split(&d2, &dummy, &deltas[1]);
 
   return result;
 }
