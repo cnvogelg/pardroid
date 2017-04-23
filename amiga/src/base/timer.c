@@ -227,6 +227,11 @@ BYTE timer_sig_init(struct timer_handle *th)
   }
 }
 
+ULONG timer_sig_get_mask(struct timer_handle *th)
+{
+  return 1 << th->sigTimerPort->mp_SigBit;
+}
+
 void timer_sig_exit(struct timer_handle *th)
 {
   if(th->initFlags & 16) {

@@ -15,6 +15,7 @@ int test_msg_tiny(test_t *t, test_param_t *p);
 int test_msg_size(test_t *t, test_param_t *p);
 int test_msg_size_chunks(test_t *t, test_param_t *p);
 int test_pend(test_t *t, test_param_t *p);
+int test_ack_irq(test_t *t, test_param_t *p);
 
 #define TESTS_PROTO_ALL \
   { test_ping, "ping", "ping parbox device" }, \
@@ -26,6 +27,7 @@ int test_pend(test_t *t, test_param_t *p);
   { test_msg_tiny, "mt", "write/read tiny 4 byte message"}, \
   { test_msg_size, "ms", "write/read messages of given size"}, \
   { test_msg_size_chunks, "msc", "write/read messages of given size in two chunks"}, \
-  { test_pend, "p", "test pending flag"},
+  { test_pend, "p", "test pending flag"}, \
+  { test_ack_irq, "a", "test ack irq on first pending request"},
 
 #endif

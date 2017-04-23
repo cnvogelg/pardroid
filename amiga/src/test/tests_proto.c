@@ -455,3 +455,80 @@ int test_pend(test_t *t, test_param_t *p)
 
   return 0;
 }
+
+int test_ack_irq(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  /* alloc ack signal */
+  BYTE ackSig = AllocSignal(-1);
+  if(ackSig != -1) {
+    p->error = "no signal";
+    p->section = "init";
+    return 1;
+  }
+
+  /* setup ack irq handler */
+  struct Task *task = FindTask(NULL);
+  int error = pario_setup_ack_irq(pb->pario, task, ackSig);
+  if(error) {
+    p->error = "setup ack irq";
+    p->section = "init";
+    return 1;
+  }
+
+  /* setup signal timer */
+  error = timer_sig_init(pb->timer);
+  if(error == -1) {
+    p->error = "setup timer";
+    p->section = "init";
+    return 1;
+  }
+
+  /* sim pend_req_add -> trigger ack irq */
+  int res = proto_action(pb->proto, PROTO_ACTION_USER);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "req_add";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG tmask = timer_sig_get_mask(pb->timer);
+  ULONG amask = 1 << ackSig;
+  ULONG mask =  tmask | amask;
+  timer_sig_start(pb->timer, 1, 0);
+  ULONG got = Wait(mask);
+  timer_sig_stop(pb->timer);
+
+  /* sim pend_req_rem to restore state */
+  res = proto_action(pb->proto, PROTO_ACTION_USER + 1);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "req_add";
+    return res;
+  }
+
+  /* timer cleanup */
+  timer_sig_exit(pb->timer);
+
+  /* cleanup ack irq */
+  pario_cleanup_ack_irq(pb->pario);
+
+  /* free signal */
+  FreeSignal(ackSig);
+
+  if(got & tmask) {
+    p->error = "timer triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  if((got & amask) == 0) {
+    p->error = "no ack triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  return 0;
+}
