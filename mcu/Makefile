@@ -2,6 +2,9 @@ BASE_DIR=..
 
 # config setup
 CONFIG?=configs/pbnano.config
+ifeq "$(words $(wildcard $(CONFIG)))" "0"
+	dummy:=$(error config not found: $(CONFIG))
+endif
 FLASH_CONFIG?=configs/flash.config
 EXTRA_CONFIG=$(FLASH_CONFIG) $(USER_CONFIG)
 ifeq "$(DEBUG)" "1"
