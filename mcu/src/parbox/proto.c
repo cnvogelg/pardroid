@@ -49,10 +49,10 @@ static void msg_read(u08 chan)
 {
   DS("mr:"); DB(chan); DC('=');
   u16 size = 0;
-  u08 *buf = proto_api_prepare_read_msg(chan, &size);
+  u08 *buf = proto_api_read_msg_prepare(chan, &size);
   DW(size);
   proto_low_read_block(size, buf);
-  proto_api_done_read_msg(chan);
+  proto_api_read_msg_done(chan);
   DC('.'); DNL;
 }
 
@@ -60,11 +60,11 @@ static void msg_write(u08 chan)
 {
   DS("mw:"); DB(chan); DC('=');
   u16 max_size = 0;
-  u08 *buf = proto_api_prepare_write_msg(chan, &max_size);
+  u08 *buf = proto_api_write_msg_prepare(chan, &max_size);
   DW(max_size); DC(':');
   u16 size = proto_low_write_block(max_size, buf);
   DW(size);
-  proto_api_done_write_msg(chan, size);
+  proto_api_write_msg_done(chan, size);
   DC('.'); DNL;
 }
 

@@ -134,7 +134,7 @@ int main(void)
 
 #define PAGE_WORDS (SPM_PAGESIZE >> 1)
 
-u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
+u08 *proto_api_read_msg_prepare(u08 chan, u16 *size)
 {
   *size = PAGE_WORDS;
   uart_send('r');
@@ -142,19 +142,19 @@ u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
   return page_buf;
 }
 
-void proto_api_done_read_msg(u08 chan)
+void proto_api_read_msg_done(u08 chan)
 {
   uart_send('.');
 }
 
-u08 *proto_api_prepare_write_msg(u08 chan, u16 *max_size)
+u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
 {
   *max_size = PAGE_WORDS;
   uart_send('w');
   return page_buf;
 }
 
-void proto_api_done_write_msg(u08 chan, u16 size)
+void proto_api_write_msg_done(u08 chan, u16 size)
 {
   if(size == PAGE_WORDS) {
     uart_send('(');

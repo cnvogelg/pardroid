@@ -12,9 +12,9 @@ extern void proto_api_set_rw_reg(u08 reg,u16 val);
 extern u16  proto_api_get_rw_reg(u08 reg);
 extern u16  proto_api_get_ro_reg(u08 num);
 
-extern u08 *proto_api_prepare_read_msg(u08 chan,u16 *size);
-extern void proto_api_done_read_msg(u08 chan);
-extern u08 *proto_api_prepare_write_msg(u08 chan,u16 *max_size);
-extern void proto_api_done_write_msg(u08 chan,u16 size);
+extern u08 *proto_api_read_msg_prepare(u08 chan,u16 *size);
+extern void proto_api_read_msg_done(u08 chan);
+extern u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_size);
+extern void proto_api_write_msg_done(u08 chan,u16 size);
 
 #endif

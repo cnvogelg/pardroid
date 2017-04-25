@@ -15,6 +15,7 @@
 #include "action.h"
 #include "machtag.h"
 #include "pend.h"
+#include "handler.h"
 
 #include <util/delay.h>
 
@@ -86,28 +87,42 @@ REG_RW_TABLE_BEGIN
   REG_RW_TABLE_RAM_B(test_byte)
 REG_RW_TABLE_END
 
-// msg ops
+// my handler
 
-u08 *proto_api_prepare_read_msg(u08 chan, u16 *size)
+void my_init(void)
+{
+}
+
+void my_work(void)
+{
+}
+
+u08 *my_read_msg_prepare(u16 *size)
 {
   *size = test_size;
   return test_msg;
 }
 
-void proto_api_done_read_msg(u08 chan)
+void my_read_msg_done(void)
 {
 }
 
-u08 *proto_api_prepare_write_msg(u08 chan, u16 *max_size)
+u08 *my_write_msg_prepare(u16 *max_size)
 {
   *max_size = MAX_TEST_MSG_SIZE >> 1;
   return test_msg;
 }
 
-void proto_api_done_write_msg(u08 chan, u16 size)
+void my_write_msg_done(u16 size)
 {
   test_size = size;
 }
+
+// handler
+
+HANDLER_TABLE_BEGIN
+  HANDLER_ENTRY(my_init, my_work, my_read_msg_prepare, my_read_msg_done, my_write_msg_prepare, my_write_msg_done)
+HANDLER_TABLE_END
 
 static void rom_info(void)
 {
@@ -150,12 +165,14 @@ int main(void)
   DC('+');
   proto_init();
   pend_init();
+  handler_init();
   DC('-');
 
   while(1) {
     system_wdt_reset();
     proto_handle();
     pend_handle();
+    handler_work();
   }
 
   return 0;
