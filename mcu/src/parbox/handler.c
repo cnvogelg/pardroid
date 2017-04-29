@@ -64,9 +64,9 @@ void handler_write_msg_done(u08 chn, u16 size)
 {
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
-    rom_pchar ptr = read_rom_rom_ptr(&handler_table[chn].read_msg_done);
-    read_msg_done_func_t f = (read_msg_done_func_t)ptr;
-    return f();
+    rom_pchar ptr = read_rom_rom_ptr(&handler_table[chn].write_msg_done);
+    write_msg_done_func_t f = (write_msg_done_func_t)ptr;
+    return f(size);
   }
 }
 

@@ -462,7 +462,7 @@ int test_ack_irq(test_t *t, test_param_t *p)
 
   /* alloc ack signal */
   BYTE ackSig = AllocSignal(-1);
-  if(ackSig != -1) {
+  if(ackSig == -1) {
     p->error = "no signal";
     p->section = "init";
     return 1;
