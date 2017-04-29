@@ -49,14 +49,15 @@ VPATH=$(INCLUDES)
 
 # test-fw
 TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS) test-main.c machtag.c
+$(eval $(call dist-pbl,test-fw))
+$(eval $(call dist-hex,test-fw))
 $(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
-$(eval $(call make-pablo,test-fw))
 
 ifdef CONFIG_BOOTLOADER
 # bootloader
 BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c flash.c
+$(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
-$(eval $(call make-bootloader,bootloader))
 endif
 
 DEFAULT_FIRMWARE=test-fw

@@ -48,8 +48,12 @@ map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 # $4 = extra ld flags
 define make-firmware
 FIRMWARES += $1
+FILES_$1 += $(call map-bin,$1.lss $1.sym $1.elf)
 
 .PHONY: $1-sym $1-code $1-check
+
+$1: $$(FILES_$1) $1-check
+	@echo "$1 done"
 
 $1-sym: $(call map-bin,$1.sym_size)
 	$(H)cat $$<
@@ -60,44 +64,33 @@ $1-code: $(call map-bin,$1.code_size)
 $1-check: $(call map-bin,$1.elf)
 	$(H)$(SIZE) -A $$< | scripts/checksize.py $3 $(CONFIG_MAX_RAM) $1
 
+$1-prog: $(call map-bin,$1.hex) $1-check
+	$(call prog-firmware,$$<,$$(<F))
+
 $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)
 	@echo "  LD   $$(@F)"
 	$(H)$(CC) $(CFLAGS) $$^ -o $$@ $(LDFLAGS) $4
 endef
 
-# make-pablo
+# dist-pablo
 # $1 = program name
-define make-pablo
+define dist-pbl
 DIST_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
+FILES_$1 += $(call map-bin,$1.pbl)
 
-.PHONY: $1 $1-prog $1-prog-full
-
-$1: $(call map-bin,$1.pbl $1.lss $1.sym) $1-check
-
-$1-prog: $(call map-bin,$1.hex) $1-check
+$1-prog-img: $(call map-bin,$1.img) $1-check
 	$(call prog-firmware,$$<,$$(<F))
-
-$1-prog-full: $(call map-bin,$1.img) $1-check
-	$(call prog-firmware,$$<,$$(<F))
-
-$1-dist: $(call map-bin,$1-$(CONFIG_BASE_NAME).hex)
 
 $(DIST_DIR)/$1-$(DIST_TAG).pbl: $(BIN_DIR)/$1.pbl
 	@echo "  DIST  $$(@F)"
 	$(H)cp $$< $$@
 endef
 
-# make-bootloader
+# dist-hex
 # $1 = program name
-define make-bootloader
+define dist-hex
 DIST_FILES += $(call map-dist,$1-$(DIST_TAG).hex)
-
-.PHONY: $1 $1-prog
-
-$1: $(call map-bin,$1.hex $1.lss $1.sym) $1-check
-
-$1-prog: $(call map-bin,$1.hex) $1-check
-	$(call prog-bootloader,$$<,$$(<F))
+FILES_$1 += $(call map-bin,$1.hex)
 
 $(DIST_DIR)/$1-$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
 	@echo "  DIST  $$(@F)"
