@@ -6,6 +6,11 @@ include $(BASE_DIR)/scripts/gencfg.mk
 include scripts/common-defs.mk
 # toolchain
 include scripts/toolchain-$(CONFIG_ARCH).mk
+# version
+include ../version.mk
+
+# dist tag
+DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo src/test

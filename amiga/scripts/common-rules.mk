@@ -6,6 +6,9 @@ clean:
 clean-all:
 	$(H)rm -rf $(BUILD_BASE_DIR)
 
+# distribution
+dist: $(DIST_FILES)
+
 # compile
 $(OBJ_DIR)/%.o : %.c
 	@echo "  CC   $<"
