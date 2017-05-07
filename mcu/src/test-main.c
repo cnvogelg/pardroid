@@ -166,7 +166,7 @@ int main(void)
   proto_init();
   pend_init();
   handler_init();
-  DC('-');
+  DC('-'); DNL;
 
   while(1) {
     system_wdt_reset();
