@@ -4,10 +4,10 @@
     DATA 0 ... 7     PB 0 ... 7     IN/OUT
 
     /STROBE          PF 0           IN (INT0)
-    SELECT           PF 1           IN
-    POUT             PF 4           IN
-    BUSY             PF 5           OUT
-    /ACK             PF 6           OUT
+    SELECT           PF 6           IN
+    POUT             PF 5           IN
+    BUSY             PF 4           OUT
+    /ACK             PF 1           OUT
 */
 
 // /STROBE (IN) (INT0)
