@@ -68,6 +68,7 @@ read-flash:
 
 write-fuses:
 ifneq "$(AVRDUDE_WRITE_FUSE)" ""
+	@echo "write fuses for $(CONFIG_AVRDUDE_MCU) on $(CONFIG_MACH)"
 	$(H)$(AVRDUDE) $(AVRDUDE_FLAGS) $(AVRDUDE_WRITE_FUSE)
 else
 	@echo "nothing to write. no fuses configured"
