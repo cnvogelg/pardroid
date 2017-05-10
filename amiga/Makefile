@@ -21,6 +21,7 @@ BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
 PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c
+WORKER_SRCS = worker.c
 TEST_SRCS = test.c
 
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
@@ -37,6 +38,10 @@ $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 # test-proto
 TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
+
+# test-worker
+TEST_WORKER_SRCS = test-worker.c $(WORKER_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,test-worker,$(TEST_WORKER_SRCS)))
 
 # parbox-test
 PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
