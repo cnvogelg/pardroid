@@ -34,7 +34,7 @@ struct timer_handle *timer_init(struct Library *SysBase)
 {
   /* alloc handle */
   struct timer_handle *th;
-  th = AllocMem(sizeof(struct timer_handle), MEMF_CLEAR);
+  th = AllocMem(sizeof(struct timer_handle), MEMF_CLEAR | MEMF_PUBLIC);
   if(th == NULL) {
     return NULL;
   }
@@ -220,6 +220,7 @@ BYTE timer_sig_init(struct timer_handle *th)
     th->sigTimerReq.tr_node.io_Device = th->timerReq.tr_node.io_Device;
     th->sigTimerReq.tr_node.io_Unit = th->timerReq.tr_node.io_Unit;
     th->sigTimerReq.tr_node.io_Command = TR_ADDREQUEST;
+    th->sigTimerReq.tr_node.io_Flags = IOF_QUICK;
 
     return th->sigTimerPort->mp_SigBit;
   } else {
@@ -238,6 +239,7 @@ void timer_sig_exit(struct timer_handle *th)
     th->initFlags &= ~16;
 
     struct IORequest *req = (struct IORequest *)&th->sigTimerReq;
+    AbortIO(req);
     WaitIO(req);
 
     DeleteMsgPort(th->sigTimerPort);

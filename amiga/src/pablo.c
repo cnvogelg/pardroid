@@ -174,7 +174,7 @@ static int do_verify(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
   PutStr("Verifying...");
 
   /* alloc page buffer */
-  UBYTE *page_buf = AllocVec(bi->page_size, MEMF_CLEAR);
+  UBYTE *page_buf = AllocVec(bi->page_size, MEMF_CLEAR | MEMF_PUBLIC);
   if(page_buf == 0) {
     return BOOTLOADER_RET_NO_PAGE_DATA;
   }

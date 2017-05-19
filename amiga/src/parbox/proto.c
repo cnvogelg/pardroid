@@ -26,7 +26,7 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th)
 {
   proto_handle_t *ph;
 
-  ph = AllocMem(sizeof(struct proto_handle), MEMF_CLEAR);
+  ph = AllocMem(sizeof(struct proto_handle), MEMF_CLEAR | MEMF_PUBLIC);
   if(ph == NULL) {
     return NULL;
   }

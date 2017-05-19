@@ -35,11 +35,13 @@ static SAVEDS ASM void worker_main(void)
 
   /* call user init */
   if(port != NULL) {
+    D(("Task: user startup\n"));
     if(!def->startup(def->user_data, &def->user_sig_mask)) {
       /* user aborted worker */
       DeleteMsgPort(port);
       port = NULL;
     }
+    D(("Task: user startup done: %08lx\n", port));
   }
 
   /* setup term signal */
@@ -95,9 +97,10 @@ static SAVEDS ASM void worker_main(void)
     }
 
     /* call shutdown only if worker was entered */
-    D(("Task: exit\n"));
+    D(("Task: user shutdown\n"));
     /* shutdown worker */
     def->shutdown(def->user_data);
+    D(("Task: user shutdown done\n"));
   }
 
   D(("Task: delete port\n"));
