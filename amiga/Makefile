@@ -25,7 +25,7 @@ WORKER_SRCS = worker.c
 TEST_SRCS = test.c
 
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
-PARBOX_SRCS += parbox.c
+PARBOX_SRCS += parbox.c reg_ro.c reg_rw.c
 
 # test-pario
 TEST_PARIO_SRCS = test-pario.c $(PARIO_SRCS) $(BASE_SRCS)

@@ -25,14 +25,16 @@
 #define PROTO_CMD_MASK            0xf0
 
 // ro register definitions
-#define PROTO_RO_REG_VERSION      0
-#define PROTO_RO_REG_MACHTAG      1
-#define PROTO_RO_REG_FW_ID        2
-#define PROTO_RO_REG_NUM_RO_RW    3
-#define PROTO_RO_REG_PEND_MASK    4
-#define PROTO_RO_REG_PEND_TOTAL   5
+#define PROTO_REG_RO_FW_VERSION   0
+#define PROTO_REG_RO_FW_MACHTAG   1
+#define PROTO_REG_RO_FW_ID        2
+#define PROTO_REG_RO_NUM_REGS     3
+#define PROTO_REG_RO_PEND_TOTAL   4
+#define PROTO_REG_RO_USER         5
 
-#define PROTO_RO_REG_USER         6
+// rw register definitions
+#define PROTO_REG_RW_DRV_TAG      0
+#define PROTO_REG_RW_USER         1
 
 // firmware ids
 #define PROTO_FWID_TEST           1
