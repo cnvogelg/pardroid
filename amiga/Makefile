@@ -13,7 +13,8 @@ include ../version.mk
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # paths
-INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox src/pablo src/test
+INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
+INCLUDES+=src/parbox src/engine src/pablo src/test
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
 

@@ -4,6 +4,10 @@
 #include <exec/types.h>
 #include <exec/ports.h>
 
+#ifdef CONFIG_DEBUG_WORKER
+#define KDEBUG
+#endif
+
 #define NO_SYSBASE
 #include "autoconf.h"
 #include "compiler.h"
