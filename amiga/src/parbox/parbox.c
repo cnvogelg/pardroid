@@ -1,3 +1,4 @@
+#define __NOLIBBASE__
 #include <proto/exec.h>
 
 #include "autoconf.h"
@@ -25,7 +26,7 @@ int parbox_init(parbox_handle_t *pb, struct Library *SysBase)
     return PARBOX_ERROR_TIMER;
   }
 
-  pb->proto = proto_init(pb->port, pb->timer);
+  pb->proto = proto_init(pb->port, pb->timer, SysBase);
   if(pb->proto == NULL) {
     return PARBOX_ERROR_PROTO;
   }

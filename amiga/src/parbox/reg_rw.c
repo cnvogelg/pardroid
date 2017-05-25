@@ -1,3 +1,4 @@
+#define __NOLIBBASE__
 #include <proto/exec.h>
 
 #include "autoconf.h"

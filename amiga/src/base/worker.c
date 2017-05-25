@@ -1,3 +1,4 @@
+#define __NOLIBBASE__
 #include <proto/exec.h>
 #include <proto/alib.h>
 
@@ -8,7 +9,6 @@
 #define KDEBUG
 #endif
 
-#define NO_SYSBASE
 #include "autoconf.h"
 #include "compiler.h"
 #include "debug.h"
@@ -34,8 +34,8 @@ static SAVEDS ASM void worker_main(void)
   worker_def_t *def = worker_startup();
   D(("Task: def=%08lx\n", def));
 
-  /* create worker port */
-  struct MsgPort *port = CreateMsgPort();
+  /* create worker port (maybe public), def_prio=0 */
+  struct MsgPort *port = CreatePort(def->port_name, 0);
 
   /* call user init */
   if(port != NULL) {
@@ -108,7 +108,7 @@ static SAVEDS ASM void worker_main(void)
   }
 
   D(("Task: delete port\n"));
-  DeleteMsgPort(port);
+  DeletePort(port);
   def->port = NULL;
 
   D(("Task: free signal\n"));

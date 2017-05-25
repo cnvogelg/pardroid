@@ -1,3 +1,4 @@
+#define __NOLIBBASE__
 #include <proto/exec.h>
 
 #include <exec/semaphores.h>
@@ -27,6 +28,8 @@ struct engine_handle {
   UWORD             result;
   UWORD             open_count;
 };
+
+#define SysBase eh->sys_base
 
 static BOOL startup(void *user_data, ULONG *user_sig_mask)
 {
@@ -142,7 +145,9 @@ static void handle_sig(ULONG sig_mask, void *user_data)
   /* TODO */
 }
 
-engine_handle_t *engine_start(int *result, struct Library *sys_base)
+#undef SysBase
+
+engine_handle_t *engine_start(int *result, struct Library *SysBase, const char *port_name)
 {
   engine_handle_t *eh;
 
@@ -154,13 +159,14 @@ engine_handle_t *engine_start(int *result, struct Library *sys_base)
   /* setup worker task */
   worker_def_t *wd = &eh->worker_def;
   wd->task_name = "parbox_engine";
+  wd->port_name = port_name;
   wd->user_data = eh;
   wd->startup = startup;
   wd->shutdown = shutdown;
   wd->handle_msg = handle_msg;
   wd->handle_sig = handle_sig;
 
-  eh->sys_base = sys_base;
+  eh->sys_base = SysBase;
 
   InitSemaphore(&eh->sem);
 
@@ -174,6 +180,8 @@ engine_handle_t *engine_start(int *result, struct Library *sys_base)
     return eh;
   }
 }
+
+#define SysBase eh->sys_base
 
 void engine_stop(engine_handle_t *eh)
 {

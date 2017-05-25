@@ -6,7 +6,6 @@
 #include "debug.h"
 
 #include "engine.h"
-#include "parbox.h"
 #include "request.h"
 
 static void test_write(engine_handle_t *eh, struct MsgPort *mp)
@@ -42,7 +41,7 @@ int dosmain(void)
 
   PutStr("test-engine\n");
   int result;
-  eh = engine_start(&result, (struct Library *)SysBase);
+  eh = engine_start(&result, (struct Library *)SysBase, NULL);
   if(eh != NULL) {
     PutStr("started ok.\n");
 
@@ -71,7 +70,7 @@ int dosmain(void)
     PutStr("done\n");
   } else {
     PutStr("start: failed!\n");
-    Printf("result=%ld -> %s\n", result, parbox_perror(result));
+    Printf("result=%ld -> %s\n", result, engine_perror(result));
   }
   return 0;
 }

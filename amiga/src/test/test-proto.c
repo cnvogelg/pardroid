@@ -23,7 +23,7 @@ int dosmain(void)
         if(th != NULL) {
             /* setup proto low */
             PutStr("proto_init\n");
-            struct proto_handle *ph = proto_init(port, th);
+            struct proto_handle *ph = proto_init(port, th, (struct Library *)SysBase);
             if(ph != NULL) {
                 PutStr("proto_ping\n");
                 int error = proto_action(ph, PROTO_ACTION_PING);

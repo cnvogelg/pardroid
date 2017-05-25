@@ -3,6 +3,7 @@
 
 struct worker_def {
   const char *task_name;
+  const char *port_name; /* use != NULL for public port name */
   void *user_data;
   BOOL (*startup)(void *user_data, ULONG *user_sig_mask);
   void (*shutdown)(void *user_data);

@@ -15,7 +15,7 @@
 struct engine_handle;
 typedef struct engine_handle engine_handle_t;
 
-extern engine_handle_t *engine_start(int *result, struct Library *sys_base);
+extern engine_handle_t *engine_start(int *result, struct Library *sys_base, const char *port_name);
 extern void engine_stop(engine_handle_t *eh);
 
 extern int engine_open_channel(engine_handle_t *eh, UBYTE channel);

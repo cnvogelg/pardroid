@@ -1,3 +1,4 @@
+#define __NOLIBBASE__
 #include <proto/exec.h>
 
 #include "autoconf.h"
@@ -20,9 +21,10 @@ struct proto_handle {
     struct timer_handle *timer;
     ULONG                timeout_s;
     ULONG                timeout_ms;
+    struct Library      *sys_base;
 };
 
-proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th)
+proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, struct Library *SysBase)
 {
   proto_handle_t *ph;
 
@@ -34,6 +36,7 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th)
   ph->timer = th;
   ph->timeout_s  = 0;
   ph->timeout_ms = 500000UL;
+  ph->sys_base = SysBase;
 
   /* control: clk=out(1) rak,pend=in*/
   *port->ctrl_ddr |= port->clk_mask;
@@ -46,6 +49,9 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th)
 
   return ph;
 }
+
+#undef SysBase
+#define SysBase ph->sys_base
 
 void proto_exit(proto_handle_t *ph)
 {
