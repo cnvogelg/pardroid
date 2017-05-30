@@ -195,7 +195,7 @@ int bootloader_read(parbox_handle_t *pb, bootinfo_t *bi,
     }
 
     /* read flash page (and do flash) */
-    ULONG size = page_words;
+    UWORD size = page_words;
     res = proto_msg_read_single(ph, BOOTLOADER_CHN_PAGES, data, &size);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_READ_PAGE_ERROR | res;

@@ -125,7 +125,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
     return res;
   }
 
-  ULONG size = 0;
+  UWORD size = 0;
   res = proto_msg_read_single(pb->proto, 0, 0, &size);
   if(res != 0) {
     p->error = proto_perror(res);
@@ -136,7 +136,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   if(size != 0) {
     p->error = "not empty";
     p->section = "compare";
-    sprintf(p->extra, "%04lx", size);
+    sprintf(p->extra, "%04x", size);
     return 1;
   }
 
@@ -154,7 +154,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
     return res;
   }
 
-  ULONG size = 2;
+  UWORD size = 2;
   res = proto_msg_read_single(pb->proto, 0, (UBYTE *)&data, &size);
   if(res != 0) {
     p->error = proto_perror(res);
@@ -165,7 +165,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   if(size != 2) {
     p->error = "not two words";
     p->section = "compare";
-    sprintf(p->extra, "%04lx", size);
+    sprintf(p->extra, "%04x", size);
     return 1;
   }
 
@@ -261,7 +261,7 @@ int test_msg_size(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  ULONG words = size>>1;
+  UWORD words = size>>1;
 
   /* send buffer */
   int res = proto_msg_write_single(pb->proto, 0, mem_w, words);
@@ -272,7 +272,7 @@ int test_msg_size(test_t *t, test_param_t *p)
   }
 
   /* receive buffer */
-  ULONG got_words = size_r>>1;
+  UWORD got_words = size_r>>1;
   res = proto_msg_read_single(pb->proto, 0, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
@@ -284,7 +284,7 @@ int test_msg_size(test_t *t, test_param_t *p)
   if(got_words != words) {
     p->error = "size mismatch";
     p->section = "compare";
-    sprintf(p->extra, "w=%04lx r=%04lx", words, got_words);
+    sprintf(p->extra, "w=%04x r=%04x", words, got_words);
     return 1;
   }
 

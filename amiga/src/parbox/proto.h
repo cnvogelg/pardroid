@@ -35,8 +35,8 @@ extern int proto_reg_ro_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
 extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 
-extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG num_words);
-extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG *max_words);
+extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
+extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words);
 
 extern const char *proto_perror(int res);
 

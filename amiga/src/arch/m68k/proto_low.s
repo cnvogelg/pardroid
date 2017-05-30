@@ -504,6 +504,7 @@ plmw_abort:
 ;      a2 = ptr to blkiov (see above)
 ;      d0 = cmd byte
 ; out: d0 = result
+;      blkiov[0] = channel << 24 | extra << 16 | recv_words
 _proto_low_read_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
@@ -516,6 +517,9 @@ _proto_low_read_block:
         ; prepare size regs
         moveq           #0,d5
         moveq           #0,d6
+        moveq           #0,d7
+        ; get max size given in blkiov
+        move.l          (a2),d1
 
         ; final slave sync
         wait_rak_lo     plmr_abort
@@ -523,6 +527,17 @@ _proto_low_read_block:
         ; switch: port read
         ddr_in
         clk_hi
+
+        ; read channel/extra
+        clk_lo
+        get_data        d7 ; channel
+        clk_hi
+        get_data        d6 ; extra
+
+        ; combine (channel+extra) and move to high word of d7
+        lsl.w           #8,d7
+        or.w            d6,d7
+        swap            d7
 
         ; read size
         clk_lo
@@ -533,10 +548,9 @@ _proto_low_read_block:
         ; combine size lo/hi -> d5
         lsl.w           #8,d5
         or.w            d6,d5
-        ; get max size given in blkiov
-        move.l          (a2),d1
-        ; store real size in blkiov
-        move.l          d5,(a2)+
+        ; store real size in blkiov[0] (combined with channel+extra)
+        or.w            d5,d7
+        move.l          d7,(a2)+
         ; check size
         tst.w           d5 ; empty message
         beq.s           plmr_done_ok

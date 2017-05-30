@@ -206,7 +206,7 @@ int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov)
   return result;
 }
 
-int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG num_words)
+int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   ULONG msgiov[] = {
     num_words, /* total size */
@@ -217,7 +217,7 @@ int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG num_
   return proto_msg_write(ph, chn, msgiov);
 }
 
-int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG *max_words)
+int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words)
 {
   ULONG msgiov[] = {
     *max_words, /* total size */
@@ -227,7 +227,7 @@ int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, ULONG *max_
   };
   int result = proto_msg_read(ph, chn, msgiov);
   /* store returned result size */
-  *max_words = msgiov[0];
+  *max_words = (UWORD)(msgiov[0] & 0xffff);
   return result;
 }
 

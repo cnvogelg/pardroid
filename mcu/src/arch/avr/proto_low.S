@@ -322,9 +322,10 @@ proto_low_write_block:
 
     ; ----- proto_low_read_block -----
     ; master wants to read a message
-    ; void proto_low_read_block(u16 num_words, const u08 *buffer)
+    ; void proto_low_read_block(u16 num_words, const u08 *buffer, u16 chn_ext)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
+    ; in:  r21,r20 = chn+ext value
     ; out: -
     .global  proto_low_read_block
 proto_low_read_block:
@@ -337,6 +338,20 @@ proto_low_read_block:
     ; data: write
     wait_clk_hi
     ddr_out
+    debug_hi
+
+    ; send channel
+    mov     r18,r21
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
+    debug_lo
+
+    ; send extra
+    mov     r18,r20
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
     debug_hi
 
     ; size: hi
