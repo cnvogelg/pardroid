@@ -93,7 +93,12 @@ void proto_handle(void)
             rw_reg_read(num);
             break;
           case PROTO_CMD_MSG_WRITE:
-            msg_write(num);
+            // only accept write commands if no read is pending
+            if(!proto_api_read_is_pending()) {
+              msg_write(num);
+            } else {
+              DS("mw!"); DNL;
+            }
             break;
           case PROTO_CMD_MSG_READ:
             msg_read(num);

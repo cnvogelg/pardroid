@@ -405,8 +405,17 @@ int test_pend(test_t *t, test_param_t *p)
     return 1;
   }
 
+  /* write a message to see it works */
+  ULONG data = 0xdeadbeef;
+  int res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write msg";
+    return res;
+  }
+
   /* sim pend_req_add */
-  int res = proto_action(pb->proto, PROTO_ACTION_USER);
+  res = proto_action(pb->proto, PROTO_ACTION_USER);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "req_add";
@@ -426,6 +435,14 @@ int test_pend(test_t *t, test_param_t *p)
   if(!pf) {
     p->error = "pending inactive";
     p->section = "main";
+    return 1;
+  }
+
+  /* now message write must be aborted due to pending read */
+  res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  if(res != PROTO_RET_WRITE_ABORT) {
+    p->error = proto_perror(res);
+    p->section = "write msg not aborted";
     return 1;
   }
 
@@ -451,6 +468,14 @@ int test_pend(test_t *t, test_param_t *p)
     p->error = "pending active";
     p->section = "post";
     return 1;
+  }
+
+  /* message write now works again */
+  res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write msg2";
+    return res;
   }
 
   return 0;

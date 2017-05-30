@@ -17,4 +17,6 @@ extern void proto_api_read_msg_done(u08 chan);
 extern u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_size);
 extern void proto_api_write_msg_done(u08 chan,u16 size);
 
+extern u08  proto_api_read_is_pending(void);
+
 #endif

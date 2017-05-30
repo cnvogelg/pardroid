@@ -6,6 +6,11 @@
 static u08 ack_raised;
 u16 pend_total;
 
+u08 proto_api_read_is_pending(void)
+{
+  return pend_total > 0;
+}
+
 void pend_init(void)
 {
   pend_total = 0;

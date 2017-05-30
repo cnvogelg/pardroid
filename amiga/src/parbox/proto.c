@@ -248,6 +248,8 @@ const char *proto_perror(int res)
       return "invalid channel";
     case PROTO_RET_MSG_TOO_LARGE:
       return "message too large";
+    case PROTO_RET_WRITE_ABORT:
+      return "write was aborted";
     default:
       return "?";
   }
