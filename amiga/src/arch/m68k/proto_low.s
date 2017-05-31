@@ -109,7 +109,7 @@ wait_rak_lo_pend_abort  MACRO
         moveq   #RET_TIMEOUT,d0
         bra     \1
 \@3:    ; check pending (low active)
-        btst    \2,(a1)
+        btst    \2,(a5)
         bne.s   \@1
         ; abort write due to pending read
         moveq   #RET_WRITE_ABORT,d0
@@ -530,11 +530,11 @@ _proto_low_read_block:
 
         ; read channel/extra
         clk_lo
-        get_data        d7 ; channel
+        get_data        d6 ; channel
         clk_hi
-        get_data        d6 ; extra
+        get_data        d7 ; extra
 
-        ; combine (channel+extra) and move to high word of d7
+        ; combine (extra+channel) and move to high word of d7
         lsl.w           #8,d7
         or.w            d6,d7
         swap            d7

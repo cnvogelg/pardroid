@@ -341,14 +341,14 @@ proto_low_read_block:
     debug_hi
 
     ; send channel
-    mov     r18,r21
+    mov     r18,r20
     data_out_prepare
     wait_clk_lo
     data_out_set
     debug_lo
 
     ; send extra
-    mov     r18,r20
+    mov     r18,r21
     data_out_prepare
     wait_clk_hi
     data_out_set

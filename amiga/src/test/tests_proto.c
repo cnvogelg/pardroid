@@ -370,9 +370,10 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     p->section = "read";
     return res;
   }
+  UWORD got_words = (UWORD)(msgiov_r[0] & 0xffff);
 
   /* check buf size */
-  if(msgiov_r[0] != words) {
+  if(got_words != words) {
     p->error = "size mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04lx r=%04lx", words, msgiov_r[0]);
