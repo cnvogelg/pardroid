@@ -216,17 +216,34 @@ proto_low_read_word:
 
     ; ----- proto_low_write_block -----
     ; master wants to write a message
-    ; u16 proto_low_write_block(u16 max_words, u08 *buffer)
+    ; u16 proto_low_write_block(u16 max_words, u08 *buffer, u16 *chn_ext)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
+    ; in:  r21,r20 = ptr to (extra << 8 | channel)
     ; out: r25,r24 = num_words received
     .global  proto_low_write_block
 proto_low_write_block:
     ; Z is buffer pointer
     movw    r30,r22
+    ; X is ptr to extra/channel
+    movw    r26,r20
 
     ; confirm to master we are ready
     rak_lo
+
+    ; -- read extra, channel
+    ; extra
+    wait_clk_hi
+    data_in
+    mov     r0,r18
+    debug_hi
+
+    ; channel
+    wait_clk_lo
+    data_in
+    st      x+,r18
+    st      x+,r0
+    debug_lo
 
     ; -- read size: hi/lo=r23:r22
     ; hi
@@ -325,12 +342,16 @@ proto_low_write_block:
     ; void proto_low_read_block(u16 num_words, const u08 *buffer, u16 chn_ext)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
-    ; in:  r21,r20 = chn+ext value
+    ; in:  r21,r20 = extra << 8 | channel value
     ; out: -
     .global  proto_low_read_block
 proto_low_read_block:
     ; Z is buffer pointer
     movw    r30,r22
+
+    ; save r20 (channel) -> r0
+    ; warning: r20 gets globbered by first data_out* call!
+    mov     r0,r20
 
     ; confirm to master we are ready
     rak_lo
@@ -340,15 +361,15 @@ proto_low_read_block:
     ddr_out
     debug_hi
 
-    ; send channel
-    mov     r18,r20
+    ; send extra
+    mov     r18,r21
     data_out_prepare
     wait_clk_lo
     data_out_set
     debug_lo
 
-    ; send extra
-    mov     r18,r21
+    ; send channel
+    mov     r18,r0
     data_out_prepare
     wait_clk_hi
     data_out_set
@@ -360,6 +381,7 @@ proto_low_read_block:
     wait_clk_lo
     data_out_set
     debug_lo
+
     ; size: lo
     mov     r18, r24
     data_out_prepare

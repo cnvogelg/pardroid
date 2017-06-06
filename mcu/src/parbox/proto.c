@@ -63,8 +63,9 @@ static void msg_write(u08 chan)
   u16 max_size = 0;
   u08 *buf = proto_api_write_msg_prepare(chan, &max_size);
   DW(max_size); DC(':');
-  u16 size = proto_low_write_block(max_size, buf);
-  DW(size);
+  u16 chn_ext = 0;
+  u16 size = proto_low_write_block(max_size, buf, &chn_ext);
+  DW(size); DC(','); DW(chn_ext);
   proto_api_write_msg_done(chan, size);
   DC('.'); DNL;
 }

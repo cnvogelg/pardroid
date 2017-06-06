@@ -422,7 +422,7 @@ plrr_abort:
 ; out: d0 = result
 ;
 ; blkiov: ULONG[]
-; [0]  total size of block in words
+; [0]  total size of block in words | (extra << 24) | (channel << 16)
 ; [1]  first chunk size in words
 ; [2]  pointer to data of first chunk
 ; [3]  second chunk size in words
@@ -446,8 +446,20 @@ _proto_low_write_block:
         move.w          d1,d5
         lsr.w           #8,d5
 
+        ; prepare extra/channel values (high word of iov[0])
+        move.l          d1,d6
+        swap            d6
+        move.w          d6,d0 ; d6 = channel
+        lsr.w           #8,d0 ; d0 = extra
+
         ; wait for slave sync (abort if pending was set, or on timeout)
         wait_rak_lo_pend_abort     plrw_abort,d7
+
+        ; send extra/channel
+        set_data        d0 ; extra
+        clk_hi
+        set_data        d6 ; channel
+        clk_lo
 
         ; send size
         set_data        d5 ; hi byte
@@ -504,7 +516,7 @@ plmw_abort:
 ;      a2 = ptr to blkiov (see above)
 ;      d0 = cmd byte
 ; out: d0 = result
-;      blkiov[0] = channel << 24 | extra << 16 | recv_words
+;      blkiov[0] = extra << 24 | channel << 16 | recv_words
 _proto_low_read_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
@@ -530,9 +542,9 @@ _proto_low_read_block:
 
         ; read channel/extra
         clk_lo
-        get_data        d6 ; channel
-        clk_hi
         get_data        d7 ; extra
+        clk_hi
+        get_data        d6 ; channel
 
         ; combine (extra+channel) and move to high word of d7
         lsl.w           #8,d7
@@ -541,9 +553,9 @@ _proto_low_read_block:
 
         ; read size
         clk_lo
-        get_data        d5 ; hi
+        get_data        d5 ; hi size
         clk_hi
-        get_data        d6 ; lo
+        get_data        d6 ; lo size
 
         ; combine size lo/hi -> d5
         lsl.w           #8,d5
