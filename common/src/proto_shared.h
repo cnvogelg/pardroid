@@ -17,24 +17,19 @@
 
 #define PROTO_CMD_MSG_WRITE       0x20
 #define PROTO_CMD_MSG_READ        0x30
-#define PROTO_CMD_RW_REG_WRITE    0x40
-#define PROTO_CMD_RW_REG_READ     0x60
-#define PROTO_CMD_RO_REG_READ     0x80
+#define PROTO_CMD_REG_WRITE       0x40
+#define PROTO_CMD_REG_READ        0x60
 #define PROTO_CMD_INVALID         0xff
 
 #define PROTO_CMD_MASK            0xf0
 
-// ro register definitions
-#define PROTO_REG_RO_FW_VERSION   0
-#define PROTO_REG_RO_FW_MACHTAG   1
-#define PROTO_REG_RO_FW_ID        2
-#define PROTO_REG_RO_NUM_REGS     3
-#define PROTO_REG_RO_PEND_TOTAL   4
-#define PROTO_REG_RO_USER         5
-
-// rw register definitions
-#define PROTO_REG_RW_DRV_TAG      0
-#define PROTO_REG_RW_USER         1
+// register definitions
+#define PROTO_REG_FW_VERSION        0
+#define PROTO_REG_FW_MACHTAG        1
+#define PROTO_REG_FW_ID             2
+#define PROTO_REG_NUM_REGS          3
+#define PROTO_REG_PEND_TOTAL        4
+#define PROTO_REG_USER              5
 
 // firmware ids
 #define PROTO_FWID_TEST           1

@@ -17,17 +17,15 @@ struct bootinfo {
 };
 typedef struct bootinfo bootinfo_t;
 
-/* ro registers defined in bootloader */
-#define BOOTLOADER_RO_BL_VERSION        0
-#define BOOTLOADER_RO_BL_MACHTAG        1
-#define BOOTLOADER_RO_PAGE_SIZE         2
-#define BOOTLOADER_RO_ROM_SIZE          3
-#define BOOTLOADER_RO_FW_CRC            4
-#define BOOTLOADER_RO_FW_MACHTAG        5
-#define BOOTLOADER_RO_FW_VERSION        6
-
-/* rw registers */
-#define BOOTLOADER_RW_PAGE_ADDR         0
+/* registers defined in bootloader */
+#define BOOTLOADER_REG_BL_VERSION       0
+#define BOOTLOADER_REG_BL_MACHTAG       1
+#define BOOTLOADER_REG_PAGE_SIZE        2
+#define BOOTLOADER_REG_ROM_SIZE         3
+#define BOOTLOADER_REG_FW_CRC           4
+#define BOOTLOADER_REG_FW_MACHTAG       5
+#define BOOTLOADER_REG_FW_VERSION       6
+#define BOOTLOADER_REG_PAGE_ADDR        7  /* rw */
 
 /* channels */
 #define BOOTLOADER_CHN_PAGES            0

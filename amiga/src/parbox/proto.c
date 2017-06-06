@@ -118,11 +118,11 @@ int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG
   return result;
 }
 
-int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
+int proto_reg_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_RW_REG_READ;
+  UBYTE cmd = reg + PROTO_CMD_REG_READ;
   if(reg >= PROTO_MAX_RW_REG) {
     return PROTO_RET_INVALID_REG;
   }
@@ -134,33 +134,17 @@ int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
   return result;
 }
 
-int proto_reg_rw_write(proto_handle_t *ph, UBYTE reg, UWORD *data)
+int proto_reg_write(proto_handle_t *ph, UBYTE reg, UWORD data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_RW_REG_WRITE;
+  UBYTE cmd = reg + PROTO_CMD_REG_WRITE;
   if(reg >= PROTO_MAX_RW_REG) {
     return PROTO_RET_INVALID_REG;
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_word(port, timeout_flag, cmd, (UBYTE *)data);
-  timer_stop(ph->timer);
-
-  return result;
-}
-
-int proto_reg_ro_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
-{
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = reg + PROTO_CMD_RO_REG_READ;
-  if(reg >= PROTO_MAX_RO_REG) {
-    return PROTO_RET_INVALID_REG;
-  }
-
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_word(port, timeout_flag, cmd, (UBYTE *)data);
+  int result = proto_low_write_word(port, timeout_flag, cmd, (UBYTE *)&data);
   timer_stop(ph->timer);
 
   return result;

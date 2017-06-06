@@ -8,10 +8,8 @@
 #include "debug.h"
 #include "system.h"
 #include "pablo.h"
-#include "reg_ro.h"
-#include "reg_ro_def.h"
-#include "reg_rw.h"
-#include "reg_rw_def.h"
+#include "reg.h"
+#include "reg_def.h"
 #include "action.h"
 #include "machtag.h"
 #include "pend.h"
@@ -43,7 +41,7 @@ ACTION_TABLE_BEGIN
 ACTION_TABLE_END
 
 // ----- ro registers -----
-// test values
+// read-only test values
 static const u16 ro_rom_word ROM_ATTR = 1;
 static const u08 ro_rom_byte ROM_ATTR = 2;
 static u16 ro_ram_word = 3;
@@ -52,19 +50,7 @@ static u16 ro_func(void) {
   return 5;
 }
 
-REG_RO_PROTO_APPID(PROTO_FWID_TEST)
-REG_RO_TABLE_BEGIN
-  REG_RO_PROTO_DEFAULTS
-  /* user regs */
-  REG_RO_TABLE_ROM_W(ro_rom_word),
-  REG_RO_TABLE_ROM_B(ro_rom_byte),
-  REG_RO_TABLE_RAM_W(ro_ram_word),
-  REG_RO_TABLE_RAM_B(ro_ram_byte),
-  REG_RO_TABLE_FUNC(ro_func)
-REG_RO_TABLE_END
-
-// ----- rw registers -----
-// test values
+// read/write test values
 static u16 test_word = 0x4812;
 static u08 test_byte = 0x42;
 static u16 test_size;
@@ -79,13 +65,20 @@ static u16 get_test_size(void)
   return test_size;
 }
 
-REG_RW_TABLE_BEGIN
-  REG_RW_PROTO_DEFAULTS
-  /* user regs */
-  REG_RW_TABLE_FUNC(get_test_size, set_test_size),
-  REG_RW_TABLE_RAM_W(test_word),
-  REG_RW_TABLE_RAM_B(test_byte)
-REG_RW_TABLE_END
+REG_PROTO_APPID(PROTO_FWID_TEST)
+REG_TABLE_BEGIN
+  REG_TABLE_DEFAULTS
+  /* user read-only regs */
+  REG_TABLE_RO_ROM_W(ro_rom_word),
+  REG_TABLE_RO_ROM_B(ro_rom_byte),
+  REG_TABLE_RO_RAM_W(ro_ram_word),
+  REG_TABLE_RO_RAM_B(ro_ram_byte),
+  REG_TABLE_RO_FUNC(ro_func),
+  /* user read-write regs */
+  REG_TABLE_RW_FUNC(get_test_size, set_test_size),
+  REG_TABLE_RW_RAM_W(test_word),
+  REG_TABLE_RW_RAM_B(test_byte)
+REG_TABLE_END
 
 // my handler
 

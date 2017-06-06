@@ -27,10 +27,8 @@ extern int proto_is_pending(proto_handle_t *ph);
 extern int proto_action(proto_handle_t *ph, UBYTE cmd);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2]);
 
-extern int proto_reg_rw_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
-extern int proto_reg_rw_write(proto_handle_t *ph, UBYTE reg, UWORD *data);
-
-extern int proto_reg_ro_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
+extern int proto_reg_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
+extern int proto_reg_write(proto_handle_t *ph, UBYTE reg, UWORD data);
 
 extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);

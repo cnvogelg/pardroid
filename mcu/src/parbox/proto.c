@@ -15,31 +15,21 @@ static void action(u08 num)
   proto_api_action(num);
 }
 
-static void rw_reg_write(u08 reg)
+static void reg_write(u08 reg)
 {
   // master wants to write a u16
   DS("rw:"); DB(reg); DC('=');
   u16 val = proto_low_write_word();
   DW(val);
-  proto_api_set_rw_reg(reg, val);
+  proto_api_set_reg(reg, val);
   DC('.'); DNL;
 }
 
-static void rw_reg_read(u08 reg)
+static void reg_read(u08 reg)
 {
   // master wants to reead a u16
   DS("rr:"); DB(reg); DC('=');
-  u16 val = proto_api_get_rw_reg(reg);
-  DW(val);
-  proto_low_read_word(val);
-  DC('.'); DNL;
-}
-
-static void ro_reg_read(u08 reg)
-{
-  // master wants to reead a u16
-  DS("or:"); DB(reg); DC('=');
-  u16 val = proto_api_get_ro_reg(reg);
+  u16 val = proto_api_get_reg(reg);
   DW(val);
   proto_low_read_word(val);
   DC('.'); DNL;
@@ -88,11 +78,11 @@ void proto_handle(void)
           case PROTO_CMD_ACTION:
             action(num);
             break;
-          case PROTO_CMD_RW_REG_WRITE:
-            rw_reg_write(num);
+          case PROTO_CMD_REG_WRITE:
+            reg_write(num);
             break;
-          case PROTO_CMD_RW_REG_READ:
-            rw_reg_read(num);
+          case PROTO_CMD_REG_READ:
+            reg_read(num);
             break;
           case PROTO_CMD_MSG_WRITE:
             // only accept write commands if no read is pending
@@ -104,9 +94,6 @@ void proto_handle(void)
             break;
           case PROTO_CMD_MSG_READ:
             msg_read(num);
-            break;
-          case PROTO_CMD_RO_REG_READ:
-            ro_reg_read(num);
             break;
           default:
             DS("?:"); DB(cmd); DNL;
