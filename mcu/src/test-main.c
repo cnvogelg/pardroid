@@ -69,15 +69,15 @@ REG_PROTO_APPID(PROTO_FWID_TEST)
 REG_TABLE_BEGIN
   REG_TABLE_DEFAULTS
   /* user read-only regs */
-  REG_TABLE_RO_ROM_W(ro_rom_word),
-  REG_TABLE_RO_ROM_B(ro_rom_byte),
-  REG_TABLE_RO_RAM_W(ro_ram_word),
-  REG_TABLE_RO_RAM_B(ro_ram_byte),
-  REG_TABLE_RO_FUNC(ro_func),
+  REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
+  REG_TABLE_RO_ROM_B(ro_rom_byte),      // user+1
+  REG_TABLE_RO_RAM_W(ro_ram_word),      // user+2
+  REG_TABLE_RO_RAM_B(ro_ram_byte),      // user+3
+  REG_TABLE_RO_FUNC(ro_func),           // user+4
   /* user read-write regs */
-  REG_TABLE_RW_FUNC(get_test_size, set_test_size),
-  REG_TABLE_RW_RAM_W(test_word),
-  REG_TABLE_RW_RAM_B(test_byte)
+  REG_TABLE_RW_FUNC(get_test_size, set_test_size), // user+5
+  REG_TABLE_RW_RAM_W(test_word),                   // user+6
+  REG_TABLE_RW_RAM_B(test_byte)                    // user+7
 REG_TABLE_END
 
 // my handler

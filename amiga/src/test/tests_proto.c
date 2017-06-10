@@ -11,9 +11,10 @@
 
 #include "parbox.h"
 #include "proto.h"
+#include "proto_shared.h"
 #include "test.h"
 
-#define REG_TEST 0
+#define REG_TEST   PROTO_REG_USER+5
 
 static UWORD test_size;
 static UWORD test_bias;
