@@ -9,6 +9,7 @@ DEP_DIR=$(OBJ_DIR)
 # setup CFLAGS
 CFLAGS_COMMON = -std=c99 -fno-common -Wall -Werror -Wstrict-prototypes
 CFLAGS_COMMON += -Wall -Werror -Wstrict-prototypes
+CFLAGS_COMMON += -Wno-error=unused-variable
 CFLAGS_COMMON += -ffunction-sections -fdata-sections
 
 CFLAGS_LST = -Wa,-adhlns=$(OBJ_DIR)/$(notdir $(<:%.c=%.lst))

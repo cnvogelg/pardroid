@@ -19,8 +19,9 @@ static void reg_write(u08 reg)
 {
   // master wants to write a u16
   DS("rw:"); DB(reg); DC('=');
-  u16 val = proto_low_write_word();
-  DW(val);
+  u16 val;
+  u08 reg2 = proto_low_write_word(&val);
+  DW(val); DW(':'); DB(reg2);
   proto_api_set_reg(reg, val);
   DC('.'); DNL;
 }
@@ -31,8 +32,8 @@ static void reg_read(u08 reg)
   DS("rr:"); DB(reg); DC('=');
   u16 val = proto_api_get_reg(reg);
   DW(val);
-  proto_low_read_word(val);
-  DC('.'); DNL;
+  u08 reg2 = proto_low_read_word(val);
+  DC(':') DB(reg2); DC('.'); DNL;
 }
 
 static void msg_read(u08 chan)

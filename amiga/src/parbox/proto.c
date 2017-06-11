@@ -128,7 +128,7 @@ int proto_reg_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_word(port, timeout_flag, cmd, (UBYTE *)data);
+  int result = proto_low_read_word(port, timeout_flag, cmd, reg, (UBYTE *)data);
   timer_stop(ph->timer);
 
   return result;
@@ -144,7 +144,7 @@ int proto_reg_write(proto_handle_t *ph, UBYTE reg, UWORD data)
   }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_word(port, timeout_flag, cmd, (UBYTE *)&data);
+  int result = proto_low_write_word(port, timeout_flag, cmd, reg, (UBYTE *)&data);
   timer_stop(ph->timer);
 
   return result;

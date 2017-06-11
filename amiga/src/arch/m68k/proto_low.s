@@ -335,8 +335,9 @@ plab_abort:
 ; --- proto_low_write_word ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to byte
+;      a2 = ptr to data
 ;      d0 = cmd byte
+;      d1 = reg num
 ; out: d0 = result
 _proto_low_write_word:
         movem.l d2-d7/a2-a6,-(sp)
@@ -348,6 +349,14 @@ _proto_low_write_word:
         clk_lo
         wait_rak_lo     plrw_abort
 
+        ; ddr: out
+        clk_hi
+        ddr_out
+
+        ; reg_num
+        set_data        d1
+        clk_lo
+
         ; -- first byte
         ; setup test value on data lines
         set_data        (a2)+
@@ -357,6 +366,13 @@ _proto_low_write_word:
         ; -- second byte
         set_data        (a2)+
         clk_lo
+
+        ; unused cycle
+        clk_hi
+
+        ; ddr: idle
+        clk_lo
+        ddr_idle
 
         ; final sync
         clk_hi
@@ -380,6 +396,7 @@ plrw_abort:
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to test byte
 ;      d0 = cmd byte
+;      d1 = reg num
 ; out: d0 = result
 _proto_low_read_word:
         movem.l d2-d7/a2-a6,-(sp)
@@ -391,7 +408,15 @@ _proto_low_read_word:
         clk_lo
         wait_rak_lo     plrr_abort
 
-        ; switch: port read
+        ; ddr: out
+        clk_hi
+        ddr_out
+
+        ; write reg num
+        set_data        d1
+        clk_lo
+
+        ; ddr: in
         ddr_in
         clk_hi
 
@@ -401,11 +426,11 @@ _proto_low_read_word:
         ; read value from data port
         get_data        (a2)+
 
-        ; second bytes
+        ; second byte
         clk_hi
         get_data        (a2)+
 
-        ; switch: port write
+        ; ddr: idle
         clk_lo
         ddr_idle        d7
 
