@@ -149,6 +149,17 @@ ddr_out  MACRO
         ENDM
 
 
+; --- ddr_idle ---
+; \1 = temp reg
+; set special idle mode ddr: one nybble in, other nybble out
+ddr_idle  MACRO
+; TBD
+;        moveq   #15,\1   ; lower nybble out
+;        move.b  \1,(a4)
+        st.b    (a4)
+        ENDM
+
+
 ; --- set_cmd_idle ---
 ; set command to idle (0)
 set_cmd_idle  MACRO
@@ -396,7 +407,7 @@ _proto_low_read_word:
 
         ; switch: port write
         clk_lo
-        ddr_out
+        ddr_idle        d7
 
         ; final sync
         clk_hi
@@ -455,17 +466,21 @@ _proto_low_write_block:
         ; wait for slave sync (abort if pending was set, or on timeout)
         wait_rak_lo_pend_abort     plrw_abort,d7
 
+        ; switch port to write
+        clk_hi
+        ddr_out
+
         ; send extra/channel
         set_data        d0 ; extra
-        clk_hi
-        set_data        d6 ; channel
         clk_lo
+        set_data        d6 ; channel
+        clk_hi
 
         ; send size
         set_data        d5 ; hi byte
-        clk_hi
-        set_data        d1 ; lo byte
         clk_lo
+        set_data        d1 ; lo byte
+        clk_hi
 
         ; empty message?
         tst.w           d1
@@ -485,15 +500,19 @@ plmw_chunks:
 plmw_loop:
         ; odd byte
         set_data        (a0)+
-        clk_hi
+        clk_lo
         ; even byte
         set_data        (a0)+
-        clk_lo
+        clk_hi
 
         dbra            d1,plmw_loop
         bra.s           plmw_chunks
 
 plmw_done:
+        ; set ddr to idle
+        clk_lo
+        ddr_idle        d7
+
         ; final sync
         clk_hi
         check_rak_hi    plmw_end
@@ -617,7 +636,7 @@ plmr_done_ok:
 plmr_done:
         ; switch: port write
         clk_lo
-        ddr_out
+        ddr_idle        d7
 
         ; final sync
         clk_hi

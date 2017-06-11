@@ -71,8 +71,8 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     ; setup parallel port lines
     .global  proto_low_init
 proto_low_init:
-    ; setup data port: INPUT
-    ddr_in
+    ; setup data port: idle mode
+    ddr_idle
     ; setup control lines
     ; DDR INPUT: strobe, pout
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
@@ -203,9 +203,9 @@ proto_low_read_word:
     data_out_set
     debug_hi
 
-    ; data: read
+    ; leave write mode
     wait_clk_lo
-    ddr_in
+    ddr_idle
     debug_lo
 
     ; end sync
@@ -231,31 +231,36 @@ proto_low_write_block:
     ; confirm to master we are ready
     rak_lo
 
-    ; -- read extra, channel
-    ; extra
+    ; ddr input
     wait_clk_hi
-    data_in
-    mov     r0,r18
+    ddr_in
     debug_hi
 
-    ; channel
+    ; -- read extra, channel
+    ; extra
     wait_clk_lo
+    data_in
+    mov     r0,r18
+    debug_lo
+
+    ; channel
+    wait_clk_hi
     data_in
     st      x+,r18
     st      x+,r0
-    debug_lo
+    debug_hi
 
     ; -- read size: hi/lo=r23:r22
     ; hi
-    wait_clk_hi
-    data_in
-    mov     r23,r18
-    debug_hi
-    ; lo
     wait_clk_lo
     data_in
-    mov     r22,r18
+    mov     r23,r18
     debug_lo
+    ; lo
+    wait_clk_hi
+    data_in
+    mov     r22,r18
+    debug_hi
 
     ; empty size?
     or      r18,r23
@@ -293,15 +298,15 @@ proto_low_write_block:
     breq    .wb_end
 
     ; odd byte
-    wait_clk_hi
-    data_in
-    st      Z+,r18
-    debug_hi
-    ; even byte
     wait_clk_lo
     data_in
     st      Z+,r18
     debug_lo
+    ; even byte
+    wait_clk_hi
+    data_in
+    st      Z+,r18
+    debug_hi
 
     rjmp    .wb_loop
 
@@ -313,13 +318,13 @@ proto_low_write_block:
     breq    .wb_end
 
     ; odd byte
-    wait_clk_hi
-    adiw    r30,1
-    debug_hi
-    ; even byte
     wait_clk_lo
     adiw    r30,1
     debug_lo
+    ; even byte
+    wait_clk_hi
+    adiw    r30,1
+    debug_hi
 
     rjmp    .wb_fake_loop
 
@@ -328,12 +333,14 @@ proto_low_write_block:
     clr     r25
     clr     r24
 .wb_end:
-    ; done sending
-    debug_hi
+    ; ddr idle
+    wait_clk_lo
+    ddr_idle
+    debug_lo
+
     ; end sync
     wait_clk_hi
     rak_hi
-    debug_lo
     ret
 
 
@@ -356,7 +363,7 @@ proto_low_read_block:
     ; confirm to master we are ready
     rak_lo
 
-    ; data: write
+    ; ddr out
     wait_clk_hi
     ddr_out
     debug_hi
@@ -420,9 +427,9 @@ proto_low_read_block:
 
     rjmp    .rb_loop
 .rb_end:
-    ; data: read
+    ; ddr idle
     wait_clk_lo
-    ddr_in
+    ddr_idle
     debug_lo
 
     ; end sync
