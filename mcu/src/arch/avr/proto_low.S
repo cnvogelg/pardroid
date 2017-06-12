@@ -172,13 +172,14 @@ proto_low_write_word:
     wait_clk_hi
     ; get data and save as result
     data_in
-    st      Z+,r18
+    mov     r23, 18
 
     ; byte 2
     ; wait clk
     wait_clk_lo
     data_in
     st      Z+,r18
+    st      Z+,r23
 
     ; unused cycle
     wait_clk_hi
