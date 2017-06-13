@@ -124,6 +124,7 @@ proto_low_get_cmd:
     sbic_clk
     ret
     data_in
+    andi    r18, 0x1f
     mov     r24, r18
     ret
 

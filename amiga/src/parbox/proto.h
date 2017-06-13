@@ -23,6 +23,7 @@ extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *
 extern void proto_exit(proto_handle_t *ph);
 
 extern int proto_is_pending(proto_handle_t *ph);
+extern UBYTE proto_get_status(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE cmd);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2]);

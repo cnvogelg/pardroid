@@ -1,27 +1,40 @@
 // proto_shared.h
 // shared defines for parbox protocol
 
-// registers
-#define PROTO_MAX_RW_REG          32
-#define PROTO_MAX_RO_REG          32
-#define PROTO_MAX_CHANNEL         16
+// number of channels
+#define PROTO_MAX_CHANNEL         8
 
-// command codes
-#define PROTO_CMD_IDLE            0x00
+// command codes: bit 4+3 in idle byte
+#define PROTO_CMD_MASK            0x18
+#define PROTO_CMD_FULL_MASK       0x1f
+#define PROTO_CMD_SUB_MASK        0x07
+#define PROTO_CMD_ACTION          0x00
+#define PROTO_CMD_MSG_READ        0x08
+#define PROTO_CMD_MSG_WRITE       0x10
+#define PROTO_CMD_FUNCTION        0x18
 
-#define PROTO_CMD_ACTION          0x10
-#define PROTO_ACTION_PING         0x10
-#define PROTO_ACTION_BOOTLOADER   0x11
-#define PROTO_ACTION_RESET        0x12
-#define PROTO_ACTION_USER         0x13
+// actions
+#define PROTO_ACTION_IDLE         0x00
+#define PROTO_ACTION_RESET        0x01
+#define PROTO_ACTION_PING         0x02
+#define PROTO_ACTION_BOOTLOADER   0x03
+#define PROTO_ACTION_ATTACH       0x04
+#define PROTO_ACTION_DETACH       0x05
+#define PROTO_ACTION_USER         0x06
 
-#define PROTO_CMD_MSG_WRITE       0x20
-#define PROTO_CMD_MSG_READ        0x30
-#define PROTO_CMD_REG_WRITE       0x40
-#define PROTO_CMD_REG_READ        0x60
-#define PROTO_CMD_INVALID         0xff
+// functions
+#define PROTO_FUNC_REG_READ       0x00
+#define PROTO_FUNC_REG_WRITE      0x01
+#define PROTO_FUNC_CHN_OPEN       0x02
+#define PROTO_FUNC_CHN_CLOSE      0x03
+#define PROTO_FUNC_GET_ERROR      0x04
+#define PROTO_FUNC_USER           0x05
 
-#define PROTO_CMD_MASK            0xf0
+// device status: bit 7,6,5 in idle byte (set by device)
+#define PROTO_STATUS_MASK         0xe0
+#define PROTO_STATUS_BOOTLOADER   0x20
+#define PROTO_STATUS_DETACHED     0x40
+#define PROTO_STATUS_ERROR        0x80
 
 // register definitions
 #define PROTO_REG_FW_VERSION        0

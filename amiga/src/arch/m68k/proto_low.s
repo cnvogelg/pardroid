@@ -7,6 +7,7 @@
         include         "proto.i"
 
         xdef            _proto_low_read_pending
+        xdef            _proto_low_read_status_bits
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
@@ -151,12 +152,10 @@ ddr_out  MACRO
 
 ; --- ddr_idle ---
 ; \1 = temp reg
-; set special idle mode ddr: one nybble in, other nybble out
+; set special idle mode ddr: bit 0..4 out, bit 5..7 in
 ddr_idle  MACRO
-; TBD
-;        moveq   #15,\1   ; lower nybble out
-;        move.b  \1,(a4)
-        st.b    (a4)
+        moveq   #31,\1
+        move.b  \1,(a4)
         ENDM
 
 
@@ -219,6 +218,20 @@ _proto_low_read_pending:
         rts
 plrp_active:
         moveq   #1,d0
+        rts
+
+
+; --- proto_low_read_status_bits ---
+; read the device status bits: bit 5,6,7 in idle byte
+;
+;  in:
+;       a0      struct pario_port *port
+;  out:
+;       d0      bits 5,6,7 set from idle byte
+_proto_low_read_status_bits:
+        move.l  PO_DATA_PORT(a0),a1
+        move.b  (a1),d0
+        andi.b  #$e0,d0
         rts
 
 
@@ -372,7 +385,7 @@ _proto_low_write_word:
 
         ; ddr: idle
         clk_lo
-        ddr_idle
+        ddr_idle        d7
 
         ; final sync
         clk_hi

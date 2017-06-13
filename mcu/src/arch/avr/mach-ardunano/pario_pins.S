@@ -67,11 +67,11 @@
     .endm                                   ; = 5
 
     ; ddr_idle
-    ; TBD - for now clone of ddr_in
+    ; bits 0..4 out, bits 5..7 in
     .macro ddr_idle
-    clr     r18                             ; 1
+    ldi     r18, 0x20                       ; 1
     in      r19, _SFR_IO_ADDR(DDRD)         ; 1
-    andi    r19, 0x3f                       ; 1
+    ori     r19, 0xc0                       ; 1
     out     _SFR_IO_ADDR(DDRC), r18         ; 1
     out     _SFR_IO_ADDR(DDRD), r19         ; 1
     .endm                                   ; = 5

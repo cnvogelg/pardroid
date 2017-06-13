@@ -15,25 +15,42 @@ static void action(u08 num)
   proto_api_action(num);
 }
 
-static void reg_write(u08 reg)
+static void reg_write(void)
 {
   // master wants to write a u16
-  DS("rw:"); DB(reg); DC('=');
+  DS("rw:");
   u16 val;
-  u08 reg2 = proto_low_write_word(&val);
-  DW(val); DC(':'); DB(reg2);
+  u08 reg = proto_low_write_word(&val);
+  DB(reg); DC('='); DW(val);
   proto_api_set_reg(reg, val);
   DC('.'); DNL;
 }
 
-static void reg_read(u08 reg)
+static void reg_read(void)
 {
   // master wants to reead a u16
-  DS("rr:"); DB(reg); DC('=');
-  u16 val = proto_api_get_reg(reg);
+  DS("rr:");
+  // TBD reg addr!
+  u16 val = proto_api_get_reg(0);
   DW(val);
   u08 reg2 = proto_low_read_word(val);
   DC(':'); DB(reg2); DC('.'); DNL;
+}
+
+static void function(u08 num)
+{
+  DS("f:"); DB(num); DNL;
+  switch(num) {
+    case PROTO_FUNC_REG_WRITE:
+      reg_write();
+      break;
+    case PROTO_FUNC_REG_READ:
+      reg_read();
+      break;
+    default:
+      DS("?:"); DB(cmd); DNL;
+      break;
+  }
 }
 
 static void msg_read(u08 chan)
@@ -63,44 +80,33 @@ static void msg_write(u08 chan)
 
 void proto_handle(void)
 {
+  // read command from bits 0..4 in idle byte
   u08 cmd = proto_low_get_cmd();
-  switch(cmd) {
-    case PROTO_CMD_IDLE:
-      // nothing to do for now. return
-      break;
-    case PROTO_CMD_INVALID:
-      //DS("invalid"); DNL;
-      break;
-    default:
-      {
-        u08 cmd_base = cmd & PROTO_CMD_MASK;
-        u08 num = cmd - cmd_base;
-        switch(cmd_base) {
-          case PROTO_CMD_ACTION:
-            action(num);
-            break;
-          case PROTO_CMD_REG_WRITE:
-            reg_write(num);
-            break;
-          case PROTO_CMD_REG_READ:
-            reg_read(num);
-            break;
-          case PROTO_CMD_MSG_WRITE:
-            // only accept write commands if no read is pending
-            if(!proto_api_read_is_pending()) {
-              msg_write(num);
-            } else {
-              DS("mw!"); DNL;
-            }
-            break;
-          case PROTO_CMD_MSG_READ:
-            msg_read(num);
-            break;
-          default:
-            DS("?:"); DB(cmd); DNL;
-            break;
-        }
+  if(cmd == 0) {
+    // no command set or no clk line pulled -> idle nothing to do
+    return;
+  }
+
+  // extract command group
+  u08 grp = cmd & PROTO_CMD_MASK;
+  u08 chn = cmd & PROTO_CMD_SUB_MASK;
+  switch(grp) {
+    case PROTO_CMD_MSG_WRITE:
+      // only accept write commands if no read is pending
+      if(!proto_api_read_is_pending()) {
+        msg_write(chn);
+      } else {
+        DS("mw!"); DNL;
       }
+      break;
+    case PROTO_CMD_MSG_READ:
+      msg_read(chn);
+      break;
+    case PROTO_CMD_ACTION:
+      action(chn);
+      break;
+    case PROTO_CMD_FUNCTION:
+      function(chn);
       break;
   }
 }

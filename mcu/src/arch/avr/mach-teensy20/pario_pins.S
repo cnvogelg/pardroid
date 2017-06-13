@@ -61,7 +61,7 @@
 
     ; ddr_idle
     .macro ddr_idle
-    clr     r18                             ; 1
+    ldi     r18, 0xe0                       ; 1
     out     _SFR_IO_ADDR(DDRB), r18         ; 1
     .endm                                   ; = 2
 
