@@ -74,10 +74,14 @@ UBYTE proto_get_status(proto_handle_t *ph)
   return proto_low_read_status_bits(port);
 }
 
-int proto_action(proto_handle_t *ph, UBYTE cmd)
+int proto_action(proto_handle_t *ph, UBYTE num)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  if(num > PROTO_MAX_ACTION) {
+    return PROTO_RET_INVALID_ACTION;
+  }
+  UBYTE cmd = PROTO_CMD_ACTION + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_action(port, timeout_flag, cmd);
@@ -93,10 +97,14 @@ static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))
   timer_eclock_get(th, ts);
 }
 
-int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2])
+int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start, ULONG deltas[2])
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  if(num > PROTO_MAX_ACTION) {
+    return PROTO_RET_INVALID_ACTION;
+  }
+  UBYTE cmd = PROTO_CMD_ACTION + num;
 
   struct cb_data cbd = {
     bench_cb,
@@ -124,27 +132,33 @@ int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG
   return result;
 }
 
-int proto_reg_read(proto_handle_t *ph, UBYTE reg, UWORD *data)
+int proto_function_read(proto_handle_t *ph, UBYTE num, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = PROTO_CMD_FUNCTION + PROTO_FUNC_REG_READ;
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_FUNCTION + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_word(port, timeout_flag, cmd, reg, (UBYTE *)data);
+  int result = proto_low_read_word(port, timeout_flag, cmd, data);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_reg_write(proto_handle_t *ph, UBYTE reg, UWORD data)
+int proto_function_write(proto_handle_t *ph, UBYTE num, UWORD data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = PROTO_CMD_FUNCTION + PROTO_FUNC_REG_WRITE;
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_FUNCTION + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_word(port, timeout_flag, cmd, reg, (UBYTE *)&data);
+  int result = proto_low_write_word(port, timeout_flag, cmd, &data);
   timer_stop(ph->timer);
 
   return result;
@@ -226,10 +240,12 @@ const char *proto_perror(int res)
       return "timeout";
     case PROTO_RET_SLAVE_ERROR:
       return "slave error";
-    case PROTO_RET_INVALID_REG:
-      return "invalid register";
+    case PROTO_RET_INVALID_FUNCTION:
+      return "invalid function";
     case PROTO_RET_INVALID_CHANNEL:
       return "invalid channel";
+    case PROTO_RET_INVALID_ACTION:
+      return "invalid action";
     case PROTO_RET_MSG_TOO_LARGE:
       return "message too large";
     case PROTO_RET_WRITE_ABORT:

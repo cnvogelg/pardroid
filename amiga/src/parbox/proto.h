@@ -12,7 +12,8 @@
 #define PROTO_RET_MSG_TOO_LARGE     4
 #define PROTO_RET_WRITE_ABORT       5
 #define PROTO_RET_INVALID_CHANNEL   15
-#define PROTO_RET_INVALID_REG       14
+#define PROTO_RET_INVALID_FUNCTION  14
+#define PROTO_RET_INVALID_ACTION    13
 
 #define PROTO_RET_MASK              0xf
 
@@ -25,11 +26,11 @@ extern void proto_exit(proto_handle_t *ph);
 extern int proto_is_pending(proto_handle_t *ph);
 extern UBYTE proto_get_status(proto_handle_t *ph);
 
-extern int proto_action(proto_handle_t *ph, UBYTE cmd);
-extern int proto_action_bench(proto_handle_t *ph, UBYTE cmd, time_stamp_t *start, ULONG deltas[2]);
+extern int proto_action(proto_handle_t *ph, UBYTE num);
+extern int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start, ULONG deltas[2]);
 
-extern int proto_reg_read(proto_handle_t *ph, UBYTE reg, UWORD *data);
-extern int proto_reg_write(proto_handle_t *ph, UBYTE reg, UWORD data);
+extern int proto_function_read(proto_handle_t *ph, UBYTE num, UWORD *data);
+extern int proto_function_write(proto_handle_t *ph, UBYTE num, UWORD data);
 
 extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);

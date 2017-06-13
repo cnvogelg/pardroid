@@ -39,7 +39,7 @@ u16 reg_get(u08 num)
   }
 }
 
-u16 proto_api_get_reg(u08 num) __attribute__ ((weak, alias("reg_get")));
+u16 func_api_get_reg(u08 num) __attribute__ ((weak, alias("reg_get")));
 
 void reg_set(u08 num, u16 val)
 {
@@ -73,4 +73,4 @@ void reg_set(u08 num, u16 val)
   }
 }
 
-void proto_api_set_reg(u08 num, u16 val) __attribute__ ((weak, alias("reg_set")));
+void func_api_set_reg(u08 num, u16 val) __attribute__ ((weak, alias("reg_set")));

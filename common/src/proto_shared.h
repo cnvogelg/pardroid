@@ -3,6 +3,8 @@
 
 // number of channels
 #define PROTO_MAX_CHANNEL         8
+#define PROTO_MAX_FUNCTION        8
+#define PROTO_MAX_ACTION          8
 
 // command codes: bit 4+3 in idle byte
 #define PROTO_CMD_MASK            0x18
@@ -23,10 +25,10 @@
 #define PROTO_ACTION_USER         0x06
 
 // functions
-#define PROTO_FUNC_REG_READ       0x00
-#define PROTO_FUNC_REG_WRITE      0x01
-#define PROTO_FUNC_CHN_OPEN       0x02
-#define PROTO_FUNC_CHN_CLOSE      0x03
+#define PROTO_FUNC_REGADDR_GET    0x00
+#define PROTO_FUNC_REGADDR_SET    0x01
+#define PROTO_FUNC_REG_READ       0x02
+#define PROTO_FUNC_REG_WRITE      0x03
 #define PROTO_FUNC_GET_ERROR      0x04
 #define PROTO_FUNC_USER           0x05
 

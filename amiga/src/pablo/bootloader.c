@@ -8,6 +8,7 @@
 
 #include "bootloader.h"
 #include "proto.h"
+#include "reg.h"
 
 int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
 {
@@ -28,7 +29,7 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
 
   /* read version tag */
   UWORD bl_version;
-  res = proto_reg_read(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
+  res = reg_get(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
@@ -41,20 +42,20 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
   }
 
   /* bootloader mach tag */
-  res = proto_reg_read(ph, BOOTLOADER_REG_BL_MACHTAG, &bi->bl_mach_tag);
+  res = reg_get(ph, BOOTLOADER_REG_BL_MACHTAG, &bi->bl_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
 
   /* page size */
-  res = proto_reg_read(ph, BOOTLOADER_REG_PAGE_SIZE, &bi->page_size);
+  res = reg_get(ph, BOOTLOADER_REG_PAGE_SIZE, &bi->page_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
 
   /* rom size */
   UWORD size;
-  res = proto_reg_read(ph, BOOTLOADER_REG_ROM_SIZE, &size);
+  res = reg_get(ph, BOOTLOADER_REG_ROM_SIZE, &size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
@@ -69,19 +70,19 @@ int bootloader_update_fw_info(parbox_handle_t *pb, bootinfo_t *bi)
   proto_handle_t *ph = pb->proto;
 
   /* firmware crc */
-  res = proto_reg_read(ph, BOOTLOADER_REG_FW_CRC, &bi->fw_crc);
+  res = reg_get(ph, BOOTLOADER_REG_FW_CRC, &bi->fw_crc);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
 
   /* firmware mach tag */
-  res = proto_reg_read(ph, BOOTLOADER_REG_FW_MACHTAG, &bi->fw_mach_tag);
+  res = reg_get(ph, BOOTLOADER_REG_FW_MACHTAG, &bi->fw_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
 
   /* firmware version */
-  res = proto_reg_read(ph, BOOTLOADER_REG_FW_VERSION, &bi->fw_version);
+  res = reg_get(ph, BOOTLOADER_REG_FW_VERSION, &bi->fw_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
@@ -138,7 +139,7 @@ int bootloader_flash(parbox_handle_t *pb, bootinfo_t *bi,
 
     /* set addr in bootloader */
     UWORD addr = bu.addr;
-    res = proto_reg_write(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
+    res = reg_set(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
@@ -189,7 +190,7 @@ int bootloader_read(parbox_handle_t *pb, bootinfo_t *bi,
 
     /* set addr in bootloader */
     UWORD addr = bu.addr;
-    res = proto_reg_write(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
+    res = reg_set(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
@@ -246,7 +247,7 @@ int bootloader_leave(parbox_handle_t *pb)
 
   /* read version tag from running firmware */
   UWORD bl_version;
-  res = proto_reg_read(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
+  res = reg_get(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }

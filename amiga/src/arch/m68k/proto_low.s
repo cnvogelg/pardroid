@@ -350,7 +350,6 @@ plab_abort:
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to data
 ;      d0 = cmd byte
-;      d1 = reg num
 ; out: d0 = result
 _proto_low_write_word:
         movem.l d2-d7/a2-a6,-(sp)
@@ -366,21 +365,14 @@ _proto_low_write_word:
         clk_hi
         ddr_out
 
-        ; reg_num
-        set_data        d1
-        clk_lo
-
         ; -- first byte
         ; setup test value on data lines
         set_data        (a2)+
         ; signal to slave to read the value
-        clk_hi
+        clk_lo
 
         ; -- second byte
         set_data        (a2)+
-        clk_lo
-
-        ; unused cycle
         clk_hi
 
         ; ddr: idle
@@ -409,7 +401,6 @@ plrw_abort:
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to test byte
 ;      d0 = cmd byte
-;      d1 = reg num
 ; out: d0 = result
 _proto_low_read_word:
         movem.l d2-d7/a2-a6,-(sp)
@@ -420,14 +411,6 @@ _proto_low_read_word:
         set_cmd         d0
         clk_lo
         wait_rak_lo     plrr_abort
-
-        ; ddr: out
-        clk_hi
-        ddr_out
-
-        ; write reg num
-        set_data        d1
-        clk_lo
 
         ; ddr: in
         ddr_in

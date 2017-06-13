@@ -15,42 +15,10 @@ static void action(u08 num)
   proto_api_action(num);
 }
 
-static void reg_write(void)
-{
-  // master wants to write a u16
-  DS("rw:");
-  u16 val;
-  u08 reg = proto_low_write_word(&val);
-  DB(reg); DC('='); DW(val);
-  proto_api_set_reg(reg, val);
-  DC('.'); DNL;
-}
-
-static void reg_read(void)
-{
-  // master wants to reead a u16
-  DS("rr:");
-  // TBD reg addr!
-  u16 val = proto_api_get_reg(0);
-  DW(val);
-  u08 reg2 = proto_low_read_word(val);
-  DC(':'); DB(reg2); DC('.'); DNL;
-}
-
 static void function(u08 num)
 {
   DS("f:"); DB(num); DNL;
-  switch(num) {
-    case PROTO_FUNC_REG_WRITE:
-      reg_write();
-      break;
-    case PROTO_FUNC_REG_READ:
-      reg_read();
-      break;
-    default:
-      DS("?:"); DB(cmd); DNL;
-      break;
-  }
+  proto_api_function(num);
 }
 
 static void msg_read(u08 chan)

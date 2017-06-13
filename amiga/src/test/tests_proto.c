@@ -14,8 +14,6 @@
 #include "proto_shared.h"
 #include "test.h"
 
-#define REG_TEST   PROTO_REG_USER+5
-
 static UWORD test_size;
 static UWORD test_bias;
 static UWORD test_add_size;
@@ -55,12 +53,12 @@ int test_reset(test_t *t, test_param_t *p)
   }
 }
 
-int test_reg_write(test_t *t, test_param_t *p)
+int test_func_write(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
   UWORD v = 0x4711;
 
-  int res = proto_reg_write(pb->proto, REG_TEST, v);
+  int res = proto_function_write(pb->proto, PROTO_FUNC_REGADDR_SET, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -69,12 +67,12 @@ int test_reg_write(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_reg_read(test_t *t, test_param_t *p)
+int test_func_read(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
   UWORD v;
 
-  int res = proto_reg_read(pb->proto, REG_TEST, &v);
+  int res = proto_function_read(pb->proto, PROTO_FUNC_REGADDR_GET, &v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -83,13 +81,13 @@ int test_reg_read(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_reg_write_read(test_t *t, test_param_t *p)
+int test_func_write_read(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
   UWORD v = (UWORD)p->iter + test_bias;
 
   /* write */
-  int res = proto_reg_write(pb->proto, REG_TEST, v);
+  int res = proto_function_write(pb->proto, PROTO_FUNC_REGADDR_SET, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -98,7 +96,7 @@ int test_reg_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_reg_read(pb->proto, REG_TEST, &r);
+  res = proto_function_read(pb->proto, PROTO_FUNC_REGADDR_GET, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";

@@ -147,15 +147,12 @@ proto_low_action:
 
 
     ; ----- proto_low_write_word -----
-    ; master wants to write a u16 register value
-    ; u08 proto_low_write_word(u16 *val)
-    ; in:  r24,r25 = wrote val ptr
-    ; out: r24 = reg_num
+    ; master wants to write a u16 function value
+    ; u16 proto_low_write_word(void)
+    ; in:  -
+    ; out: r24,r25 = reg_num
     .global  proto_low_write_word
 proto_low_write_word:
-    ; Z is buffer pointer
-    movw    r30,r24
-
     ; confirm to master we are ready
     rak_lo
 
@@ -163,27 +160,18 @@ proto_low_write_word:
     wait_clk_hi
     ddr_in
 
-    ; read reg_num
-    wait_clk_lo
-    data_in
-    mov     r24, r18  ; reg_num is return value
-
     ; byte 1
     ; wait clk
-    wait_clk_hi
+    wait_clk_lo
     ; get data and save as result
     data_in
-    mov     r23, 18
+    mov     r25, r18
 
     ; byte 2
     ; wait clk
-    wait_clk_lo
-    data_in
-    st      Z+,r18
-    st      Z+,r23
-
-    ; unused cycle
     wait_clk_hi
+    data_in
+    mov     r24, r18
 
     ; ddr: idle
     wait_clk_lo
@@ -196,22 +184,13 @@ proto_low_write_word:
 
 
     ; ----- proto_low_read_word -----
-    ; master wants to read a u16 register value
-    ; u08 proto_low_read_word(u16 v)
+    ; master wants to read a u16 function value
+    ; void proto_low_read_word(u16 v)
     ; in:  r24,r25 = read val
-    ; out: r24 = reg_num
+    ; out: -
     .global  proto_low_read_word
 proto_low_read_word:
     rak_lo
-
-    ; ddr: input
-    wait_clk_hi
-    ddr_in
-
-    ; read reg_num
-    wait_clk_lo
-    data_in
-    mov     r23, r18  ; temp=r23
 
     ; ddr: output
     wait_clk_hi
@@ -236,9 +215,6 @@ proto_low_read_word:
     ; end sync
     wait_clk_hi
     rak_hi
-
-    ; return value
-    mov     r24, r23
     ret
 
 

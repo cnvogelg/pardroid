@@ -7,9 +7,7 @@ extern void proto_handle(void);
 
 // define these in your code
 extern void proto_api_action(u08 num);
-
-extern void proto_api_set_reg(u08 reg,u16 val);
-extern u16  proto_api_get_reg(u08 reg);
+extern void proto_api_function(u08 num);
 
 extern u08 *proto_api_read_msg_prepare(u08 chan,u16 *size);
 extern void proto_api_read_msg_done(u08 chan);
