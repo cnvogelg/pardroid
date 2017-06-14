@@ -50,10 +50,18 @@ void proto_handle(void)
 {
   // read command from bits 0..4 in idle byte
   u08 cmd = proto_low_get_cmd();
-  if(cmd == 0) {
-    // no command set or no clk line pulled -> idle nothing to do
+  if(cmd == 0xff) {
+    // no clock lined pulled -> idle
     return;
   }
+
+#if 0
+  // invalid command
+  if((cmd == 0) || (cmd == 0x1f)) {
+    DS("?!"); DNL;
+    return;
+  }
+#endif
 
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;

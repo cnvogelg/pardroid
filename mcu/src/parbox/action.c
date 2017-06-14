@@ -6,6 +6,10 @@
 #include "proto_low.h"
 #include "action.h"
 
+void action_idle(void)
+{
+}
+
 void action_ping(void)
 {
   DS("ping"); DNL;
@@ -29,7 +33,7 @@ void action_handle(u08 num)
 {
   u08 max = read_rom_char(&action_table_size);
   if(num >= max) {
-    DS("??"); DNL;
+    DS("a:??"); DNL;
     return;
   } else {
     u08 flags = read_rom_char(&action_table[num].flags);

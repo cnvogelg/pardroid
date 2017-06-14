@@ -17,12 +17,10 @@
 
 // actions
 #define PROTO_ACTION_IDLE         0x00
-#define PROTO_ACTION_RESET        0x01
-#define PROTO_ACTION_PING         0x02
-#define PROTO_ACTION_BOOTLOADER   0x03
-#define PROTO_ACTION_ATTACH       0x04
-#define PROTO_ACTION_DETACH       0x05
-#define PROTO_ACTION_USER         0x06
+#define PROTO_ACTION_PING         0x01
+#define PROTO_ACTION_BOOTLOADER   0x02
+#define PROTO_ACTION_RESET        0x03
+#define PROTO_ACTION_USER         0x04
 
 // functions
 #define PROTO_FUNC_REGADDR_GET    0x00

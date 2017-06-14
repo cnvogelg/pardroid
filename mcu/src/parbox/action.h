@@ -24,10 +24,12 @@ extern const action_table_entry_t action_table[] ROM_ATTR;
 #define ACTION_TABLE_FUNC_FLAGS(x,f) { .func = x, .flags = f }
 
 #define ACTION_PROTO_DEFAULTS \
+  ACTION_TABLE_FUNC(action_idle), \
   ACTION_TABLE_FUNC(action_ping), \
   ACTION_TABLE_FUNC_FLAGS(action_bootloader, ACTION_FLAG_NO_REPLY), \
   ACTION_TABLE_FUNC(action_reset),
 
+extern void action_idle(void);
 extern void action_ping(void);
 extern void action_bootloader(void);
 extern void action_reset(void);

@@ -116,11 +116,11 @@ proto_low_pend_hi:
 
     ; ----- proto_low_get_cmd -----
     ; u08 proto_low_get_cmd(void)
-    ; return 0 or command byte
+    ; return 0xff for idle or command byte
     .global  proto_low_get_cmd
 proto_low_get_cmd:
     clr     r25
-    clr     r24
+    ldi     r24, 0xff
     sbic_clk
     ret
     data_in
