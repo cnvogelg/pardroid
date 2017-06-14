@@ -40,8 +40,8 @@ extern const reg_table_entry_t reg_table[] ROM_ATTR;
 #define REG_TABLE_RO_RAM_B(v)    { {.cptr = (u08 *)&v}, .flags=REG_FLAG_BYTE }
 #define REG_TABLE_RO_ROM_W(v)    { {.wptr = (u16 *)&v}, .flags=REG_FLAG_ROM }
 #define REG_TABLE_RO_ROM_B(v)    { {.cptr = (u08 *)&v}, .flags=REG_FLAG_BYTE|REG_FLAG_ROM }
-#define REG_TABLE_RO_ROM_W_PTR(v) { {.wptr = (u16 *)v}, .flags=REG_FLAG_ROM }
-#define REG_TABLE_RO_ROM_B_PTR(v) { {.cptr = (u08 *)v}, .flags=REG_FLAG_BYTE|REG_FLAG_ROM }
+#define REG_TABLE_RO_ROM_W_PTR(v) { {.wptr = (u16 *)(v)}, .flags=REG_FLAG_ROM }
+#define REG_TABLE_RO_ROM_B_PTR(v) { {.cptr = (u08 *)(v)}, .flags=REG_FLAG_BYTE|REG_FLAG_ROM }
 #define REG_TABLE_RO_FUNC(g)     { .get_func=g, .flags=REG_FLAG_FUNC }
 
 #endif
