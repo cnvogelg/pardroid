@@ -62,12 +62,6 @@ void proto_exit(proto_handle_t *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
-UBYTE proto_get_status(proto_handle_t *ph)
-{
-  struct pario_port *port = ph->port;
-  return proto_low_read_status_bits(port);
-}
-
 int proto_action(proto_handle_t *ph, UBYTE num)
 {
   struct pario_port *port = ph->port;
@@ -82,6 +76,20 @@ int proto_action(proto_handle_t *ph, UBYTE num)
   timer_stop(ph->timer);
 
   return result;
+}
+
+int proto_action_status(proto_handle_t *ph, UBYTE *status)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_action(port, timeout_flag, PROTO_ACTION_PING);
+  timer_stop(ph->timer);
+
+  *status = result & PROTO_RET_STATUS_MASK;
+
+  return result & PROTO_RET_MASK;
 }
 
 static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))

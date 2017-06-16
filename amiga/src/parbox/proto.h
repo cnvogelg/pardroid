@@ -15,7 +15,8 @@
 #define PROTO_RET_INVALID_FUNCTION  14
 #define PROTO_RET_INVALID_ACTION    13
 
-#define PROTO_RET_MASK              0xf
+#define PROTO_RET_MASK              0x0f
+#define PROTO_RET_STATUS_MASK       0xf0
 
 struct proto_handle;
 typedef struct proto_handle proto_handle_t;
@@ -23,9 +24,8 @@ typedef struct proto_handle proto_handle_t;
 extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, struct Library *SysBase);
 extern void proto_exit(proto_handle_t *ph);
 
-extern UBYTE proto_get_status(proto_handle_t *ph);
-
 extern int proto_action(proto_handle_t *ph, UBYTE num);
+extern int proto_action_status(proto_handle_t *ph, UBYTE *status);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start, ULONG deltas[2]);
 
 extern int proto_function_read(proto_handle_t *ph, UBYTE num, UWORD *data);

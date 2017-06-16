@@ -23,8 +23,13 @@ static u08 page_buf[SPM_PAGESIZE];
 
 // action
 ACTION_TABLE_BEGIN
-  ACTION_PROTO_DEFAULTS
+  ACTION_PROTO_BOOTLOADER
 ACTION_TABLE_END
+
+// we need to fake status update to make action happy
+void status_update(void)
+{
+}
 
 // ro registers
 static const u16 ro_version ROM_ATTR = VERSION_TAG;

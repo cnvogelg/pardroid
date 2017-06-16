@@ -20,7 +20,9 @@
 #define PROTO_ACTION_PING         0x01
 #define PROTO_ACTION_BOOTLOADER   0x02
 #define PROTO_ACTION_RESET        0x03
-#define PROTO_ACTION_USER         0x04
+#define PROTO_ACTION_ATTACH       0x04
+#define PROTO_ACTION_DETACH       0x05
+#define PROTO_ACTION_USER         0x06
 
 // functions
 #define PROTO_FUNC_REGADDR_GET    0x00
@@ -32,9 +34,9 @@
 
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xe0
-#define PROTO_STATUS_OK           0x00
+#define PROTO_STATUS_INIT         0x00
 #define PROTO_STATUS_BOOTLOADER   0x20
-#define PROTO_STATUS_DETACHED     0x40
+#define PROTO_STATUS_ATTACHED     0x40
 #define PROTO_STATUS_ERROR        0x80
 #define PROTO_STATUS_READ_PENDING 0x10 // is or'ed in from pending line
 
@@ -43,8 +45,12 @@
 #define PROTO_REG_FW_MACHTAG        1
 #define PROTO_REG_FW_ID             2
 #define PROTO_REG_NUM_REGS          3
-#define PROTO_REG_PEND_TOTAL        4
-#define PROTO_REG_USER              5
+#define PROTO_REG_USER              4
+
+// device errors
+#define PROTO_ERROR_NONE                0
+#define PROTO_ERROR_ALREADY_ATTACHED    1
+#define PROTO_ERROR_ALREADY_DETACHED    2
 
 // firmware ids
 #define PROTO_FWID_TEST           1

@@ -98,8 +98,10 @@ proto_low_init:
     ; ----- device status bits -----
     ; void proto_low_set_status(u08 status)
     ; in: r24 = status bits
+    ; out: -
     .global  proto_low_set_status
 proto_low_set_status:
+    ; perform change
     andi    r24,0xe0
     ori     r24,0x1f
     mov     r18,r24

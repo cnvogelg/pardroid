@@ -27,6 +27,16 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
     return BOOTLOADER_RET_NO_BOOTLOADER | res;
   }
 
+  /* check bootloader status bit */
+  UBYTE status;
+  res = proto_action_status(ph, &status);
+  if(res != PROTO_RET_OK) {
+    return BOOTLOADER_RET_NO_BOOTLOADER | res;
+  }
+  if(status != PROTO_STATUS_BOOTLOADER) {
+    return BOOTLOADER_RET_NO_BOOTLOADER;
+  }
+
   /* read version tag */
   UWORD bl_version;
   res = reg_get(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
@@ -35,12 +45,6 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
   }
 
   bi->bl_version = bl_version;
-
-  /* check bootloader status bit */
-  UBYTE status = proto_get_status(ph);
-  if(status != PROTO_STATUS_BOOTLOADER) {
-    return BOOTLOADER_RET_NO_BOOTLOADER;
-  }
 
   /* bootloader mach tag */
   res = reg_get(ph, BOOTLOADER_REG_BL_MACHTAG, &bi->bl_mach_tag);

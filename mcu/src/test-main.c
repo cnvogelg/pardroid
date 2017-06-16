@@ -13,8 +13,8 @@
 #include "reg_def.h"
 #include "action.h"
 #include "machtag.h"
-#include "pend.h"
 #include "handler.h"
+#include "status.h"
 
 #include <util/delay.h>
 
@@ -22,23 +22,23 @@
 
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
-static void sim_pend_add_req(void)
+static void sim_set_pending(void)
 {
-  DS("pend_add_req"); DNL;
-  pend_add_req();
+  DS("set_pending"); DNL;
+  status_set_pending(0);
 }
 
-static void sim_pend_rem_req(void)
+static void sim_clear_pending(void)
 {
-  DS("pend_rem_req"); DNL;
-  pend_rem_req();
+  DS("clear_pending"); DNL;
+  status_clear_pending();
 }
 
 // ----- actions -----
 ACTION_TABLE_BEGIN
   ACTION_PROTO_DEFAULTS
-  ACTION_TABLE_FUNC(sim_pend_add_req),
-  ACTION_TABLE_FUNC(sim_pend_rem_req)
+  ACTION_TABLE_FUNC(sim_set_pending),
+  ACTION_TABLE_FUNC(sim_clear_pending)
 ACTION_TABLE_END
 
 // ----- ro registers -----
@@ -157,15 +157,15 @@ int main(void)
   rom_info();
 
   DC('+');
-  proto_init(PROTO_STATUS_OK);
-  pend_init();
+  proto_init(PROTO_STATUS_INIT);
+  status_init();
   handler_init();
   DC('-'); DNL;
 
   while(1) {
     system_wdt_reset();
     proto_handle();
-    pend_handle();
+    status_handle();
     handler_work();
   }
 

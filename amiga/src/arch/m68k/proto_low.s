@@ -6,8 +6,8 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_read_status_bits
         xdef            _proto_low_action
+        xdef            _proto_low_action_status
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
@@ -200,37 +200,13 @@ call_cb MACRO
 
 ; ----- functions -----------------------------------------------------------
 
-; --- proto_low_read_status_bits ---
-; read the device status bits: bit 5,6,7 in idle byte
-; and pending flag
-;
-;  in:
-;       a0      struct pario_port *port
-;  out:
-;       d0      bits 5,6,7 set from idle byte + bit 4 is set from pending
-_proto_low_read_status_bits:
-        ; status bits from data port
-        move.l  PO_DATA_PORT(a0),a1
-        move.b  (a1),d0
-        andi.b  #$e0,d0
-        ; pending flag?
-        move.b  PO_SEL_BIT(a0),d1
-        move.l  PO_CTRL_PORT(a0),a1
-        btst    d1,(a1)
-        ; is low active
-        bne.s   plrsb_done
-        ori.b   #$10,d0
-plrsb_done:
-        rts
-
-
 ; --- proto_low_action ---
 ; a simple command that does not transfer any value
 ;
 ;   in:
 ;       a0      struct pario_port *port
 ;       a1      volatile UBYTE *timeout_flag
-;       d0      CMD_PING constant
+;       d0      action constant
 ;   out:
 ;       d0      return code
 _proto_low_action:
@@ -272,6 +248,53 @@ pla_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s   pla_end
+
+
+; --- proto_low_action_status ---
+; a simple command that does not transfer any value but reads the status
+;
+;   in:
+;       a0      struct pario_port *port
+;       a1      volatile UBYTE *timeout_flag
+;       d0      action constant
+;   out:
+;       d0      return error code in low nybble and status bits in high nybble
+_proto_low_action_status:
+        movem.l d2-d7/a2-a6,-(sp)
+
+        setup_port_regs
+
+        check_rak_hi    plas_end
+        set_cmd         d0
+        clk_lo
+        wait_rak_lo     plas_abort
+
+        ; get status bits/pending channel from data port
+        get_data        d0
+        andi.b          #$e0,d0
+
+        ; pending flag?
+        move.b          PO_SEL_BIT(a0),d1
+        move.l          (a5),a1
+        btst            d1,(a1)
+        ; is low active -> set bit 4 in status
+        bne.s           plas_no_pend
+        ori.b           #$10,d0
+plas_no_pend:
+
+        ; -- final sync
+        clk_hi
+        check_rak_hi    plas_end
+plas_end:
+        ; restore cmd
+        set_cmd_idle
+
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plas_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s           plas_end
 
 
 ; --- proto_low_action_bench ---

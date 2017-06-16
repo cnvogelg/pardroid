@@ -52,8 +52,3 @@ int reg_get_num_regs(proto_handle_t *ph, UWORD *num_regs)
 {
   return reg_get(ph, PROTO_REG_NUM_REGS, num_regs);
 }
-
-int reg_ro_get_pend_total(proto_handle_t *ph, UWORD *pend_total)
-{
-  return reg_get(ph, PROTO_REG_PEND_TOTAL, pend_total);
-}

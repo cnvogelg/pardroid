@@ -1,7 +1,6 @@
 #ifndef REG_DEF_H
 #define REG_DEF_H
 
-#include "pend.h"
 #include "reg.h"
 
 // proto values
@@ -17,6 +16,5 @@ extern u16 get_num_regs(void);
   REG_TABLE_RO_ROM_W(fw_machtag), \
   REG_TABLE_RO_ROM_W(fw_id), \
   REG_TABLE_RO_ROM_B(reg_table_size), \
-  REG_TABLE_RO_RAM_W(pend_total),
 
 #endif
