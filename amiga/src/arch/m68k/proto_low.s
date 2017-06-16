@@ -6,7 +6,6 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_read_pending
         xdef            _proto_low_read_status_bits
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
@@ -201,37 +200,27 @@ call_cb MACRO
 
 ; ----- functions -----------------------------------------------------------
 
-; --- proto_low_read_pending ---
-; check if the pending read line is still active
-;
-;   in:
-;       a0      struct pario_port *port
-;   out:
-;       d0      0: not pending, 1: pending
-_proto_low_read_pending:
-        move.b  PO_SEL_BIT(a0),d1
-        move.l  PO_CTRL_PORT(a0),a1
-        btst    d1,(a1)
-        ; is low active
-        beq.s   plrp_active
-        moveq   #0,d0
-        rts
-plrp_active:
-        moveq   #1,d0
-        rts
-
-
 ; --- proto_low_read_status_bits ---
 ; read the device status bits: bit 5,6,7 in idle byte
+; and pending flag
 ;
 ;  in:
 ;       a0      struct pario_port *port
 ;  out:
-;       d0      bits 5,6,7 set from idle byte
+;       d0      bits 5,6,7 set from idle byte + bit 4 is set from pending
 _proto_low_read_status_bits:
+        ; status bits from data port
         move.l  PO_DATA_PORT(a0),a1
         move.b  (a1),d0
         andi.b  #$e0,d0
+        ; pending flag?
+        move.b  PO_SEL_BIT(a0),d1
+        move.l  PO_CTRL_PORT(a0),a1
+        btst    d1,(a1)
+        ; is low active
+        bne.s   plrsb_done
+        ori.b   #$10,d0
+plrsb_done:
         rts
 
 

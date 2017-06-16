@@ -36,6 +36,7 @@
 #define PROTO_STATUS_BOOTLOADER   0x20
 #define PROTO_STATUS_DETACHED     0x40
 #define PROTO_STATUS_ERROR        0x80
+#define PROTO_STATUS_READ_PENDING 0x10 // is or'ed in from pending line
 
 // register definitions
 #define PROTO_REG_FW_VERSION        0

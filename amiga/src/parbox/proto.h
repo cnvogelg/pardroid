@@ -23,7 +23,6 @@ typedef struct proto_handle proto_handle_t;
 extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, struct Library *SysBase);
 extern void proto_exit(proto_handle_t *ph);
 
-extern int proto_is_pending(proto_handle_t *ph);
 extern UBYTE proto_get_status(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE num);

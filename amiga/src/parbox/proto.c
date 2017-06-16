@@ -62,12 +62,6 @@ void proto_exit(proto_handle_t *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
-int proto_is_pending(proto_handle_t *ph)
-{
-  struct pario_port *port = ph->port;
-  return proto_low_read_pending(port);
-}
-
 UBYTE proto_get_status(proto_handle_t *ph)
 {
   struct pario_port *port = ph->port;

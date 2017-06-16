@@ -398,8 +398,8 @@ int test_pend(test_t *t, test_param_t *p)
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
   /* assume nothing is pending */
-  int pf = proto_is_pending(pb->proto);
-  if(pf) {
+  UBYTE status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
     p->error = "pending active";
     p->section = "pre";
     return 1;
@@ -431,8 +431,8 @@ int test_pend(test_t *t, test_param_t *p)
   }
 
   /* assume pending is set */
-  pf = proto_is_pending(pb->proto);
-  if(!pf) {
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == 0) {
     p->error = "pending inactive";
     p->section = "main";
     return 1;
@@ -463,8 +463,8 @@ int test_pend(test_t *t, test_param_t *p)
   }
 
   /* assume pending is cleared again */
-  pf = proto_is_pending(pb->proto);
-  if(pf) {
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
     p->error = "pending active";
     p->section = "post";
     return 1;
