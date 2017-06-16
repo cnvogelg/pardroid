@@ -67,12 +67,19 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     .section .text
 
     ; ----- proto_low_init -----
-    ; void proto_low_init(void)
+    ; void proto_low_init(u08 status)
     ; setup parallel port lines
+    ; in: r24 = status bits
     .global  proto_low_init
 proto_low_init:
     ; setup data port: idle mode
     ddr_idle
+    ; set status bits (5,6,7)
+    andi    r24,0xe0
+    ori     r24,0x1f
+    mov     r18,r24
+    data_out_prepare
+    data_out_set
     ; setup control lines
     ; DDR INPUT: strobe, pout
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
@@ -85,6 +92,19 @@ proto_low_init:
     ack_hi
     rak_hi
     pend_hi
+    ret
+
+
+    ; ----- device status bits -----
+    ; void proto_low_set_status(u08 status)
+    ; in: r24 = status bits
+    .global  proto_low_set_status
+proto_low_set_status:
+    andi    r24,0xe0
+    ori     r24,0x1f
+    mov     r18,r24
+    data_out_prepare
+    data_out_set
     ret
 
 

@@ -32,6 +32,7 @@
 
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xe0
+#define PROTO_STATUS_OK           0x00
 #define PROTO_STATUS_BOOTLOADER   0x20
 #define PROTO_STATUS_DETACHED     0x40
 #define PROTO_STATUS_ERROR        0x80

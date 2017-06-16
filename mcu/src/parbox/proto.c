@@ -4,9 +4,9 @@
 #include "debug.h"
 #include "system.h"
 
-void proto_init(void)
+void proto_init(u08 status)
 {
-  proto_low_init();
+  proto_low_init(status);
 }
 
 static void action(u08 num)

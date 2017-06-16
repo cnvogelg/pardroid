@@ -36,8 +36,9 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
 
   bi->bl_version = bl_version;
 
-  /* check bootloader version magic */
-  if((bl_version & BOOTLOADER_VER_TAG) != BOOTLOADER_VER_TAG) {
+  /* check bootloader status bit */
+  UBYTE status = proto_get_status(ph);
+  if(status != PROTO_STATUS_BOOTLOADER) {
     return BOOTLOADER_RET_NO_BOOTLOADER;
   }
 

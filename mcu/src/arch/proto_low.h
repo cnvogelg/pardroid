@@ -1,6 +1,6 @@
 #ifndef PROTO_LOW_H
 
-extern void proto_low_init(void);
+extern void proto_low_init(u08 status);
 extern u08 proto_low_get_cmd(void);
 
 extern void proto_low_action(void);
@@ -16,5 +16,7 @@ extern void proto_low_ack_hi(void);
 
 extern void proto_low_pend_lo(void);
 extern void proto_low_pend_hi(void);
+
+extern void proto_low_set_status(u08 status);
 
 #endif

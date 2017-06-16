@@ -27,7 +27,7 @@ ACTION_TABLE_BEGIN
 ACTION_TABLE_END
 
 // ro registers
-static const u16 ro_version ROM_ATTR = 0x8000 | VERSION_TAG;
+static const u16 ro_version ROM_ATTR = VERSION_TAG;
 static const u16 ro_mach_tag ROM_ATTR = MACHTAG;
 static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
 static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
@@ -91,7 +91,7 @@ int main(void)
   uart_send('P');
 
   // setup proto
-  proto_init();
+  proto_init(PROTO_STATUS_BOOTLOADER);
   uart_send('A');
 
   // check if bootloader command is set - if not enter app

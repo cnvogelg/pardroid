@@ -2,7 +2,7 @@
 
 #include "proto_shared.h"
 
-extern void proto_init(void);
+extern void proto_init(u08 status);
 extern void proto_handle(void);
 
 // define these in your code

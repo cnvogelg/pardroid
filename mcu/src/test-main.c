@@ -5,6 +5,7 @@
 #include "uart.h"
 #include "uartutil.h"
 #include "proto.h"
+#include "proto_shared.h"
 #include "debug.h"
 #include "system.h"
 #include "pablo.h"
@@ -156,7 +157,7 @@ int main(void)
   rom_info();
 
   DC('+');
-  proto_init();
+  proto_init(PROTO_STATUS_OK);
   pend_init();
   handler_init();
   DC('-'); DNL;
