@@ -39,6 +39,7 @@
 #define PROTO_STATUS_ATTACHED     0x20
 #define PROTO_STATUS_ERROR        0x40
 #define PROTO_STATUS_READ_PENDING 0x80
+#define PROTO_STATUS_CHANNEL_MASK 0x70
 
 // register definitions
 #define PROTO_REG_FW_VERSION        0

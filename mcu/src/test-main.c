@@ -23,28 +23,35 @@
 
 static u08 test_msg[MAX_TEST_MSG_SIZE];
 
-static void sim_set_pending(void)
+static void sim_pending(u16 *valp)
 {
-  DS("set_pending"); DNL;
-  status_set_pending(0);
+  u08 v = *valp & 0xff;
+  if(v == 0xff) {
+    DS("sim:p-"); DNL;
+    status_clear_pending();
+  } else {
+    DS("sim:p+"); DB(v); DNL;
+    status_set_pending(v);
+  }
 }
 
-static void sim_clear_pending(void)
+static void sim_error(u16 *valp)
 {
-  DS("clear_pending"); DNL;
-  status_clear_pending();
+  u08 e = *valp & 0xff;
+  DS("sim:e"); DB(e); DNL;
+  status_set_error(e);
 }
 
 // ----- actions -----
 ACTION_TABLE_BEGIN
   ACTION_PROTO_DEFAULTS
-  ACTION_TABLE_FUNC(sim_set_pending),
-  ACTION_TABLE_FUNC(sim_clear_pending)
 ACTION_TABLE_END
 
 // ----- functions -----
 FUNC_TABLE_BEGIN
   FUNC_PROTO_DEFAULTS
+  FUNC_TABLE_SET_FUNC(sim_pending),
+  FUNC_TABLE_SET_FUNC(sim_error)
 FUNC_TABLE_END
 
 // ----- ro registers -----

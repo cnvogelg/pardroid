@@ -29,7 +29,7 @@ ACTION_TABLE_END
 
 // ----- functions -----
 FUNC_TABLE_BEGIN
-  FUNC_PROTO_DEFAULTS
+  FUNC_PROTO_BOOTLOADER
 FUNC_TABLE_END
 
 // ro registers

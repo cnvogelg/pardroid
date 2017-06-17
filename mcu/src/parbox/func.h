@@ -23,11 +23,18 @@ extern const func_table_entry_t func_table[] ROM_ATTR;
 #define FUNC_TABLE_GET_FUNC(x)    { .func = x, .flags = FUNC_FLAG_NONE }
 #define FUNC_TABLE_SET_FUNC(x)    { .func = x, .flags = FUNC_FLAG_SET }
 
-#define FUNC_PROTO_DEFAULTS \
+#define FUNC_PROTO_BOOTLOADER \
   FUNC_TABLE_GET_FUNC(func_regaddr_get), \
   FUNC_TABLE_SET_FUNC(func_regaddr_set), \
   FUNC_TABLE_GET_FUNC(func_reg_read), \
   FUNC_TABLE_SET_FUNC(func_reg_write),
+
+#define FUNC_PROTO_DEFAULTS \
+  FUNC_TABLE_GET_FUNC(func_regaddr_get), \
+  FUNC_TABLE_SET_FUNC(func_regaddr_set), \
+  FUNC_TABLE_GET_FUNC(func_reg_read), \
+  FUNC_TABLE_SET_FUNC(func_reg_write), \
+  FUNC_TABLE_GET_FUNC(func_get_error),
 
 extern void func_handle(u08 num);
 
@@ -35,6 +42,7 @@ extern void func_regaddr_set(u16 *valp);
 extern void func_regaddr_get(u16 *valp);
 extern void func_reg_write(u16 *valp);
 extern void func_reg_read(u16 *valp);
+extern void func_get_error(u16 *valp);
 
 // ----- external API for register access -----
 extern void func_api_set_reg(u08 reg,u16 val);

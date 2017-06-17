@@ -393,7 +393,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_pend(test_t *t, test_param_t *p)
+int test_status_read_pending(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
@@ -414,11 +414,13 @@ int test_pend(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* sim pend_req_add */
-  res = proto_action(pb->proto, PROTO_ACTION_USER);
+  UWORD channel = (p->iter + test_bias) & 7;
+
+  /* sim_pending */
+  res = proto_function_write(pb->proto, PROTO_FUNC_USER, channel);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "req_add";
+    p->section = "sim_pending #1";
     return res;
   }
 
@@ -438,6 +440,13 @@ int test_pend(test_t *t, test_param_t *p)
     return 1;
   }
 
+  /* check that channel is set */
+  if((status & PROTO_STATUS_CHANNEL_MASK) != channel) {
+    p->error = "wrong channel in status";
+    p->section = "status";
+    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status, channel);
+  }
+
   /* now message write must be aborted due to pending read */
   res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
   if(res != PROTO_RET_WRITE_ABORT) {
@@ -446,11 +455,11 @@ int test_pend(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* sim pend_req_rem */
-  res = proto_action(pb->proto, PROTO_ACTION_USER + 1);
+  /* sim_pending with no channel (0xff) */
+  res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "req_add";
+    p->section = "sim_pending #2";
     return res;
   }
 
@@ -481,7 +490,7 @@ int test_pend(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_ack_irq(test_t *t, test_param_t *p)
+int test_status_ack_irq(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
@@ -510,11 +519,11 @@ int test_ack_irq(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* sim pend_req_add -> trigger ack irq */
-  int res = proto_action(pb->proto, PROTO_ACTION_USER);
+  /* sim pending */
+  int res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "req_add";
+    p->section = "sim_pending #1";
     return res;
   }
 
@@ -527,10 +536,10 @@ int test_ack_irq(test_t *t, test_param_t *p)
   timer_sig_stop(pb->timer);
 
   /* sim pend_req_rem to restore state */
-  res = proto_action(pb->proto, PROTO_ACTION_USER + 1);
+  res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "req_add";
+    p->section = "sim_pending #2";
     return res;
   }
 
@@ -552,6 +561,153 @@ int test_ack_irq(test_t *t, test_param_t *p)
   if((got & amask) == 0) {
     p->error = "no ack triggered";
     p->section = "main";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_status_error(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  /* assume nothing is pending */
+  UBYTE status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #1";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* assume no error is set already */
+  if((status & PROTO_STATUS_ERROR) == PROTO_STATUS_ERROR) {
+    p->error = "already has error";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* create an error */
+  UBYTE error = (UBYTE)(p->iter + test_bias);
+  if(error == 0) {
+    error = 1;
+  }
+
+  /* simulate an error */
+  int res = proto_function_write(pb->proto, PROTO_FUNC_USER+1, error);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "sim_error #1";
+    return res;
+  }
+
+  /* assume status is set */
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #2";
+    p->section = "main";
+    return 1;
+  }
+  if((status & PROTO_STATUS_ERROR) == 0) {
+    p->error = "no error was set";
+    p->section = "main";
+    return 1;
+  }
+
+  /* get error (and clear it) */
+  UWORD result;
+  res = proto_function_read(pb->proto, PROTO_FUNC_GET_ERROR, &result);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get_error failed";
+    return res;
+  }
+
+  /* check if correct error code was returned */
+  if(result != error) {
+    p->error = "wrong error returned";
+    p->section = "main";
+    sprintf(p->extra, "got=%02x want=%02x", result, (UWORD)error);
+    return 1;
+  }
+
+  /* make sure error status is cleared now */
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #3";
+    p->section = "post";
+    return 1;
+  }
+
+  /* assume nothing is pending */
+  if((status & PROTO_STATUS_ERROR) == PROTO_STATUS_ERROR) {
+    p->error = "error was not cleared";
+    p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_status_attach_detach(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  /* assume nothing is pending */
+  UBYTE status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #1";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* assume not attached */
+  if((status & PROTO_STATUS_ATTACHED) == PROTO_STATUS_ATTACHED) {
+    p->error = "already is attached";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* attach device */
+  int res = proto_action(pb->proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach failed";
+    return res;
+  }
+
+  /* assume status is set */
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #2";
+    p->section = "main";
+    return 1;
+  }
+  if((status & PROTO_STATUS_ATTACHED) == 0) {
+    p->error = "not attached";
+    p->section = "main";
+    return 1;
+  }
+
+  /* detach device */
+  res = proto_action(pb->proto, PROTO_ACTION_DETACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "detach failed";
+    return res;
+  }
+
+  /* make sure error status is cleared now */
+  status = proto_get_status(pb->proto);
+  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
+    p->error = "pending active #3";
+    p->section = "post";
+    return 1;
+  }
+
+  /* assume not attached */
+  if((status & PROTO_STATUS_ATTACHED) == PROTO_STATUS_ATTACHED) {
+    p->error = "still attached";
+    p->section = "post";
     return 1;
   }
 
