@@ -9,59 +9,62 @@
 
 static u16 regaddr;
 
-static void regaddr_set(void)
+void func_regaddr_set(u16 *valp)
 {
   DS("ras:");
-  regaddr = proto_low_write_word();
+  regaddr = *valp;
   DW(regaddr); DC('.'); DNL;
 }
 
-static void regaddr_get(void)
+void func_regaddr_get(u16 *valp)
 {
   DS("rag:"); DW(regaddr);
-  proto_low_read_word(regaddr);
+  *valp = regaddr;
   DC('.'); DNL;
 }
 
-static void reg_write(void)
+void func_reg_write(u16 *valp)
 {
   // master wants to write a u16
   DS("rw:");
-  u16 val = proto_low_write_word();
+  u16 val = *valp;
   DW(regaddr); DC('='); DW(val);
   func_api_set_reg(regaddr & 0xff, val);
   DC('.'); DNL;
 }
 
-static void reg_read(void)
+void func_reg_read(u16 *valp)
 {
   // master wants to reead a u16
   DS("rr:"); DW(regaddr); DC('=');
   u16 val = func_api_get_reg(regaddr & 0xff);
   DW(val);
-  proto_low_read_word(val);
+  *valp = val;
   DC('.'); DNL;
 }
 
 void func_handle(u08 num)
 {
-  DS("f:"); DB(num); DNL;
-  switch(num) {
-    case PROTO_FUNC_REGADDR_GET:
-      regaddr_get();
-      break;
-    case PROTO_FUNC_REGADDR_SET:
-      regaddr_set();
-      break;
-    case PROTO_FUNC_REG_WRITE:
-      reg_write();
-      break;
-    case PROTO_FUNC_REG_READ:
-      reg_read();
-      break;
-    default:
-      DS("???"); DNL;
-      break;
+  u08 max = read_rom_char(&func_table_size);
+  if(num >= max) {
+    DS("f:??"); DNL;
+    return;
+  } else {
+    u08 flags = read_rom_char(&func_table[num].flags);
+
+    // get func ptr
+    rom_pchar ptr = read_rom_rom_ptr(&func_table[num].func);
+    func_func_t func = (func_func_t)ptr;
+
+    // set func
+    if(flags & FUNC_FLAG_SET) {
+      u16 val = proto_low_write_word();
+      func(&val);
+    } else {
+      u16 val = 0;
+      func(&val);
+      proto_low_read_word(val);
+    }
   }
 }
 

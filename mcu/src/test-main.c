@@ -12,6 +12,7 @@
 #include "reg.h"
 #include "reg_def.h"
 #include "action.h"
+#include "func.h"
 #include "machtag.h"
 #include "handler.h"
 #include "status.h"
@@ -40,6 +41,11 @@ ACTION_TABLE_BEGIN
   ACTION_TABLE_FUNC(sim_set_pending),
   ACTION_TABLE_FUNC(sim_clear_pending)
 ACTION_TABLE_END
+
+// ----- functions -----
+FUNC_TABLE_BEGIN
+  FUNC_PROTO_DEFAULTS
+FUNC_TABLE_END
 
 // ----- ro registers -----
 // read-only test values

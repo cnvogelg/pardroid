@@ -15,6 +15,7 @@
 #include "pablo.h"
 #include "reg.h"
 #include "action.h"
+#include "func.h"
 #include "machtag.h"
 
 static u08 status;
@@ -25,6 +26,11 @@ static u08 page_buf[SPM_PAGESIZE];
 ACTION_TABLE_BEGIN
   ACTION_PROTO_BOOTLOADER
 ACTION_TABLE_END
+
+// ----- functions -----
+FUNC_TABLE_BEGIN
+  FUNC_PROTO_DEFAULTS
+FUNC_TABLE_END
 
 // we need to fake status update to make action happy
 void status_update(void)
