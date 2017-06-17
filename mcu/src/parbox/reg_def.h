@@ -15,6 +15,6 @@ extern u16 get_num_regs(void);
   REG_TABLE_RO_ROM_W(fw_version), \
   REG_TABLE_RO_ROM_W(fw_machtag), \
   REG_TABLE_RO_ROM_W(fw_id), \
-  REG_TABLE_RO_ROM_B(reg_table_size), \
+  REG_TABLE_RO_ROM_W(reg_table_size), \
 
 #endif

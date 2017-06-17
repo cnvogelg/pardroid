@@ -50,26 +50,23 @@ FUNC_TABLE_END
 // ----- ro registers -----
 // read-only test values
 static const u16 ro_rom_word ROM_ATTR = 1;
-static const u08 ro_rom_byte ROM_ATTR = 2;
 static u16 ro_ram_word = 3;
-static u08 ro_ram_byte = 4;
-static u16 ro_func(void) {
-  return 5;
+static void ro_func(u16 *val, u08 mode) {
+  *val = 5;
 }
 
 // read/write test values
 static u16 test_word = 0x4812;
-static u08 test_byte = 0x42;
 static u16 test_size;
-static void set_test_size(u16 val)
+static void func_test_size(u16 *val, u08 mode)
 {
-  if(val <= (MAX_TEST_MSG_SIZE / 2)) {
-    test_size = val;
+  if(mode == REG_MODE_WRITE) {
+    if(*val <= (MAX_TEST_MSG_SIZE / 2)) {
+      test_size = *val;
+    }
+  } else {
+    *val = test_size;
   }
-}
-static u16 get_test_size(void)
-{
-  return test_size;
 }
 
 REG_PROTO_APPID(PROTO_FWID_TEST)
@@ -77,14 +74,11 @@ REG_TABLE_BEGIN
   REG_TABLE_DEFAULTS
   /* user read-only regs */
   REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
-  REG_TABLE_RO_ROM_B(ro_rom_byte),      // user+1
-  REG_TABLE_RO_RAM_W(ro_ram_word),      // user+2
-  REG_TABLE_RO_RAM_B(ro_ram_byte),      // user+3
-  REG_TABLE_RO_FUNC(ro_func),           // user+4
+  REG_TABLE_RO_RAM_W(ro_ram_word),      // user+1
+  REG_TABLE_RO_FUNC(ro_func),           // user+2
   /* user read-write regs */
-  REG_TABLE_RW_FUNC(get_test_size, set_test_size), // user+5
-  REG_TABLE_RW_RAM_W(test_word),                   // user+6
-  REG_TABLE_RW_RAM_B(test_byte)                    // user+7
+  REG_TABLE_RW_FUNC(func_test_size),    // user+3
+  REG_TABLE_RW_RAM_W(test_word),        // user+4
 REG_TABLE_END
 
 // my handler
