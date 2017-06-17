@@ -55,11 +55,6 @@ void proto_handle(void)
     return;
   }
 
-  // invalid command
-  if((cmd == 0) || (cmd == 0x1f)) {
-    return;
-  }
-
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;
   u08 chn = cmd & PROTO_CMD_SUB_MASK;

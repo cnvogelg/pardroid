@@ -13,32 +13,32 @@ void action_nop(void)
 
 void action_ping(void)
 {
-  DS("ping"); DNL;
+  DS("a:p"); DNL;
 }
 
 void action_bootloader(void)
 {
   /* do a sys reset but do not reply to command of master
      this will be done by bootloader itself */
-  DS("bootloader"); DNL;
+  DS("a:bl"); DNL;
   system_sys_reset();
 }
 
 void action_reset(void)
 {
-  DS("reset"); DNL;
+  DS("a:r"); DNL;
   system_sys_reset();
 }
 
 void action_attach(void)
 {
-  DS("attach"); DNL;
+  DS("a:a"); DNL;
   status_attach();
 }
 
 void action_detach(void)
 {
-  DS("detach"); DNL;
+  DS("a:d"); DNL;
   status_detach();
 }
 
@@ -50,11 +50,6 @@ void action_handle(u08 num)
     return;
   } else {
     u08 flags = read_rom_char(&action_table[num].flags);
-
-    // master reads status with this action - so update it now
-    if(flags & ACTION_FLAG_STATUS_UPDATE) {
-      status_update();
-    }
 
     // handle action protocol
     if((flags & ACTION_FLAG_NO_REPLY) == 0) {

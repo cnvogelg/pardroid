@@ -28,13 +28,9 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
   }
 
   /* check bootloader status bit */
-  UBYTE status;
-  res = proto_action_status(ph, &status);
-  if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_NO_BOOTLOADER | res;
-  }
+  UBYTE status = proto_get_status(ph);
   if(status != PROTO_STATUS_BOOTLOADER) {
-    return BOOTLOADER_RET_NO_BOOTLOADER;
+    return BOOTLOADER_RET_NO_BOOTLOADER_STATUS;
   }
 
   /* read version tag */

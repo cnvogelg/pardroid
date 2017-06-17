@@ -14,6 +14,14 @@
     sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     .endm
 
+    .macro sbic_cflg
+    sbic    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
+    .endm
+
+    .macro sbis_cflg
+    sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
+    .endm
+
     .macro wait_clk_lo
 l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     rjmp     l\@
@@ -21,6 +29,16 @@ l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
 
     .macro wait_clk_hi
 l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
+    rjmp     l\@
+    .endm
+
+    .macro wait_cflg_lo
+l\@: sbic    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
+    rjmp     l\@
+    .endm
+
+    .macro wait_cflg_hi
+l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     rjmp     l\@
     .endm
 
@@ -38,14 +56,6 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
 
     .macro rak_lo
     cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
-    .endm
-
-    .macro pend_hi
-    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
-    .endm
-
-    .macro pend_lo
-    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
     .endm
 
     ; if needed use select pin as a debug line
@@ -74,24 +84,23 @@ l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
 proto_low_init:
     ; setup data port: idle mode
     ddr_idle
-    ; set status bits (5,6,7)
-    andi    r24,0xe0
-    ori     r24,0x1f
+    ; set status bits (4,5,6,7)
+    andi    r24,0xf0
+    ori     r24,0x0f
     mov     r18,r24
     data_out_prepare
     data_out_set
     ; setup control lines
-    ; DDR INPUT: strobe, pout
+    ; DDR INPUT: strobe, pout, select
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
     cbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
-    ; DDR OUTPUT: ack, busy, select
-    sbi     _SFR_IO_ADDR(PAR_SELECT_DDR), PAR_SELECT_BIT
+    cbi     _SFR_IO_ADDR(PAR_SELECT_DDR), PAR_SELECT_BIT
+    ; DDR OUTPUT: ack, busy
     sbi     _SFR_IO_ADDR(PAR_ACK_DDR), PAR_ACK_BIT
     sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
     ; set OUTPUT levels
     ack_hi
     rak_hi
-    pend_hi
     ret
 
 
@@ -101,9 +110,11 @@ proto_low_init:
     ; out: -
     .global  proto_low_set_status
 proto_low_set_status:
+    ; make sure cflg is not low
+    wait_cflg_hi
     ; perform change
-    andi    r24,0xe0
-    ori     r24,0x1f
+    andi    r24,0xf0
+    ori     r24,0x0f
     mov     r18,r24
     data_out_prepare
     data_out_set
@@ -123,19 +134,6 @@ proto_low_ack_hi:
     ack_hi
     ret
 
-    ; void proto_low_pend_lo(void)
-    .global  proto_low_pend_lo
-proto_low_pend_lo:
-    pend_lo
-    ret
-
-    ; void proto_low_pend_hi(void)
-    .global  proto_low_pend_hi
-proto_low_pend_hi:
-    pend_hi
-    ret
-
-
     ; ----- proto_low_get_cmd -----
     ; u08 proto_low_get_cmd(void)
     ; return 0xff for idle or command byte
@@ -145,8 +143,13 @@ proto_low_get_cmd:
     ldi     r24, 0xff
     sbic_clk
     ret
+    ; read low idle byte nybble
     data_in
-    andi    r18, 0x1f
+    andi    r18, 0x0f
+    ; if cflg is low then set bit 4 of command
+    sbis_cflg
+    ori     r18, 0x10
+    ; return result
     mov     r24, r18
     ret
 

@@ -11,7 +11,7 @@
 /* proto signals */
 #define clk_mask    pout_mask
 #define rak_mask    busy_mask
-#define pend_mask   sel_mask
+#define cflg_mask   sel_mask
 
 #define DDR_DATA_OUT  0xff
 #define DDR_DATA_IN   0x00
@@ -38,14 +38,14 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, str
   ph->timeout_ms = 500000UL;
   ph->sys_base = SysBase;
 
-  /* control: clk=out(1) rak,pend=in*/
-  *port->ctrl_ddr |= port->clk_mask;
-  *port->ctrl_ddr &= ~(port->rak_mask | port->pend_mask);
+  /* control: clk,cflg=out(1) rak=in*/
+  *port->ctrl_ddr |= port->clk_mask | port->cflg_mask;
+  *port->ctrl_ddr &= ~(port->rak_mask);
   *port->ctrl_port |= port->all_mask;
 
   /* data: port=0, ddr=0xff (OUT) */
-  *port->data_port = PROTO_CMD_ACTION + PROTO_ACTION_IDLE;
-  *port->data_ddr  = PROTO_CMD_FULL_MASK;
+  *port->data_port = 0;
+  *port->data_ddr  = 0x0f; // lower nybble is for command bits 0..3
 
   return ph;
 }
@@ -62,6 +62,12 @@ void proto_exit(proto_handle_t *ph)
   FreeMem(ph, sizeof(struct proto_handle));
 }
 
+UBYTE proto_get_status(proto_handle_t *ph)
+{
+  struct pario_port *port = ph->port;
+  return proto_low_get_status(port);
+}
+
 int proto_action(proto_handle_t *ph, UBYTE num)
 {
   struct pario_port *port = ph->port;
@@ -76,20 +82,6 @@ int proto_action(proto_handle_t *ph, UBYTE num)
   timer_stop(ph->timer);
 
   return result;
-}
-
-int proto_action_status(proto_handle_t *ph, UBYTE *status)
-{
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_action(port, timeout_flag, PROTO_ACTION_PING);
-  timer_stop(ph->timer);
-
-  *status = result & PROTO_RET_STATUS_MASK;
-
-  return result & PROTO_RET_MASK;
 }
 
 static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))

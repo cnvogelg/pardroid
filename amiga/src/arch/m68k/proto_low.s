@@ -6,8 +6,8 @@
         include         "pario.i"
         include         "proto.i"
 
+        xdef            _proto_low_get_status
         xdef            _proto_low_action
-        xdef            _proto_low_action_status
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
@@ -151,9 +151,9 @@ ddr_out  MACRO
 
 ; --- ddr_idle ---
 ; \1 = temp reg
-; set special idle mode ddr: bit 0..4 out, bit 5..7 in
+; set special idle mode ddr: bit 0..3 out, bit 4..7 in
 ddr_idle  MACRO
-        moveq   #31,\1
+        moveq   #15,\1
         move.b  \1,(a4)
         ENDM
 
@@ -188,6 +188,7 @@ get_data MACRO
         move.b  (a3),\1
         ENDM
 
+
 ; --- call_callback ---
 ; \1 = id
 call_cb MACRO
@@ -198,7 +199,50 @@ call_cb MACRO
         ENDM
 
 
+; --- cflag_lo ---
+; \1 = reg for sel bit
+cflg_lo MACRO
+        move.b          PO_SEL_BIT(a0),\1
+        bclr            \1,d4
+        move.b          d4,(a5)
+        ENDM
+
+
+; --- cflag_hi ---
+; \1 = reg for sel bit
+cflg_hi MACRO
+        move.b          PO_SEL_BIT(a0),\1
+        bset            \1,d4
+        move.b          d4,(a5)
+        ENDM
+
+
 ; ----- functions -----------------------------------------------------------
+
+; --- proto_low_get_status ---
+; read the status nybble of the device from the idle byte
+;
+;   in:
+;       a0      struct pario_port *port
+;   out:
+;       d0      return status bits in high nybble
+_proto_low_get_status:
+        move.l          PO_DATA_PORT(a0),a1
+        move.l          PO_CTRL_PORT(a0),a0
+        move.b          PO_SEL_BIT(a0),d1
+
+        ; clfg_lo to signal status access
+        bclr            d1,(a0)
+
+        ; read status
+        move.b          (a1),d0
+        andi.b          #$f0,d0
+
+        ; cflg_hi to signal end of status access
+        bset            d1,(a0)
+
+        rts
+
 
 ; --- proto_low_action ---
 ; a simple command that does not transfer any value
@@ -220,6 +264,8 @@ _proto_low_action:
         check_rak_hi    pla_end
         ; set cmd to data port
         set_cmd         d0
+        ; set cflag to signal command
+        cflg_lo         d1
         ; set CLK to low (active) to trigger command at slave
         clk_lo
         ; busy wait with timeout for RAK to go low
@@ -241,6 +287,8 @@ _proto_low_action:
 pla_end:
         ; restore cmd
         set_cmd_idle
+        ; restore cflg
+        cflg_hi         d1
 
         movem.l (sp)+,d2-d7/a2-a6
         rts
@@ -248,53 +296,6 @@ pla_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s   pla_end
-
-
-; --- proto_low_action_status ---
-; a simple command that does not transfer any value but reads the status
-;
-;   in:
-;       a0      struct pario_port *port
-;       a1      volatile UBYTE *timeout_flag
-;       d0      action constant
-;   out:
-;       d0      return error code in low nybble and status bits in high nybble
-_proto_low_action_status:
-        movem.l d2-d7/a2-a6,-(sp)
-
-        setup_port_regs
-
-        check_rak_hi    plas_end
-        set_cmd         d0
-        clk_lo
-        wait_rak_lo     plas_abort
-
-        ; get status bits/pending channel from data port
-        get_data        d0
-        andi.b          #$e0,d0
-
-        ; pending flag?
-        move.b          PO_SEL_BIT(a0),d1
-        move.l          (a5),a1
-        btst            d1,(a1)
-        ; is low active -> set bit 4 in status
-        bne.s           plas_no_pend
-        ori.b           #$10,d0
-plas_no_pend:
-
-        ; -- final sync
-        clk_hi
-        check_rak_hi    plas_end
-plas_end:
-        ; restore cmd
-        set_cmd_idle
-
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-plas_abort:
-        ; ensure CLK is hi
-        clk_hi
-        bra.s           plas_end
 
 
 ; --- proto_low_action_bench ---
@@ -321,6 +322,8 @@ _proto_low_action_bench:
         check_rak_hi    plab_end
         ; set cmd to data port
         set_cmd         d0
+        ; set cflag to signal command
+        cflg_lo         d1
         ; set CLK to low (active) to trigger command at slave
         clk_lo
 
@@ -348,6 +351,8 @@ _proto_low_action_bench:
 plab_end:
         ; restore cmd
         set_cmd_idle
+        ; restore cflg
+        cflg_hi         d1
 
         movem.l (sp)+,d2-d7/a2-a6
         rts
@@ -370,6 +375,7 @@ _proto_low_write_word:
         ; sync with slave
         check_rak_hi    plrw_end
         set_cmd         d0
+        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrw_abort
 
@@ -400,6 +406,7 @@ _proto_low_write_word:
         moveq   #RET_OK,d0
 plrw_end:
         set_cmd_idle
+        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrw_abort:
@@ -421,6 +428,7 @@ _proto_low_read_word:
         ; sync with slave
         check_rak_hi    plrr_end
         set_cmd         d0
+        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrr_abort
 
@@ -450,6 +458,7 @@ _proto_low_read_word:
         moveq   #RET_OK,d0
 plrr_end:
         set_cmd_idle
+        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrr_abort:

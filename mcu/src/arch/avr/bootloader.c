@@ -32,11 +32,6 @@ FUNC_TABLE_BEGIN
   FUNC_PROTO_DEFAULTS
 FUNC_TABLE_END
 
-// we need to fake status update to make action happy
-void status_update(void)
-{
-}
-
 // ro registers
 static const u16 ro_version ROM_ATTR = VERSION_TAG;
 static const u16 ro_mach_tag ROM_ATTR = MACHTAG;

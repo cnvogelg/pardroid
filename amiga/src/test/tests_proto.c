@@ -398,13 +398,7 @@ int test_pend(test_t *t, test_param_t *p)
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
   /* assume nothing is pending */
-  UBYTE status;
-  int res = proto_action_status(pb->proto, &status);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "get status #1";
-    return res;
-  }
+  UBYTE status = proto_get_status(pb->proto);
   if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
     p->error = "pending active";
     p->section = "pre";
@@ -413,7 +407,7 @@ int test_pend(test_t *t, test_param_t *p)
 
   /* write a message to see it works */
   ULONG data = 0xdeadbeef;
-  res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  int res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write msg";
@@ -437,12 +431,7 @@ int test_pend(test_t *t, test_param_t *p)
   }
 
   /* assume pending is set */
-  res = proto_action_status(pb->proto, &status);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "get status #2";
-    return res;
-  }
+  status = proto_get_status(pb->proto);
   if((status & PROTO_STATUS_READ_PENDING) == 0) {
     p->error = "pending inactive";
     p->section = "main";
@@ -474,12 +463,7 @@ int test_pend(test_t *t, test_param_t *p)
   }
 
   /* assume pending is cleared again */
-  res = proto_action_status(pb->proto, &status);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "get status #3";
-    return res;
-  }
+  status = proto_get_status(pb->proto);
   if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
     p->error = "pending active";
     p->section = "post";
