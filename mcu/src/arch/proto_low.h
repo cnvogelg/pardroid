@@ -18,5 +18,6 @@ extern void proto_low_pend_lo(void);
 extern void proto_low_pend_hi(void);
 
 extern void proto_low_set_status(u08 status);
+extern void proto_low_wait_cflg_hi(void);
 
 #endif

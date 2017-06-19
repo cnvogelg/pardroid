@@ -47,6 +47,8 @@ void action_handle(u08 num)
   u08 max = read_rom_char(&action_table_size);
   if(num >= max) {
     DS("a:??"); DNL;
+    // wait for invalid action to time out
+    proto_low_wait_cflg_hi();
     return;
   } else {
     u08 flags = read_rom_char(&action_table[num].flags);

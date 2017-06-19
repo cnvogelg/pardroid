@@ -121,6 +121,14 @@ proto_low_set_status:
     ret
 
 
+    ; ----- wait for end of invalid action/func -----
+    ; void proto_low_wait_cflg_hi(void)
+    .global  proto_low_wait_cflg_hi
+proto_low_wait_cflg_hi:
+    wait_cflg_hi
+    ret
+
+
     ; ----- ack/pend signals -----
     ; void proto_low_ack_lo(void)
     .global  proto_low_ack_lo

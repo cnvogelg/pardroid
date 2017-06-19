@@ -108,9 +108,9 @@ wait_rak_lo_pend_abort  MACRO
         ; timeout error
         moveq   #RET_TIMEOUT,d0
         bra     \1
-\@3:    ; check pending (low active)
-        btst    \2,(a5)
-        bne.s   \@1
+\@3:    ; check pending (hi active)
+        btst    \2,(a3)
+        beq.s   \@1
         ; abort write due to pending read
         moveq   #RET_WRITE_ABORT,d0
         bra     \1
@@ -228,8 +228,8 @@ cflg_hi MACRO
 ;       d0      return status bits in high nybble
 _proto_low_get_status:
         move.l          PO_DATA_PORT(a0),a1
-        move.l          PO_CTRL_PORT(a0),a0
         move.b          PO_SEL_BIT(a0),d1
+        move.l          PO_CTRL_PORT(a0),a0
 
         ; clfg_lo to signal status access
         bclr            d1,(a0)
@@ -485,9 +485,9 @@ plrr_abort:
 _proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
+
         ; addtionally prepare pending bit
-        moveq           #0,d7
-        move.b          PO_SEL_BIT(a0),d7
+        moveq           #7,d7
 
         ; sync with slave
         check_rak_hi    plrw_end
@@ -506,7 +506,7 @@ _proto_low_write_block:
         lsr.w           #8,d0 ; d0 = extra
 
         ; wait for slave sync (abort if pending was set, or on timeout)
-        wait_rak_lo_pend_abort     plrw_abort,d7
+        wait_rak_lo_pend_abort     plmw_abort,d7
 
         ; switch port to write
         clk_hi

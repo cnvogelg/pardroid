@@ -55,6 +55,7 @@ void status_handle(void)
   if(bits != old_state) {
     DS("s:"); DB(bits); DNL;
     proto_low_set_status(bits);
+    DS("--"); DNL;
     old_state = bits;
   }
 }

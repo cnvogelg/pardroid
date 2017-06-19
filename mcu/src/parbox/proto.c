@@ -7,6 +7,7 @@
 void proto_init(u08 status)
 {
   proto_low_init(status);
+  DS("init:"); DB(status); DNL;
 }
 
 static void action(u08 num)
@@ -54,6 +55,14 @@ void proto_handle(void)
     // no clock lined pulled -> idle
     return;
   }
+
+  // action=0 is invalid
+  // it is generated when amiga is powered off
+  if(cmd == 0x10) {
+    return;
+  }
+
+  DS("cmd:"); DB(cmd); DNL;
 
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;

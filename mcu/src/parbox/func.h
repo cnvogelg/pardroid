@@ -18,7 +18,7 @@ extern const func_table_entry_t func_table[] ROM_ATTR;
 #define FUNC_TABLE_SIZE           sizeof(func_table)/sizeof(func_table[0])
 
 #define FUNC_TABLE_BEGIN          const func_table_entry_t func_table[] ROM_ATTR = {
-#define FUNC_TABLE_END            }; const u08 func_table_size = ACTION_TABLE_SIZE;
+#define FUNC_TABLE_END            }; const u08 func_table_size = FUNC_TABLE_SIZE;
 
 #define FUNC_TABLE_GET_FUNC(x)    { .func = x, .flags = FUNC_FLAG_NONE }
 #define FUNC_TABLE_SET_FUNC(x)    { .func = x, .flags = FUNC_FLAG_SET }
