@@ -424,14 +424,6 @@ int test_status_read_pending(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* issue a ping to ensure req add was processed */
-  res = proto_action(pb->proto, PROTO_ACTION_PING);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "ping1";
-    return res;
-  }
-
   /* assume pending is set */
   status = proto_get_status(pb->proto);
   if((status & PROTO_STATUS_READ_PENDING) == 0) {
@@ -460,14 +452,6 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
-    return res;
-  }
-
-  /* issue a ping to ensure req rem was processed */
-  res = proto_action(pb->proto, PROTO_ACTION_PING);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "ping2";
     return res;
   }
 
@@ -597,14 +581,6 @@ int test_status_error(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_error #1";
-    return res;
-  }
-
-  /* issue a ping to ensure req rem was processed */
-  res = proto_action(pb->proto, PROTO_ACTION_PING);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "ping1";
     return res;
   }
 

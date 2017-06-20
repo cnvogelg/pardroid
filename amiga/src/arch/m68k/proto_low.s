@@ -280,7 +280,7 @@ _proto_low_action:
         ; now raise CLK again
         clk_hi
         ; expect slave to raise rak, too
-        check_rak_hi    pla_end
+        wait_rak_hi     pla_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -341,7 +341,7 @@ _proto_low_action_bench:
         ; now raise CLK again
         clk_hi
         ; expect slave to raise rak, too
-        check_rak_hi    plab_end
+        wait_rak_hi     plab_end
 
         ; callback 2: got rak hi
         call_cb         #2
@@ -400,7 +400,7 @@ _proto_low_write_word:
         ; final sync
         clk_hi
         ; wait for slave done
-        check_rak_hi    plrw_end
+        wait_rak_hi     plrw_end
 
         ; ok
         moveq   #RET_OK,d0
@@ -452,7 +452,7 @@ _proto_low_read_word:
 
         ; final sync
         clk_hi
-        check_rak_hi    plrr_end
+        wait_rak_hi     plrr_end
 
         ; ok
         moveq   #RET_OK,d0

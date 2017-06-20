@@ -54,14 +54,30 @@ void action_handle(u08 num)
     u08 flags = read_rom_char(&action_table[num].flags);
 
     // handle action protocol
+    u08 end = 0;
     if((flags & ACTION_FLAG_NO_REPLY) == 0) {
       proto_low_action();
+      end = 1;
+    }
+
+    // end protocol before execution action
+    if((flags & ACTION_FLAG_END_BEFORE) == ACTION_FLAG_END_BEFORE) {
+      proto_low_end();
+      end = 0;
     }
 
     // trigger action func
     rom_pchar ptr = read_rom_rom_ptr(&action_table[num].func);
     action_func_t func = (action_func_t)ptr;
     func();
+
+    // restore state
+    action_api_done();
+
+    // finish action after executing function
+    if(end) {
+      proto_low_end();
+    }
   }
 }
 

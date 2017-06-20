@@ -47,5 +47,6 @@ extern void func_get_error(u16 *valp);
 // ----- external API for register access -----
 extern void func_api_set_reg(u08 reg,u16 val);
 extern u16  func_api_get_reg(u08 reg);
+extern void func_api_done(void);
 
 #endif

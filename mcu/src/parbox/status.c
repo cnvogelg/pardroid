@@ -30,40 +30,49 @@ void status_handle(void)
     proto_low_ack_hi();
     DS("I-"); DNL;
   }
+}
 
+void status_update(void)
+{
   // if an error is set then show it always (suppress pending if necessary)
   u08 bits = 0;
+  if(attached) {
+    bits |= PROTO_STATUS_ATTACHED;
+  }
   if(error_code != 0) {
-    bits = PROTO_STATUS_ERROR;
-    if(attached) {
-      bits |= PROTO_STATUS_ATTACHED;
-    }
+    bits |= PROTO_STATUS_ERROR;
   }
   // if a channel is pending
   else if(pending_channel != STATUS_NO_CHANNEL) {
     bits = pending_channel << 4 | PROTO_STATUS_READ_PENDING;
   }
-  // regular bits (no pending channel)
-  else {
-    u08 bits = 0;
-    if(attached) {
-      bits |= PROTO_STATUS_ATTACHED;
-    }
-  }
 
   // set bits
   if(bits != old_state) {
-    DS("s:"); DB(bits); DNL;
-    proto_low_set_status(bits);
-    DS("--"); DNL;
     old_state = bits;
+    DS("s:"); DB(bits); DNL;
+    u08 done = proto_low_set_status(bits);
+    if(done) {
+      DS("s."); DNL;
+    } else {
+      DS("s!"); DNL;
+    }
+  } else {
+    DS("s?"); DB(bits); DNL;
   }
+}
+
+void status_restore(void)
+{
+  DS("sr:"); DB(old_state); DNL;
+  proto_low_force_status(old_state);
 }
 
 void status_set_error(u08 error)
 {
   DS("e+"); DB(error); DNL;
   error_code = error;
+  status_update();
 }
 
 u08 status_clear_error(void)
@@ -71,6 +80,7 @@ u08 status_clear_error(void)
   DS("e-"); DB(error_code); DNL;
   u08 e = error_code;
   error_code = STATUS_NO_ERROR;
+  status_update();
   return e;
 }
 
@@ -83,6 +93,7 @@ void status_attach(void)
     DS("sa?"); DNL;
     status_set_error(PROTO_ERROR_ALREADY_ATTACHED);
   }
+  status_update();
 }
 
 void status_detach(void)
@@ -94,6 +105,7 @@ void status_detach(void)
     DS("sd?"); DNL;
     status_set_error(PROTO_ERROR_ALREADY_DETACHED);
   }
+  status_update();
 }
 
 void status_set_pending(u08 channel)
@@ -106,12 +118,14 @@ void status_set_pending(u08 channel)
     irq_triggered = 1;
   }
   pending_channel = channel;
+  status_update();
 }
 
 void status_clear_pending(void)
 {
   DS("p-"); DNL;
   pending_channel = STATUS_NO_CHANNEL;
+  status_update();
 }
 
 u08 status_is_pending(void)
@@ -120,3 +134,5 @@ u08 status_is_pending(void)
 }
 
 void proto_api_read_is_pending(u08 cmd) __attribute__ ((weak, alias("status_is_pending")));
+void action_api_done(u08 cmd) __attribute__ ((weak, alias("status_restore")));
+void func_api_done(u08 cmd) __attribute__ ((weak, alias("status_restore")));

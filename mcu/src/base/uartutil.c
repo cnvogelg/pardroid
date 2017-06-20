@@ -60,7 +60,8 @@ void uart_send_data(u08 *data,u08 len)
 
 void uart_send_crlf(void)
 {
-  uart_send_pstring(PSTR("\r\n"));
+  uart_send(13);
+  uart_send(10);
 }
 
 void uart_send_spc(void)

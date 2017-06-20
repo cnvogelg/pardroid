@@ -74,6 +74,12 @@ void func_handle(u08 num)
       func(&val);
       proto_low_read_word(val);
     }
+
+    // enforce status update
+    func_api_done();
+
+    // end function
+    proto_low_end();
   }
 }
 

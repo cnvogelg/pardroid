@@ -139,7 +139,6 @@ u08 *proto_api_read_msg_prepare(u08 chan, u16 *size)
 {
   *size = PAGE_WORDS;
   uart_send('r');
-  uart_send_hex_word(page_addr);
   flash_read_page(page_addr, page_buf);
   return page_buf;
 }
@@ -154,7 +153,6 @@ u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
 {
   *max_size = PAGE_WORDS;
   uart_send('w');
-  uart_send_hex_word(page_addr);
   return page_buf;
 }
 
@@ -176,3 +174,9 @@ u08 proto_api_read_is_pending(void)
 {
   return 0;
 }
+
+void dummy(void)
+{}
+void action_api_done(void) __attribute__ ((weak, alias("dummy")));
+void func_api_done(void) __attribute__ ((weak, alias("dummy")));
+
