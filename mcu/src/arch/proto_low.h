@@ -4,7 +4,7 @@ extern void proto_low_init(u08 status);
 extern u08 proto_low_get_cmd(void);
 
 extern void proto_low_action(void);
-extern void proto_low_end(void);
+extern void proto_low_end(u08 status);
 
 extern void proto_low_read_word(u16 v);
 extern u16  proto_low_write_word(void);
@@ -19,7 +19,6 @@ extern void proto_low_pend_lo(void);
 extern void proto_low_pend_hi(void);
 
 extern u08  proto_low_set_status(u08 status);
-extern void proto_low_force_status(u08 status);
 extern void proto_low_wait_cflg_hi(void);
 
 #endif

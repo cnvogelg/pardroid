@@ -147,21 +147,6 @@ plss_ok:
     ret
 
 
-    ; ----- enforce status bits -----
-    ; void proto_low_force_status(u08 status)
-    ; in: r24 = status bits
-    ; out: -
-    .section .text.proto_low_force_status
-    .global  proto_low_force_status
-proto_low_force_status:
-    andi    r24,0xf0
-    ori     r24,0x0f
-    mov     r18,r24
-    data_out_prepare
-    data_out_set
-    ret
-
-
     ; ----- wait for end of invalid action/func -----
     ; void proto_low_wait_cflg_hi(void)
     .section .text.proto_low_wait_cflg_hi
@@ -223,9 +208,17 @@ proto_low_action:
     ; ----- proto_low_end -----
     ; void proto_low_end(void)
     ; end an action or function call
+    ; in: r24 = status
+    ; out: -
     .section .text.proto_low_end
     .global  proto_low_end
 proto_low_end:
+    ; update status nybble
+    andi    r24,0xf0
+    ori     r24,0x0f
+    mov     r18,r24
+    data_out_prepare
+    data_out_set
     ; command finishes with a last clk hi transition
     wait_clk_hi
     ; confirm it

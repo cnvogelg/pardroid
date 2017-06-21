@@ -102,7 +102,7 @@ int main(void)
 
   // check if bootloader command is set - if not enter app
   u08 cmd = proto_low_get_cmd();
-  if(cmd != PROTO_ACTION_BOOTLOADER) {
+  if(cmd != (PROTO_CMD_ACTION | PROTO_ACTION_BOOTLOADER)) {
     // check crc
     uart_send('B');
     u16 crc = pablo_check_rom_crc();
@@ -112,6 +112,7 @@ int main(void)
       u16 rom_mach_tag = pablo_get_mach_tag();
       if(rom_mach_tag == MACHTAG) {
         uart_send('O');
+        uart_send_crlf();
         // run app if valid
         run_app(rst_flag);
       }
@@ -121,6 +122,7 @@ int main(void)
     // reply to bootloader command
     uart_send('-');
     proto_low_action();
+    proto_low_end(PROTO_STATUS_BOOTLOADER);
   }
 
   // enter main loop
@@ -175,8 +177,7 @@ u08 proto_api_read_is_pending(void)
   return 0;
 }
 
-void dummy(void)
-{}
-void action_api_done(void) __attribute__ ((weak, alias("dummy")));
-void func_api_done(void) __attribute__ ((weak, alias("dummy")));
-
+u08 proto_api_get_end_status(void)
+{
+  return PROTO_STATUS_BOOTLOADER;
+}

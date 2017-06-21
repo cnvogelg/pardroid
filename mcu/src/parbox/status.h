@@ -7,7 +7,8 @@
 extern void status_init(void);
 extern void status_update(void);
 extern void status_handle(void);
-extern void status_restore(void);
+
+extern u08  status_get_current(void);
 
 extern void status_set_error(u08 error);
 extern u08  status_clear_error(void);

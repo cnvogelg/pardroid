@@ -62,10 +62,10 @@ void status_update(void)
   }
 }
 
-void status_restore(void)
+u08 status_get_current(void)
 {
   DS("sr:"); DB(old_state); DNL;
-  proto_low_force_status(old_state);
+  return old_state;
 }
 
 void status_set_error(u08 error)
@@ -134,5 +134,4 @@ u08 status_is_pending(void)
 }
 
 void proto_api_read_is_pending(u08 cmd) __attribute__ ((weak, alias("status_is_pending")));
-void action_api_done(u08 cmd) __attribute__ ((weak, alias("status_restore")));
-void func_api_done(u08 cmd) __attribute__ ((weak, alias("status_restore")));
+u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));

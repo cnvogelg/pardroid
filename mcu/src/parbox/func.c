@@ -3,6 +3,7 @@
 #include "debug.h"
 #include "system.h"
 
+#include "proto.h"
 #include "proto_low.h"
 #include "proto_shared.h"
 #include "func.h"
@@ -75,11 +76,9 @@ void func_handle(u08 num)
       proto_low_read_word(val);
     }
 
-    // enforce status update
-    func_api_done();
-
     // end function
-    proto_low_end();
+    u08 status = proto_api_get_end_status();
+    proto_low_end(status);
   }
 }
 

@@ -47,6 +47,4 @@ extern void action_detach(void);
 
 extern void action_handle(u08 num);
 
-extern void action_api_done(void);
-
 #endif
