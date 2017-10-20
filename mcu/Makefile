@@ -42,14 +42,17 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 # sources
 BASE_SRCS = uart.c uartutil.c system.c pablo.c
 PROTO_SRCS = proto_low.S proto.c reg.c action.c func.c
-PROTO_EXT_SRCS = reg_def.c handler.c status.c
+PROTO_EXT_SRCS = reg_def.c status.c
+HANDLER_SRCS = handler.c buffer.c channel.c hnd_echo.c
 
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base src/parbox
+INCLUDES += src/handler
 INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-fw
-TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS) test-main.c machtag.c
+TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS) $(HANDLER_SRCS)
+TEST_SRCS += test-main.c machtag.c
 $(eval $(call dist-pbl,test-fw))
 $(eval $(call dist-hex,test-fw))
 $(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))

@@ -14,14 +14,13 @@
 #include "action.h"
 #include "func.h"
 #include "machtag.h"
-#include "handler.h"
 #include "status.h"
+#include "buffer.h"
+#include "channel.h"
+#include "handler.h"
+#include "hnd_echo.h"
 
 #include <util/delay.h>
-
-#define MAX_TEST_MSG_SIZE 1024
-
-static u08 test_msg[MAX_TEST_MSG_SIZE];
 
 static void sim_pending(u16 *valp)
 {
@@ -68,7 +67,7 @@ static u16 test_size;
 static void func_test_size(u16 *val, u08 mode)
 {
   if(mode == REG_MODE_WRITE) {
-    if(*val <= (MAX_TEST_MSG_SIZE / 2)) {
+    if(*val <= 0x1234) {
       test_size = *val;
     }
   } else {
@@ -79,6 +78,7 @@ static void func_test_size(u16 *val, u08 mode)
 REG_PROTO_APPID(PROTO_FWID_TEST)
 REG_TABLE_BEGIN
   REG_TABLE_DEFAULTS
+  REG_TABLE_CHANNEL
   /* user read-only regs */
   REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
   REG_TABLE_RO_RAM_W(ro_ram_word),      // user+1
@@ -88,41 +88,11 @@ REG_TABLE_BEGIN
   REG_TABLE_RW_RAM_W(test_word),        // user+4
 REG_TABLE_END
 
-// my handler
-
-void my_init(void)
-{
-}
-
-void my_work(void)
-{
-}
-
-u08 *my_read_msg_prepare(u16 *size)
-{
-  *size = test_size;
-  return test_msg;
-}
-
-void my_read_msg_done(void)
-{
-}
-
-u08 *my_write_msg_prepare(u16 *max_size)
-{
-  *max_size = MAX_TEST_MSG_SIZE >> 1;
-  return test_msg;
-}
-
-void my_write_msg_done(u16 size)
-{
-  test_size = size;
-}
-
 // handler
 
 HANDLER_TABLE_BEGIN
-  HANDLER_ENTRY(my_init, my_work, my_read_msg_prepare, my_read_msg_done, my_write_msg_prepare, my_write_msg_done)
+  HANDLER_TABLE_ENTRY(echo),
+  HANDLER_TABLE_ENTRY(echo)
 HANDLER_TABLE_END
 
 static void rom_info(void)
@@ -166,14 +136,15 @@ int main(void)
   DC('+');
   proto_init(PROTO_STATUS_INIT);
   status_init();
-  handler_init();
+  buffer_init();
+  channel_init();
   DC('-'); DNL;
 
   while(1) {
     system_wdt_reset();
     proto_handle();
     status_handle();
-    handler_work();
+    channel_work();
   }
 
   return 0;
