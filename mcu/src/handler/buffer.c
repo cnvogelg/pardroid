@@ -1,6 +1,7 @@
 #include "types.h"
 #include "autoconf.h"
 #include "buffer.h"
+#include "debug.h"
 
 #define NULL (void *)0
 
@@ -18,6 +19,7 @@ static mem_info_t *first_mi;
 
 void buffer_init(void)
 {
+  DS("Bi"); DNL;
   mem_info_t *mi = (mem_info_t *)data;
   mi->prev = NULL;
   mi->next = NULL;
@@ -42,10 +44,12 @@ u08 *buffer_alloc(u16 size)
     size = sizeof(mem_info_t);
   }
 
+#if 0
   /* align to 4 bytes */
   if(size & 3) {
     size = (size & ~3) + 4;
   }
+#endif
 
   /* no memory free */
   if(free_total < size) {

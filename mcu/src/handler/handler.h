@@ -32,6 +32,7 @@ typedef const handler_t *handler_ptr_t;
 extern const u08 handler_table_size ROM_ATTR;
 extern const handler_ptr_t handler_table[] ROM_ATTR;
 
+#define HANDLER_GET_TABLE_SIZE()     read_rom_char(&handler_table_size)
 #define HANDLER_TABLE_SIZE           sizeof(handler_table)/sizeof(handler_table[0])
 
 #define HANDLER_TABLE_BEGIN          const handler_ptr_t handler_table[] ROM_ATTR = {

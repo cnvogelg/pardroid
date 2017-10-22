@@ -3,6 +3,7 @@
 #include "arch.h"
 #include "handler.h"
 #include "reg.h"
+#include "debug.h"
 
 #define NUM_CHANNELS PROTO_MAX_CHANNEL
 
@@ -26,16 +27,24 @@ static u08 chn_idx;
 void channel_init(void)
 {
   /* init channel state */
-  u08 num_handler = handler_table_size;
+  u08 num_handler = HANDLER_GET_TABLE_SIZE();
+  DS("Ci:"); DB(num_handler); DC(','); DB(NUM_CHANNELS); DNL;
   for(u08 i=0; i<NUM_CHANNELS;i++) {
     channel_t *c = &channels[i];
     if(i < num_handler) {
       c->flags = FLAG_HANDLER;
       /* try to init handler */
       u08 status = handler_init(i);
+      DS("Cn:"); DB(i); DC('='); DB(status);
       if(status == HANDLER_OK) {
         c->flags |= FLAG_INIT;
+        /* setup mtu */
+        u16 min, max;
+        handler_get_mtu(i, &max, &min);
+        c->mtu = max;
+        DC(','); DW(max);
       }
+      DNL;
     } else {
       c->flags = FLAG_NONE;
     }
