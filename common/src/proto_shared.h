@@ -28,6 +28,10 @@
 #define PROTO_FUNC_REGADDR_SET    0x01
 #define PROTO_FUNC_REG_READ       0x02
 #define PROTO_FUNC_REG_WRITE      0x03
+#define PROTO_FUNC_OFFSLOT_GET    0x04
+#define PROTO_FUNC_OFFSLOT_SET    0x05
+#define PROTO_FUNC_OFFSET_GET     0x06
+#define PROTO_FUNC_OFFSET_SET     0x07
 
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xf0

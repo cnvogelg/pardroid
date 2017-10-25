@@ -260,6 +260,52 @@ proto_low_write_word:
     ret
 
 
+    ; ----- proto_low_write_long -----
+    ; master wants to write a u32 function value
+    ; u32 proto_low_write_long(void)
+    ; in:  -
+    ; out: r22,r23,r24,r25 = value
+    .section .text.proto_low_write_long
+    .global  proto_low_write_long
+proto_low_write_long:
+    ; confirm to master we are ready
+    rak_lo
+
+    ; ddr: input
+    wait_clk_hi
+    ddr_in
+
+    ; byte 1
+    ; wait clk
+    wait_clk_lo
+    ; get data and save as result
+    data_in
+    mov     r25, r18
+
+    ; byte 2
+    ; wait clk
+    wait_clk_hi
+    data_in
+    mov     r24, r18
+
+    ; byte 3
+    ; wait clk
+    wait_clk_lo
+    data_in
+    mov     r23, r18
+
+    ; byte 4
+    ; wait clk
+    wait_clk_hi
+    data_in
+    mov     r22, r18
+
+    ; ddr: idle
+    wait_clk_lo
+    ddr_idle
+    ret
+
+
     ; ----- proto_low_read_word -----
     ; master wants to read a u16 function value
     ; void proto_low_read_word(u16 v)
@@ -282,6 +328,50 @@ proto_low_read_word:
 
     ; byte 2
     mov     r18, r24
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+
+    ; ddr: idle
+    wait_clk_lo
+    ddr_idle
+    ret
+
+
+    ; ----- proto_low_read_long -----
+    ; master wants to read a u32 function value
+    ; void proto_low_read_long(u32 v)
+    ; in:  r22,r23,r24,r25 = read val
+    ; out: -
+    .section .text.proto_low_read_long
+    .global  proto_low_read_long
+proto_low_read_long:
+    rak_lo
+
+    ; ddr: output
+    wait_clk_hi
+    ddr_out
+
+    ; byte 1
+    mov     r18, r25
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
+
+    ; byte 2
+    mov     r18, r24
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+
+    ; byte 3
+    mov     r18, r23
+    data_out_prepare
+    wait_clk_lo
+    data_out_set
+
+    ; byte 4
+    mov     r18, r22
     data_out_prepare
     wait_clk_hi
     data_out_set

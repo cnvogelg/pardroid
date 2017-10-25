@@ -44,6 +44,8 @@ void uart_send_spc(void);
 void uart_send_hex_byte(u08 data);
 // send a hex word
 void uart_send_hex_word(u16 data);
+// send a hex word
+void uart_send_hex_long(u32 data);
 
 #endif
 

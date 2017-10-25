@@ -13,6 +13,7 @@
 #include "proto.h"
 #include "proto_shared.h"
 #include "reg.h"
+#include "offset.h"
 #include "test.h"
 
 static UWORD test_size;
@@ -109,6 +110,42 @@ int test_func_write_read(test_t *t, test_param_t *p)
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04x r=%04x", v, r);
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_offset_write_read(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  UWORD v = (UWORD)p->iter + test_bias;
+  v %= PROTO_MAX_CHANNEL;
+
+  ULONG val = 0xdeadbeef + v;
+
+  /* write offset */
+  int res = offset_set(pb->proto, v, val);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "set";
+    return res;
+  }
+
+  /* read offset */
+  ULONG off;
+  res = offset_get(pb->proto, v, &off);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get";
+    return res;
+  }
+
+  /* compare */
+  if(val != off) {
+    p->error = "value mismatch";
+    p->section = "compare";
+    sprintf(p->extra, "w=%08lx, r=%08lx", val, off);
     return 1;
   }
 

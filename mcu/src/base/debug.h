@@ -16,6 +16,8 @@
 #define DB(x)  uart_send_hex_byte(x)
 // debug word
 #define DW(x)  uart_send_hex_word(x)
+// debug long
+#define DL(x)  uart_send_hex_long(x)
 // debug newline
 #define DNL    uart_send_crlf()
 // debug space
@@ -28,6 +30,7 @@
 #define DS(x)
 #define DB(x)
 #define DW(x)
+#define DL(x)
 #define DNL
 #define DSPC
 

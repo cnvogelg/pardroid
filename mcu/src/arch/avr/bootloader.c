@@ -181,3 +181,8 @@ u08 proto_api_get_end_status(void)
 {
   return PROTO_STATUS_BOOTLOADER;
 }
+
+void func_handle_long_weak(rom_pchar ptr, u08 flags)
+{
+  // no long procesing in func required
+}

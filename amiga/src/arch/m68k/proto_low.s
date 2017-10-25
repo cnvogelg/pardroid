@@ -11,6 +11,8 @@
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
+        xdef            _proto_low_write_long
+        xdef            _proto_low_read_long
         xdef            _proto_low_write_block
         xdef            _proto_low_read_block
 
@@ -415,6 +417,67 @@ plrw_abort:
         bra.s    plrw_end
 
 
+; --- proto_low_write_lonf ---
+; in:  a0 = port ptr
+;      a1 = timeout byte ptr
+;      a2 = ptr to data
+;      d0 = cmd byte
+; out: d0 = result
+_proto_low_write_long:
+        movem.l d2-d7/a2-a6,-(sp)
+        setup_port_regs
+
+        ; sync with slave
+        check_rak_hi    plrwl_end
+        set_cmd         d0
+        cflg_lo         d1
+        clk_lo
+        wait_rak_lo     plrwl_abort
+
+        ; ddr: out
+        clk_hi
+        ddr_out
+
+        ; -- first byte
+        ; setup test value on data lines
+        set_data        (a2)+
+        ; signal to slave to read the value
+        clk_lo
+
+        ; -- second byte
+        set_data        (a2)+
+        clk_hi
+
+        ; -- byte 3
+        set_data        (a2)+
+        clk_lo
+
+        ; -- byte 4
+        set_data        (a2)+
+        clk_hi
+
+        ; ddr: idle
+        clk_lo
+        ddr_idle        d7
+
+        ; final sync
+        clk_hi
+        ; wait for slave done
+        wait_rak_hi     plrwl_end
+
+        ; ok
+        moveq   #RET_OK,d0
+plrwl_end:
+        set_cmd_idle
+        cflg_hi         d1
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plrwl_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s    plrwl_end
+
+
 ; --- proto_low_read_word ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
@@ -465,6 +528,66 @@ plrr_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s    plrr_end
+
+
+; --- proto_low_read_lonf ---
+; in:  a0 = port ptr
+;      a1 = timeout byte ptr
+;      a2 = ptr to test byte
+;      d0 = cmd byte
+; out: d0 = result
+_proto_low_read_long:
+        movem.l d2-d7/a2-a6,-(sp)
+        setup_port_regs
+
+        ; sync with slave
+        check_rak_hi    plrrl_end
+        set_cmd         d0
+        cflg_lo         d1
+        clk_lo
+        wait_rak_lo     plrrl_abort
+
+        ; ddr: in
+        ddr_in
+        clk_hi
+
+        ; first byte
+        ; signal read to slave
+        clk_lo
+        ; read value from data port
+        get_data        (a2)+
+
+        ; second byte
+        clk_hi
+        get_data        (a2)+
+
+        ; byte 3
+        clk_lo
+        get_data        (a2)+
+
+        ; byte 4
+        clk_hi
+        get_data        (a2)+
+
+        ; ddr: idle
+        clk_lo
+        ddr_idle        d7
+
+        ; final sync
+        clk_hi
+        wait_rak_hi     plrrl_end
+
+        ; ok
+        moveq   #RET_OK,d0
+plrrl_end:
+        set_cmd_idle
+        cflg_hi         d1
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+plrrl_abort:
+        ; ensure CLK is hi
+        clk_hi
+        bra.s    plrrl_end
 
 
 ; --- proto_low_write_block ---

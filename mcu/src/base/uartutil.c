@@ -88,3 +88,9 @@ void uart_send_hex_word(u16 in)
   uart_send_hex_byte((u08)(in>>8));
   uart_send_hex_byte((u08)(in&0xff));
 }
+
+void uart_send_hex_long(u32 in)
+{
+  uart_send_hex_word((u16)(in>>16));
+  uart_send_hex_word((u16)(in&0xffff));
+}

@@ -158,6 +158,38 @@ int proto_function_write(proto_handle_t *ph, UBYTE num, UWORD data)
   return result;
 }
 
+int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_FUNCTION + num;
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_read_long(port, timeout_flag, cmd, data);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_FUNCTION + num;
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_write_long(port, timeout_flag, cmd, &data);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
 int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov)
 {
   struct pario_port *port = ph->port;

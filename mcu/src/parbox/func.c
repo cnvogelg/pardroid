@@ -9,6 +9,9 @@
 #include "func.h"
 
 static u16 regaddr;
+static u08 offslot;
+
+// --- registers ---
 
 void func_regaddr_set(u16 *valp)
 {
@@ -44,6 +47,68 @@ void func_reg_read(u16 *valp)
   DC('.'); DNL;
 }
 
+// --- offsets ---
+
+void func_offslot_set(u16 *valp)
+{
+  offslot = (u08)(*valp);
+  DS("Ow:"); DB(offslot); DNL;
+}
+
+void func_offslot_get(u16 *valp)
+{
+  *valp = offslot;
+  DS("Or:"); DB(offslot); DNL;
+}
+
+void func_offset_set(u32 *valp)
+{
+  u32 offset = *valp;
+  DS("os:"); DL(offset); DNL;
+  func_api_set_offset(offslot, offset);
+}
+
+void func_offset_get(u32 *valp)
+{
+  u32 offset = func_api_get_offset(offslot);
+  DS("og:"); DL(offset); DNL;
+  *valp = offset;
+}
+
+static void func_handle_word(rom_pchar ptr, u08 flags)
+{
+  func_word_t func = (func_word_t)ptr;
+
+  // set func
+  if(flags & FUNC_FLAG_SET) {
+    u16 val = proto_low_write_word();
+    func(&val);
+  } else {
+    u16 val = 0;
+    func(&val);
+    proto_low_read_word(val);
+  }
+}
+
+static void func_handle_long(rom_pchar ptr, u08 flags)
+{
+  func_long_t func = (func_long_t)ptr;
+
+  // set func
+  if(flags & FUNC_FLAG_SET) {
+    u32 val = proto_low_write_long();
+    func(&val);
+  } else {
+    u32 val = 0;
+    func(&val);
+    proto_low_read_long(val);
+  }
+}
+
+// make long processing optional for bootloader
+void func_handle_word_weak(rom_pchar ptr, u08 flags) __attribute__ ((weak, alias("func_handle_word")));
+void func_handle_long_weak(rom_pchar ptr, u08 flags) __attribute__ ((weak, alias("func_handle_long")));
+
 void func_handle(u08 num)
 {
   u08 max = read_rom_char(&func_table_size);
@@ -57,16 +122,12 @@ void func_handle(u08 num)
 
     // get func ptr
     rom_pchar ptr = read_rom_rom_ptr(&func_table[num].func);
-    func_func_t func = (func_func_t)ptr;
 
-    // set func
-    if(flags & FUNC_FLAG_SET) {
-      u16 val = proto_low_write_word();
-      func(&val);
+    // long operation
+    if(flags & FUNC_FLAG_LONG) {
+      func_handle_long_weak(ptr, flags);
     } else {
-      u16 val = 0;
-      func(&val);
-      proto_low_read_word(val);
+      func_handle_word_weak(ptr, flags);
     }
 
     // end function

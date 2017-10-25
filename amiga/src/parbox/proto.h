@@ -32,6 +32,9 @@ extern int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start
 extern int proto_function_read(proto_handle_t *ph, UBYTE num, UWORD *data);
 extern int proto_function_write(proto_handle_t *ph, UBYTE num, UWORD data);
 
+extern int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data);
+extern int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data);
+
 extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
 

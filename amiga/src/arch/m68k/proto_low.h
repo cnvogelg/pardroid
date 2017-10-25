@@ -31,6 +31,15 @@ extern ASM int proto_low_write_word(REG(a0, struct pario_port *port),
                                     REG(d0, UBYTE cmd),
                                     REG(a2, UWORD *data));
 
+extern ASM int proto_low_read_long(REG(a0, struct pario_port *port),
+                                   REG(a1, volatile UBYTE *timeout_flag),
+                                   REG(d0, UBYTE cmd),
+                                   REG(a2, ULONG *data));
+extern ASM int proto_low_write_long(REG(a0, struct pario_port *port),
+                                    REG(a1, volatile UBYTE *timeout_flag),
+                                    REG(d0, UBYTE cmd),
+                                    REG(a2, ULONG *data));
+
 extern ASM int proto_low_read_block(REG(a0, struct pario_port *port),
                                     REG(a1, volatile UBYTE *timeout_flag),
                                     REG(d0, UBYTE cmd),

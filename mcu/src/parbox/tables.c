@@ -24,6 +24,7 @@ ACTION_TABLE_END
 
 // ----- functions -----
 FUNC_TABLE_BEGIN
+  // --- registers ---
   // 0
   FUNC_TABLE_GET_FUNC(func_regaddr_get),
   // 1
@@ -32,6 +33,15 @@ FUNC_TABLE_BEGIN
   FUNC_TABLE_GET_FUNC(func_reg_read),
   // 3
   FUNC_TABLE_SET_FUNC(func_reg_write),
+  // --- offsets ---
+  // 4
+  FUNC_TABLE_GET_FUNC(func_offslot_get),
+  // 5
+  FUNC_TABLE_SET_FUNC(func_offslot_set),
+  // 6
+  FUNC_TABLE_GET_FUNC_LONG(func_offset_get),
+  // 7
+  FUNC_TABLE_SET_FUNC_LONG(func_offset_set),
 FUNC_TABLE_END
 
 

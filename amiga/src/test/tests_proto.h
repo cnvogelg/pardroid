@@ -10,6 +10,7 @@ int test_reset(test_t *t, test_param_t *p);
 int test_func_write(test_t *t, test_param_t *p);
 int test_func_read(test_t *t, test_param_t *p);
 int test_func_write_read(test_t *t, test_param_t *p);
+int test_offset_write_read(test_t *t, test_param_t *p);
 int test_msg_empty(test_t *t, test_param_t *p);
 int test_msg_tiny(test_t *t, test_param_t *p);
 int test_msg_size(test_t *t, test_param_t *p);
@@ -25,6 +26,7 @@ int test_status_attach_detach(test_t *t, test_param_t *p);
   { test_func_read, "fr", "read test function word" }, \
   { test_func_write, "fw", "write test function word" }, \
   { test_func_write_read, "fwr", "write/read test function word" }, \
+  { test_offset_write_read, "owr", "write/read long offset" }, \
   { test_msg_empty, "me", "write/read empty message"}, \
   { test_msg_tiny, "mt", "write/read tiny 4 byte message"}, \
   { test_msg_size, "ms", "write/read messages of given size"}, \
