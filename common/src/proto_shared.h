@@ -22,15 +22,12 @@
 #define PROTO_ACTION_RESET        0x03
 #define PROTO_ACTION_ATTACH       0x04
 #define PROTO_ACTION_DETACH       0x05
-#define PROTO_ACTION_USER         0x06
 
 // functions
 #define PROTO_FUNC_REGADDR_GET    0x00
 #define PROTO_FUNC_REGADDR_SET    0x01
 #define PROTO_FUNC_REG_READ       0x02
 #define PROTO_FUNC_REG_WRITE      0x03
-#define PROTO_FUNC_GET_ERROR      0x04
-#define PROTO_FUNC_USER           0x05
 
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xf0
@@ -42,11 +39,20 @@
 #define PROTO_STATUS_CHANNEL_MASK 0x70
 
 // register definitions
-#define PROTO_REG_FW_VERSION        0
-#define PROTO_REG_FW_MACHTAG        1
-#define PROTO_REG_FW_ID             2
-#define PROTO_REG_NUM_REGS          3
-#define PROTO_REG_USER              4
+// base registers
+#define PROTO_REG_BASE_FW_VERSION        0
+#define PROTO_REG_BASE_FW_MACHTAG        1
+#define PROTO_REG_BASE_FW_ID             2
+#define PROTO_REG_BASE_NUM_REGS          3
+#define PROTO_REG_BASE_ERROR             4
+#define PROTO_REG_NUM_BASE               5
+// channel registers
+#define PROTO_REG_CHANNEL_INDEX          (PROTO_REG_NUM_BASE)
+#define PROTO_REG_CHANNEL_STATUS_CONTROL (PROTO_REG_NUM_BASE+1)
+#define PROTO_REG_CHANNEL_MTU            (PROTO_REG_NUM_BASE+2)
+#define PROTO_REG_NUM_CHANNEL            3
+// user regs
+#define PROTO_REG_USER                   (PROTO_REG_CHANNEL_INDEX + PROTO_REG_NUM_CHANNEL)
 
 // device errors
 #define PROTO_ERROR_NONE                0

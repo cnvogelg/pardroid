@@ -30,14 +30,6 @@ extern const action_table_entry_t action_table[] ROM_ATTR;
   ACTION_TABLE_FUNC_FLAGS(action_bootloader, ACTION_FLAG_NO_REPLY), \
   ACTION_TABLE_FUNC_FLAGS(action_reset, ACTION_FLAG_END_BEFORE),
 
-#define ACTION_PROTO_DEFAULTS \
-  ACTION_TABLE_FUNC_FLAGS(action_nop, ACTION_FLAG_NO_REPLY), \
-  ACTION_TABLE_FUNC(action_ping), \
-  ACTION_TABLE_FUNC_FLAGS(action_bootloader, ACTION_FLAG_NO_REPLY), \
-  ACTION_TABLE_FUNC_FLAGS(action_reset, ACTION_FLAG_END_BEFORE), \
-  ACTION_TABLE_FUNC(action_attach), \
-  ACTION_TABLE_FUNC(action_detach),
-
 extern void action_nop(void);
 extern void action_ping(void);
 extern void action_bootloader(void);

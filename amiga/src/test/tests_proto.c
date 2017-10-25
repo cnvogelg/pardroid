@@ -12,6 +12,7 @@
 #include "parbox.h"
 #include "proto.h"
 #include "proto_shared.h"
+#include "reg.h"
 #include "test.h"
 
 static UWORD test_size;
@@ -393,6 +394,9 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   return 0;
 }
 
+#define REG_SIM_PENDING (PROTO_REG_USER + 5)
+#define REG_SIM_ERROR   (PROTO_REG_USER + 6)
+
 int test_status_read_pending(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
@@ -417,7 +421,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim_pending */
-  res = proto_function_write(pb->proto, PROTO_FUNC_USER, channel);
+  res = reg_set(pb->proto, REG_SIM_PENDING, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -448,7 +452,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* sim_pending with no channel (0xff) */
-  res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0xff);
+  res = reg_set(pb->proto, REG_SIM_PENDING, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
@@ -504,7 +508,7 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
   }
 
   /* sim pending */
-  int res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0);
+  int res = reg_set(pb->proto, REG_SIM_PENDING, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -520,7 +524,7 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
   timer_sig_stop(pb->timer);
 
   /* sim pend_req_rem to restore state */
-  res = proto_function_write(pb->proto, PROTO_FUNC_USER, 0xff);
+  res = reg_set(pb->proto, REG_SIM_PENDING, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
@@ -577,7 +581,7 @@ int test_status_error(test_t *t, test_param_t *p)
   }
 
   /* simulate an error */
-  int res = proto_function_write(pb->proto, PROTO_FUNC_USER+1, error);
+  int res = reg_set(pb->proto, REG_SIM_ERROR, error);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_error #1";
@@ -599,7 +603,7 @@ int test_status_error(test_t *t, test_param_t *p)
 
   /* get error (and clear it) */
   UWORD result;
-  res = proto_function_read(pb->proto, PROTO_FUNC_GET_ERROR, &result);
+  res = reg_get_error(pb->proto, &result);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_error failed";

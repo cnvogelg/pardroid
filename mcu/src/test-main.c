@@ -22,36 +22,29 @@
 
 #include <util/delay.h>
 
-static void sim_pending(u16 *valp)
+// sim functions
+static void sim_pending(u16 *valp, u08 mode)
 {
-  u08 v = *valp & 0xff;
-  if(v == 0xff) {
-    DS("sim:p-"); DNL;
-    status_clear_pending();
-  } else {
-    DS("sim:p+"); DB(v); DNL;
-    status_set_pending(v);
+  if(mode == REG_MODE_WRITE) {
+    u08 v = *valp & 0xff;
+    if(v == 0xff) {
+      DS("sim:p-"); DNL;
+      status_clear_pending();
+    } else {
+      DS("sim:p+"); DB(v); DNL;
+      status_set_pending(v);
+    }
   }
 }
 
-static void sim_error(u16 *valp)
+static void sim_error(u16 *valp, u08 mode)
 {
-  u08 e = *valp & 0xff;
-  DS("sim:e"); DB(e); DNL;
-  status_set_error(e);
+  if(mode == REG_MODE_WRITE) {
+    u08 e = *valp & 0xff;
+    DS("sim:e"); DB(e); DNL;
+    status_set_error(e);
+  }
 }
-
-// ----- actions -----
-ACTION_TABLE_BEGIN
-  ACTION_PROTO_DEFAULTS
-ACTION_TABLE_END
-
-// ----- functions -----
-FUNC_TABLE_BEGIN
-  FUNC_PROTO_DEFAULTS
-  FUNC_TABLE_SET_FUNC(sim_pending),
-  FUNC_TABLE_SET_FUNC(sim_error)
-FUNC_TABLE_END
 
 // ----- ro registers -----
 // read-only test values
@@ -75,6 +68,7 @@ static void func_test_size(u16 *val, u08 mode)
   }
 }
 
+// registers
 REG_PROTO_APPID(PROTO_FWID_TEST)
 REG_TABLE_BEGIN
   REG_TABLE_DEFAULTS
@@ -86,10 +80,11 @@ REG_TABLE_BEGIN
   /* user read-write regs */
   REG_TABLE_RW_FUNC(func_test_size),    // user+3
   REG_TABLE_RW_RAM_W(test_word),        // user+4
+  REG_TABLE_RW_FUNC(sim_pending),       // user+5
+  REG_TABLE_RW_FUNC(sim_error)          // user+6
 REG_TABLE_END
 
 // handler
-
 HANDLER_TABLE_BEGIN
   HANDLER_TABLE_ENTRY(echo),
   HANDLER_TABLE_ENTRY(echo)

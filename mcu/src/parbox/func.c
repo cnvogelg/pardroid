@@ -7,7 +7,6 @@
 #include "proto_low.h"
 #include "proto_shared.h"
 #include "func.h"
-#include "status.h"
 
 static u16 regaddr;
 
@@ -43,12 +42,6 @@ void func_reg_read(u16 *valp)
   DW(val);
   *valp = val;
   DC('.'); DNL;
-}
-
-void func_get_error(u16 *valp)
-{
-  u08 e = status_clear_error();
-  *valp = e;
 }
 
 void func_handle(u08 num)
