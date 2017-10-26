@@ -22,7 +22,6 @@ static mem_info_t *first_mi;
 
 void buffer_init(void)
 {
-  DS("Bi"); DNL;
   mem_info_t *mi = (mem_info_t *)data;
   mi->prev = NULL;
   mi->next = NULL;
@@ -30,6 +29,7 @@ void buffer_init(void)
 
   first_mi = mi;
   free_total = CONFIG_BUFFER_SIZE;
+  DS("Bi:@"); DP(data); DC('+'); DW(free_total); DNL;
 }
 
 u16 buffer_get_free(void)
@@ -56,6 +56,7 @@ u08 *buffer_alloc(u16 size)
 
   /* no memory free */
   if(free_total < size) {
+    DS("Ba!"); DNL;
     return NULL;
   }
 
@@ -93,11 +94,13 @@ u08 *buffer_alloc(u16 size)
       u16 *sp = (u16 *)buf;
       *sp = size;
       /* return buffer after size */
+      DS("Ba:[@"); DP(buf + 2); DC('+'); DW(size - 2); DC(']'); DNL;
       return buf + 2;
     }
     mi = mi->next;
   }
   /* nothing found */
+  DS("Ba?"); DNL;
   return NULL;
 }
 
@@ -107,6 +110,8 @@ void buffer_free(u08 *ptr)
   u08 *sp = ptr - 2;
   u16 size = *((u16 *)sp);
 
+  DS("Bf:[@"); DP(ptr); DC('+'); DW(size);
+
   /* create a new mem info there */
   mem_info_t *mi = (mem_info_t *)sp;
   mi->size = size;
@@ -114,16 +119,24 @@ void buffer_free(u08 *ptr)
 
   /* no mem info */
   if(first_mi == NULL) {
+    mi->prev = NULL;
+    mi->next = NULL;
     first_mi = mi;
+    DC('!'); DNL;
   } else {
     /* find mem info before (or NULL) */
     mem_info_t *prev_mi = first_mi;
-    while((prev_mi != NULL) && (prev_mi < mi)) {
-      prev_mi = prev_mi->next;
+    while(prev_mi != NULL) {
+      mem_info_t *n = prev_mi->next;
+      if((n == NULL) || (n > mi)) {
+        break;
+      }
+      prev_mi = n;
     }
     if(prev_mi == NULL) {
       first_mi = mi;
     }
+    DC('p'); DP(prev_mi);
     /* find mem info after (or NULL) */
     mem_info_t *next_mi;
     if(prev_mi == NULL) {
@@ -131,17 +144,28 @@ void buffer_free(u08 *ptr)
     } else {
       next_mi = prev_mi->next;
     }
+    DC('n'); DP(next_mi);
     /* can we merge mem infos? */
     u08 merge_prev = 0;
     u08 merge_next = 0;
-    if((prev_mi != NULL) && ((prev_mi + prev_mi->size) == mi)) {
-      merge_prev = 1;
+    DC(',');
+    if(prev_mi != NULL) {
+      u08 *ptr = (u08 *)prev_mi;
+      DC('p'); DP(ptr + prev_mi->size);
+      if((ptr + prev_mi->size) == (u08*)mi) {
+        merge_prev = 1;
+      }
     }
-    if((next_mi != NULL) && ((mi + mi->size) == next_mi)) {
-      merge_next = 1;
+    if(next_mi != NULL) {
+      u08 *ptr = (u08 *)mi;
+      DC('n'); DP(ptr + mi->size);
+      if((ptr + mi->size) == (u08 *)next_mi) {
+        merge_next = 1;
+      }
     }
     /* merge triple */
     if(merge_prev && merge_next) {
+      DC('T');
       prev_mi->size += mi->size + next_mi->size;
       prev_mi->next = next_mi->next;
       if(next_mi->next != NULL) {
@@ -150,6 +174,7 @@ void buffer_free(u08 *ptr)
     }
     /* merge prev and current */
     else if(merge_prev) {
+      DC('<');
       prev_mi->size += mi->size;
       prev_mi->next = next_mi;
       if(next_mi != NULL) {
@@ -158,6 +183,7 @@ void buffer_free(u08 *ptr)
     }
     /* merge current and next */
     else if(merge_next) {
+      DC('>');
       mi->size += next_mi->size;
       mi->next = next_mi->next;
       if(next_mi->next != NULL) {
@@ -166,6 +192,7 @@ void buffer_free(u08 *ptr)
     }
     /* no merge possible. link new mi */
     else {
+      DC('-');
       mi->prev = prev_mi;
       if(prev_mi != NULL) {
         prev_mi->next = mi;
@@ -176,5 +203,7 @@ void buffer_free(u08 *ptr)
       }
     }
   }
+
+  DC(']'); DNL;
 }
 

@@ -18,6 +18,14 @@
 #define DW(x)  uart_send_hex_word(x)
 // debug long
 #define DL(x)  uart_send_hex_long(x)
+
+// pointer
+#if CONFIG_ARCH == avr
+#define DP(x)  uart_send_hex_word((u16)x)
+#else
+#define DP(x)  uart_send_hex_long((u32)x)
+#endif
+
 // debug newline
 #define DNL    uart_send_crlf()
 // debug space
@@ -31,6 +39,7 @@
 #define DB(x)
 #define DW(x)
 #define DL(x)
+#define DP(x)
 #define DNL
 #define DSPC
 
