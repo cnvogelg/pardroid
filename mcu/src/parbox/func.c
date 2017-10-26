@@ -1,5 +1,9 @@
 #include "types.h"
 #include "arch.h"
+#include "autoconf.h"
+
+#define DEBUG CONFIG_DEBUG_FUNC
+
 #include "debug.h"
 #include "system.h"
 

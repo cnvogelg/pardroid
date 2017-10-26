@@ -1,5 +1,9 @@
 #include "types.h"
 #include "arch.h"
+#include "autoconf.h"
+
+#define DEBUG CONFIG_DEBUG_OFFSET
+
 #include "debug.h"
 #include "system.h"
 
@@ -15,13 +19,16 @@ static u32 offset[NUM_SLOTS];
 void offset_set(u08 slot, u32 val)
 {
   if(slot < NUM_SLOTS) {
+    DS("Ow:"); DL(val); DNL;
     offset[slot] = val;
   }
 }
 
 u32 offset_get(u08 slot) {
   if(slot < NUM_SLOTS) {
-    return offset[slot];
+    u32 val = offset[slot];
+    DS("Or:"); DL(val); DNL;
+    return val;
   } else {
     return 0;
   }

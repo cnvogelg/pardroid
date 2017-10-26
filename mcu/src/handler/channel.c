@@ -1,3 +1,7 @@
+#include "autoconf.h"
+
+#define DEBUG CONFIG_DEBUG_CHANNEL
+
 #include "types.h"
 #include "proto_shared.h"
 #include "arch.h"

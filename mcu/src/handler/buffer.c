@@ -1,5 +1,8 @@
-#include "types.h"
 #include "autoconf.h"
+
+#define DEBUG CONFIG_DEBUG_BUFFER
+
+#include "types.h"
 #include "buffer.h"
 #include "debug.h"
 

@@ -1,4 +1,8 @@
 #include "types.h"
+#include "autoconf.h"
+
+#define DEBUG CONFIG_DEBUG_PROTO
+
 #include "proto_low.h"
 #include "proto.h"
 #include "debug.h"

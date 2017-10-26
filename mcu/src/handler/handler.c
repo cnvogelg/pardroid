@@ -1,6 +1,5 @@
 #include "types.h"
 #include "arch.h"
-#include "debug.h"
 #include "system.h"
 #include "handler.h"
 

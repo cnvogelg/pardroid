@@ -2,6 +2,8 @@
 #include "arch.h"
 #include "autoconf.h"
 
+#define DEBUG CONFIG_DEBUG_HANDLER_ECHO
+
 #include "handler.h"
 #include "hnd_echo.h"
 #include "buffer.h"

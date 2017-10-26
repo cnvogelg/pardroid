@@ -2,6 +2,8 @@
 #include "types.h"
 #include "arch.h"
 
+#define DEBUG 1
+
 #include "uart.h"
 #include "uartutil.h"
 #include "proto.h"
