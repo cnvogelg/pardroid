@@ -5,4 +5,3 @@ RET_TIMEOUT             equ     2
 RET_SLAVE_ERROR         equ     3
 RET_MSG_TOO_LARGE       equ     4
 RET_WRITE_ABORT         equ     5
-RET_SLAVE_NOSPACE       equ     6
