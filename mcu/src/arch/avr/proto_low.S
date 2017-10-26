@@ -74,21 +74,6 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     sbis    _SFR_IO_ADDR(PAR_BUSY_PIN), PAR_BUSY_BIT
     .endm
 
-    ; if needed use select pin as a debug line
-#ifdef CONFIG_DEBUG_PIN
-    /* lo is active, hi is inactive */
-    .macro debug_lo
-    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
-    .endm
-    .macro debug_hi
-    cbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
-    .endm
-#else
-    .macro debug_lo
-    .endm
-    .macro debug_hi
-    .endm
-#endif
 
     ; ----- proto_low_init -----
     ; void proto_low_init(u08 status)
@@ -411,33 +396,28 @@ proto_low_write_block:
     ; ddr input
     wait_clk_hi
     ddr_in
-    debug_hi
 
     ; -- read extra, channel
     ; extra
     wait_clk_lo
     data_in
     mov     r0,r18
-    debug_lo
 
     ; channel
     wait_clk_hi
     data_in
     st      x+,r18
     st      x+,r0
-    debug_hi
 
     ; -- read size: hi/lo=r23:r22
     ; hi
     wait_clk_lo
     data_in
     mov     r23,r18
-    debug_lo
     ; lo
     wait_clk_hi
     data_in
     mov     r22,r18
-    debug_hi
 
     ; check size: too large?
     cp      r24,r22
@@ -479,12 +459,10 @@ proto_low_write_block:
     wait_clk_lo
     data_in
     st      Z+,r18
-    debug_lo
     ; even byte
     wait_clk_hi
     data_in
     st      Z+,r18
-    debug_hi
 
     rjmp    .wb_loop
 
@@ -497,7 +475,6 @@ proto_low_write_block:
     ; ddr idle
     wait_clk_lo
     ddr_idle
-    debug_lo
 
     ; end sync
     wait_clk_hi
@@ -532,35 +509,30 @@ proto_low_read_block:
     ; ddr out
     wait_clk_hi
     ddr_out
-    debug_hi
 
     ; send extra
     mov     r18,r21
     data_out_prepare
     wait_clk_lo
     data_out_set
-    debug_lo
 
     ; send channel
     mov     r18,r0
     data_out_prepare
     wait_clk_hi
     data_out_set
-    debug_hi
 
     ; size: hi
     mov     r18,r25
     data_out_prepare
     wait_clk_lo
     data_out_set
-    debug_lo
 
     ; size: lo
     mov     r18, r24
     data_out_prepare
     wait_clk_hi
     data_out_set
-    debug_hi
 
     ; convert size to bytes
     add     r24,r24
@@ -582,14 +554,12 @@ proto_low_read_block:
     data_out_prepare
     wait_clk_lo_abort_cfg_lo .rb_abort
     data_out_set
-    debug_lo
 
     ; even byte
     ld      r18,Z+
     data_out_prepare
     wait_clk_hi
     data_out_set
-    debug_hi
 
     rjmp    .rb_loop
 
@@ -606,7 +576,6 @@ proto_low_read_block:
     ; ddr idle
     wait_clk_lo
     ddr_idle
-    debug_lo
 
     ; restore old status value
     mov     r18,r22
