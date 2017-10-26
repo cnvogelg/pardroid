@@ -67,6 +67,6 @@ HANDLER_BEGIN(echo)
   .read_msg_done = echo_read_msg_done,
   .write_msg_prepare = echo_write_msg_prepare,
   .write_msg_done = echo_write_msg_done,
-  .mtu_max = CONFIG_BUFFER_SIZE - 2,
+  .mtu_max = 512,
   .mtu_min = 2
 HANDLER_END

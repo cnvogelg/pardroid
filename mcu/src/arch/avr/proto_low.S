@@ -431,20 +431,24 @@ proto_low_write_block:
     mov     r22,r18
     debug_hi
 
-    ; empty size?
-    or      r18,r23
-    breq    .wb_empty
-
     ; check size: too large?
-    clt
     cp      r24,r22
     cpc     r25,r23
     brsh    .wb_size_ok
 
-    ; size invalid - set T flag
-    set
+    ; -> size invalid!
+    ; signal with rak hi
+    rak_hi
+
+    ; end transmision
+    ; clear result
+    rjmp    .wb_empty
 
 .wb_size_ok:
+    ; empty size?
+    or      r18,r23
+    breq    .wb_empty
+
     ; save result size
     movw    r24,r22
 
@@ -455,9 +459,6 @@ proto_low_write_block:
     ; add start address: end address: r23:r22
     add     r22,r30
     adc     r23,r31
-
-    ; if size is invalid use a fake loop
-    brts    .wb_fake_loop
 
     ; copy loop
 .wb_loop:
@@ -479,28 +480,11 @@ proto_low_write_block:
 
     rjmp    .wb_loop
 
-    ; non copy fake loop
-.wb_fake_loop:
-    ; check end
-    cp      r30,r22
-    cpc     r31,r23
-    breq    .wb_end
-
-    ; odd byte
-    wait_clk_lo
-    adiw    r30,1
-    debug_lo
-    ; even byte
-    wait_clk_hi
-    adiw    r30,1
-    debug_hi
-
-    rjmp    .wb_fake_loop
-
 .wb_empty:
     ; empty message
     clr     r25
     clr     r24
+
 .wb_end:
     ; ddr idle
     wait_clk_lo

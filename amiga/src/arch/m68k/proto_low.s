@@ -57,7 +57,7 @@ check_rak_hi  MACRO
 check_rak_lo  MACRO
         btst    d2,(a5)
         beq.s   \@
-        moveq   #RET_SLAVE_ERROR,d0
+        moveq   #RET_SLAVE_NOSPACE,d0
         bra     \1
 \@:
         ENDM
@@ -651,6 +651,10 @@ _proto_low_write_block:
         tst.w           d1
         beq.s           plmw_done
 
+        ; check if slave aborted operation?
+        ; slave signals by setting rak to hi
+        check_rak_lo    plmw_slave_nospace
+
 plmw_chunks:
         ; get chunk size and buffer pointer
         move.l          (a2)+,d1
@@ -674,6 +678,10 @@ plmw_loop:
         bra.s           plmw_chunks
 
 plmw_done:
+        ; ok
+        moveq   #RET_OK,d0
+
+plmw_slave_nospace:
         ; set ddr to idle
         clk_lo
         ddr_idle        d7
@@ -682,8 +690,6 @@ plmw_done:
         clk_hi
         check_rak_hi    plmw_end
 
-        ; ok
-        moveq   #RET_OK,d0
 plmw_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6

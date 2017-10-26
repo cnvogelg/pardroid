@@ -276,6 +276,8 @@ const char *proto_perror(int res)
       return "message too large";
     case PROTO_RET_WRITE_ABORT:
       return "write was aborted";
+    case PROTO_RET_SLAVE_NOSPACE:
+      return "slave has no space";
     default:
       return "?";
   }
