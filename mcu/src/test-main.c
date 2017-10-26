@@ -19,6 +19,7 @@
 #include "channel.h"
 #include "handler.h"
 #include "hnd_echo.h"
+#include "hnd_null.h"
 
 #include <util/delay.h>
 
@@ -87,7 +88,8 @@ REG_TABLE_END
 // handler
 HANDLER_TABLE_BEGIN
   HANDLER_TABLE_ENTRY(echo),
-  HANDLER_TABLE_ENTRY(echo)
+  HANDLER_TABLE_ENTRY(echo),
+  HANDLER_TABLE_ENTRY(null)
 HANDLER_TABLE_END
 
 static void rom_info(void)

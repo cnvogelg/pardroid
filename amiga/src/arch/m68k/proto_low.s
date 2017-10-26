@@ -759,15 +759,14 @@ _proto_low_read_block:
         cmp.w           d1,d5 ; max size
         bls.s           plmr_chunk
 
-        ; size invalid - run a fake loop a do not store data
+        ; --- message too large ---
+        ; signal to slave by setting CFLG to lo
+        cflg_lo         d1
+        ; size invalid return value
         moveq           #RET_MSG_TOO_LARGE,d0
-        subq.w          #1,d5
-plmr_fake_loop:
-        clk_lo
-        get_data        d1
-        clk_hi
-        get_data        d1
-        dbra            d5,plmr_fake_loop
+        ; restore signal
+        cflg_hi         d1
+        ; end transfer
         bra.s           plmr_done
 
 plmr_chunk:

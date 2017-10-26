@@ -27,6 +27,14 @@ l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     rjmp     l\@
     .endm
 
+    .macro wait_clk_lo_abort_cfg_lo exit
+l\@:
+    sbis_cflg
+    rjmp     \exit
+    sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
+    rjmp     l\@
+    .endm
+
     .macro wait_clk_hi
 l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
     rjmp     l\@
@@ -499,11 +507,11 @@ proto_low_write_block:
 
     ; ----- proto_low_read_block -----
     ; master wants to read a message
-    ; void proto_low_read_block(u16 num_words, const u08 *buffer, u16 chn_ext)
+    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer, u16 chn_ext)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
     ; in:  r21,r20 = extra << 8 | channel value
-    ; out: -
+    ; out: r24 = 0=ok, 1=abort
     .section .text.proto_low_read_block
     .global  proto_low_read_block
 proto_low_read_block:
@@ -567,12 +575,12 @@ proto_low_read_block:
     ; check end
     cp      r30,r24
     cpc     r31,r25
-    breq    .rb_end
+    breq    .rb_ok
 
     ; odd byte
     ld      r18,Z+
     data_out_prepare
-    wait_clk_lo
+    wait_clk_lo_abort_cfg_lo .rb_abort
     data_out_set
     debug_lo
 
@@ -584,6 +592,16 @@ proto_low_read_block:
     debug_hi
 
     rjmp    .rb_loop
+
+.rb_abort:
+    ; error result
+    ldi     r24,1
+    rjmp    .rb_end
+
+.rb_ok:
+    ; clear result=ok
+    ldi     r24,0
+
 .rb_end:
     ; ddr idle
     wait_clk_lo

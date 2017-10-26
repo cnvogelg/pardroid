@@ -20,13 +20,16 @@ static UWORD test_size;
 static UWORD test_bias;
 static UWORD test_add_size;
 static UWORD test_sub_size;
+static UBYTE test_channel;
 
-void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size)
+void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
+                        UBYTE channel)
 {
   test_size = size;
   test_bias = bias;
   test_add_size = add_size;
   test_sub_size = sub_size;
+  test_channel = channel;
 }
 
 int test_ping(test_t *t, test_param_t *p)
@@ -155,7 +158,7 @@ int test_offset_write_read(test_t *t, test_param_t *p)
 int test_msg_empty(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
-  int res = proto_msg_write_single(pb->proto, 0, 0, 0);
+  int res = proto_msg_write_single(pb->proto, test_channel, 0, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -163,7 +166,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   }
 
   UWORD size = 0;
-  res = proto_msg_read_single(pb->proto, 0, 0, &size);
+  res = proto_msg_read_single(pb->proto, test_channel, 0, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -184,7 +187,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
   ULONG data = 0xdeadbeef;
-  int res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  int res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -192,7 +195,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   }
 
   UWORD size = 2;
-  res = proto_msg_read_single(pb->proto, 0, (UBYTE *)&data, &size);
+  res = proto_msg_read_single(pb->proto, test_channel, (UBYTE *)&data, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -301,7 +304,7 @@ int test_msg_size(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* send buffer */
-  int res = proto_msg_write_single(pb->proto, 0, mem_w, words);
+  int res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -310,7 +313,7 @@ int test_msg_size(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  res = proto_msg_read_single(pb->proto, 0, mem_r, &got_words);
+  res = proto_msg_read_single(pb->proto, test_channel, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -380,7 +383,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     (ULONG)c2_buf,
     0
   };
-  int res = proto_msg_write(pb->proto, 0, msgiov_w);
+  int res = proto_msg_write(pb->proto, test_channel, msgiov_w);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -401,7 +404,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     (ULONG)c2_buf,
     0
   };
-  res = proto_msg_read(pb->proto, 0, msgiov_r);
+  res = proto_msg_read(pb->proto, test_channel, msgiov_r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -431,6 +434,62 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_msg_write(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  ULONG size = get_default_size();
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w);
+
+  UWORD words = size>>1;
+
+  /* send buffer */
+  int res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  FreeVec(mem_w);
+  return 0;
+}
+
+int test_msg_read(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  ULONG size = get_default_size();
+  ULONG size_r = get_size(size);
+
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if(mem_r == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  UWORD words = size>>1;
+
+  /* receive buffer */
+  UWORD got_words = size_r>>1;
+  int res = proto_msg_read_single(pb->proto, test_channel, mem_r, &got_words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return res;
+  }
+
+  FreeVec(mem_r);
+  return 0;
+}
+
 #define REG_SIM_PENDING (PROTO_REG_USER + 5)
 #define REG_SIM_ERROR   (PROTO_REG_USER + 6)
 
@@ -448,7 +507,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
 
   /* write a message to see it works */
   ULONG data = 0xdeadbeef;
-  int res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  int res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write msg";
@@ -481,7 +540,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* now message write must be aborted due to pending read */
-  res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
   if(res != PROTO_RET_WRITE_ABORT) {
     p->error = proto_perror(res);
     p->section = "write msg not aborted";
@@ -505,7 +564,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* message write now works again */
-  res = proto_msg_write_single(pb->proto, 0, (UBYTE *)&data, 2);
+  res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write msg2";
