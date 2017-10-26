@@ -3,7 +3,7 @@
 
 #include "autoconf.h"
 
-#ifdef CONFIG_DEBUG
+#if defined(CONFIG_DEBUG) && defined(DEBUG)
 // enable debug output macros
 #include "uart.h"
 #include "uartutil.h"

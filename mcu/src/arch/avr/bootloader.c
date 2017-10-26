@@ -145,7 +145,7 @@ u08 *proto_api_read_msg_prepare(u08 chan, u16 *size)
   return page_buf;
 }
 
-void proto_api_read_msg_done(u08 chan)
+void proto_api_read_msg_done(u08 chan, u08 status)
 {
   uart_send('.');
   uart_send_crlf();

@@ -27,7 +27,7 @@ static u08 *echo_read_msg_prepare(u08 chn, u16 *ret_size)
   return data;
 }
 
-static void echo_read_msg_done(u08 chn)
+static void echo_read_msg_done(u08 chn, u08 status)
 {
   DS("Erd:"); DW((u16)data); DNL;
   /* free buffer */

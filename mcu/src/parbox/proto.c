@@ -31,7 +31,7 @@ static void msg_read(u08 chan)
   DW(size); DC(','); DW(chn_ext);
   u08 res = proto_low_read_block(size, buf, chn_ext);
   DC('>'); DB(res);
-  proto_api_read_msg_done(chan);
+  proto_api_read_msg_done(chan, res);
   DC('.'); DNL;
 }
 

@@ -84,14 +84,14 @@ u08 *handler_read_msg_prepare(u08 chn, u16 *size)
   }
 }
 
-void handler_read_msg_done(u08 chn)
+void handler_read_msg_done(u08 chn, u08 status)
 {
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
     handler_ptr_t hnd = get_handler(chn);
     rom_pchar ptr = read_rom_rom_ptr(&hnd->read_msg_done);
     read_msg_done_func_t f = (read_msg_done_func_t)ptr;
-    return f(chn);
+    return f(chn, status);
   }
 }
 
