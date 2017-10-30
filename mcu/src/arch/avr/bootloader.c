@@ -37,7 +37,7 @@ static const u16 ro_version ROM_ATTR = VERSION_TAG;
 static const u16 ro_mach_tag ROM_ATTR = MACHTAG;
 static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
 static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
-REG_TABLE_BEGIN
+REG_TABLE_BEGIN(def)
   REG_TABLE_RO_ROM_W(ro_version),               /* 0: bl version */
   REG_TABLE_RO_ROM_W(ro_mach_tag),              /* 1: bl mach tag */
   REG_TABLE_RO_ROM_W(ro_page_size),             /* 2: page size */
@@ -46,7 +46,8 @@ REG_TABLE_BEGIN
   REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-4),     /* 5: rom mach tag */
   REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-6),     /* 6: rom version */
   REG_TABLE_RW_RAM_W(page_addr)                 /* 7: (rw) page addr */
-REG_TABLE_END
+REG_TABLE_END(def, 0, 0)
+REG_TABLE_SETUP(def)
 
 // from optiboot
 static void run_app(u08 rstFlags) __attribute__ ((naked));

@@ -7,7 +7,9 @@
 #include "arch.h"
 #include "handler.h"
 #include "reg.h"
+#include "reg_def.h"
 #include "debug.h"
+#include "channel.h"
 
 #define NUM_CHANNELS PROTO_MAX_CHANNEL
 
@@ -27,6 +29,12 @@ typedef struct channel channel_t;
 
 static channel_t channels[NUM_CHANNELS];
 static u08 chn_idx;
+
+REG_TABLE_BEGIN(channel)
+  REG_TABLE_RW_FUNC(channel_reg_index),
+  REG_TABLE_RW_FUNC(channel_reg_ctrl_status),
+  REG_TABLE_RW_FUNC(channel_reg_mtu)
+REG_TABLE_END(channel, PROTO_REGOFFSET_CHANNEL, REG_TABLE_REF(base))
 
 void channel_init(void)
 {

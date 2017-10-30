@@ -71,11 +71,11 @@ static void func_test_size(u16 *val, u08 mode)
   }
 }
 
-// registers
+// define my app id
 REG_PROTO_APPID(PROTO_FWID_TEST)
-REG_TABLE_BEGIN
-  REG_TABLE_DEFAULTS
-  REG_TABLE_CHANNEL
+
+// registers
+REG_TABLE_BEGIN(test)
   /* user read-only regs */
   REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
   REG_TABLE_RO_RAM_W(ro_ram_word),      // user+1
@@ -85,7 +85,8 @@ REG_TABLE_BEGIN
   REG_TABLE_RW_RAM_W(test_word),        // user+4
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
   REG_TABLE_RW_FUNC(sim_error)          // user+6
-REG_TABLE_END
+REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(channel))
+REG_TABLE_SETUP(test)
 
 // handler
 HANDLER_TABLE_BEGIN

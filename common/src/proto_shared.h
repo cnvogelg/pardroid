@@ -43,20 +43,23 @@
 #define PROTO_STATUS_CHANNEL_MASK 0x70
 
 // register definitions
+#define PROTO_REGOFFSET_BASE             0x00
+#define PROTO_REGOFFSET_CHANNEL          0x20
+#define PROTO_REGOFFSET_USER             0x80
+
 // base registers
-#define PROTO_REG_BASE_FW_VERSION        0
-#define PROTO_REG_BASE_FW_MACHTAG        1
-#define PROTO_REG_BASE_FW_ID             2
-#define PROTO_REG_BASE_NUM_REGS          3
-#define PROTO_REG_BASE_ERROR             4
-#define PROTO_REG_NUM_BASE               5
+#define PROTO_REG_BASE_FW_VERSION        (PROTO_REGOFFSET_BASE + 0)
+#define PROTO_REG_BASE_FW_MACHTAG        (PROTO_REGOFFSET_BASE + 1)
+#define PROTO_REG_BASE_FW_ID             (PROTO_REGOFFSET_BASE + 2)
+#define PROTO_REG_BASE_NUM_REGS          (PROTO_REGOFFSET_BASE + 3)
+#define PROTO_REG_BASE_ERROR             (PROTO_REGOFFSET_BASE + 4)
+#define PROTO_REGNUM_BASE                5
+
 // channel registers
-#define PROTO_REG_CHANNEL_INDEX          (PROTO_REG_NUM_BASE)
-#define PROTO_REG_CHANNEL_STATUS_CONTROL (PROTO_REG_NUM_BASE+1)
-#define PROTO_REG_CHANNEL_MTU            (PROTO_REG_NUM_BASE+2)
+#define PROTO_REG_CHANNEL_INDEX          (PROTO_REGOFFSET_CHANNEL + 0)
+#define PROTO_REG_CHANNEL_STATUS_CONTROL (PROTO_REGOFFSET_CHANNEL + 1)
+#define PROTO_REG_CHANNEL_MTU            (PROTO_REGOFFSET_CHANNEL + 2)
 #define PROTO_REG_NUM_CHANNEL            3
-// user regs
-#define PROTO_REG_USER                   (PROTO_REG_CHANNEL_INDEX + PROTO_REG_NUM_CHANNEL)
 
 // device errors
 #define PROTO_ERROR_NONE                0

@@ -490,8 +490,8 @@ int test_msg_read(test_t *t, test_param_t *p)
   return 0;
 }
 
-#define REG_SIM_PENDING (PROTO_REG_USER + 5)
-#define REG_SIM_ERROR   (PROTO_REG_USER + 6)
+#define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
+#define REG_SIM_ERROR   (PROTO_REGOFFSET_USER + 6)
 
 int test_status_read_pending(test_t *t, test_param_t *p)
 {

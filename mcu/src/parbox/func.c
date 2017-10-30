@@ -12,7 +12,7 @@
 #include "proto_shared.h"
 #include "func.h"
 
-static u16 regaddr;
+static u08 regaddr;
 static u08 offslot;
 
 // --- registers ---
@@ -20,13 +20,13 @@ static u08 offslot;
 void func_regaddr_set(u16 *valp)
 {
   DS("ras:");
-  regaddr = *valp;
-  DW(regaddr); DC('.'); DNL;
+  regaddr = (u08)(*valp & 0xff);
+  DC(regaddr); DC('.'); DNL;
 }
 
 void func_regaddr_get(u16 *valp)
 {
-  DS("rag:"); DW(regaddr);
+  DS("rag:"); DC(regaddr);
   *valp = regaddr;
   DC('.'); DNL;
 }
@@ -36,16 +36,16 @@ void func_reg_write(u16 *valp)
   // master wants to write a u16
   DS("rw:");
   u16 val = *valp;
-  DW(regaddr); DC('='); DW(val);
-  func_api_set_reg(regaddr & 0xff, val);
+  DC(regaddr); DC('='); DW(val);
+  func_api_set_reg(regaddr, val);
   DC('.'); DNL;
 }
 
 void func_reg_read(u16 *valp)
 {
   // master wants to reead a u16
-  DS("rr:"); DW(regaddr); DC('=');
-  u16 val = func_api_get_reg(regaddr & 0xff);
+  DS("rr:"); DC(regaddr); DC('=');
+  u16 val = func_api_get_reg(regaddr);
   DW(val);
   *valp = val;
   DC('.'); DNL;

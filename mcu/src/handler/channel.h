@@ -1,6 +1,8 @@
 #ifndef CHANNEL_H
 #define CHANNEL_H
 
+#include "reg.h"
+
 extern void channel_init(void);
 extern void channel_work(void);
 
@@ -14,9 +16,6 @@ extern void channel_reg_index(u16 *v,u08 mode);
 extern void channel_reg_ctrl_status(u16 *v,u08 mode);
 extern void channel_reg_mtu(u16 *v,u08 mode);
 
-#define REG_TABLE_CHANNEL \
-  REG_TABLE_RW_FUNC(channel_reg_index), \
-  REG_TABLE_RW_FUNC(channel_reg_ctrl_status), \
-  REG_TABLE_RW_FUNC(channel_reg_mtu),
+REG_TABLE_DECLARE(channel)
 
 #endif
