@@ -22,6 +22,8 @@
 #include "handler.h"
 #include "hnd_echo.h"
 #include "hnd_null.h"
+#include "driver.h"
+#include "drv_null.h"
 
 #include <util/delay.h>
 
@@ -95,6 +97,11 @@ HANDLER_TABLE_BEGIN
   HANDLER_TABLE_ENTRY(null)
 HANDLER_TABLE_END
 
+// driver
+DRIVER_TABLE_BEGIN
+  DRIVER_TABLE_ENTRY(null)
+DRIVER_TABLE_END
+
 static void rom_info(void)
 {
   // show pablo infos
@@ -137,6 +144,7 @@ int main(void)
   proto_init(PROTO_STATUS_INIT);
   status_init();
   buffer_init();
+  DRIVER_INIT();
   channel_init();
   DC('-'); DNL;
 
@@ -144,6 +152,7 @@ int main(void)
     system_wdt_reset();
     proto_handle();
     status_handle();
+    DRIVER_WORK();
     channel_work();
   }
 
