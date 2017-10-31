@@ -12,7 +12,7 @@
 #include "system.h"
 #include "pablo.h"
 #include "reg.h"
-#include "reg_def.h"
+#include "base_reg.h"
 #include "action.h"
 #include "func.h"
 #include "machtag.h"
@@ -74,7 +74,7 @@ static void func_test_size(u16 *val, u08 mode)
 }
 
 // define my app id
-REG_PROTO_APPID(PROTO_FWID_TEST)
+BASE_REG_APPID(PROTO_FWID_TEST)
 
 // registers
 REG_TABLE_BEGIN(test)

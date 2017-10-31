@@ -1,7 +1,7 @@
 #include "types.h"
 #include "arch.h"
 #include "machtag.h"
-#include "reg_def.h"
+#include "base_reg.h"
 #include "status.h"
 
 // proto values
@@ -15,10 +15,10 @@ REG_TABLE_BEGIN(base)
   REG_TABLE_RO_ROM_W(fw_version),
   REG_TABLE_RO_ROM_W(fw_machtag),
   REG_TABLE_RO_ROM_W(fw_id),
-  REG_TABLE_RO_FUNC(reg_get_error)
+  REG_TABLE_RO_FUNC(base_reg_get_error)
 REG_TABLE_END(base, 0, 0)
 
-void reg_get_error(u16 *valp, u08 mode)
+void base_reg_get_error(u16 *valp, u08 mode)
 {
   u08 e = status_clear_error();
   *valp = e;

@@ -9,7 +9,7 @@
 #include "proto_shared.h"
 #include "handler.h"
 #include "reg.h"
-#include "reg_def.h"
+#include "base_reg.h"
 #include "handler_reg.h"
 
 static u08 chn_idx;
