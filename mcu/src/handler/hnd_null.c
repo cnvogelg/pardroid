@@ -14,36 +14,22 @@ static u08 null_init(u08 chn)
   return HANDLER_OK;
 }
 
-static u08 *null_read_msg_prepare(u08 chn, u16 *ret_size)
+static u08 null_read(u08 chn, u16 *ret_size, u08 *buf)
 {
-  DS("Nr+:"); DNL;
-  *ret_size = 0x2000;
-  return 0;
+  DS("Nr:"); DW(*ret_size); DC('@'); DP(buf); DNL;
+  return HANDLER_OK;
 }
 
-static void null_read_msg_done(u08 chn, u08 status)
+static u08 null_write(u08 chn, u16 size, u08 *buf)
 {
-  DS("Nr-:"); DNL;
-}
-
-static u08 *null_write_msg_prepare(u08 chn, u16 *max_size)
-{
-  DS("Nw+:"); DNL;
-  *max_size = 0;
-  return 0;
-}
-
-static void null_write_msg_done(u08 chn, u16 got_size)
-{
-  DS("Nw-:"); DNL;
+  DS("Nw:"); DW(size); DC('@'); DP(buf); DNL;
+  return HANDLER_OK;
 }
 
 HANDLER_BEGIN(null)
   .init_func = null_init,
-  .read_msg_prepare = null_read_msg_prepare,
-  .read_msg_done = null_read_msg_done,
-  .write_msg_prepare = null_write_msg_prepare,
-  .write_msg_done = null_write_msg_done,
+  .read_func = null_read,
+  .write_func = null_write,
   .mtu_max = 0,
   .mtu_min = 0
 HANDLER_END

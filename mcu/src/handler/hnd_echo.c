@@ -10,65 +10,56 @@
 #include "debug.h"
 
 static u08 *data;
-static u16  size;
+static u16  data_size;
 
 static u08 echo_init(u08 chn)
 {
   DS("Ei"); DNL;
   data = 0;
-  size = 0;
+  data_size = 0;
   return HANDLER_OK;
 }
 
-static u08 *echo_read_msg_prepare(u08 chn, u16 *ret_size)
+static u08 echo_read(u08 chn, u16 *size, u08 *buf)
 {
-  DS("Erp:"); DW(size); DC(','); DW((u16)data); DNL;
-  /* return last written buffer */
-  *ret_size = size;
-  return data;
-}
-
-static void echo_read_msg_done(u08 chn, u08 status)
-{
-  DS("Erd:"); DW((u16)data); DNL;
-  /* free buffer */
+  DS("Er:"); DW(size); DC('@'); DP(buf); DNL;
   if(data != 0) {
+    if(*size == data_size) {
+      for(u16 i=0;i<*size;i++) {
+        buf[i] = data[i];
+      }
+    } else {
+      *size = 0;
+    }
     buffer_free(data);
     data = 0;
-    size = 0;
-  }
-}
-
-static u08 *echo_write_msg_prepare(u08 chn, u16 *max_size)
-{
-  handler_data_t *hdata = HANDLER_GET_DATA(chn);
-  u16 mtu = hdata->mtu;
-  DS("Ewp:"); DW(mtu); DC(',');
-  u08 *buffer = buffer_alloc(mtu);
-  data = buffer;
-  DW((u16)buffer); DNL;
-  if(buffer != 0) {
-    *max_size = mtu;
-    return buffer;
   } else {
-    *max_size = 0;
-    return 0;
+    *size = 0;
   }
+  return HANDLER_OK;
 }
 
-static void echo_write_msg_done(u08 chn, u16 got_size)
+static u08 echo_write(u08 chn, u16 size, u08 *buf)
 {
-  /* adjust read size */
-  size = got_size;
-  DS("Ewd:"); DW(size); DNL;
+  DS("Ew:"); DW(size); DC('@'); DP(buf);
+  data = buffer_alloc(size);
+  data_size = size;
+  DC('#'); DP(data);
+  if(data != 0) {
+    /* copy buf */
+    for(u16 i=0;i<size;i++) {
+      data[i] = buf[i];
+    }
+    return HANDLER_OK;
+  } else {
+    return HANDLER_NO_MEMORY;
+  }
 }
 
 HANDLER_BEGIN(echo)
   .init_func = echo_init,
-  .read_msg_prepare = echo_read_msg_prepare,
-  .read_msg_done = echo_read_msg_done,
-  .write_msg_prepare = echo_write_msg_prepare,
-  .write_msg_done = echo_write_msg_done,
+  .read_func = echo_read,
+  .write_func = echo_write,
   .mtu_max = 512,
   .mtu_min = 2
 HANDLER_END

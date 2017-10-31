@@ -111,53 +111,29 @@ u08 handler_close(u08 chn)
   return HANDLER_OK;
 }
 
-u08 *handler_read_msg_prepare(u08 chn, u16 *size)
+u08 handler_read(u08 chn, u16 *size, u08 *buf)
 {
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->read_msg_prepare);
-    hnd_read_msg_prepare_func_t f = (hnd_read_msg_prepare_func_t)ptr;
-    return f(chn, size);
+    rom_pchar ptr = read_rom_rom_ptr(&hnd->read_func);
+    hnd_read_func_t f = (hnd_read_func_t)ptr;
+    return f(chn, size, buf);
   } else {
-    *size = 0;
-    return 0;
+    return HANDLER_NO_FUNC;
   }
 }
 
-void handler_read_msg_done(u08 chn, u08 status)
+u08 handler_write(u08 chn, u16 size, u08 *buf)
 {
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->read_msg_done);
-    hnd_read_msg_done_func_t f = (hnd_read_msg_done_func_t)ptr;
-    return f(chn, status);
-  }
-}
-
-u08 *handler_write_msg_prepare(u08 chn, u16 *max_size)
-{
-  u08 max = read_rom_char(&handler_table_size);
-  if(chn < max) {
-    handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->write_msg_prepare);
-    hnd_write_msg_prepare_func_t f = (hnd_write_msg_prepare_func_t)ptr;
-    return f(chn, max_size);
+    rom_pchar ptr = read_rom_rom_ptr(&hnd->write_func);
+    hnd_write_func_t f = (hnd_write_func_t)ptr;
+    return f(chn, size, buf);
   } else {
-    *max_size = 0;
-    return 0;
-  }
-}
-
-void handler_write_msg_done(u08 chn, u16 size)
-{
-  u08 max = read_rom_char(&handler_table_size);
-  if(chn < max) {
-    handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->write_msg_done);
-    hnd_write_msg_done_func_t f = (hnd_write_msg_done_func_t)ptr;
-    return f(chn, size);
+    return HANDLER_NO_FUNC;
   }
 }
 
@@ -188,10 +164,3 @@ void handler_set_status(u08 chn, u08 status)
     }
   }
 }
-
-
-/* aliases for proto API functions */
-u08 *proto_api_read_msg_prepare(u08 chn, u16 *size) __attribute__ ((weak, alias("handler_read_msg_prepare")));
-void proto_api_read_msg_done(u08 chn) __attribute__ ((weak, alias("handler_read_msg_done")));
-u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size) __attribute__ ((weak, alias("handler_write_msg_prepare")));
-void proto_api_write_msg_done(u08 chn) __attribute__ ((weak, alias("handler_write_msg_done")));

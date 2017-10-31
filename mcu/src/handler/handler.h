@@ -7,6 +7,7 @@
 #define HANDLER_ALREADY_OPEN    2
 #define HANDLER_CLOSED          3
 #define HANDLER_NO_MEMORY       4
+#define HANDLER_NO_FUNC         5
 
 /* flags */
 #define HANDLER_FLAG_NONE          0
@@ -18,20 +19,17 @@ typedef u08  (*hnd_init_func_t)(u08 chn);
 typedef void (*hnd_work_func_t)(u08 chn, u08 flags);
 typedef u08  (*hnd_open_func_t)(u08 chn);
 typedef void (*hnd_close_func_t)(u08 chn);
-typedef u08 *(*hnd_read_msg_prepare_func_t)(u08 chn, u16 *size);
-typedef void (*hnd_read_msg_done_func_t)(u08 chn, u08 status);
-typedef u08 *(*hnd_write_msg_prepare_func_t)(u08 chn, u16 *max_size);
-typedef void (*hnd_write_msg_done_func_t)(u08 chn, u16 size);
+typedef u08  (*hnd_read_func_t)(u08 chn, u16 *size, u08 *buf);
+typedef u08  (*hnd_write_func_t)(u08 chn, u16 size, u08 *buf);
 
 struct handler {
   hnd_init_func_t               init_func;
   hnd_work_func_t               work_func;
   hnd_open_func_t               open_func;
   hnd_close_func_t              close_func;
-  hnd_read_msg_prepare_func_t   read_msg_prepare;
-  hnd_read_msg_done_func_t      read_msg_done;
-  hnd_write_msg_prepare_func_t  write_msg_prepare;
-  hnd_write_msg_done_func_t     write_msg_done;
+  hnd_read_func_t               read_func;
+  hnd_write_func_t              write_func;
+
   u16                           mtu_max;
   u16                           mtu_min;
 };
@@ -76,10 +74,8 @@ extern void handler_work(u08 num);
 
 extern u08  handler_open(u08 chn);
 extern u08  handler_close(u08 chn);
-extern u08 *handler_read_msg_prepare(u08 chn, u16 *size);
-extern void handler_read_msg_done(u08 chn, u08 status);
-extern u08 *handler_write_msg_prepare(u08 chn, u16 *max_size);
-extern void handler_wrtie_msg_done(u08 chn, u16 size);
+extern u08  handler_read(u08 chn, u16 *size, u08 *buf);
+extern u08  handler_write(u08 chn, u16 size, u08 *buf);
 
 extern void handler_set_status(u08 chn, u08 status);
 extern void handler_get_mtu(u08 chn, u16 *mtu_max, u16 *mtu_min);
