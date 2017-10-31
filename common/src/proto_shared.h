@@ -44,7 +44,7 @@
 
 // register definitions
 #define PROTO_REGOFFSET_BASE             0x00
-#define PROTO_REGOFFSET_CHANNEL          0x20
+#define PROTO_REGOFFSET_HANDLER          0x20
 #define PROTO_REGOFFSET_USER             0x80
 
 // base registers
@@ -55,16 +55,16 @@
 #define PROTO_REG_BASE_ERROR             (PROTO_REGOFFSET_BASE + 4)
 #define PROTO_REGNUM_BASE                5
 
-// channel registers
-#define PROTO_REG_CHANNEL_INDEX          (PROTO_REGOFFSET_CHANNEL + 0)
-#define PROTO_REG_CHANNEL_STATUS_CONTROL (PROTO_REGOFFSET_CHANNEL + 1)
-#define PROTO_REG_CHANNEL_MTU            (PROTO_REGOFFSET_CHANNEL + 2)
-#define PROTO_REG_NUM_CHANNEL            3
+// handler registers
+#define PROTO_REG_HANDLER_INDEX          (PROTO_REGOFFSET_HANDLER + 0)
+#define PROTO_REG_HANDLER_STATUS_CONTROL (PROTO_REGOFFSET_HANDLER + 1)
+#define PROTO_REG_HANDLER_MTU            (PROTO_REGOFFSET_HANDLER + 2)
+#define PROTO_REG_NUM_HANDLER            3
 
 // device errors
 #define PROTO_ERROR_NONE                0
-#define PROTO_ERROR_ALREADY_ATTACHED    1
-#define PROTO_ERROR_ALREADY_DETACHED    2
+#define PROTO_ERROR_ALREADY_ATTACHED    0x10
+#define PROTO_ERROR_ALREADY_DETACHED    0x20
 
 // firmware ids
 #define PROTO_FWID_TEST           1

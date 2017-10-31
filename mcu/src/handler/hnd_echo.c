@@ -7,7 +7,6 @@
 #include "handler.h"
 #include "hnd_echo.h"
 #include "buffer.h"
-#include "channel.h"
 #include "debug.h"
 
 static u08 *data;
@@ -42,7 +41,8 @@ static void echo_read_msg_done(u08 chn, u08 status)
 
 static u08 *echo_write_msg_prepare(u08 chn, u16 *max_size)
 {
-  u16 mtu = channel_get_mtu(chn);
+  handler_data_t *hdata = HANDLER_GET_DATA(chn);
+  u16 mtu = hdata->mtu;
   DS("Ewp:"); DW(mtu); DC(',');
   u08 *buffer = buffer_alloc(mtu);
   data = buffer;

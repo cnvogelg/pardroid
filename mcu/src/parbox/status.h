@@ -10,7 +10,8 @@ extern void status_handle(void);
 
 extern u08  status_get_current(void);
 
-extern void status_set_error(u08 error);
+extern void status_set_error_mask(u08 mask);
+extern void status_clear_error_mask(u08 mask);
 extern u08  status_clear_error(void);
 
 extern void status_attach(void);

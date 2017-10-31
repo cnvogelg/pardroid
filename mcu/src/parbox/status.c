@@ -72,20 +72,27 @@ u08 status_get_current(void)
   return old_state;
 }
 
-void status_set_error(u08 error)
+void status_set_error_mask(u08 mask)
 {
-  DS("e+"); DB(error); DNL;
-  error_code = error;
+  error_code |= mask;
+  DS("e+"); DB(error_code); DNL;
+  status_update();
+}
+
+void status_clear_error_mask(u08 mask)
+{
+  error_code &= ~mask;
+  DS("e-"); DB(error_code); DNL;
   status_update();
 }
 
 u08 status_clear_error(void)
 {
-  DS("e-"); DB(error_code); DNL;
-  u08 e = error_code;
-  error_code = STATUS_NO_ERROR;
+  DS("e:"); DB(error_code); DNL;
+  u08 error = error_code;
+  error_code = 0;
   status_update();
-  return e;
+  return error;
 }
 
 void status_attach(void)
@@ -95,7 +102,7 @@ void status_attach(void)
     attached = 1;
   } else {
     DS("sa?"); DNL;
-    status_set_error(PROTO_ERROR_ALREADY_ATTACHED);
+    status_set_error_mask(PROTO_ERROR_ALREADY_ATTACHED);
   }
   status_update();
 }
@@ -107,7 +114,7 @@ void status_detach(void)
     attached = 0;
   } else {
     DS("sd?"); DNL;
-    status_set_error(PROTO_ERROR_ALREADY_DETACHED);
+    status_set_error_mask(PROTO_ERROR_ALREADY_DETACHED);
   }
   status_update();
 }

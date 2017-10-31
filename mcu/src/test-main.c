@@ -18,8 +18,8 @@
 #include "machtag.h"
 #include "status.h"
 #include "buffer.h"
-#include "channel.h"
 #include "handler.h"
+#include "handler_reg.h"
 #include "hnd_echo.h"
 #include "hnd_null.h"
 #include "driver.h"
@@ -47,7 +47,7 @@ static void sim_error(u16 *valp, u08 mode)
   if(mode == REG_MODE_WRITE) {
     u08 e = *valp & 0xff;
     DS("sim:e"); DB(e); DNL;
-    status_set_error(e);
+    status_set_error_mask(e);
   }
 }
 
@@ -87,7 +87,7 @@ REG_TABLE_BEGIN(test)
   REG_TABLE_RW_RAM_W(test_word),        // user+4
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
   REG_TABLE_RW_FUNC(sim_error)          // user+6
-REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(channel))
+REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(handler))
 REG_TABLE_SETUP(test)
 
 // handler
@@ -145,7 +145,7 @@ int main(void)
   status_init();
   buffer_init();
   DRIVER_INIT();
-  channel_init();
+  HANDLER_INIT();
   DC('-'); DNL;
 
   while(1) {
@@ -153,7 +153,7 @@ int main(void)
     proto_handle();
     status_handle();
     DRIVER_WORK();
-    channel_work();
+    HANDLER_WORK();
   }
 
   return 0;
