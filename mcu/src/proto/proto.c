@@ -28,12 +28,13 @@ static void function(u08 num)
 
 static void msg_read(u08 chan)
 {
-  DS("mr:"); DB(chan); DC('=');
-  u16 size = 0;
-  u08 *buf = proto_api_read_msg_prepare(chan, &size);
+  DS("mr:#"); DB(chan); DC(':');
+  u16 size_bytes = 0;
+  u08 *buf = proto_api_read_msg_prepare(chan, &size_bytes);
   u16 chn_ext = chan | 0x4200;
-  DW(size); DC(','); DW(chn_ext);
-  u08 res = proto_low_read_block(size, buf, chn_ext);
+  DC('+'); DW(size_bytes); DC('%'); DW(chn_ext);
+  u16 size_words = size_bytes >> 1;
+  u08 res = proto_low_read_block(size_words, buf, chn_ext);
   DC('>'); DB(res);
   proto_api_read_msg_done(chan, res);
   DC('.'); DNL;
@@ -41,14 +42,16 @@ static void msg_read(u08 chan)
 
 static void msg_write(u08 chan)
 {
-  DS("mw:"); DB(chan); DC('=');
-  u16 max_size = 0;
-  u08 *buf = proto_api_write_msg_prepare(chan, &max_size);
-  DW(max_size); DC(':');
+  DS("mw:#"); DB(chan); DC(':');
+  u16 max_bytes = 0;
+  u08 *buf = proto_api_write_msg_prepare(chan, &max_bytes);
+  DW(max_bytes); DC(':');
   u16 chn_ext = 0;
-  u16 size = proto_low_write_block(max_size, buf, &chn_ext);
-  DW(size); DC(','); DW(chn_ext);
-  proto_api_write_msg_done(chan, size);
+  u16 max_words = max_bytes >> 1;
+  u16 size_words = proto_low_write_block(max_words, buf, &chn_ext);
+  u16 size_bytes = size_words << 1;
+  DC('+'); DW(size_bytes); DC('%'); DW(chn_ext);
+  proto_api_write_msg_done(chan, size_bytes);
   DC('.'); DNL;
 }
 

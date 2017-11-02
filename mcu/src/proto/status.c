@@ -72,6 +72,13 @@ u08 status_get_current(void)
   return old_state;
 }
 
+void status_set_error(u08 code)
+{
+  error_code = code;
+  DS("e:"); DB(error_code); DNL;
+  status_update();
+}
+
 void status_set_error_mask(u08 mask)
 {
   error_code |= mask;

@@ -49,6 +49,9 @@ typedef struct reg_table reg_table_t;
 #define REG_TABLE_REF(name)  \
     &reg_table_ ## name
 
+#define REG_TABLE_GET_SIZE(name) \
+    read_rom_char(&reg_table_ ## name.size)
+
 #define REG_TABLE_RW_RAM_W(v)    { {.var = (void *)(&v)}, .flags=REG_FLAG_WRITE }
 #define REG_TABLE_RW_FUNC(f)     { {.func= f},   .flags=REG_FLAG_FUNC|REG_FLAG_WRITE }
 

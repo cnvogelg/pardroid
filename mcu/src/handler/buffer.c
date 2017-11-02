@@ -39,6 +39,8 @@ u16 buffer_get_free(void)
 
 u08 *buffer_alloc(u16 size)
 {
+  u16 real_size = size;
+
   /* store extra size word before allocation */
   size += 2;
 
@@ -47,16 +49,11 @@ u08 *buffer_alloc(u16 size)
     size = sizeof(mem_info_t);
   }
 
-#if 0
-  /* align to 4 bytes */
-  if(size & 3) {
-    size = (size & ~3) + 4;
-  }
-#endif
+  DNL;
 
   /* no memory free */
   if(free_total < size) {
-    DS("Ba!"); DNL;
+    DS("{Ba!}"); DNL;
     return NULL;
   }
 
@@ -90,30 +87,24 @@ u08 *buffer_alloc(u16 size)
       }
       /* adjust total free */
       free_total -= size;
-      /* store size in buf */
+      /* store real size in buf */
       u16 *sp = (u16 *)buf;
-      *sp = size;
+      *sp = real_size;
       /* return buffer after size */
-      DS("Ba:[@"); DP(buf + 2); DC('+'); DW(size - 2); DC(']'); DNL;
+      DS("{Ba:@"); DP(buf + 2); DC('+'); DW(size); DC('='); DW(real_size); DC('}'); DNL;
       return buf + 2;
     }
     mi = mi->next;
   }
   /* nothing found */
-  DS("Ba?"); DNL;
+  DS("{Ba?}"); DNL;
   return NULL;
 }
 
-void buffer_free(u08 *ptr)
+static void free_internal(u08 *ptr, u16 size)
 {
-  /* get pointer of size field */
-  u08 *sp = ptr - 2;
-  u16 size = *((u16 *)sp);
-
-  DS("Bf:[@"); DP(ptr); DC('+'); DW(size);
-
   /* create a new mem info there */
-  mem_info_t *mi = (mem_info_t *)sp;
+  mem_info_t *mi = (mem_info_t *)ptr;
   mi->size = size;
   free_total += size;
 
@@ -151,16 +142,18 @@ void buffer_free(u08 *ptr)
     DC(',');
     if(prev_mi != NULL) {
       u08 *ptr = (u08 *)prev_mi;
-      DC('p'); DP(ptr + prev_mi->size);
+      DC('P'); DP(ptr + prev_mi->size);
       if((ptr + prev_mi->size) == (u08*)mi) {
         merge_prev = 1;
+        DC('!');
       }
     }
     if(next_mi != NULL) {
       u08 *ptr = (u08 *)mi;
-      DC('n'); DP(ptr + mi->size);
+      DC('N'); DP(ptr + mi->size);
       if((ptr + mi->size) == (u08 *)next_mi) {
         merge_next = 1;
+        DC('!');
       }
     }
     /* merge triple */
@@ -204,6 +197,72 @@ void buffer_free(u08 *ptr)
     }
   }
 
-  DC(']'); DNL;
+  DC('}'); DNL;
+}
+
+void buffer_free(u08 *ptr)
+{
+  /* get pointer of size field */
+  u08 *sp = ptr - 2;
+  u16 real_size = *((u16 *)sp);
+
+  /* adjust size */
+  u16 size = real_size;
+  size += 2;
+
+  /* enforce min size so mem info fits always */
+  if(size < sizeof(mem_info_t)) {
+    size = sizeof(mem_info_t);
+  }
+
+  DNL;
+  DS("{Bf:@"); DP(ptr); DC('+'); DW(size); DC('='); DW(real_size);
+  free_internal(sp, size);
+}
+
+void buffer_shrink(u08 *ptr, u16 new_real_size)
+{
+  /* get pointer of size field */
+  u08 *sp = ptr - 2;
+  u16 cur_real_size = *((u16 *)sp);
+
+  /* nothing to do */
+  if(new_real_size >= cur_real_size) {
+    return;
+  }
+
+  /* adjust size */
+  u16 cur_size = cur_real_size;
+  cur_size += 2;
+
+  /* enforce min size so mem info fits always */
+  if(cur_size < sizeof(mem_info_t)) {
+    cur_size = sizeof(mem_info_t);
+  }
+
+  u16 new_size = new_real_size;
+  new_size += 2;
+  if(new_size < sizeof(mem_info_t)) {
+    new_size = sizeof(mem_info_t);
+  }
+
+  /* nothing to do */
+  if(new_size >= cur_size) {
+    return;
+  }
+
+  /* can't shrink: remainder is too small */
+  u16 new_delta = cur_size - new_size;
+  if(new_delta < sizeof(mem_info_t)) {
+    return;
+  }
+
+  DNL;
+  DS("{Bs:@"); DP(ptr); DC('+'); DW(cur_size); DC('='); DW(cur_real_size);
+  DC('>'); DW(new_size); DC('='); DW(new_real_size);
+  free_internal(sp + new_size, new_delta);
+
+  /* store new size */
+  *((u16 *)sp) = new_real_size;
 }
 

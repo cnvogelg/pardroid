@@ -25,9 +25,9 @@ u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size)
 
   /* try to allocate MTU buffer */
   handler_data_t *hdata = HANDLER_GET_DATA(chn);
-  u16 size = hdata->mtu;
-  DW(size); DC('>');
-  data = buffer_alloc(size);
+  u16 mtu_size = hdata->mtu;
+  DW(mtu_size); DC('>');
+  data = buffer_alloc(mtu_size);
   if(data == 0) {
     DC('O');
     handler_set_status(chn, HANDLER_NO_MEMORY);
@@ -35,10 +35,15 @@ u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size)
   }
 
   /* let the handler fill it */
+  u16 size = mtu_size;
   u08 status = handler_read(chn, &size, data);
   DW(size); DC('@'); DP(data); DC(':'); DB(status);
   handler_set_status(chn, status);
   if(status == HANDLER_OK) {
+    /* shrink buffer */
+    if(size < mtu_size) {
+      buffer_shrink(data, size);
+    }
     /* buffer ok */
     *ret_size = size;
     return data;
@@ -62,7 +67,7 @@ void msgio_read_msg_done(u08 chn)
 
 u08 *msgio_write_msg_prepare(u08 chn, u16 *max_size)
 {
-  DS("[W:");
+  DS("[W+:");
   data = 0;
   *max_size = 0;
 
@@ -75,9 +80,9 @@ u08 *msgio_write_msg_prepare(u08 chn, u16 *max_size)
 
   /* try to allocate MTU buffer */
   handler_data_t *hdata = HANDLER_GET_DATA(chn);
-  u16 size = hdata->mtu;
-  DW(size); DC('>');
-  data = buffer_alloc(size);
+  u16 mtu_size = hdata->mtu;
+  DW(mtu_size); DC('>');
+  data = buffer_alloc(mtu_size);
   if(data == 0) {
     DC('O');
     handler_set_status(chn, HANDLER_NO_MEMORY);
@@ -85,12 +90,14 @@ u08 *msgio_write_msg_prepare(u08 chn, u16 *max_size)
   }
 
   /* return valid buffer */
-  *max_size = size;
+  *max_size = mtu_size;
+  DC(']');
   return data;
 }
 
 void msgio_write_msg_done(u08 chn, u16 size)
 {
+  DS("[W-:");
   if(data != 0) {
     DW(size);
     u08 status = handler_write(chn, size, data);

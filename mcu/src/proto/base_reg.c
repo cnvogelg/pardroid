@@ -15,8 +15,14 @@ REG_TABLE_BEGIN(base)
   REG_TABLE_RO_ROM_W(fw_version),
   REG_TABLE_RO_ROM_W(fw_machtag),
   REG_TABLE_RO_ROM_W(fw_id),
+  REG_TABLE_RO_FUNC(base_reg_get_num_regs),
   REG_TABLE_RO_FUNC(base_reg_get_error)
 REG_TABLE_END(base, 0, 0)
+
+void base_reg_get_num_regs(u16 *valp, u08 mode)
+{
+  *valp = REG_TABLE_GET_SIZE(base);
+}
 
 void base_reg_get_error(u16 *valp, u08 mode)
 {

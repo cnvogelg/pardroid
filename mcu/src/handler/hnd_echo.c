@@ -22,12 +22,13 @@ static u08 echo_init(u08 chn)
 
 static u08 echo_read(u08 chn, u16 *size, u08 *buf)
 {
-  DS("Er:"); DW(size); DC('@'); DP(buf); DNL;
+  DS("Er:"); DW(*size); DC('@'); DP(buf);
   if(data != 0) {
-    if(*size == data_size) {
-      for(u16 i=0;i<*size;i++) {
+    if(*size >= data_size) {
+      for(u16 i=0;i<data_size;i++) {
         buf[i] = data[i];
       }
+      *size = data_size;
     } else {
       *size = 0;
     }
@@ -36,6 +37,7 @@ static u08 echo_read(u08 chn, u16 *size, u08 *buf)
   } else {
     *size = 0;
   }
+  DC('>'); DW(*size); DNL;
   return HANDLER_OK;
 }
 
@@ -44,7 +46,7 @@ static u08 echo_write(u08 chn, u16 size, u08 *buf)
   DS("Ew:"); DW(size); DC('@'); DP(buf);
   data = buffer_alloc(size);
   data_size = size;
-  DC('#'); DP(data);
+  DC('@'); DP(data); DNL;
   if(data != 0) {
     /* copy buf */
     for(u16 i=0;i<size;i++) {

@@ -21,12 +21,12 @@ void func_regaddr_set(u16 *valp)
 {
   DS("ras:");
   regaddr = (u08)(*valp & 0xff);
-  DC(regaddr); DC('.'); DNL;
+  DB(regaddr); DC('.'); DNL;
 }
 
 void func_regaddr_get(u16 *valp)
 {
-  DS("rag:"); DC(regaddr);
+  DS("rag:"); DB(regaddr);
   *valp = regaddr;
   DC('.'); DNL;
 }
@@ -36,7 +36,7 @@ void func_reg_write(u16 *valp)
   // master wants to write a u16
   DS("rw:");
   u16 val = *valp;
-  DC(regaddr); DC('='); DW(val);
+  DB(regaddr); DC('='); DW(val);
   func_api_set_reg(regaddr, val);
   DC('.'); DNL;
 }
@@ -44,7 +44,7 @@ void func_reg_write(u16 *valp)
 void func_reg_read(u16 *valp)
 {
   // master wants to reead a u16
-  DS("rr:"); DC(regaddr); DC('=');
+  DS("rr:"); DB(regaddr); DC('=');
   u16 val = func_api_get_reg(regaddr);
   DW(val);
   *valp = val;
