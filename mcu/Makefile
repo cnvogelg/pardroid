@@ -40,7 +40,8 @@ CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # sources
-BASE_SRCS = uart.c uartutil.c system.c pablo.c
+COMMON_SRCS = machtag.c
+BASE_SRCS = uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = proto_low.S proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
 HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
@@ -51,12 +52,27 @@ INCLUDES += src/proto src/handler src/driver
 INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
-# test-fw
-TEST_SRCS = $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS) $(HANDLER_SRCS) $(DRIVER_SRCS)
-TEST_SRCS += test-main.c machtag.c
-$(eval $(call dist-pbl,test-fw))
-$(eval $(call dist-hex,test-fw))
-$(eval $(call make-firmware,test-fw,$(TEST_SRCS),$(CONFIG_MAX_ROM)))
+# test-base
+TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_BASE_SRCS += test-base.c
+$(eval $(call dist-pbl,test-base-fw))
+$(eval $(call dist-hex,test-base-fw))
+$(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-proto
+TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+TEST_PROTO_SRCS += test-proto.c
+$(eval $(call dist-pbl,test-proto-fw))
+$(eval $(call dist-hex,test-proto-fw))
+$(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-handler
+TEST_HANDLER_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+TEST_HANDLER_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
+TEST_HANDLER_SRCS += test-handler.c
+$(eval $(call dist-pbl,test-handler-fw))
+$(eval $(call dist-hex,test-handler-fw))
+$(eval $(call make-firmware,test-handler-fw,$(TEST_HANDLER_SRCS),$(CONFIG_MAX_ROM)))
 
 ifdef CONFIG_BOOTLOADER
 # bootloader
@@ -65,7 +81,7 @@ $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
 endif
 
-DEFAULT_FIRMWARE=test-fw
+DEFAULT_FIRMWARE=test-proto-fw
 
 # rules
 include scripts/common-rules.mk

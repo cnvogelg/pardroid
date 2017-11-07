@@ -67,4 +67,7 @@
 #define PROTO_ERROR_ALREADY_DETACHED    0x20
 
 // firmware ids
-#define PROTO_FWID_TEST           1
+#define PROTO_FWID_TEST_BASE            1
+#define PROTO_FWID_TEST_PROTO           2
+#define PROTO_FWID_TEST_HANDLER         3
+

@@ -4,28 +4,22 @@
 
 #define DEBUG 1
 
+#include "debug.h"
+
 #include "uart.h"
 #include "uartutil.h"
+#include "rominfo.h"
 #include "proto.h"
-#include "proto_shared.h"
-#include "debug.h"
-#include "system.h"
-#include "pablo.h"
 #include "reg.h"
-#include "base_reg.h"
-#include "action.h"
-#include "func.h"
-#include "machtag.h"
+#include "system.h"
 #include "status.h"
-#include "buffer.h"
-#include "handler.h"
-#include "handler_reg.h"
-#include "hnd_echo.h"
-#include "hnd_null.h"
-#include "driver.h"
-#include "drv_null.h"
+#include "base_reg.h"
 
-#include <util/delay.h>
+// max size of message buffer
+#define MAX_BUFFER_SIZE 1024
+
+static u08 buffer[MAX_BUFFER_SIZE];
+
 
 // sim functions
 static void sim_pending(u16 *valp, u08 mode)
@@ -61,11 +55,11 @@ static void ro_func(u16 *val, u08 mode) {
 
 // read/write test values
 static u16 test_word = 0x4812;
-static u16 test_size;
+static u16 test_size = MAX_BUFFER_SIZE;
 static void func_test_size(u16 *val, u08 mode)
 {
   if(mode == REG_MODE_WRITE) {
-    if(*val <= 0x1234) {
+    if(*val <= MAX_BUFFER_SIZE) {
       test_size = *val;
     }
   } else {
@@ -74,7 +68,7 @@ static void func_test_size(u16 *val, u08 mode)
 }
 
 // define my app id
-BASE_REG_APPID(PROTO_FWID_TEST)
+BASE_REG_APPID(PROTO_FWID_TEST_PROTO)
 
 // registers
 REG_TABLE_BEGIN(test)
@@ -87,55 +81,42 @@ REG_TABLE_BEGIN(test)
   REG_TABLE_RW_RAM_W(test_word),        // user+4
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
   REG_TABLE_RW_FUNC(sim_error)          // user+6
-REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(handler))
+REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
 REG_TABLE_SETUP(test)
 
-// handler
-HANDLER_TABLE_BEGIN
-  HANDLER_TABLE_ENTRY(echo),
-  HANDLER_TABLE_ENTRY(echo),
-  HANDLER_TABLE_ENTRY(null)
-HANDLER_TABLE_END
+// message buffer handling
 
-// driver
-DRIVER_TABLE_BEGIN
-  DRIVER_TABLE_ENTRY(null)
-DRIVER_TABLE_END
-
-static void rom_info(void)
+u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size)
 {
-  // show pablo infos
-  u16 crc = pablo_check_rom_crc();
-  u16 mt  = pablo_get_mach_tag();
-  u16 ver = pablo_get_rom_version();
-  uart_send_pstring(PSTR("crc="));
-  uart_send_hex_word(crc);
-  uart_send_pstring(PSTR(" machtag="));
-  uart_send_hex_word(mt);
-  uart_send_pstring(PSTR(" version="));
-  uart_send_hex_word(ver);
-  uart_send_crlf();
-
-  // decode machtag
-  rom_pchar arch,mcu,mach;
-  u08 extra;
-  machtag_decode(mt, &arch, &mcu, &mach, &extra);
-  uart_send_pstring(arch);
-  uart_send('-');
-  uart_send_pstring(mcu);
-  uart_send('-');
-  uart_send_pstring(mach);
-  uart_send('-');
-  uart_send_hex_byte(extra);
-  uart_send_crlf();
+  DS("[R#"); DB(chn); DC('+'); DW(test_size);
+  *ret_size = test_size;
+  return buffer;
 }
+
+void proto_api_read_msg_done(u08 chn, u08 status)
+{
+  DC(']'); DNL;
+}
+
+u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
+{
+  DS("[W#"); DB(chn); DC(':'); DW(test_size);
+  *max_size = test_size;
+  return buffer;
+}
+
+void proto_api_write_msg_done(u08 chn, u16 size)
+{
+  DC(':'); DW(size); DC(']'); DNL;
+}
+
 
 int main(void)
 {
   system_init();
 
   uart_init();
-  uart_send_pstring(PSTR("parbox-test!"));
+  uart_send_pstring(PSTR("parbox: test-proto!"));
   uart_send_crlf();
 
   rom_info();
@@ -143,17 +124,12 @@ int main(void)
   DC('+');
   proto_init(PROTO_STATUS_INIT);
   status_init();
-  buffer_init();
-  DRIVER_INIT();
-  HANDLER_INIT();
   DC('-'); DNL;
 
   while(1) {
     system_wdt_reset();
     proto_handle();
     status_handle();
-    DRIVER_WORK();
-    HANDLER_WORK();
   }
 
   return 0;
