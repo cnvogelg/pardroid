@@ -4,7 +4,9 @@
 struct pblfile {
   ULONG   rom_size;
   UWORD   version;
+  UWORD   fw_id;
   UWORD   mach_tag;
+  UWORD   pad;
   UBYTE   *data;
 };
 

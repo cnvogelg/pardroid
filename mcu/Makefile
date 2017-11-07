@@ -40,7 +40,7 @@ CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # sources
-COMMON_SRCS = machtag.c
+COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = proto_low.S proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
@@ -55,6 +55,8 @@ VPATH=$(INCLUDES)
 # test-base
 TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_BASE_SRCS += test-base.c
+FW_ID_test-base-fw = 0x8001
+FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-base-fw))
 $(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
@@ -62,6 +64,8 @@ $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 # test-proto
 TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 TEST_PROTO_SRCS += test-proto.c
+FW_ID_test-proto-fw = 0x8002
+FW_VER_test-proto-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-proto-fw))
 $(eval $(call dist-hex,test-proto-fw))
 $(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
@@ -70,6 +74,8 @@ $(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
 TEST_HANDLER_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 TEST_HANDLER_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
 TEST_HANDLER_SRCS += test-handler.c
+FW_ID_test-handler-fw = 0x8003
+FW_VER_test-handler-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-handler-fw))
 $(eval $(call dist-hex,test-handler-fw))
 $(eval $(call make-firmware,test-handler-fw,$(TEST_HANDLER_SRCS),$(CONFIG_MAX_ROM)))

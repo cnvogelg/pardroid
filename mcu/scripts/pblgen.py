@@ -19,21 +19,23 @@ def crc16_ccitt(buf):
   return crc
 
 # get params
-if len(sys.argv) != 6:
-  print("Usage: <in.bin> <max_size> <mach_tag> <version_tag> <out.pbl>")
+if len(sys.argv) != 7:
+  print("Usage: <in.bin> <max_size> <mach_tag> <fw_id> <version_tag> <out.pbl>")
   sys.exit(1)
 
 in_bin = sys.argv[1]
 max_size = int(sys.argv[2])
 mach_tag = int(sys.argv[3][2:],16)
-version_tag = int(sys.argv[4][2:],16)
-out_pbl = sys.argv[5]
+fw_id = int(sys.argv[4][2:],16)
+version_tag = int(sys.argv[5][2:],16)
+out_pbl = sys.argv[6]
 
 # pablo footer in ROM (little endian):
 # ROMEND-2: crc16_ccitt (0..ROMEND-2)
 # ROMEND-4: mach_tag
 # ROMEND-6: version_tag
-hdr_size = 6
+# ROMEND-8: fw_id
+hdr_size = 8
 
 # free program range
 max_free = max_size - hdr_size
@@ -55,7 +57,7 @@ else:
   rom_data = in_data
 
 # append pablo footer without crc
-pablo_footer = struct.pack("<HH", version_tag, mach_tag)
+pablo_footer = struct.pack("<HHH", fw_id, version_tag, mach_tag)
 rom_data += pablo_footer
 
 # calc checksum
@@ -83,8 +85,8 @@ with open(out_pbl, "wb") as fh:
 
 # write message
 out_file = os.path.basename(out_pbl)
-print("%-16s  SIZE=%06x  CRC16=%04x  VER=%04x  MACH=%04x" % \
-  (out_file, max_size, check_sum, version_tag, mach_tag))
+print("%-16s  SIZE=%06x  CRC16=%04x  FW=%04x  VER=%04x  MACH=%04x" % \
+  (out_file, max_size, check_sum, fw_id, version_tag, mach_tag))
 
 # done
 sys.exit(0)

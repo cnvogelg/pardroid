@@ -8,6 +8,7 @@
 
 #include "system.h"
 #include "rominfo.h"
+#include "fwid.h"
 #include "uart.h"
 #include "uartutil.h"
 #include "base_reg.h"
@@ -25,7 +26,7 @@
 #include "drv_null.h"
 
 // define my app id
-BASE_REG_APPID(PROTO_FWID_TEST_HANDLER)
+BASE_REG_APPID(FWID_TEST_HANDLER)
 
 // set register table
 REG_TABLE_SETUP(handler)

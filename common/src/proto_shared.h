@@ -65,9 +65,3 @@
 #define PROTO_ERROR_NONE                0
 #define PROTO_ERROR_ALREADY_ATTACHED    0x10
 #define PROTO_ERROR_ALREADY_DETACHED    0x20
-
-// firmware ids
-#define PROTO_FWID_TEST_BASE            1
-#define PROTO_FWID_TEST_PROTO           2
-#define PROTO_FWID_TEST_HANDLER         3
-

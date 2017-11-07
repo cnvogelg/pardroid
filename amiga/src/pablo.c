@@ -12,6 +12,7 @@
 #include "pblfile.h"
 #include "bootloader.h"
 #include "machtag.h"
+#include "fwid.h"
 
 static const char *TEMPLATE =
    "Flash/S,"
@@ -47,7 +48,10 @@ static void show_file_info(const char *file_name, pblfile_t *pf)
   char *arch,*mcu,*mach;
   UBYTE extra;
   machtag_decode(pf->mach_tag, &arch, &mcu, &mach, &extra);
-  Printf("PBL File:   %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
+  char *id_str;
+  fwid_decode(pf->fw_id, &id_str);
+  Printf("PBL File:   fw=%04lx (%s), %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
+    (ULONG)pf->fw_id, id_str,
     (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)extra, (ULONG)pf->mach_tag);
 }
 
@@ -75,7 +79,10 @@ static void show_fw_info(bootinfo_t *bi)
     char *arch,*mcu,*mach;
     UBYTE extra;
     machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach, &extra);
-    Printf("Firmware:   %ld.%ld, %s-%s-%s-%ld (%04lx)  crc=%04lx\n",
+    char *id_str;
+    fwid_decode(bi->fw_id, &id_str);
+    Printf("Firmware:   fw=%04lx (%s), %ld.%ld, %s-%s-%s-%ld (%04lx)  crc=%04lx\n",
+      (ULONG)bi->fw_id, id_str,
       (ULONG)fw_hi, (ULONG)fw_lo, arch, mcu, mach, (ULONG)extra, (ULONG)bi->fw_mach_tag,
       (ULONG)bi->fw_crc);
   }

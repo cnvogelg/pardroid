@@ -16,6 +16,12 @@ uint16_t pablo_get_rom_version(void)
   return pgm_read_word(addr);
 }
 
+uint16_t pablo_get_rom_fw_id(void)
+{
+  uint16_t addr = CONFIG_MAX_ROM - 8;
+  return pgm_read_word(addr);
+}
+
 uint16_t pablo_check_rom_crc(void)
 {
   uint16_t crc = 0xffff;

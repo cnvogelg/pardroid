@@ -88,6 +88,12 @@ int bootloader_update_fw_info(parbox_handle_t *pb, bootinfo_t *bi)
     return BOOTLOADER_RET_REG_RO_ERROR | res;
   }
 
+  /* firmware id */
+  res = reg_get(ph, BOOTLOADER_REG_FW_ID, &bi->fw_id);
+  if(res != PROTO_RET_OK) {
+    return BOOTLOADER_RET_REG_RO_ERROR | res;
+  }
+
   return BOOTLOADER_RET_OK;
 }
 

@@ -11,6 +11,7 @@ struct bootinfo {
   UWORD   bl_version;
   UWORD   bl_mach_tag;
   /* rom image */
+  UWORD   fw_id;
   UWORD   fw_version;
   UWORD   fw_mach_tag;
   UWORD   fw_crc;
@@ -25,7 +26,8 @@ typedef struct bootinfo bootinfo_t;
 #define BOOTLOADER_REG_FW_CRC           4
 #define BOOTLOADER_REG_FW_MACHTAG       5
 #define BOOTLOADER_REG_FW_VERSION       6
-#define BOOTLOADER_REG_PAGE_ADDR        7  /* rw */
+#define BOOTLOADER_REG_FW_ID            7
+#define BOOTLOADER_REG_PAGE_ADDR        8  /* rw */
 
 /* channels */
 #define BOOTLOADER_CHN_PAGES            0

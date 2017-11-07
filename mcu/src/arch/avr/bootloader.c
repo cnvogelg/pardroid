@@ -45,7 +45,8 @@ REG_TABLE_BEGIN(def)
   REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-2),     /* 4: rom crc */
   REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-4),     /* 5: rom mach tag */
   REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-6),     /* 6: rom version */
-  REG_TABLE_RW_RAM_W(page_addr)                 /* 7: (rw) page addr */
+  REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-8),     /* 7: rom fw id */
+  REG_TABLE_RW_RAM_W(page_addr)                 /* 8: (rw) page addr */
 REG_TABLE_END(def, 0, 0)
 REG_TABLE_SETUP(def)
 
