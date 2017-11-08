@@ -79,10 +79,8 @@ void func_offset_get(u32 *valp)
   *valp = offset;
 }
 
-static void func_handle_word(rom_pchar ptr, u08 flags)
+static void func_handle_word(func_word_t func, u08 flags)
 {
-  func_word_t func = (func_word_t)ptr;
-
   // set func
   if(flags & FUNC_FLAG_SET) {
     u16 val = proto_low_write_word();
@@ -94,10 +92,8 @@ static void func_handle_word(rom_pchar ptr, u08 flags)
   }
 }
 
-static void func_handle_long(rom_pchar ptr, u08 flags)
+static void func_handle_long(func_long_t func, u08 flags)
 {
-  func_long_t func = (func_long_t)ptr;
-
   // set func
   if(flags & FUNC_FLAG_SET) {
     u32 val = proto_low_write_long();
@@ -110,8 +106,8 @@ static void func_handle_long(rom_pchar ptr, u08 flags)
 }
 
 // make long processing optional for bootloader
-void func_handle_word_weak(rom_pchar ptr, u08 flags) __attribute__ ((weak, alias("func_handle_word")));
-void func_handle_long_weak(rom_pchar ptr, u08 flags) __attribute__ ((weak, alias("func_handle_long")));
+void func_handle_word_weak(func_word_t func, u08 flags) __attribute__ ((weak, alias("func_handle_word")));
+void func_handle_long_weak(func_long_t func, u08 flags) __attribute__ ((weak, alias("func_handle_long")));
 
 void func_handle(u08 num)
 {
@@ -124,14 +120,13 @@ void func_handle(u08 num)
   } else {
     u08 flags = read_rom_char(&func_table[num].flags);
 
-    // get func ptr
-    rom_pchar ptr = read_rom_rom_ptr(&func_table[num].func);
-
     // long operation
     if(flags & FUNC_FLAG_LONG) {
-      func_handle_long_weak(ptr, flags);
+      func_long_t func = (func_long_t)read_rom_rom_ptr(&func_table[num].func.flong);
+      func_handle_long_weak(func, flags);
     } else {
-      func_handle_word_weak(ptr, flags);
+      func_word_t func = (func_word_t)read_rom_rom_ptr(&func_table[num].func.fword);
+      func_handle_word_weak(func, flags);
     }
 
     // end function

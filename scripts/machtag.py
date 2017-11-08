@@ -20,6 +20,15 @@ machtags = {
             "avrnetio" : 2,
             "teensy20" : 3
         }
+    },
+    "mk20" : {
+        "id" : 2,
+        "cpus" : {
+            "mk20dx256" : 1
+        },
+        "machs" : {
+            "teensy32" : 1
+        }
     }
 }
 

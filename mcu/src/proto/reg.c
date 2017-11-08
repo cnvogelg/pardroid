@@ -42,8 +42,7 @@ u16 reg_get(u08 num)
   u16 val = 0;
   if(flags & REG_FLAG_FUNC) {
     /* getter function */
-    rom_pchar ptr = read_rom_rom_ptr(&def->ptr.func);
-    reg_func_t func = (reg_func_t)ptr;
+    reg_func_t func = (reg_func_t)read_rom_rom_ptr(&def->ptr.func);
     func(&val, REG_MODE_READ);
   } else {
     rom_pchar ptr = read_rom_rom_ptr(&def->ptr.var);
@@ -76,8 +75,7 @@ void reg_set(u08 num, u16 val)
   }
   if(flags & REG_FLAG_FUNC) {
     /* setter function */
-    rom_pchar ptr = read_rom_rom_ptr(&def->ptr.func);
-    reg_func_t func = (reg_func_t)ptr;
+    reg_func_t func = (reg_func_t)read_rom_rom_ptr(&def->ptr.func);
     func(&val, REG_MODE_WRITE);
   }
   else {

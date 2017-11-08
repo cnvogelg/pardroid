@@ -37,5 +37,17 @@ void machtag_decode(u16 mt, rom_pchar *arch, rom_pchar *mcu, rom_pchar *mach, u0
           break;
       }
       break;
+    case MT_ARCH_MK20:
+      *arch = PSTR("mk20");
+      switch(mt & MT_MCU_MASK) {
+        case MT_MCU_MK20DX256:
+          *mcu = PSTR("mk20dx256");
+          break;
+      }
+      switch(mt & MT_MACH_MASK) {
+        case MT_MACH_TEENSY32:
+          *mach = PSTR("teensy32");
+          break;
+      }
   }
 }

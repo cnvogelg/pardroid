@@ -5,8 +5,7 @@
 
 static driver_ptr_t get_driver(u08 num)
 {
-  rom_pchar ptr = read_rom_rom_ptr(&driver_table[num]);
-  return (driver_ptr_t)ptr;
+  return (driver_ptr_t)read_rom_rom_ptr(&driver_table[num]);
 }
 
 void driver_init(u08 num)
@@ -14,8 +13,7 @@ void driver_init(u08 num)
   for(u08 did=0;did<num;did++) {
     driver_ptr_t drv = get_driver(did);
     driver_data_t *data = DRIVER_GET_DATA(did);
-    rom_pchar ptr = read_rom_rom_ptr(&drv->init_func);
-    drv_init_func_t f = (drv_init_func_t)ptr;
+    drv_init_func_t f = (drv_init_func_t)read_rom_rom_ptr(&drv->init_func);
     if(f != 0) {
       if(f(did)) {
         data->flags = DRIVER_FLAG_INIT;
@@ -33,8 +31,7 @@ void driver_work(u08 num)
   for(u08 did=0;did<num;did++) {
     driver_ptr_t drv = get_driver(did);
     driver_data_t *data = DRIVER_GET_DATA(did);
-    rom_pchar ptr = read_rom_rom_ptr(&drv->work_func);
-    drv_work_func_t f = (drv_work_func_t)ptr;
+    drv_work_func_t f = (drv_work_func_t)read_rom_rom_ptr(&drv->work_func);
     if(f != 0) {
       f(did, data->flags);
     }
@@ -46,8 +43,7 @@ u08 driver_open(u08 did)
   u08 max = read_rom_char(&driver_table_size);
   if(did < max) {
     driver_ptr_t hnd = get_driver(did);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->open_func);
-    drv_open_func_t f = (drv_open_func_t)ptr;
+    drv_open_func_t f = (drv_open_func_t)read_rom_rom_ptr(&hnd->open_func);
     if(f != 0) {
       return f(did);
     } else {
@@ -63,8 +59,7 @@ void driver_close(u08 did)
   u08 max = read_rom_char(&driver_table_size);
   if(did < max) {
     driver_ptr_t hnd = get_driver(did);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->close_func);
-    drv_close_func_t f = (drv_close_func_t)ptr;
+    drv_close_func_t f = (drv_close_func_t)read_rom_rom_ptr(&hnd->close_func);
     if(f != 0) {
       return f(did);
     }
@@ -76,8 +71,7 @@ u16 driver_read(u08 did, u08 *buf, u16 size)
   u08 max = read_rom_char(&driver_table_size);
   if(did < max) {
     driver_ptr_t hnd = get_driver(did);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->read_func);
-    drv_read_func_t f = (drv_read_func_t)ptr;
+    drv_read_func_t f = (drv_read_func_t)read_rom_rom_ptr(&hnd->read_func);
     return f(did, buf, size);
   } else {
     return 0;
@@ -89,8 +83,7 @@ u16 driver_write(u08 did, u08 *buf, u16 size)
   u08 max = read_rom_char(&driver_table_size);
   if(did < max) {
     driver_ptr_t hnd = get_driver(did);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->write_func);
-    drv_write_func_t f = (drv_write_func_t)ptr;
+    drv_write_func_t f = (drv_write_func_t)read_rom_rom_ptr(&hnd->write_func);
     return f(did, buf, size);
   } else {
     return 0;

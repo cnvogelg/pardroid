@@ -73,8 +73,7 @@ void action_handle(u08 num)
     }
 
     // trigger action func
-    rom_pchar ptr = read_rom_rom_ptr(&action_table[num].func);
-    action_func_t func = (action_func_t)ptr;
+    action_func_t func = (action_func_t)read_rom_rom_ptr(&action_table[num].func);
     func();
 
     // finish action after executing function

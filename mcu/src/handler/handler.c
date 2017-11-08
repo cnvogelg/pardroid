@@ -10,16 +10,14 @@
 
 static handler_ptr_t get_handler(u08 num)
 {
-  rom_pchar ptr = read_rom_rom_ptr(&handler_table[num]);
-  return (handler_ptr_t)ptr;
+  return (handler_ptr_t)read_rom_rom_ptr(&handler_table[num]);
 }
 
 void handler_init(u08 num)
 {
   for(u08 chn=0;chn<num;chn++) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->init_func);
-    hnd_init_func_t f = (hnd_init_func_t)ptr;
+    hnd_init_func_t f = (hnd_init_func_t)read_rom_rom_ptr(&hnd->init_func);
     u08 flags = HANDLER_FLAG_NONE;
     u08 status = HANDLER_OK;
     if(f != 0) {
@@ -43,8 +41,7 @@ void handler_work(u08 num)
 {
   for(u08 chn=0;chn<num;chn++) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->work_func);
-    hnd_work_func_t f = (hnd_work_func_t)ptr;
+    hnd_work_func_t f = (hnd_work_func_t)read_rom_rom_ptr(&hnd->work_func);
     if(f != 0) {
       handler_data_t *data = HANDLER_GET_DATA(chn);
       f(chn, data->flags);
@@ -68,8 +65,7 @@ u08 handler_open(u08 chn)
 
   /* call open func */
   handler_ptr_t hnd = get_handler(chn);
-  rom_pchar ptr = read_rom_rom_ptr(&hnd->open_func);
-  hnd_open_func_t f = (hnd_open_func_t)ptr;
+  hnd_open_func_t f = (hnd_open_func_t)read_rom_rom_ptr(&hnd->open_func);
   u08 status = HANDLER_OK;
   if(f != 0) {
     status = f(chn);
@@ -99,8 +95,7 @@ u08 handler_close(u08 chn)
 
   /* call close func */
   handler_ptr_t hnd = get_handler(chn);
-  rom_pchar ptr = read_rom_rom_ptr(&hnd->close_func);
-  hnd_close_func_t f = (hnd_close_func_t)ptr;
+  hnd_close_func_t f = (hnd_close_func_t)read_rom_rom_ptr(&hnd->close_func);
   if(f != 0) {
     f(chn);
   }
@@ -116,8 +111,7 @@ u08 handler_read(u08 chn, u16 *size, u08 *buf)
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->read_func);
-    hnd_read_func_t f = (hnd_read_func_t)ptr;
+    hnd_read_func_t f = (hnd_read_func_t)read_rom_rom_ptr(&hnd->read_func);
     return f(chn, size, buf);
   } else {
     return HANDLER_NO_FUNC;
@@ -129,8 +123,7 @@ u08 handler_write(u08 chn, u16 size, u08 *buf)
   u08 max = read_rom_char(&handler_table_size);
   if(chn < max) {
     handler_ptr_t hnd = get_handler(chn);
-    rom_pchar ptr = read_rom_rom_ptr(&hnd->write_func);
-    hnd_write_func_t f = (hnd_write_func_t)ptr;
+    hnd_write_func_t f = (hnd_write_func_t)read_rom_rom_ptr(&hnd->write_func);
     return f(chn, size, buf);
   } else {
     return HANDLER_NO_FUNC;

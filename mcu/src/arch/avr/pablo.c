@@ -2,30 +2,31 @@
 #include <avr/pgmspace.h>
 
 #include "autoconf.h"
+#include "types.h"
 #include "pablo.h"
 
-uint16_t pablo_get_mach_tag(void)
+u16 pablo_get_mach_tag(void)
 {
-  uint16_t addr = CONFIG_MAX_ROM - 4;
+  u16 addr = CONFIG_MAX_ROM - 4;
   return pgm_read_word(addr);
 }
 
-uint16_t pablo_get_rom_version(void)
+u16 pablo_get_rom_version(void)
 {
-  uint16_t addr = CONFIG_MAX_ROM - 6;
+  u16 addr = CONFIG_MAX_ROM - 6;
   return pgm_read_word(addr);
 }
 
-uint16_t pablo_get_rom_fw_id(void)
+u16 pablo_get_rom_fw_id(void)
 {
-  uint16_t addr = CONFIG_MAX_ROM - 8;
+  u16 addr = CONFIG_MAX_ROM - 8;
   return pgm_read_word(addr);
 }
 
-uint16_t pablo_check_rom_crc(void)
+u16 pablo_check_rom_crc(void)
 {
-  uint16_t crc = 0xffff;
-  uint16_t addr = 0;
+  u16 crc = 0xffff;
+  u16 addr = 0;
   while(addr < CONFIG_MAX_ROM) {
     crc = _crc_ccitt_update(crc, pgm_read_byte(addr++));
   }

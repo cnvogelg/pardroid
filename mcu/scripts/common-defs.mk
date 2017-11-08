@@ -28,6 +28,7 @@ ASFLAGS = $(ASFLAGS_COMMON) $(CFLAGS_INCLUDES) $(ASFLAGS_ARCH) $(ASFLAGS_LST) $(
 LDFLAGS = -Wl,-Map=$$(@:%.elf=%.map),--cref
 LDFLAGS += -lm -lc
 LDFLAGS += -Wl,--gc-sections
+LDFLAGS += $(LDFLAGS_ARCH)
 
 # ----- firmware -----
 # list of firmwares, created by make-firmware

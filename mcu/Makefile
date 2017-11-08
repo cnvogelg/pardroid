@@ -11,8 +11,12 @@ ifeq "$(DEBUG)" "1"
 	dummy:=$(info debug enabled)
 	EXTRA_CONFIG+=configs/debug.config
 endif
+
+# avr configs
 ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config configs/avrnetio.config
 ALL_CONFIGS+=configs/teensy20.config
+# mk20 configs
+ALL_CONFIGS+=configs/teensy32.config
 
 include $(BASE_DIR)/scripts/gencfg.mk
 # version
@@ -41,13 +45,14 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = uart.c uartutil.c system.c pablo.c rominfo.c
+BASE_SRCS = $(ARCH_SRCS)
+BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = proto_low.S proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
 HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
 DRIVER_SRCS = driver.c drv_null.c
 
-INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
+INCLUDES := src src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/$(MACH_DIR) src/base
 INCLUDES += src/proto src/handler src/driver
 INCLUDES += ../common/src
 VPATH=$(INCLUDES)
