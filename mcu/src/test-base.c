@@ -11,6 +11,8 @@
 #include "rominfo.h"
 #include "system.h"
 
+#include "proto_low.h"
+
 int main(void)
 {
   system_init();
@@ -20,6 +22,8 @@ int main(void)
   uart_send_crlf();
 
   rom_info();
+
+  proto_low_init(0);
 
   while(1) {
     system_wdt_reset();

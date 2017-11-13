@@ -47,20 +47,6 @@
 #define PROTO_REGOFFSET_HANDLER          0x20
 #define PROTO_REGOFFSET_USER             0x80
 
-// base registers
-#define PROTO_REG_BASE_FW_VERSION        (PROTO_REGOFFSET_BASE + 0)
-#define PROTO_REG_BASE_FW_MACHTAG        (PROTO_REGOFFSET_BASE + 1)
-#define PROTO_REG_BASE_FW_ID             (PROTO_REGOFFSET_BASE + 2)
-#define PROTO_REG_BASE_NUM_REGS          (PROTO_REGOFFSET_BASE + 3)
-#define PROTO_REG_BASE_ERROR             (PROTO_REGOFFSET_BASE + 4)
-#define PROTO_REGNUM_BASE                5
-
-// handler registers
-#define PROTO_REG_HANDLER_INDEX          (PROTO_REGOFFSET_HANDLER + 0)
-#define PROTO_REG_HANDLER_STATUS_CONTROL (PROTO_REGOFFSET_HANDLER + 1)
-#define PROTO_REG_HANDLER_MTU            (PROTO_REGOFFSET_HANDLER + 2)
-#define PROTO_REG_NUM_HANDLER            3
-
 // device errors
 #define PROTO_ERROR_NONE                0
 #define PROTO_ERROR_ALREADY_ATTACHED    0x10

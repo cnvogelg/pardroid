@@ -58,7 +58,7 @@ INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-base
-TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) proto_low.S
 TEST_BASE_SRCS += test-base.c
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)

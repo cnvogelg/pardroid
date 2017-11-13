@@ -21,6 +21,7 @@ int test_status_read_pending(test_t *t, test_param_t *p);
 int test_status_ack_irq(test_t *t, test_param_t *p);
 int test_status_error(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
+int test_base_regs(test_t *t, test_param_t *p);
 
 #define TESTS_PROTO_ALL \
   { test_ping, "ping", "ping parbox device" }, \
@@ -38,6 +39,7 @@ int test_status_attach_detach(test_t *t, test_param_t *p);
   { test_status_read_pending, "sp", "test status read pending flag"}, \
   { test_status_ack_irq, "sa", "test ack irq on first pending read request"}, \
   { test_status_error, "se", "test status error code" }, \
-  { test_status_attach_detach, "sad", "test attach/detach" },
+  { test_status_attach_detach, "sad", "test attach/detach" }, \
+  { test_base_regs, "br", "test base regs" }, \
 
 #endif

@@ -9,9 +9,13 @@
 #include "compiler.h"
 #include "debug.h"
 
+#include "types.h"
+#include "arch.h"
+
 #include "parbox.h"
 #include "proto.h"
 #include "proto_shared.h"
+#include "fwid.h"
 #include "reg.h"
 #include "offset.h"
 #include "test.h"
@@ -699,7 +703,7 @@ int test_status_error(test_t *t, test_param_t *p)
 
   /* get error (and clear it) */
   UWORD result;
-  res = reg_get_error(pb->proto, &result);
+  res = reg_base_get_error(pb->proto, &result);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_error failed";
@@ -792,6 +796,61 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
   if((status & PROTO_STATUS_ATTACHED) == PROTO_STATUS_ATTACHED) {
     p->error = "still attached";
     p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_base_regs(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  UWORD fw_version, machtag, fw_id, error;
+
+  /* get fw_version */
+  int res = reg_base_get_fw_version(pb->proto, &fw_version);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get_fw_version failed";
+    return res;
+  }
+
+  /* get machtag */
+  res = reg_base_get_fw_machtag(pb->proto, &machtag);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get_fw_machtag failed";
+    return res;
+  }
+
+  /* get fw_id */
+  res = reg_base_get_fw_id(pb->proto, &fw_id);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get_fw_id failed";
+    return res;
+  }
+
+  /* get error */
+  res = reg_base_get_error(pb->proto, &error);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "get_error failed";
+    return res;
+  }
+
+  /* check fw_id */
+  if(fw_id != FWID_TEST_PROTO) {
+    p->error = "no proto test firmware!";
+    p->section = "check";
+    return 1;
+  }
+
+  /* assume no error */
+  if(error != 0) {
+    p->error = "device error set!";
+    p->section = "check";
     return 1;
   }
 

@@ -7,6 +7,7 @@
 
 #include "proto.h"
 #include "proto_shared.h"
+#include "base_reg_def.h"
 #include "reg.h"
 
 int reg_get(proto_handle_t *ph, UWORD num, UWORD *val)
@@ -33,27 +34,24 @@ int reg_set(proto_handle_t *ph, UWORD num, UWORD val)
   return res;
 }
 
-int reg_get_fw_version(proto_handle_t *ph, UWORD *version)
+// base register
+
+int reg_base_get_fw_version(proto_handle_t *ph, UWORD *version)
 {
-  return reg_get(ph, PROTO_REG_BASE_FW_VERSION, version);
+  return reg_get(ph, BASE_REG_FW_VERSION, version);
 }
 
-int reg_get_fw_machtag(proto_handle_t *ph, UWORD *machtag)
+int reg_base_get_fw_machtag(proto_handle_t *ph, UWORD *machtag)
 {
-  return reg_get(ph, PROTO_REG_BASE_FW_MACHTAG, machtag);
+  return reg_get(ph, BASE_REG_FW_MACHTAG, machtag);
 }
 
-int reg_get_fw_id(proto_handle_t *ph, UWORD *fw_id)
+int reg_base_get_fw_id(proto_handle_t *ph, UWORD *fw_id)
 {
-  return reg_get(ph, PROTO_REG_BASE_FW_ID, fw_id);
+  return reg_get(ph, BASE_REG_FW_ID, fw_id);
 }
 
-int reg_get_num_regs(proto_handle_t *ph, UWORD *num_regs)
+int reg_base_get_error(proto_handle_t *ph, UWORD *num_regs)
 {
-  return reg_get(ph, PROTO_REG_BASE_NUM_REGS, num_regs);
-}
-
-int reg_get_error(proto_handle_t *ph, UWORD *num_regs)
-{
-  return reg_get(ph, PROTO_REG_BASE_ERROR, num_regs);
+  return reg_get(ph, BASE_REG_ERROR, num_regs);
 }
