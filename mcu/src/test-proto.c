@@ -50,8 +50,8 @@ static void sim_error(u16 *valp, u08 mode)
 // read-only test values
 static const u16 ro_rom_word ROM_ATTR = 1;
 static u16 ro_ram_word = 3;
-static void ro_func(u16 *val, u08 mode) {
-  *val = 5;
+static void func_max_size(u16 *val, u08 mode) {
+  *val = MAX_BUFFER_SIZE;
 }
 
 // read/write test values
@@ -76,7 +76,7 @@ REG_TABLE_BEGIN(test)
   /* user read-only regs */
   REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
   REG_TABLE_RO_RAM_W(ro_ram_word),      // user+1
-  REG_TABLE_RO_FUNC(ro_func),           // user+2
+  REG_TABLE_RO_FUNC(func_max_size),     // user+2
   /* user read-write regs */
   REG_TABLE_RW_FUNC(func_test_size),    // user+3
   REG_TABLE_RW_RAM_W(test_word),        // user+4
@@ -101,14 +101,15 @@ void proto_api_read_msg_done(u08 chn, u08 status)
 
 u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
 {
-  DS("[W#"); DB(chn); DC(':'); DW(test_size);
-  *max_size = test_size;
+  *max_size = MAX_BUFFER_SIZE;
+  DS("[W#"); DB(chn); DC(':'); DW(*max_size);
   return buffer;
 }
 
 void proto_api_write_msg_done(u08 chn, u16 size)
 {
   DC(':'); DW(size); DC(']'); DNL;
+  test_size = size;
 }
 
 

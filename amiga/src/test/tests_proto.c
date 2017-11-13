@@ -282,10 +282,9 @@ static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
   return result;
 }
 
-int test_msg_size(test_t *t, test_param_t *p)
+static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
-  ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
   if(mem_w == 0) {
@@ -344,6 +343,30 @@ int test_msg_size(test_t *t, test_param_t *p)
   FreeVec(mem_w);
   FreeVec(mem_r);
   return 0;
+}
+
+int test_msg_size(test_t *t, test_param_t *p)
+{
+  ULONG size = get_default_size();
+  return msg_read_write(t, p, size);
+}
+
+#define REG_MAX_BYTES (PROTO_REGOFFSET_USER + 2)
+
+int test_msg_size_max(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  UWORD max_bytes;
+
+  /* read max size from firmware */
+  int res = reg_get(pb->proto, REG_MAX_BYTES, &max_bytes);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read max_bytes";
+    return res;
+  }
+
+  return msg_read_write(t, p, max_bytes);
 }
 
 int test_msg_size_chunks(test_t *t, test_param_t *p)
@@ -466,6 +489,46 @@ int test_msg_write(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_msg_write_too_large(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  UWORD size;
+
+  /* read max size from firmware */
+  int res = reg_get(pb->proto, REG_MAX_BYTES, &size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read max_bytes";
+    return res;
+  }
+
+  /* too many now */
+  size += 2;
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w);
+
+  UWORD words = size>>1;
+
+  /* send buffer and expect msg to large */
+  res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
+  if(res != PROTO_RET_MSG_TOO_LARGE) {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  FreeVec(mem_w);
+  return 0;
+}
+
 int test_msg_read(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
@@ -485,6 +548,44 @@ int test_msg_read(test_t *t, test_param_t *p)
   UWORD got_words = size_r>>1;
   int res = proto_msg_read_single(pb->proto, test_channel, mem_r, &got_words);
   if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return res;
+  }
+
+  FreeVec(mem_r);
+  return 0;
+}
+
+int test_msg_read_too_large(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+
+  UWORD size;
+
+  /* read max size from firmware */
+  int res = reg_get(pb->proto, REG_MAX_BYTES, &size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read max_bytes";
+    return res;
+  }
+
+  /* too many now */
+  size += 2;
+
+  BYTE *mem_r = AllocVec(size, MEMF_PUBLIC);
+  if(mem_r == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  UWORD words = size>>1;
+
+  /* receive buffer */
+  res = proto_msg_read_single(pb->proto, test_channel, mem_r, &words);
+  if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
     p->section = "read";
     return res;

@@ -14,9 +14,12 @@ int test_offset_write_read(test_t *t, test_param_t *p);
 int test_msg_empty(test_t *t, test_param_t *p);
 int test_msg_tiny(test_t *t, test_param_t *p);
 int test_msg_size(test_t *t, test_param_t *p);
+int test_msg_size_max(test_t *t, test_param_t *p);
 int test_msg_size_chunks(test_t *t, test_param_t *p);
 int test_msg_write(test_t *t, test_param_t *p);
 int test_msg_read(test_t *t, test_param_t *p);
+int test_msg_write_too_large(test_t *t, test_param_t *p);
+int test_msg_read_too_large(test_t *t, test_param_t *p);
 int test_status_read_pending(test_t *t, test_param_t *p);
 int test_status_ack_irq(test_t *t, test_param_t *p);
 int test_status_error(test_t *t, test_param_t *p);
@@ -33,9 +36,12 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_msg_empty, "me", "write/read empty message"}, \
   { test_msg_tiny, "mt", "write/read tiny 4 byte message"}, \
   { test_msg_size, "ms", "write/read messages of given size"}, \
+  { test_msg_size_max, "msx", "write/read messages of max size"}, \
   { test_msg_size_chunks, "msc", "write/read messages of given size in two chunks"}, \
   { test_msg_write, "mw", "write message of given size"}, \
   { test_msg_read, "mr", "read message of given size"}, \
+  { test_msg_write_too_large, "mwtl", "write too large message"}, \
+  { test_msg_read_too_large, "mrtl", "read too large message"}, \
   { test_status_read_pending, "sp", "test status read pending flag"}, \
   { test_status_ack_irq, "sa", "test ack irq on first pending read request"}, \
   { test_status_error, "se", "test status error code" }, \
