@@ -45,14 +45,18 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = $(ARCH_SRCS)
+BASE_SRCS = $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
-PROTO_SRCS = proto_low.S proto.c reg.c action.c func.c
+PROTO_SRCS = $(PROTO_ARCH_SRCS)
+PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
 HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
 DRIVER_SRCS = driver.c drv_null.c
 
-INCLUDES := src src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/$(MACH_DIR) src/base
+INCLUDES := src
+INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
+INCLUDES += src/$(MACH_DIR)
+INCLUDES += src/base
 INCLUDES += src/proto src/handler src/driver
 INCLUDES += ../common/src
 VPATH=$(INCLUDES)
