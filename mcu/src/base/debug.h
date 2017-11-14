@@ -20,10 +20,12 @@
 #define DL(x)  uart_send_hex_long(x)
 
 // pointer
-#if CONFIG_ARCH == avr
+#if CONFIG_PTR_BITS == 16
 #define DP(x)  uart_send_hex_word((u16)x)
-#else
+#elif CONFIG_PTR_BITS == 32
 #define DP(x)  uart_send_hex_long((u32)x)
+#else
+#error invalid CONFIG_PTR_BITS
 #endif
 
 // debug newline

@@ -89,26 +89,26 @@ REG_TABLE_SETUP(test)
 
 u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size)
 {
-  DS("[R#"); DB(chn); DC('+'); DW(test_size);
+  DS("[R#"); DB(chn); DC('+'); DW(test_size); DC(']');
   *ret_size = test_size;
   return buffer;
 }
 
 void proto_api_read_msg_done(u08 chn, u08 status)
 {
-  DC(']'); DNL;
+  DS("[r#"); DB(chn); DC(':'); DB(status); DC(']'); DNL;
 }
 
 u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
 {
   *max_size = MAX_BUFFER_SIZE;
-  DS("[W#"); DB(chn); DC(':'); DW(*max_size);
+  DS("[W#"); DB(chn); DC(':'); DW(*max_size); DC(']');
   return buffer;
 }
 
 void proto_api_write_msg_done(u08 chn, u16 size)
 {
-  DC(':'); DW(size); DC(']'); DNL;
+  DS("[w#"); DB(chn); DC(':'); DW(size); DC(']'); DNL;
   test_size = size;
 }
 

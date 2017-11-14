@@ -37,22 +37,19 @@ int main(void)
   }
 #endif
 
-  while(1) {
-    u08 on = 1;
-    for(int i=0;i<10;i++) {
-      system_wdt_reset();
-
-      timer_delay(100);
-
-      on = !on;
-      led_set(on);
-    }
-
 #ifdef TEST_SYS_RESET
     uart_send_pstring(PSTR("reset!"));
     uart_send_crlf();
     system_sys_reset();
 #endif
+
+  while(1) {
+    system_wdt_reset();
+    u08 cmd = proto_low_get_cmd();
+    uart_send_hex_byte(cmd);
+    uart_send_crlf();
+
+    timer_delay(200);
   }
 
   return 0;

@@ -35,6 +35,7 @@ MACHTAG_ID=$(word 1,$(MT_VALS))
 MACHTAG_SYMBOL=$(word 2,$(MT_VALS))
 MACH_UPPER=$(shell echo "$(CONFIG_MACH)" | tr a-z A-Z)
 CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG_SYMBOL) -DMACH_$(MACH_UPPER)
+dummy := $(info arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH))
 
 # generate version tag
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
@@ -62,7 +63,7 @@ INCLUDES += ../common/src
 VPATH=$(INCLUDES)
 
 # test-base
-TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) proto_low.S
+TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)

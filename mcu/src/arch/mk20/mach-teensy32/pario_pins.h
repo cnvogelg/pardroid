@@ -4,6 +4,9 @@
 #include <stdint.h>
 #include "kinetis.h"
 
+#define irq_off()      __disable_irq()
+#define irq_on()       __enable_irq()
+
 /* Parallel Port Setup
 
 
