@@ -28,14 +28,31 @@ int main(void)
 
   proto_low_init(0);
 
-  u08 on = 1;
-  while(1) {
-    system_wdt_reset();
-
+#ifdef TEST_WAIT_WATCHDOG
+  // test wd
+  for(int i=0;i<100;i++) {
+    uart_send_hex_byte(i);
+    uart_send_crlf();
     timer_delay(100);
+  }
+#endif
 
-    on = !on;
-    led_set(on);
+  while(1) {
+    u08 on = 1;
+    for(int i=0;i<10;i++) {
+      system_wdt_reset();
+
+      timer_delay(100);
+
+      on = !on;
+      led_set(on);
+    }
+
+#ifdef TEST_SYS_RESET
+    uart_send_pstring(PSTR("reset!"));
+    uart_send_crlf();
+    system_sys_reset();
+#endif
   }
 
   return 0;

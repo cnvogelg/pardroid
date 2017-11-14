@@ -72,7 +72,7 @@ def check(cfg, src_dir):
     return False
   mach_dir = get_mach_dir(cfg)
   if not os.path.isdir(os.path.join(src_dir, mach_dir)):
-    log("unsupported CONFIG_MACH={}".format(mach))
+    log("unsupported CONFIG_MACH={}".format(mach_dir))
   return True
 
 
