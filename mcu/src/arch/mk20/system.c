@@ -24,19 +24,10 @@ void system_init(void)
 
 void system_sys_reset(void)
 {
-  __disable_irq();
-  // unlock
-  WDOG_UNLOCK = WDOG_UNLOCK_SEQ1;
-  WDOG_UNLOCK = WDOG_UNLOCK_SEQ2;
-  __asm__ volatile ("nop");
-  __asm__ volatile ("nop");
-  // enable
-  WDOG_STCTRLH = WDOG_STCTRLH_ALLOWUPDATE | WDOG_STCTRLH_WDOGEN;
-  // 1 ms
-  WDOG_TOVALL = 1;
-  WDOG_TOVALH = 0;
-  WDOG_PRESC = 0; // 1KHz dog timer
-  __enable_irq();
+  // fastest way to trigger a watchdog reset:
+  // write invalid value to UNLOCK register
+  WDOG_UNLOCK = 0;
+
   // wait for my death
   while(1) {}
 }
