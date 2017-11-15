@@ -220,6 +220,8 @@ u08  proto_low_read_block(u16 num_words, u08 *buffer, u16 chn_ext)
 
   irq_off();
 
+  u08 old_status = din();
+
   rak_lo();
   wait_clk_hi();
   ddr_out();
@@ -234,29 +236,28 @@ u08  proto_low_read_block(u16 num_words, u08 *buffer, u16 chn_ext)
   wait_clk_hi();
   dout(sl);
 
-  u16 i;
-  for(i=0;i<num_words;i++) {
-#if 1
-    // wait_clk_lo
-    while(clk()) {
-      // abort if cflg == lo
-      if(!cflg()) {
-        goto read_end;
-      }
+  u16 i=0;
+
+  // wait_clk_lo
+  while(clk()) {
+    // did master abort?
+    if(!cflg()) {
+      goto read_end;
     }
-#else
+  }
+
+  for(i=0;i<num_words;i++) {
     wait_clk_lo();
-#endif
     dout(*buffer++);
     wait_clk_hi();
     dout(*buffer++);
   }
-#if 1
 read_end:
-#endif
 
   wait_clk_lo();
   ddr_idle();
+  // restore status
+  dout(old_status);
 
   wait_clk_hi();
   rak_hi();
