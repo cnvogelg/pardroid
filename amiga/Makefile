@@ -14,7 +14,8 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
-INCLUDES+=src/parbox src/engine src/pablo src/test
+INCLUDES+=src/parbox src/engine src/pablo
+INCLUDES+=src/test src/mini-test
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
 
@@ -28,6 +29,7 @@ TEST_SRCS = test.c
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
 PARBOX_SRCS += parbox.c reg.c offset.c engine.c request.c channel.c
 
+# ---- mini tests
 # test-pario
 TEST_PARIO_SRCS = test-pario.c $(PARIO_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-pario,$(TEST_PARIO_SRCS)))
@@ -48,10 +50,12 @@ $(eval $(call make-program,test-worker,$(TEST_WORKER_SRCS)))
 TEST_ENGINE_SRCS = test-engine.c $(PARBOX_SRCS)
 $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 
-# parbox-test
-PARBOX_TEST_SRCS = parbox-test.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
-$(eval $(call make-program,parbox-test,$(PARBOX_TEST_SRCS)))
+# ----- tests
+# pb-test-proto
+PB_TEST_PROTO_SRCS = pb-test-proto.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
+$(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
 
+# ----- tools
 # parbox-engine
 PARBOX_ENGINE_SRCS = parbox-engine.c $(PARBOX_SRCS)
 $(eval $(call make-program,parbox-engine,$(PARBOX_ENGINE_SRCS)))
