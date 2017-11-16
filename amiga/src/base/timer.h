@@ -16,7 +16,6 @@ typedef unsigned long long time_stamp_t;
 extern ULONG timer_eclock_get(struct timer_handle *th, time_stamp_t *val);
 extern void timer_eclock_delta(time_stamp_t *end, time_stamp_t *begin, time_stamp_t *delta);
 extern ULONG timer_eclock_to_us(struct timer_handle *th, time_stamp_t *et);
-extern ULONG timer_eclock_to_bps(struct timer_handle *th, time_stamp_t *delta, ULONG bytes);
 extern void timer_eclock_split(time_stamp_t *ts, ULONG *hi, ULONG *lo);
 
 /* signal based timer */

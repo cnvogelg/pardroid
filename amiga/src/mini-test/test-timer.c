@@ -35,8 +35,6 @@ int dosmain(void)
         Printf("eclock: diff=%08lx.%08lx\n", hid, lod);
         ULONG us = timer_eclock_to_us(th, &delta);
         Printf("us: %ld\n", us);
-        ULONG bps = timer_eclock_to_bps(th, &delta, 100UL);
-        Printf("bps: %ld\n", bps);
 
         /* test timer: busy wait for timeout */
         volatile UBYTE *flag = timer_get_flag(th);

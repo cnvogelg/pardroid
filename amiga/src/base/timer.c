@@ -173,11 +173,6 @@ ULONG timer_eclock_to_us(struct timer_handle *th, time_stamp_t *delta)
   return (ULONG)(*delta * 1000000UL / th->eClockFreq);
 }
 
-ULONG timer_eclock_to_bps(struct timer_handle *th, time_stamp_t *delta, ULONG bytes)
-{
-  return (ULONG)(*delta * bytes / th->eClockFreq);
-}
-
 union conv {
   time_stamp_t ts;
   struct {

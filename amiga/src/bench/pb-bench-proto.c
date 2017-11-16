@@ -16,11 +16,13 @@
 static const char *TEMPLATE =
   "L=Loop/S,"
   "N=Num/K/N,"
-  "Bench/K";
+  "Bench/K,"
+  "Size/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
   char *bench;
+  ULONG *size;
 } params_t;
 static params_t params = { 0, NULL, "action" };
 
@@ -30,6 +32,19 @@ static ULONG get_num(void)
     return 100;
   } else {
     return *params.num;
+  }
+}
+
+static ULONG get_size(void)
+{
+  if(params.size == NULL) {
+    return 1024;
+  } else {
+    ULONG s = *params.size;
+    if(s&1) {
+      s++;
+    }
+    return s;
   }
 }
 
@@ -47,10 +62,133 @@ static void bench_action(void *user_data)
       (LONG)error, deltas[0], deltas[1]);
 }
 
+typedef int (*loop_func_t)(proto_handle_t *ph, void *user_data);
+
+static void run_loop(parbox_handle_t *pb, ULONG num, ULONG size,
+                     loop_func_t func, void *user_data)
+{
+  ULONG sum_size = 0;
+  ULONG i;
+  time_stamp_t start, end;
+  timer_eclock_get(pb->timer, &start);
+
+  for(i=0;i<num;i++) {
+    int status = func(pb->proto, user_data);
+    if(status != PROTO_RET_OK) {
+      Printf("ERROR: %lu = %s\n", status, proto_perror(status));
+      break;
+    }
+    sum_size += size;
+  }
+
+  timer_eclock_get(pb->timer, &end);
+  time_stamp_t delta;
+  timer_eclock_delta(&end, &start, &delta);
+
+  ULONG us = timer_eclock_to_us(pb->timer, &delta);
+  ULONG kbps = (sum_size * 1000UL) / us;
+  Printf("#%lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, us, kbps);
+}
+
+typedef struct {
+  UBYTE *buffer;
+  ULONG  num_words;
+} msgio_data_t;
+
+static int func_msg_write(proto_handle_t *ph, void *user_data)
+{
+  msgio_data_t *data = (msgio_data_t *)user_data;
+  return proto_msg_write_single(ph, 0, data->buffer, data->num_words);
+}
+
+static int func_msg_read(proto_handle_t *ph, void *user_data)
+{
+  msgio_data_t *data = (msgio_data_t *)user_data;
+  UWORD size = data->num_words;
+  return proto_msg_read_single(ph, 0, data->buffer, &size);
+}
+
+static int func_msg_write_read(proto_handle_t *ph, void *user_data)
+{
+  msgio_data_t *data = (msgio_data_t *)user_data;
+  int status = proto_msg_write_single(ph, 0, data->buffer, data->num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  UWORD size = data->num_words;
+  return proto_msg_read_single(ph, 0, data->buffer, &size);
+}
+
+static void bench_msg_write(void *user_data)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  proto_handle_t *ph = pb->proto;
+  ULONG num = get_num();
+  ULONG size = get_size();
+  Printf("message write: num=%lu, size=%lu\n", num, size);
+
+  UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
+  if(buf == NULL) {
+    PutStr("No Memory!\n");
+    return;
+  }
+
+  ULONG num_words = size >> 1;
+  msgio_data_t data = { buf, num_words };
+  run_loop(pb, num, size, func_msg_write, &data);
+
+  FreeVec(buf);
+}
+
+static void bench_msg_read(void *user_data)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  proto_handle_t *ph = pb->proto;
+  ULONG num = get_num();
+  ULONG size = get_size();
+  Printf("message read: num=%lu, size=%lu\n", num, size);
+
+  UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
+  if(buf == NULL) {
+    PutStr("No Memory!\n");
+    return;
+  }
+
+  ULONG num_words = size >> 1;
+  msgio_data_t data = { buf, num_words };
+  run_loop(pb, num, size, func_msg_read, &data);
+
+  FreeVec(buf);
+}
+
+static void bench_msg_write_read(void *user_data)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  proto_handle_t *ph = pb->proto;
+  ULONG num = get_num();
+  ULONG size = get_size();
+  Printf("message write/read: num=%lu, size=%lu\n", num, size);
+
+  UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
+  if(buf == NULL) {
+    PutStr("No Memory!\n");
+    return;
+  }
+
+  ULONG num_words = size >> 1;
+  msgio_data_t data = { buf, num_words };
+  run_loop(pb, num, size * 2, func_msg_write_read, &data);
+
+  FreeVec(buf);
+}
+
 /* benchmark table */
 
 static bench_def_t all_benches[] = {
   { bench_action, "action", "test action command latency" },
+  { bench_msg_write, "mw", "message write benchmark" },
+  { bench_msg_read, "mr", "message read benchmark" },
+  { bench_msg_write_read, "mwr", "message write/read benchmark" },
   { NULL, NULL, NULL }
 };
 
