@@ -19,6 +19,10 @@ clean:
 clean-all:
 	$(H)rm -rf $(BUILD_BASE_DIR)
 
+INSTALL_DIR ?= /Volumes/AMIGA
+install: $(PBL_FILES)
+	cp $(PBL_FILES) $(INSTALL_DIR)/
+
 # distribution
 dist: $(DIST_FILES)
 

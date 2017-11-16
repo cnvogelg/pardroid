@@ -34,6 +34,7 @@ LDFLAGS += $(LDFLAGS_ARCH)
 # list of firmwares, created by make-firmware
 FIRMWARES :=
 DIST_FILES :=
+PBL_FILES :=
 
 # map-src-to-tgt
 # $1 = src files
@@ -78,6 +79,7 @@ endef
 # $1 = program name
 define dist-pbl
 DIST_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
+PBL_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
 FILES_$1 += $(call map-bin,$1.pbl)
 
 $1-prog-img: $(call map-bin,$1.img) $1-check
