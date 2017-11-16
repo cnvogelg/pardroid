@@ -28,7 +28,8 @@ TEST_SRCS = test.c
 BENCH_SRCS = bench.c
 
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
-PARBOX_SRCS += parbox.c reg.c offset.c engine.c request.c channel.c
+PARBOX_SRCS += parbox.c reg.c offset.c status.c
+PARBOX_SRCS += engine.c request.c channel.c
 
 # ---- mini tests
 # test-pario

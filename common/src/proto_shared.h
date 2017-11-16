@@ -46,8 +46,3 @@
 #define PROTO_REGOFFSET_BASE             0x00
 #define PROTO_REGOFFSET_HANDLER          0x20
 #define PROTO_REGOFFSET_USER             0x80
-
-// device errors
-#define PROTO_ERROR_NONE                0
-#define PROTO_ERROR_ALREADY_ATTACHED    0x10
-#define PROTO_ERROR_ALREADY_DETACHED    0x20

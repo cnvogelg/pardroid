@@ -98,13 +98,10 @@ void status_clear_error_mask(u08 mask)
   status_update();
 }
 
-u08 status_clear_error(void)
+u08 status_get_error(void)
 {
   DS("e:"); DB(error_code); DNL;
-  u08 error = error_code;
-  error_code = 0;
-  status_update();
-  return error;
+  return error_code;
 }
 
 void status_attach(void)
@@ -114,7 +111,6 @@ void status_attach(void)
     attached = 1;
   } else {
     DS("sa?"); DNL;
-    status_set_error_mask(PROTO_ERROR_ALREADY_ATTACHED);
   }
   status_update();
 }
@@ -126,7 +122,6 @@ void status_detach(void)
     attached = 0;
   } else {
     DS("sd?"); DNL;
-    status_set_error_mask(PROTO_ERROR_ALREADY_DETACHED);
   }
   status_update();
 }

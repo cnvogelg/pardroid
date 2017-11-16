@@ -31,6 +31,8 @@ int parbox_init(parbox_handle_t *pb, struct Library *SysBase)
     return PARBOX_ERROR_PROTO;
   }
 
+  status_init(&pb->status);
+
   return PARBOX_OK;
 }
 

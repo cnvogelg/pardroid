@@ -20,6 +20,5 @@ REG_TABLE_END(base, 0, 0)
 
 void base_reg_get_error(u16 *valp, u08 mode)
 {
-  u08 e = status_clear_error();
-  *valp = e;
+  *valp = status_get_error();
 }

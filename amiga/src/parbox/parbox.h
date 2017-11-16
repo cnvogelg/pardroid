@@ -4,6 +4,7 @@
 #include "pario.h"
 #include "timer.h"
 #include "proto.h"
+#include "status.h"
 
 /* parbox init error codes */
 #define PARBOX_OK             0
@@ -16,6 +17,7 @@ struct parbox_handle {
   struct timer_handle *timer;
   struct proto_handle *proto;
   struct pario_port *port;
+  status_data_t  status;
 };
 
 typedef struct parbox_handle parbox_handle_t;

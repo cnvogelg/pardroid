@@ -602,10 +602,17 @@ int test_status_read_pending(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
-  /* assume nothing is pending */
-  UBYTE status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active";
+  /* update status */
+  int res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #1";
+    return res;
+  }
+
+  /* assume no flags set */
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "pre";
     return 1;
   }
@@ -613,26 +620,33 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim_pending */
-  int res = reg_set(pb->proto, REG_SIM_PENDING, channel);
+  res = reg_set(pb->proto, REG_SIM_PENDING, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
     return res;
   }
 
+  /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #2";
+    return res;
+  }
+
   /* assume pending is set */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == 0) {
-    p->error = "pending inactive";
+  if(pb->status.flags != STATUS_FLAGS_PENDING) {
+    p->error = "status not pending";
     p->section = "main";
     return 1;
   }
 
   /* check that channel is set */
-  if((status & PROTO_STATUS_CHANNEL_MASK) != channel) {
+  if(pb->status.pending_channel != channel) {
     p->error = "wrong channel in status";
     p->section = "status";
-    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status, channel);
+    sprintf(p->extra, "got=%02x want=%02x", (UWORD)pb->status.pending_channel, channel);
   }
 
   /* sim_pending with no channel (0xff) */
@@ -643,10 +657,17 @@ int test_status_read_pending(test_t *t, test_param_t *p)
     return res;
   }
 
+  /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #3";
+    return res;
+  }
+
   /* assume pending is cleared again */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active";
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "post";
     return 1;
   }
@@ -735,17 +756,17 @@ int test_status_error(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
-  /* assume nothing is pending */
-  UBYTE status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #1";
-    p->section = "pre";
-    return 1;
+ /* update status */
+  int res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #1";
+    return res;
   }
 
-  /* assume no error is set already */
-  if((status & PROTO_STATUS_ERROR) == PROTO_STATUS_ERROR) {
-    p->error = "already has error";
+  /* assume no flags set */
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "pre";
     return 1;
   }
@@ -757,54 +778,55 @@ int test_status_error(test_t *t, test_param_t *p)
   }
 
   /* simulate an error */
-  int res = reg_set(pb->proto, REG_SIM_ERROR, error);
+  res = reg_set(pb->proto, REG_SIM_ERROR, error);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_error #1";
     return res;
   }
 
-  /* assume status is set */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #2";
-    p->section = "main";
-    return 1;
-  }
-  if((status & PROTO_STATUS_ERROR) == 0) {
-    p->error = "no error was set";
-    p->section = "main";
-    return 1;
-  }
-
-  /* get error (and clear it) */
-  UWORD result;
-  res = reg_base_get_error(pb->proto, &result);
-  if(res != 0) {
+ /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
     p->error = proto_perror(res);
-    p->section = "get_error failed";
+    p->section = "status_update #2";
     return res;
   }
 
+  /* assume error is set */
+  if(pb->status.flags != STATUS_FLAGS_ERROR) {
+    p->error = "status not error";
+    p->section = "main";
+    return 1;
+  }
+
   /* check if correct error code was returned */
-  if(result != error) {
+  if(pb->status.error != error) {
     p->error = "wrong error returned";
     p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", result, (UWORD)error);
+    sprintf(p->extra, "got=%02x want=%02x", error, pb->status.error);
     return 1;
   }
 
-  /* make sure error status is cleared now */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #3";
-    p->section = "post";
-    return 1;
+  /* simulate error removal */
+  reg_set(pb->proto, REG_SIM_ERROR, 0);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "sim_error #2";
+    return res;
   }
 
-  /* assume nothing is pending */
-  if((status & PROTO_STATUS_ERROR) == PROTO_STATUS_ERROR) {
-    p->error = "error was not cleared";
+  /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #3";
+    return res;
+  }
+
+  /* assume error is not set */
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "post";
     return 1;
   }
@@ -816,38 +838,40 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
 
-  /* assume nothing is pending */
-  UBYTE status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #1";
-    p->section = "pre";
-    return 1;
+ /* update status */
+  int res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #1";
+    return res;
   }
 
-  /* assume not attached */
-  if((status & PROTO_STATUS_ATTACHED) == PROTO_STATUS_ATTACHED) {
-    p->error = "already is attached";
+  /* assume no flags set */
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "pre";
     return 1;
   }
 
   /* attach device */
-  int res = proto_action(pb->proto, PROTO_ACTION_ATTACH);
+  res = proto_action(pb->proto, PROTO_ACTION_ATTACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "attach failed";
     return res;
   }
 
-  /* assume status is set */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #2";
-    p->section = "main";
-    return 1;
+ /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #2";
+    return res;
   }
-  if((status & PROTO_STATUS_ATTACHED) == 0) {
-    p->error = "not attached";
+
+  /* assume attached flag set */
+  if(pb->status.flags != STATUS_FLAGS_ATTACHED) {
+    p->error = "status not attached";
     p->section = "main";
     return 1;
   }
@@ -860,17 +884,17 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* make sure error status is cleared now */
-  status = proto_get_status(pb->proto);
-  if((status & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    p->error = "pending active #3";
-    p->section = "post";
-    return 1;
+  /* update status */
+  res = status_update(pb->proto, &pb->status);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "status_update #3";
+    return res;
   }
 
-  /* assume not attached */
-  if((status & PROTO_STATUS_ATTACHED) == PROTO_STATUS_ATTACHED) {
-    p->error = "still attached";
+  /* assume error is not set */
+  if(pb->status.flags != STATUS_FLAGS_INIT) {
+    p->error = "status not init";
     p->section = "post";
     return 1;
   }
