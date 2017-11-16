@@ -24,7 +24,7 @@ typedef struct {
   char *bench;
   ULONG *size;
 } params_t;
-static params_t params = { 0, NULL, "action" };
+static params_t params = { 0, NULL, NULL };
 
 static ULONG get_num(void)
 {

@@ -31,13 +31,24 @@ void list_benches(bench_def_t *first)
 
 int bench_main(bench_def_t benches[], const char *name, void *user_data)
 {
-  bench_def_t *def = find_bench(benches, name);
-  if(def == NULL) {
-    list_benches(benches);
-    return RETURN_WARN;
-  }
+  // run single named test
+  if(name != NULL) {
+    bench_def_t *def = find_bench(benches, name);
+    if(def == NULL) {
+      list_benches(benches);
+      return RETURN_WARN;
+    }
 
-  def->func(user_data);
+    def->func(user_data);
+  }
+  // run all
+  else {
+    bench_def_t *def = benches;
+    while(def->func != NULL) {
+      def->func(user_data);
+      def++;
+    }
+  }
 
   return RETURN_OK;
 }

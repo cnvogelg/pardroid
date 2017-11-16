@@ -79,6 +79,13 @@ clk_hi  MACRO
         ENDM
 
 
+; --- clk_set ---
+; set clock signal
+clk_set MACRO
+        move.b  \1,(a5)
+        ENDM
+
+
 ; --- wait_rak_lo ---
 ; wait for RAK to become low or if timeout triggers
 ; \1 = jump label on timeout
@@ -626,6 +633,11 @@ _proto_low_write_block:
         ; slave signals by setting rak to hi
         check_rak_lo    plmw_msg_too_large
 
+        ; prepare clock signals
+        move.w          d4,d5
+        bclr            d3,d4 ; d4 = clk_lo
+        bset            d3,d5 ; d5 = clk_hi
+
 plmw_chunks:
         ; get chunk size and buffer pointer
         move.l          (a2)+,d1
@@ -640,10 +652,10 @@ plmw_chunks:
 plmw_loop:
         ; odd byte
         set_data        (a0)+
-        clk_lo
+        clk_set         d4
         ; even byte
         set_data        (a0)+
-        clk_hi
+        clk_set         d5
 
         dbra            d1,plmw_loop
         bra.s           plmw_chunks
@@ -728,7 +740,7 @@ _proto_low_read_block:
         tst.w           d5 ; empty message
         beq.s           plmr_done_ok
         cmp.w           d1,d5 ; max size
-        bls.s           plmr_chunk
+        bls.s           plmr_size_ok
 
         ; --- message too large ---
         ; signal to slave by setting CFLG to lo
@@ -739,6 +751,12 @@ _proto_low_read_block:
         cflg_hi         d1
         ; end transfer
         bra.s           plmr_done
+
+plmr_size_ok:
+        ; prepare clock signals
+        move.w          d4,d6
+        bclr            d3,d4 ; d4 = clk_lo
+        bset            d3,d6 ; d6 = clk_hi
 
 plmr_chunk:
         ; get current chunk size and pointer
@@ -757,10 +775,10 @@ plmr_keep:
         ; data copy loop
 plmr_copy_loop:
         ; odd byte
-        clk_lo
+        clk_set         d4
         get_data        (a0)+
         ; even byte
-        clk_hi
+        clk_set         d6
         get_data        (a0)+
         dbra            d0,plmr_copy_loop
 
