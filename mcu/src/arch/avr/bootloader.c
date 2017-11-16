@@ -174,11 +174,6 @@ void proto_api_write_msg_done(u08 chan, u16 size)
   uart_send_crlf();
 }
 
-u08 proto_api_read_is_pending(void)
-{
-  return 0;
-}
-
 u08 proto_api_get_end_status(void)
 {
   return PROTO_STATUS_BOOTLOADER;

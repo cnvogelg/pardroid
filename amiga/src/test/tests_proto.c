@@ -610,19 +610,10 @@ int test_status_read_pending(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* write a message to see it works */
-  ULONG data = 0xdeadbeef;
-  int res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "write msg";
-    return res;
-  }
-
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim_pending */
-  res = reg_set(pb->proto, REG_SIM_PENDING, channel);
+  int res = reg_set(pb->proto, REG_SIM_PENDING, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -644,14 +635,6 @@ int test_status_read_pending(test_t *t, test_param_t *p)
     sprintf(p->extra, "got=%02x want=%02x", (UWORD)status, channel);
   }
 
-  /* now message write must be aborted due to pending read */
-  res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
-  if(res != PROTO_RET_WRITE_ABORT) {
-    p->error = proto_perror(res);
-    p->section = "write msg not aborted";
-    return 1;
-  }
-
   /* sim_pending with no channel (0xff) */
   res = reg_set(pb->proto, REG_SIM_PENDING, 0xff);
   if(res != 0) {
@@ -666,14 +649,6 @@ int test_status_read_pending(test_t *t, test_param_t *p)
     p->error = "pending active";
     p->section = "post";
     return 1;
-  }
-
-  /* message write now works again */
-  res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "write msg2";
-    return res;
   }
 
   return 0;

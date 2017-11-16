@@ -9,6 +9,12 @@ clean-all:
 # distribution
 dist: $(DIST_FILES)
 
+# install files
+INSTALL_DIR ?= /Volumes/AMIGA
+
+install: $(BIN_FILES)
+	cp $(BIN_FILES) $(INSTALL_DIR)
+
 # compile
 $(OBJ_DIR)/%.o : %.c
 	@echo "  CC   $<"

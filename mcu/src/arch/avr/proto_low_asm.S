@@ -66,14 +66,6 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
     .endm
 
-    .macro sbic_rak
-    sbic    _SFR_IO_ADDR(PAR_BUSY_PIN), PAR_BUSY_BIT
-    .endm
-
-    .macro sbis_rak
-    sbis    _SFR_IO_ADDR(PAR_BUSY_PIN), PAR_BUSY_BIT
-    .endm
-
 
     ; ----- proto_low_init -----
     ; void proto_low_init(u08 status)
@@ -111,21 +103,10 @@ proto_low_init:
     .section .text.proto_low_set_status
     .global  proto_low_set_status
 proto_low_set_status:
-    ; if rak is low then abort
-    ; i.e. we are inside an action/function and master is waiting
-    ; we will restore the state after the action/function
-    sbis_rak
-    rjmp    plss_abort
     ; if cflg is high then perform change
-    ; i.e. we are not inside a action/function nor in a master update
+    ; (abort set if host currently reads status)
     sbic_cflg
     rjmp    plss_ok
-    ; if clk is low then perform change
-    ; i.e. cflg is low but we are waiting for action/function to begin
-    sbis_clk
-    rjmp    plss_ok
-    ; wait
-    rjmp    proto_low_set_status
 plss_abort:
     clr     r24
     ret

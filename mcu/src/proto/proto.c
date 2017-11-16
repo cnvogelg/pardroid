@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "system.h"
 
+static u08 in_cmd = 0xff;
+
 void proto_init(u08 status)
 {
   proto_low_init(status);
@@ -55,6 +57,11 @@ static void msg_write(u08 chan)
   DC('.'); DNL;
 }
 
+u08 proto_current_cmd(void)
+{
+  return in_cmd;
+}
+
 void proto_handle(void)
 {
   // read command from bits 0..4 in idle byte
@@ -72,17 +79,14 @@ void proto_handle(void)
 
   DS("cmd:"); DB(cmd); DNL;
 
+  in_cmd = cmd;
+
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;
   u08 chn = cmd & PROTO_CMD_SUB_MASK;
   switch(grp) {
     case PROTO_CMD_MSG_WRITE:
-      // only accept write commands if no read is pending
-      if(!proto_api_read_is_pending()) {
-        msg_write(chn);
-      } else {
-        DS("mw!"); DNL;
-      }
+      msg_write(chn);
       break;
     case PROTO_CMD_MSG_READ:
       msg_read(chn);
@@ -94,4 +98,6 @@ void proto_handle(void)
       function(chn);
       break;
   }
+
+  in_cmd = 0xff;
 }

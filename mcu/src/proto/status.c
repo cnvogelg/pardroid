@@ -10,6 +10,7 @@
 #include "status.h"
 #include "proto_low.h"
 #include "proto_shared.h"
+#include "proto.h"
 
 static u08 attached;
 static u08 error_code;
@@ -38,6 +39,28 @@ void status_handle(void)
 
 void status_update(void)
 {
+  u08 bits = status_get_current();
+
+  // set bits
+  if(bits != old_state) {
+    u08 cmd = proto_current_cmd();
+    if(cmd == 0xff) {
+      old_state = bits;
+      DS("sw:"); DB(bits);
+      u08 done = proto_low_set_status(bits);
+      if(done) {
+        DS("."); DNL;
+      } else {
+        DS("?"); DNL;
+      }
+    } else {
+      DS("s-"); DNL;
+    }
+  }
+}
+
+u08 status_get_current(void)
+{
   // if an error is set then show it always (suppress pending if necessary)
   u08 bits = 0;
   if(attached) {
@@ -50,26 +73,8 @@ void status_update(void)
   else if(pending_channel != STATUS_NO_CHANNEL) {
     bits = pending_channel << 4 | PROTO_STATUS_READ_PENDING;
   }
-
-  // set bits
-  if(bits != old_state) {
-    old_state = bits;
-    DS("s:"); DB(bits); DNL;
-    u08 done = proto_low_set_status(bits);
-    if(done) {
-      DS("s."); DNL;
-    } else {
-      DS("s!"); DNL;
-    }
-  } else {
-    DS("s?"); DB(bits); DNL;
-  }
-}
-
-u08 status_get_current(void)
-{
-  DS("sr:"); DB(old_state); DNL;
-  return old_state;
+  DS("sr:"); DB(bits); DNL;
+  return bits;
 }
 
 void status_set_error(u08 code)
@@ -151,5 +156,4 @@ u08 status_is_pending(void)
   return pending_channel != STATUS_NO_CHANNEL;
 }
 
-void proto_api_read_is_pending(u08 cmd) __attribute__ ((weak, alias("status_is_pending")));
 u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));

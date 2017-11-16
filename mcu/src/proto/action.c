@@ -80,6 +80,7 @@ void action_handle(u08 num)
     if(end) {
       u08 status = proto_api_get_end_status();
       proto_low_end(status);
+      DS("as:"); DB(status); DNL;
     }
   }
 }

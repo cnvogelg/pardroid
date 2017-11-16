@@ -132,6 +132,7 @@ void func_handle(u08 num)
     // end function
     u08 status = proto_api_get_end_status();
     proto_low_end(status);
+    DS("fs:"); DB(status); DNL;
   }
 }
 

@@ -20,6 +20,7 @@ LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_ARCH) $(LDFLAGS_DEBUG)
 # ----- program generation -----
 # list of programs, created by make-prgoram
 PROGRAMS :=
+BIN_FILES :=
 DIST_FILES :=
 
 # map-src-to-tgt
@@ -34,6 +35,7 @@ map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 # $2 = srcs for program
 define make-program
 PROGRAMS += $1
+BIN_FILES += $(BIN_DIR)/$1
 DIST_FILES += $(call map-dist,$1-$(DIST_TAG))
 
 .PHONY: $1

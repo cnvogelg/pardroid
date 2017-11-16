@@ -279,12 +279,9 @@ void proto_low_ack_hi(void)
 
 u08  proto_low_set_status(u08 status)
 {
-  // cflg has to be hi
+  // cflg has to be high
+  // (otherwise host currently reads status)
   if(!cflg()) {
-    return 0;
-  }
-  // clk has to be hi
-  if(!clk()) {
     return 0;
   }
 

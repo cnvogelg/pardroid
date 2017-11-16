@@ -96,30 +96,6 @@ wait_rak_lo  MACRO
         ENDM
 
 
-; --- wait_rak_lo_pend_abort ---
-; wait for RAK to become low or if timeout triggers or abort if pending is set
-; \1 = jump label on timeout
-; \2 = register with pending bit
-wait_rak_lo_pend_abort  MACRO
-        ; check RAK level
-\@1:    btst    d2,(a5)
-        beq.s   \@2
-        ; check for timeout
-        tst.b   (a1)
-        beq.s   \@3
-        ; timeout error
-        moveq   #RET_TIMEOUT,d0
-        bra     \1
-\@3:    ; check pending (hi active)
-        btst    \2,(a3)
-        beq.s   \@1
-        ; abort write due to pending read
-        moveq   #RET_WRITE_ABORT,d0
-        bra     \1
-\@2:
-        ENDM
-
-
 ; --- wait_rak_hi ---
 ; wait for RAK to become high or if timeout triggers
 ; \1 = jump label on timeout
@@ -609,9 +585,6 @@ _proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
 
-        ; addtionally prepare pending bit
-        moveq           #7,d7
-
         ; sync with slave
         check_rak_hi    plrw_end
         set_cmd         d0
@@ -628,8 +601,8 @@ _proto_low_write_block:
         move.w          d6,d0 ; d6 = channel
         lsr.w           #8,d0 ; d0 = extra
 
-        ; wait for slave sync (abort if pending was set, or on timeout)
-        wait_rak_lo_pend_abort     plmw_abort,d7
+        ; wait for slave sync
+        wait_rak_lo     plmw_abort
 
         ; switch port to write
         clk_hi
