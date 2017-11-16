@@ -32,12 +32,9 @@ int dosmain(void)
 
                 PutStr("bench ping\n");
                 ULONG deltas[2];
-                time_stamp_t start;
-                error = proto_action_bench(ph, PROTO_ACTION_PING, &start, deltas);
-                ULONG shi, slo;
-                timer_eclock_split(&start, &shi, &slo);
-                Printf("-> %ld, start=%ld.%ld delta=%ld, %ld\n",
-                    (LONG)error, shi, slo, deltas[0], deltas[1]);
+                error = proto_action_bench(ph, PROTO_ACTION_PING, deltas);
+                Printf("-> %ld, delta=%lu, %lu\n",
+                    (LONG)error, deltas[0], deltas[1]);
 
                 proto_exit(ph);
             } else {

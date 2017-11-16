@@ -91,7 +91,7 @@ static ASM void bench_cb(REG(d0, int id), REG(a2, struct cb_data *cb))
   timer_eclock_get(th, ts);
 }
 
-int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start, ULONG deltas[2])
+int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2])
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
@@ -113,15 +113,11 @@ int proto_action_bench(proto_handle_t *ph, UBYTE num, time_stamp_t *start, ULONG
   time_stamp_t *t0 = &cbd.timestamps[0];
   time_stamp_t *t1 = &cbd.timestamps[1];
   time_stamp_t *t2 = &cbd.timestamps[2];
-  time_stamp_t d1;
-  time_stamp_t d2;
-  timer_eclock_delta(t1, t0, &d1);
-  timer_eclock_delta(t2, t1, &d2);
-
-  *start = *t0;
-  ULONG dummy;
-  timer_eclock_split(&d1, &dummy, &deltas[0]);
-  timer_eclock_split(&d2, &dummy, &deltas[1]);
+  time_stamp_t d0, d1;
+  timer_eclock_delta(t1, t0, &d0);
+  timer_eclock_delta(t2, t1, &d1);
+  deltas[0] = timer_eclock_to_us(ph->timer, &d0);
+  deltas[1] = timer_eclock_to_us(ph->timer, &d1);
 
   return result;
 }

@@ -172,6 +172,7 @@ get_data MACRO
 call_cb MACRO
         moveq   \1,d0
         movem.l a0-a1,-(sp)
+        move.l  (a2),a0
         jsr     (a0)
         movem.l (sp)+,a0-a1
         ENDM
@@ -291,9 +292,6 @@ _proto_low_action_bench:
 
         ; setup regs with port values and read old ctrl value
         setup_port_regs
-
-        ; retrieve pointer for callback
-        move.l          (a2),a0
 
         ; -- sync with slave
         ; check RAK to be high or abort

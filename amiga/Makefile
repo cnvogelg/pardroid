@@ -15,7 +15,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/parbox src/engine src/pablo
-INCLUDES+=src/test src/mini-test
+INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
 
@@ -25,6 +25,7 @@ PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c
 WORKER_SRCS = worker.c
 TEST_SRCS = test.c
+BENCH_SRCS = bench.c
 
 PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
 PARBOX_SRCS += parbox.c reg.c offset.c engine.c request.c channel.c
@@ -54,6 +55,11 @@ $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 # pb-test-proto
 PB_TEST_PROTO_SRCS = pb-test-proto.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
 $(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
+
+# ----- bench
+# pb-bench-proto
+PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PARBOX_SRCS) $(BENCH_SRCS)
+$(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
 
 # ----- tools
 # parbox-engine
