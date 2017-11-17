@@ -18,7 +18,7 @@ def read_config(cfg_file, cfg):
   if not os.path.exists(cfg_file):
     log("config file does not exist: {}".format(cfg_file))
     return
-  regex = re.compile(r'^CONFIG_[A-Z_]+$')
+  regex = re.compile(r'^CONFIG_[A-Z0-9_]+$')
   with open(cfg_file, 'r') as fh:
     for line in fh:
       l = line.strip()

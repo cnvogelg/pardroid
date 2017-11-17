@@ -4,6 +4,7 @@
 /* status messages */
 #define DRIVER_OK               0
 #define DRIVER_ERROR_INDEX      1
+#define DRIVER_INIT_FAILED      2
 
 /* flags */
 #define DRIVER_FLAG_INIT        1

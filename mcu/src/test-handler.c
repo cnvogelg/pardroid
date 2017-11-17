@@ -23,7 +23,7 @@
 #include "hnd_null.h"
 
 #include "driver.h"
-#include "drv_null.h"
+#include "driver_list.h"
 
 // define my app id
 BASE_REG_APPID(FWID_TEST_HANDLER)
@@ -40,7 +40,10 @@ HANDLER_TABLE_END
 
 // driver
 DRIVER_TABLE_BEGIN
-  DRIVER_TABLE_ENTRY(null)
+  DRIVER_TABLE_ENTRY(null),
+#ifdef CONFIG_DRIVER_ENC28J60
+  DRIVER_TABLE_ENTRY(enc28j60)
+#endif
 DRIVER_TABLE_END
 
 

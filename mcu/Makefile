@@ -44,22 +44,36 @@ CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 # dist tag
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
-# sources
+# base sources
 COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
-HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
-DRIVER_SRCS = driver.c drv_null.c
+ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
+# handler
+HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
+
+# drivers
+DRIVER_SRCS = driver.c drv_null.c
+ifdef CONFIG_SPI
+DRIVER_SRCS += spi.c
+endif
+ifdef CONFIG_DRIVER_ENC28J60
+DRIVER_SRCS += enc28j60.c drv_enc28j60.c
+DRIVER_INCLUDES += src/driver/enc28j60
+endif
+
+# common includes
 INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base
 INCLUDES += src/proto src/handler src/driver
 INCLUDES += ../common/src
+INCLUDES += $(DRIVER_INCLUDES)
 VPATH=$(INCLUDES)
 
 # test-base
@@ -72,7 +86,7 @@ $(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto
-TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+TEST_PROTO_SRCS = $(ALL_BASE_SRCS)
 TEST_PROTO_SRCS += test-proto.c
 FW_ID_test-proto-fw = 0x8002
 FW_VER_test-proto-fw = $(VERSION_TAG)
@@ -81,7 +95,7 @@ $(eval $(call dist-hex,test-proto-fw))
 $(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-handler
-TEST_HANDLER_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+TEST_HANDLER_SRCS = $(ALL_BASE_SRCS)
 TEST_HANDLER_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
 TEST_HANDLER_SRCS += test-handler.c
 FW_ID_test-handler-fw = 0x8003

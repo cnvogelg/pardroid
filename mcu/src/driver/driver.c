@@ -1,7 +1,12 @@
+#include "autoconf.h"
 #include "types.h"
 #include "arch.h"
 #include "system.h"
 #include "driver.h"
+
+#ifdef CONFIG_SPI
+#include "spi.h"
+#endif
 
 static driver_ptr_t get_driver(u08 num)
 {
@@ -10,12 +15,16 @@ static driver_ptr_t get_driver(u08 num)
 
 void driver_init(u08 num)
 {
+#ifdef CONFIG_SPI
+  spi_init();
+#endif
+
   for(u08 did=0;did<num;did++) {
     driver_ptr_t drv = get_driver(did);
     driver_data_t *data = DRIVER_GET_DATA(did);
     drv_init_func_t f = (drv_init_func_t)read_rom_rom_ptr(&drv->init_func);
     if(f != 0) {
-      if(f(did)) {
+      if(f(did) == DRIVER_OK) {
         data->flags = DRIVER_FLAG_INIT;
       } else {
         data->flags = 0;
