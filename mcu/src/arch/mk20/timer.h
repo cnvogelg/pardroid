@@ -3,14 +3,21 @@
 
 #include <stdint.h>
 
+typedef uint32_t timer_ms_t;
+
+extern volatile timer_ms_t systick_millis_count;
+
 extern void timer_delay(uint32_t ms);
 
-extern volatile uint32_t systick_millis_count;
-
-static inline uint32_t timer_millis(void)
+static inline timer_ms_t timer_millis(void)
 {
-    volatile uint32_t ret = systick_millis_count;
+    volatile timer_ms_t ret = systick_millis_count;
     return ret;
+}
+
+static inline int timer_millis_timed_out(timer_ms_t start, uint16_t timeout)
+{
+    return (timer_millis() - start) > timeout;
 }
 
 /* from Teensyduino: core_pins.h */

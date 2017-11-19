@@ -9,4 +9,8 @@
 #include "drv_enc28j60.h"
 #endif
 
+#ifdef CONFIG_DRIVER_SDCARD
+#include "drv_sdcard.h"
+#endif
+
 #endif

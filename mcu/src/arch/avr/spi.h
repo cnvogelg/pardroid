@@ -36,23 +36,30 @@
 #include "types.h"
 #include "spi_pins.h"
 
+#define SPI_SPEED_MAX   0
+#define SPI_SPEED_SLOW  1
+
 extern void spi_init(void);
+extern void spi_set_speed(u08 speed);
 
 inline void spi_out(u08 data)
 {
   SPDR = data;
-  while (!(SPSR&(1<<SPIF)));
+  loop_until_bit_is_set(SPSR, SPIF);
 }
 
 inline u08 spi_in(void)
 {
-  SPDR = 0x00;
-  while (!(SPSR&(1<<SPIF)));
+  SPDR = 0xff;
+  loop_until_bit_is_set(SPSR, SPIF);
   return SPDR;
 }
 
 inline void spi_enable_cs0(void) { PORTB &= ~SPI_SS_MASK; }
 inline void spi_disable_cs0(void) { PORTB |= SPI_SS_MASK; }
+
+inline void spi_enable_cs1(void) { SPI_SS1_PORT &= ~SPI_SS1_MASK; }
+inline void spi_disable_cs1(void) { SPI_SS1_PORT |= SPI_SS1_MASK; }
 
 #endif // CONFIG_SPI
 

@@ -43,6 +43,16 @@ int main(void)
     system_sys_reset();
 #endif
 
+  timer_ms_t t1 = timer_millis();
+  uart_send_pstring(PSTR("go "));
+  uart_send_hex_word(t1);
+  uart_send_crlf();
+  while(!timer_millis_timed_out(t1, 10000)) {
+    system_wdt_reset();
+  }
+  uart_send_pstring(PSTR("done"));
+  uart_send_crlf();
+
   while(1) {
     system_wdt_reset();
     u08 cmd = proto_low_get_cmd();

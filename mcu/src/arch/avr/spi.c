@@ -38,6 +38,23 @@ void spi_init(void)
   // SS = 1
   PORTB |= SPI_SS_MASK;
 
+  // setup SS1
+  SPI_SS1_DDR  |= SPI_SS1_MASK;
+  SPI_SS1_PORT |= SPI_SS1_MASK;
+
   SPCR = _BV(SPE) | _BV(MSTR); // 8 MHz @ 16
   SPSR = _BV(SPI2X);
 }
+
+void spi_set_speed(u08 speed)
+{
+  if(speed == SPI_SPEED_MAX) {
+    SPCR = _BV(SPE) | _BV(MSTR); // 8 MHz @ 16 MHz FPU (clk/2)
+    SPSR = _BV(SPI2X);
+  } else {
+    // (clk/128)  @16 MHz -> 125 KHz
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR1) | _BV(SPR0);
+    SPSR = 0;
+  }
+}
+

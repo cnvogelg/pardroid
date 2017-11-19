@@ -46,7 +46,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # base sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = $(BASE_ARCH_SRCS)
+BASE_SRCS = timer.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
@@ -64,6 +64,10 @@ endif
 ifdef CONFIG_DRIVER_ENC28J60
 DRIVER_SRCS += enc28j60.c drv_enc28j60.c
 DRIVER_INCLUDES += src/driver/enc28j60
+endif
+ifdef CONFIG_DRIVER_SDCARD
+DRIVER_SRCS += sdcard.c drv_sdcard.c
+DRIVER_INCLUDES += src/driver/sdcard
 endif
 
 # common includes

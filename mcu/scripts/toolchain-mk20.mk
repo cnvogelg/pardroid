@@ -15,5 +15,5 @@ CFLAGS_ARCH += -Os
 LDFLAGS_ARCH := -Os -Wl,--defsym=__rtc_localtime=0
 LDFLAGS_ARCH += --specs=nano.specs -mcpu=cortex-m4 -mthumb -T$(MCU_LD)
 
-BASE_ARCH_SRCS = mk20dx128.c timer.c led.c
+BASE_ARCH_SRCS = mk20dx128.c led.c
 PROTO_ARCH_SRCS = proto_low.c

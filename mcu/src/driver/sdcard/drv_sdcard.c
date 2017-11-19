@@ -2,26 +2,24 @@
 #include "arch.h"
 #include "autoconf.h"
 
-#define DEBUG CONFIG_DEBUG_DRIVER_ENC28J60
+#define DEBUG CONFIG_DEBUG_DRIVER_SDCARD
 
 #include "debug.h"
 #include "driver.h"
-#include "drv_enc28j60.h"
-#include "enc28j60.h"
-#include  "uartutil.h"
+#include "drv_sdcard.h"
+#include "sdcard.h"
+#include "uartutil.h"
 
 static u08 init(u08 did)
 {
-  uart_send_pstring(PSTR("enc28j60: "));
-  u08 rev;
-  u08 status = enc28j60_init(&rev);
-  if(status == ENC28J60_RESULT_OK) {
-    uart_send_pstring(PSTR("ok, rev="));
-    uart_send_hex_byte(rev);
+  uart_send_pstring(PSTR("sdcard: "));
+  u08 result = sdcard_init();
+  if(result == SDCARD_RESULT_OK) {
+    uart_send_pstring(PSTR("OK!"));
     uart_send_crlf();
     return DRIVER_OK;
   } else {
-    uart_send_pstring(PSTR("NOT FOUND!"));
+    uart_send_hex_byte(result);
     uart_send_crlf();
     return DRIVER_INIT_FAILED;
   }
@@ -39,7 +37,7 @@ static u16 write(u08 did, u08 *buf, u16 size)
   return size;
 }
 
-DRIVER_BEGIN(enc28j60)
+DRIVER_BEGIN(sdcard)
   .init_func = init,
   .read_func = read,
   .write_func = write,

@@ -3,6 +3,7 @@
 #include <avr/interrupt.h>
 
 #include "autoconf.h"
+#include "timer.h"
 
 void system_init(void)
 {
@@ -17,6 +18,8 @@ void system_init(void)
   cli();
   wdt_enable(WDTO_500MS);
   sei();
+
+  timer_init();
 }
 
 void system_sys_reset(void)
