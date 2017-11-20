@@ -1,7 +1,11 @@
 /*
  * sd card routines
  *
- * see:
+ * heavily inspired by: www.sd2iec.de
+ *  sd2iec - SD/MMC to Commodore serial bus interface/controller
+ *           Copyright (C) 2007-2017  Ingo Korb <ingo@akana.de>
+ *
+ * also see:
  * - http://bikealive.nl/sd-v2-initialization.html
  * - https://yannik520.github.io/sdio.html
  */
@@ -31,8 +35,11 @@
 
 #define SD_INIT_TIMEOUT     2000
 #define SD_WRITE_TIMEOUT    600
+#define SD_TOKEN_TIMEOUT    100
 #define SD_AUTO_RETRIES     10
 #define SD_INIT_RETRIES     3
+
+static u08 card_type = SDCARD_TYPE_NONE;
 
 static uint8_t CRC7(const uint8_t* data, uint8_t n) {
   uint8_t crc = 0;
@@ -249,16 +256,18 @@ u08 sdcard_init(void)
   }
 
   // 3. SD_SEND_OP_COND (init SD/HC)
-  u08 is_sd;
-  result = sd_send_op_cond(&is_sd);
+  u08 type;
+  result = sd_send_op_cond(&type);
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
 
   // 4. detect SDHC
-  result = detect_sdhc(&is_sd);
-  if(result != SDCARD_RESULT_OK) {
-    goto init_fail;
+  if(type == SDCARD_TYPE_SD) {
+    result = detect_sdhc(&type);
+    if(result != SDCARD_RESULT_OK) {
+      goto init_fail;
+    }
   }
 
   // 5. SEND_OP_COND (init MMC) (ignored by SD/HC)
@@ -281,8 +290,98 @@ u08 sdcard_init(void)
 
   // OK!
   result = SDCARD_RESULT_OK;
+  card_type = type;
 init_fail:
   spi_set_speed(SPI_SPEED_MAX);
 
   return result;
+}
+
+u08 sdcard_get_type(void)
+{
+  return card_type;
+}
+
+
+static uint32_t get_bits(void *buffer, uint16_t start, int8_t bits)
+{
+  uint8_t *buf = buffer;
+  uint32_t result = 0;
+
+  if ((start % 8) != 0) {
+    /* Unaligned start */
+    result += buf[start / 8] & (0xff >> (start % 8));
+    bits  -= 8 - (start % 8);
+    start += 8 - (start % 8);
+  }
+  while (bits >= 8) {
+    result = (result << 8) + buf[start / 8];
+    start += 8;
+    bits -= 8;
+  }
+  if (bits > 0) {
+    result = result << bits;
+    result = result + (buf[start / 8] >> (8-bits));
+  } else if (bits < 0) {
+    /* Fraction of a single byte */
+    result = result >> -bits;
+  }
+  return result;
+}
+
+static u08 wait_data_token(void)
+{
+  timer_ms_t t0 = timer_millis();
+  DC('{');
+  while(1) {
+    u08 res = spi_in();
+    DB(res); DC(',');
+    if(res == 0xfe) {
+      break;
+    }
+    /* check timeout */
+    if(timer_millis_timed_out(t0, SD_TOKEN_TIMEOUT)) {
+      return SDCARD_RESULT_FAILED_TOKEN;
+    }
+    /* keep watchdog happy */
+    system_wdt_reset();
+  }
+  DC('}');
+  return SDCARD_RESULT_OK;
+}
+
+u08 sdcard_get_capacity(u32 *num_blocks)
+{
+  u08 res = begin_command(CMD_SEND_CSD, 0);
+  if(res != 0) {
+    end_command();
+    return SDCARD_RESULT_FAILED_SEND_CSD;
+  }
+
+  res = wait_data_token();
+  if(res != SDCARD_RESULT_OK) {
+    end_command();
+    return res;
+  }
+
+  // read result
+  u08 buf[18];
+  for(int i=0;i<18;i++) {
+    buf[i] = spi_in();
+  }
+  end_command();
+
+  u32 capacity;
+  if (card_type == SDCARD_TYPE_SDHC) {
+    /* Special CSD for SDHC cards */
+    capacity = (1 + get_bits(buf,127-69,22)) * 1024;
+  } else {
+    /* Assume that MMC-CSD 1.0/1.1/1.2 and SD-CSD 1.1 are the same... */
+    u08 exponent = 2 + get_bits(buf, 127-49, 3);
+    capacity = 1 + get_bits(buf, 127-73, 12);
+    exponent += get_bits(buf, 127-83,4) - 9;
+    while (exponent--) capacity *= 2;
+  }
+  *num_blocks = capacity;
+  return SDCARD_RESULT_OK;
 }

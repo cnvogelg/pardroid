@@ -94,6 +94,18 @@ int main(void)
   uart_send_pstring(PSTR(" -> "));
   uart_send_hex_byte(res);
   uart_send_crlf();
+  if(res == SDCARD_RESULT_OK) {
+    uart_send_pstring(PSTR("capacity: "));
+    u32 num_blocks;
+    res = sdcard_get_capacity(&num_blocks);
+    uart_send_pstring(PSTR(" -> "));
+    if(res == SDCARD_RESULT_OK) {
+      uart_send_hex_long(num_blocks);
+    } else {
+      uart_send_hex_byte(res);
+    }
+    uart_send_crlf();
+  }
 #endif
 
   for(int i=0;i<100;i++) {

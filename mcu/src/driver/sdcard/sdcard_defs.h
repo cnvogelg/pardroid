@@ -4,6 +4,7 @@
 #define CMD0_GO_IDLE_STATE  0x00
 #define CMD1_SEND_OP_COND   0x01
 #define CMD8_SEND_IF_COND   0x08
+#define CMD_SEND_CSD        0x09
 #define CMD_SET_BLOCKLEN    0x10
 #define CMD_APP             0x37
 #define CMD_READ_OCR        0x3a
