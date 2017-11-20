@@ -83,6 +83,9 @@ VPATH=$(INCLUDES)
 # test-base
 TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
+ifdef CONFIG_DRIVER_SDCARD
+TEST_BASE_SRCS += spi.c sdcard.c
+endif
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-base-fw))
