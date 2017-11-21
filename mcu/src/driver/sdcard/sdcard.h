@@ -12,6 +12,7 @@
 #define SDCARD_RESULT_FAILED_READ      8
 #define SDCARD_RESULT_FAILED_WRITE     9
 #define SDCARD_RESULT_FAILED_BUSY      10
+#define SDCARD_RESULT_FAILED_CRC       11
 
 #define SDCARD_TYPE_NONE        0
 #define SDCARD_TYPE_MMC         1

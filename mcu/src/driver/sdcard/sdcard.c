@@ -14,6 +14,7 @@
 #include "types.h"
 #include "timer.h"
 #include "spi.h"
+#include "crc.h"
 #include "system.h"
 
 #define DEBUG CONFIG_DEBUG_DRIVER_SDCARD
@@ -22,6 +23,10 @@
 
 #include "sdcard.h"
 #include "sdcard_defs.h"
+
+#ifdef CONFIG_DRIVER_SDCARD_CRC
+#define USE_CRC
+#endif
 
 #if CONFIG_DRIVER_SDCARD_SPI_CS == 0
 #define spi_enable_cs()   spi_enable_cs0()
@@ -41,21 +46,6 @@
 #define SD_INIT_RETRIES     3
 
 static u08 card_type = SDCARD_TYPE_NONE;
-
-static uint8_t CRC7(const uint8_t* data, uint8_t n) {
-  uint8_t crc = 0;
-  for (uint8_t i = 0; i < n; i++) {
-    uint8_t d = data[i];
-    for (uint8_t j = 0; j < 8; j++) {
-      crc <<= 1;
-      if ((d & 0x80) ^ (crc & 0x80)) {
-        crc ^= 0x09;
-      }
-      d <<= 1;
-    }
-  }
-  return (crc << 1) | 1;
-}
 
 static u32 read_u32(void)
 {
@@ -85,7 +75,7 @@ static u08 begin_command(u08 cmd, u32 arg)
   buf[3] = (uint8_t)(arg >> 8U);
   buf[4] = (uint8_t)arg;
   // add CRC
-  buf[5] = CRC7(buf, 5);
+  buf[5] = crc7(buf, 5);
 
   u08 errors = 0;
   u08 res;
@@ -228,6 +218,7 @@ static u08 send_op_cond(void)
 
 static u08 set_crc_mode(u08 on)
 {
+  DS("CRC:"); DB(on);
   u08 res = begin_command(CMD_CRC_ON_OFF, on ? 1 : 0);
   end_command();
   return (res > 1) ? SDCARD_RESULT_FAILED_CRC_MODE : SDCARD_RESULT_OK;
@@ -277,8 +268,14 @@ u08 sdcard_init(void)
     goto init_fail;
   }
 
+#ifdef USE_CRC
+  const u08 use_crc = 1;
+#else
+  const u08 use_crc = 0;
+#endif
+
   // 6. set CRC mode
-  result = set_crc_mode(0);
+  result = set_crc_mode(use_crc);
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
@@ -427,10 +424,32 @@ u08 sdcard_read(u32 block_no, u08 *data)
     return res;
   }
 
+#ifdef USE_CRC
+  u16 crc = 0;
+
+  // read data
+  for(u16 i=0;i<512;i++) {
+    u08 d = spi_in();
+    *data++ = d;
+    crc = crc_xmodem_update(crc, d);
+  }
+
+  // read crc
+  u08 crc_hi = spi_in();
+  u08 crc_lo = spi_in();
+  u16 got_crc = crc_hi << 8 | crc_lo;
+  DC('C'); DW(crc); DC('='); DW(got_crc);
+
+  if(got_crc != crc) {
+    end_command();
+    return SDCARD_RESULT_FAILED_CRC;
+  }
+#else
   // read data
   for(u16 i=0;i<512;i++) {
     *data++ = spi_in();
   }
+#endif
 
   end_command();
   return SDCARD_RESULT_OK;
@@ -452,14 +471,33 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   // data token
   spi_out(0xfe);
 
+#ifdef USE_CRC
+  u16 crc = 0;
+
+  // write data
+  for(u16 i=0;i<512;i++) {
+    u08 d = *data++;
+    spi_out(d);
+    crc = crc_xmodem_update(crc, d);
+  }
+
+  DC('C'); DW(crc);
+  u08 crc_hi = (u08)(crc >> 8);
+  u08 crc_lo = (u08)(crc & 0xff);
+
+  // crc
+  spi_out(crc_hi);
+  spi_out(crc_lo);
+#else
   // write data
   for(u16 i=0;i<512;i++) {
     spi_out(*data++);
   }
 
-  // crc
+  // crc (dummy)
   spi_out(0xff);
   spi_out(0xff);
+#endif
 
   // read status
   res = spi_in();

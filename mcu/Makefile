@@ -61,6 +61,9 @@ DRIVER_SRCS = driver.c drv_null.c
 ifdef CONFIG_SPI
 DRIVER_SRCS += spi.c
 endif
+ifdef CONFIG_CRC
+DRIVER_SRCS += crc.c
+endif
 ifdef CONFIG_DRIVER_ENC28J60
 DRIVER_SRCS += enc28j60.c drv_enc28j60.c
 DRIVER_INCLUDES += src/driver/enc28j60
@@ -83,8 +86,11 @@ VPATH=$(INCLUDES)
 # test-base
 TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
+ifdef CONFIG_SPI
+TEST_BASE_SRCS += spi.c
+endif
 ifdef CONFIG_DRIVER_SDCARD
-TEST_BASE_SRCS += spi.c sdcard.c
+TEST_BASE_SRCS += crc.c sdcard.c
 endif
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)

@@ -13,8 +13,10 @@
 #include "led.h"
 #include "timer.h"
 
-#ifdef CONFIG_DRIVER_SDCARD
+#ifdef CONFIG_SPI
 #include "spi.h"
+#endif
+#ifdef CONFIG_DRIVER_SDCARD
 #include "sdcard.h"
 #endif
 
@@ -101,18 +103,32 @@ static void test_sdcard(void)
     uart_send_crlf();
 
     // write a block
+    const u32 block = 100;
+    for(u16 i=0;i<512;i++) {
+      sdbuf[i] = (u08)(i & 0xff);
+    }
     uart_send_pstring(PSTR("write: "));
-    res = sdcard_read(1, sdbuf);
+    res = sdcard_write(block, sdbuf);
     if(res == SDCARD_RESULT_OK) {
-      res = sdcard_write(1, sdbuf);
+      uart_send('.');
+      // read back
+      res = sdcard_read(block, sdbuf);
       if(res == SDCARD_RESULT_OK) {
         uart_send('.');
+        for(u16 i=0;i<512;i++) {
+          u08 d = (u08)(i & 0xff);
+          if(d != sdbuf[i]) {
+            uart_send('#');
+          }
+        }
       } else {
-        uart_send_hex_byte(res);
-        uart_send('!');
+        uart_send('?');
       }
-      uart_send_crlf();
+    } else {
+      uart_send_hex_byte(res);
+      uart_send('!');
     }
+    uart_send_crlf();
   }
 }
 #endif
