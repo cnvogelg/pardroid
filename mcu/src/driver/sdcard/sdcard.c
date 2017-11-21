@@ -36,6 +36,7 @@
 #define SD_INIT_TIMEOUT     2000
 #define SD_WRITE_TIMEOUT    600
 #define SD_TOKEN_TIMEOUT    100
+#define SD_BUSY_TIMEOUT     500
 #define SD_AUTO_RETRIES     10
 #define SD_INIT_RETRIES     3
 
@@ -350,6 +351,27 @@ static u08 wait_data_token(void)
   return SDCARD_RESULT_OK;
 }
 
+static u08 wait_busy(void)
+{
+  timer_ms_t t0 = timer_millis();
+  DC('<');
+  while(1) {
+    u08 res = spi_in();
+    DB(res); DC(',');
+    if(res == 0xff) {
+      break;
+    }
+    /* check timeout */
+    if(timer_millis_timed_out(t0, SD_BUSY_TIMEOUT)) {
+      return SDCARD_RESULT_FAILED_TOKEN;
+    }
+    /* keep watchdog happy */
+    system_wdt_reset();
+  }
+  DC('>');
+  return SDCARD_RESULT_OK;
+}
+
 u08 sdcard_get_capacity(u32 *num_blocks)
 {
   u08 res = begin_command(CMD_SEND_CSD, 0);
@@ -384,4 +406,72 @@ u08 sdcard_get_capacity(u32 *num_blocks)
   }
   *num_blocks = capacity;
   return SDCARD_RESULT_OK;
+}
+
+u08 sdcard_read(u32 block_no, u08 *data)
+{
+  if (card_type != SDCARD_TYPE_SDHC) {
+    // convert to byte offset
+    block_no <<= 9;
+  }
+
+  u08 res = begin_command(CMD_READ_BLOCK, block_no);
+  if(res != 0) {
+    end_command();
+    return SDCARD_RESULT_FAILED_READ;
+  }
+
+  res = wait_data_token();
+  if(res != SDCARD_RESULT_OK) {
+    end_command();
+    return res;
+  }
+
+  // read data
+  for(u16 i=0;i<512;i++) {
+    *data++ = spi_in();
+  }
+
+  end_command();
+  return SDCARD_RESULT_OK;
+}
+
+u08 sdcard_write(u32 block_no, const u08 *data)
+{
+  if (card_type != SDCARD_TYPE_SDHC) {
+    // convert to byte offset
+    block_no <<= 9;
+  }
+
+  u08 res = begin_command(CMD_WRITE_BLOCK, block_no);
+  if(res != 0) {
+    end_command();
+    return SDCARD_RESULT_FAILED_WRITE;
+  }
+
+  // data token
+  spi_out(0xfe);
+
+  // write data
+  for(u16 i=0;i<512;i++) {
+    spi_out(*data++);
+  }
+
+  // crc
+  spi_out(0xff);
+  spi_out(0xff);
+
+  // read status
+  res = spi_in();
+  DC('*'); DB(res);
+  if((res & 0x1f) != 5) {
+    // TBD: retry
+    end_command();
+    return SDCARD_RESULT_FAILED_WRITE;
+  }
+
+  res = wait_busy();
+  end_command();
+
+  return res;
 }

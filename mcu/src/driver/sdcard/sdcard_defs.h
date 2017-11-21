@@ -6,6 +6,8 @@
 #define CMD8_SEND_IF_COND   0x08
 #define CMD_SEND_CSD        0x09
 #define CMD_SET_BLOCKLEN    0x10
+#define CMD_READ_BLOCK      0x11
+#define CMD_WRITE_BLOCK     0x18
 #define CMD_APP             0x37
 #define CMD_READ_OCR        0x3a
 #define CMD_CRC_ON_OFF      0x3b

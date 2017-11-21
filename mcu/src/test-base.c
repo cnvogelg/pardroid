@@ -63,6 +63,59 @@ static void test_timer_timeout(void)
 }
 #endif
 
+#ifdef CONFIG_DRIVER_SDCARD
+static u08 sdbuf[512];
+
+static void test_sdcard(void)
+{
+  // init card
+  uart_send_pstring(PSTR("sdcard: "));
+  u08 res = sdcard_init();
+  uart_send_pstring(PSTR(" -> "));
+  uart_send_hex_byte(res);
+  uart_send_crlf();
+  if(res == SDCARD_RESULT_OK) {
+    // get capacity
+    uart_send_pstring(PSTR("capacity: "));
+    u32 num_blocks;
+    res = sdcard_get_capacity(&num_blocks);
+    uart_send_pstring(PSTR(" -> "));
+    if(res == SDCARD_RESULT_OK) {
+      uart_send_hex_long(num_blocks);
+    } else {
+      uart_send_hex_byte(res);
+    }
+    uart_send_crlf();
+
+    // read a block
+    uart_send_pstring(PSTR("read: "));
+    for(u08 i=0;i<10;i++) {
+      res = sdcard_read(i, sdbuf);
+      if(res == SDCARD_RESULT_OK) {
+        uart_send('.');
+      } else {
+        uart_send_hex_byte(res);
+        uart_send('!');
+      }
+    }
+    uart_send_crlf();
+
+    // write a block
+    uart_send_pstring(PSTR("write: "));
+    res = sdcard_read(1, sdbuf);
+    if(res == SDCARD_RESULT_OK) {
+      res = sdcard_write(1, sdbuf);
+      if(res == SDCARD_RESULT_OK) {
+        uart_send('.');
+      } else {
+        uart_send_hex_byte(res);
+        uart_send('!');
+      }
+      uart_send_crlf();
+    }
+  }
+}
+#endif
 
 int main(void)
 {
@@ -87,25 +140,11 @@ int main(void)
   test_timer_timeout();
 #endif
 
-#ifdef CONFIG_DRIVER_SDCARD
+#ifdef CONFIG_SPI
   spi_init();
-  uart_send_pstring(PSTR("sdcard: "));
-  u08 res = sdcard_init();
-  uart_send_pstring(PSTR(" -> "));
-  uart_send_hex_byte(res);
-  uart_send_crlf();
-  if(res == SDCARD_RESULT_OK) {
-    uart_send_pstring(PSTR("capacity: "));
-    u32 num_blocks;
-    res = sdcard_get_capacity(&num_blocks);
-    uart_send_pstring(PSTR(" -> "));
-    if(res == SDCARD_RESULT_OK) {
-      uart_send_hex_long(num_blocks);
-    } else {
-      uart_send_hex_byte(res);
-    }
-    uart_send_crlf();
-  }
+#endif
+#ifdef CONFIG_DRIVER_SDCARD
+  test_sdcard();
 #endif
 
   for(int i=0;i<100;i++) {
