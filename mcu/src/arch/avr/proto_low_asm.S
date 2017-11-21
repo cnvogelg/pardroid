@@ -66,6 +66,20 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
     .endm
 
+#ifdef NO_IRQ
+    .macro irq_off
+    .endm
+    .macro irq_on
+    .endm
+#else
+    .macro irq_off
+    cli
+    .endm
+
+    .macro irq_on
+    sei
+    .endm
+#endif
 
     ; ----- proto_low_init -----
     ; void proto_low_init(u08 status)
@@ -208,6 +222,7 @@ proto_low_end:
     .section .text.proto_low_write_word
     .global  proto_low_write_word
 proto_low_write_word:
+    irq_off
     ; confirm to master we are ready
     rak_lo
 
@@ -231,6 +246,8 @@ proto_low_write_word:
     ; ddr: idle
     wait_clk_lo
     ddr_idle
+
+    irq_on
     ret
 
 
@@ -242,6 +259,7 @@ proto_low_write_word:
     .section .text.proto_low_write_long
     .global  proto_low_write_long
 proto_low_write_long:
+    irq_off
     ; confirm to master we are ready
     rak_lo
 
@@ -277,6 +295,8 @@ proto_low_write_long:
     ; ddr: idle
     wait_clk_lo
     ddr_idle
+
+    irq_on
     ret
 
 
@@ -288,6 +308,7 @@ proto_low_write_long:
     .section .text.proto_low_read_word
     .global  proto_low_read_word
 proto_low_read_word:
+    irq_off
     rak_lo
 
     ; ddr: output
@@ -309,6 +330,8 @@ proto_low_read_word:
     ; ddr: idle
     wait_clk_lo
     ddr_idle
+
+    irq_on
     ret
 
 
@@ -320,6 +343,7 @@ proto_low_read_word:
     .section .text.proto_low_read_long
     .global  proto_low_read_long
 proto_low_read_long:
+    irq_off
     rak_lo
 
     ; ddr: output
@@ -353,6 +377,8 @@ proto_low_read_long:
     ; ddr: idle
     wait_clk_lo
     ddr_idle
+
+    irq_on
     ret
 
 
@@ -366,6 +392,8 @@ proto_low_read_long:
     .section .text.proto_low_write_block
     .global  proto_low_write_block
 proto_low_write_block:
+    irq_off
+
     ; Z is buffer pointer
     movw    r30,r22
     ; X is ptr to extra/channel
@@ -460,6 +488,8 @@ proto_low_write_block:
     ; end sync
     wait_clk_hi
     rak_hi
+
+    irq_on
     ret
 
 
@@ -473,6 +503,8 @@ proto_low_write_block:
     .section .text.proto_low_read_block
     .global  proto_low_read_block
 proto_low_read_block:
+    irq_off
+
     ; Z is buffer pointer
     movw    r30,r22
 
@@ -566,6 +598,8 @@ proto_low_read_block:
     ; end sync
     wait_clk_hi
     rak_hi
+
+    irq_on
     ret
 
     .end
