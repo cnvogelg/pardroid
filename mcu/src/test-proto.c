@@ -15,6 +15,7 @@
 #include "system.h"
 #include "status.h"
 #include "base_reg.h"
+#include "knok.h"
 
 // max size of message buffer
 #define MAX_BUFFER_SIZE 1024
@@ -122,6 +123,9 @@ int main(void)
   uart_send_crlf();
 
   rom_info();
+
+  // wait for knockin seq
+  knok_main();
 
   DC('+');
   proto_init(PROTO_STATUS_INIT);

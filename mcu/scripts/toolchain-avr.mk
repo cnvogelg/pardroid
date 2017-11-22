@@ -15,4 +15,4 @@ ASFLAGS_ARCH += -Wa,-gstabs -x assembler-with-cpp
 LDFLAGS_BOOTLOADER := -Wl,--section-start=.text=$(CONFIG_BOOTLOADER_ADDR)
 LDFLAGS_BOOTLOADER += -Wl,--relax -nostartfiles -nostdlib
 
-PROTO_ARCH_SRCS = proto_low_asm.S
+PROTO_ARCH_SRCS = proto_low_asm.S strobe_low_asm.S

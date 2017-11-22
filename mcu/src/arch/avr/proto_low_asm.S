@@ -1,5 +1,6 @@
 #include "autoconf.h"
 #include <avr/io.h>
+#include "pario_pins.h"
 #include "pario_pins.S"
 
     ; some convenience macros for the control signals

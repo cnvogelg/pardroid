@@ -46,11 +46,11 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # base sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = timer.c $(BASE_ARCH_SRCS)
+BASE_SRCS = timer.c strobe.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
-PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
+PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c knok.c
 ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
