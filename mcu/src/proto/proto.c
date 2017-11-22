@@ -71,12 +71,6 @@ void proto_handle(void)
     return;
   }
 
-  // action=0 is invalid
-  // it is generated when amiga is powered off
-  if(cmd == 0x10) {
-    return;
-  }
-
   DS("cmd:"); DB(cmd); DNL;
 
   in_cmd = cmd;

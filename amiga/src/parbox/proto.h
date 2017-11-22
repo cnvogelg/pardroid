@@ -17,6 +17,9 @@
 #define PROTO_RET_MASK              0x0f
 #define PROTO_RET_STATUS_MASK       0xf0
 
+#define PROTO_KNOK_NOT_FOUND        0
+#define PROTO_KNOK_FOUND            1
+
 struct proto_handle;
 typedef struct proto_handle proto_handle_t;
 
@@ -24,6 +27,11 @@ extern proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *
 extern void proto_exit(proto_handle_t *ph);
 
 extern UBYTE proto_get_status(proto_handle_t *ph);
+
+extern int proto_knok_check(proto_handle_t *ph);
+extern int proto_knok_exit(proto_handle_t *ph);
+
+extern int proto_reset(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE num);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2]);

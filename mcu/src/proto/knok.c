@@ -23,6 +23,9 @@ void knok_main(void)
       if(key == KNOK_KEY_BOOT) {
         break;
       }
+      if(key == KNOK_KEY_EXIT) {
+        break;
+      }
     }
     // keep wd happy
     system_wdt_reset();

@@ -5,8 +5,9 @@
 
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size, UBYTE channel);
 
-int test_ping(test_t *t, test_param_t *p);
 int test_reset(test_t *t, test_param_t *p);
+int test_knok(test_t *t, test_param_t *p);
+int test_ping(test_t *t, test_param_t *p);
 int test_func_write(test_t *t, test_param_t *p);
 int test_func_read(test_t *t, test_param_t *p);
 int test_func_write_read(test_t *t, test_param_t *p);
@@ -27,8 +28,9 @@ int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
 
 #define TESTS_PROTO_ALL \
-  { test_ping, "ping", "ping parbox device" }, \
   { test_reset, "reset", "reset parbox device" }, \
+  { test_knok, "knok", "test if in knok state" }, \
+  { test_ping, "ping", "ping parbox device" }, \
   { test_func_read, "fr", "read test function word" }, \
   { test_func_write, "fw", "write test function word" }, \
   { test_func_write_read, "fwr", "write/read test function word" }, \

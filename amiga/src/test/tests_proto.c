@@ -36,6 +36,32 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
   test_channel = channel;
 }
 
+int test_reset(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  int res = proto_reset(pb->proto);
+  if(res == 0) {
+    return 0;
+  } else {
+    p->error = proto_perror(res);
+    p->section = "reset";
+    return res;
+  }
+}
+
+int test_knok(test_t *t, test_param_t *p)
+{
+  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  int res = proto_knok_check(pb->proto);
+  if(res == PROTO_KNOK_NOT_FOUND) {
+    return 0;
+  } else {
+    p->error = "KNOK found!";
+    p->section = "knok";
+    return 1;
+  }
+}
+
 int test_ping(test_t *t, test_param_t *p)
 {
   parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
@@ -45,19 +71,6 @@ int test_ping(test_t *t, test_param_t *p)
   } else {
     p->error = proto_perror(res);
     p->section = "ping";
-    return res;
-  }
-}
-
-int test_reset(test_t *t, test_param_t *p)
-{
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
-  int res = proto_action(pb->proto, PROTO_ACTION_RESET);
-  if(res == 0) {
-    return 0;
-  } else {
-    p->error = proto_perror(res);
-    p->section = "reset";
     return res;
   }
 }

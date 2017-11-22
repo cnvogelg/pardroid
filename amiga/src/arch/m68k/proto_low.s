@@ -6,6 +6,8 @@
         include         "pario.i"
         include         "proto.i"
 
+        xdef            _proto_low_knok_check
+        xdef            _proto_low_knok_exit
         xdef            _proto_low_get_status
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
@@ -203,7 +205,129 @@ cflg_hi MACRO
         ENDM
 
 
+; --- delay ---
+; waste a few CIA cycles
+delay   MACRO
+        tst.b           (a5)
+        tst.b           (a5)
+        tst.b           (a5)
+        ENDM
+
+
 ; ----- functions -----------------------------------------------------------
+
+; --- proto_low_knok_check ---
+; send knok magic byte to boot firmware
+;
+;   in:
+;       a0      struct pario_port *port
+;   out:
+;       d0      0=no nok, 1=nok active
+_proto_low_knok_check:
+        movem.l d2-d7/a2-a6,-(sp)
+
+        ; setup regs with port values and read old ctrl value
+        setup_port_regs
+
+        ; knok not found
+        moveq          #0,d0
+
+        ; d1=SELECT BIT
+        move.b         PO_SEL_BIT(a0),d1
+
+        ; SEL should be HI
+        btst           d1,(a5)
+        beq.s          plkc_end
+        ; BUSY should be LO
+        btst           d2,(a5)
+        bne.s          plkc_end
+
+        ; now do a live check
+
+        ; set magic byte for BUSY hi
+        move.b        #$f1,(a3)
+        ; wait a bit
+        delay
+        clk_lo
+        ; check busy value (expect HI)
+        btst          d2,(a5)
+        beq.s         plkc_end
+
+        ; set magic byte for BUSY lo
+        move.b        #$f2,(a3)
+        ; wait a bit
+        delay
+        clk_hi
+        ; check busy value  (expect LO)
+        btst          d2,(a5)
+        bne.s         plkc_end
+
+        ; knok found!
+        moveq         #1,d0
+
+plkc_end:
+        clk_hi
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+
+
+; --- proto_low_knok_exit ---
+; wait for knok sequence and
+;
+;   in:
+;       a0      struct pario_port *port
+;       a1      volatile UBYTE *timeout_flag
+;   out:
+;       d0      return error code
+_proto_low_knok_exit:
+        movem.l d2-d7/a2-a6,-(sp)
+
+        ; setup regs with port values and read old ctrl value
+        setup_port_regs
+
+plkb_retry:
+        moveq          #2,d1
+
+        ; timeout?
+        tst.b   (a1)
+        bne.s   plkb_timeout
+
+plkb_loop:
+        ; set magic byte for BUSY hi
+        move.b        #$f1,(a3)
+        ; wait a bit
+        delay
+        clk_lo
+        ; check busy value (expect HI)
+        btst          d2,(a5)
+        beq.s         plkb_retry
+
+        ; set magic byte for BUSY lo
+        move.b        #$f2,(a3)
+        ; wait a bit
+        delay
+        clk_hi
+        ; check busy value  (expect LO)
+        btst          d2,(a5)
+        bne.s         plkb_retry
+
+        dbra          d1,plkb_loop
+
+        ; sequence is ok
+        ; send magic boot byte
+        move.b        #$f3, (a3)
+
+        ; ok
+        moveq   #RET_OK,d0
+plkb_end:
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+
+plkb_timeout:
+        moveq   #RET_TIMEOUT,d0
+        bra.s   plkb_end
+
 
 ; --- proto_low_get_status ---
 ; read the status nybble of the device from the idle byte

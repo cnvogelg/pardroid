@@ -68,6 +68,46 @@ UBYTE proto_get_status(proto_handle_t *ph)
   return proto_low_get_status(port);
 }
 
+int proto_knok_check(proto_handle_t *ph)
+{
+  struct pario_port *port = ph->port;
+  return proto_low_knok_check(port);
+}
+
+int proto_knok_exit(proto_handle_t *ph)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_knok_exit(port, timeout_flag);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_reset(proto_handle_t *ph)
+{
+  int res;
+
+  // if knok active then leave first
+  if(proto_knok_check(ph)) {
+    res = proto_knok_exit(ph);
+    if(res != PROTO_RET_OK) {
+      return res;
+    }
+  }
+
+  // perform reset action
+  res = proto_action(ph, PROTO_ACTION_RESET);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  // perform knok exit
+  return proto_knok_exit(ph);
+}
+
 int proto_action(proto_handle_t *ph, UBYTE num)
 {
   struct pario_port *port = ph->port;
