@@ -89,8 +89,11 @@ TEST_BASE_SRCS += test-base.c
 ifdef CONFIG_SPI
 TEST_BASE_SRCS += spi.c
 endif
+ifdef CONFIG_CRC
+TEST_BASE_SRCS += crc.c
+endif
 ifdef CONFIG_DRIVER_SDCARD
-TEST_BASE_SRCS += crc.c sdcard.c
+TEST_BASE_SRCS += sdcard.c
 endif
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)

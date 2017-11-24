@@ -39,7 +39,9 @@
 #define POUT_MASK        (1<<0)
 #define SELECT_MASK      (1<<0)
 
+#ifndef force_inline
 #define force_inline     __attribute__((always_inline)) inline
+#endif
 
 static inline void pario_init(void)
 {

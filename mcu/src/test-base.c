@@ -26,6 +26,8 @@
 //#define TEST_WAIT_WATCHDOG
 //#define TEST_SYS_RESET
 //#define TEST_TIMER_TIMEOUT
+//#define TEST_SDCARD
+//#define TEST_SPI
 
 #ifdef TEST_WAIT_WATCHDOG
 static void test_wait_watchdog(void)
@@ -65,7 +67,7 @@ static void test_timer_timeout(void)
 }
 #endif
 
-#ifdef CONFIG_DRIVER_SDCARD
+#ifdef TEST_SDCARD
 static u08 sdbuf[512];
 
 static void test_sdcard(void)
@@ -133,10 +135,72 @@ static void test_sdcard(void)
 }
 #endif
 
+#ifdef TEST_SPI
+static void test_spi(void)
+{
+  spi_set_speed(SPI_SPEED_MAX);
+
+  spi_enable_cs0();
+  spi_out(0xaa);
+  spi_out(0xaa);
+  spi_out(0xaa);
+  spi_disable_cs0();
+
+  timer_delay(10);
+
+  spi_enable_cs0();
+  spi_out(0x55);
+  spi_disable_cs0();
+
+  timer_delay(20);
+
+  spi_enable_cs1();
+  spi_out(0xaa);
+  spi_disable_cs1();
+
+  timer_delay(10);
+
+  spi_enable_cs1();
+  spi_out(0x55);
+  spi_disable_cs1();
+
+  timer_delay(20);
+
+  spi_set_speed(SPI_SPEED_SLOW);
+
+  spi_enable_cs0();
+  spi_out(0xaa);
+  spi_out(0xaa);
+  spi_out(0xaa);
+  spi_disable_cs0();
+
+  timer_delay(10);
+
+  spi_enable_cs0();
+  spi_out(0x55);
+  spi_disable_cs0();
+
+  timer_delay(20);
+
+  spi_enable_cs1();
+  spi_out(0xaa);
+  spi_disable_cs1();
+
+  timer_delay(10);
+
+  spi_enable_cs1();
+  spi_out(0x55);
+  spi_disable_cs1();
+}
+#endif
+
 int main(void)
 {
   system_init();
-  led_init();
+  //led_init();
+#ifdef CONFIG_SPI
+  spi_init();
+#endif
 
   uart_init();
   uart_send_pstring(PSTR("parbox: test-base!"));
@@ -144,7 +208,7 @@ int main(void)
 
   rom_info();
 
-  proto_low_init(0);
+  //proto_low_init(0);
 
 #ifdef TEST_WAIT_WATCHDOG
   test_wait_watchdog();
@@ -156,10 +220,10 @@ int main(void)
   test_timer_timeout();
 #endif
 
-#ifdef CONFIG_SPI
-  spi_init();
+#ifdef TEST_SPI
+  test_spi();
 #endif
-#ifdef CONFIG_DRIVER_SDCARD
+#ifdef TEST_SDCARD
   test_sdcard();
 #endif
 
