@@ -21,6 +21,7 @@
 #define PAR_STROBE_INT          INT1
 #define PAR_STROBE_VECT         INT1_vect
 #define PAR_STROBE_ISC          ISC11
+#define PAR_STROBE_EICR         EICRA
 
 // SELECT (OUT) (B1)
 #define PAR_SELECT_BIT          1

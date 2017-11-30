@@ -1,50 +1,58 @@
 /*
     Parallel Port Connection (Teensy 2.0)
                       AVR
-    DATA 0 ... 7     PB 0 ... 7     IN/OUT
+    DATA0            PF 0
+    DATA1            PF 1
+    DATA2            PC 6
+    DATA3            PC 7
+    DATA4            PF 4
+    DATA5            PF 5
+    DATA6            PF 6
+    DATA7            PF 7
 
-    /STROBE          PF 0           IN (INT0)
-    SELECT           PF 6           IN
-    POUT             PF 5           IN
-    BUSY             PF 4           OUT
-    /ACK             PF 1           OUT
+    /STROBE          PE 6           IN (INT6)
+    SELECT           PB 7           IN
+    POUT             PB 6           IN
+    BUSY             PB 5           OUT
+    /ACK             PB 4           OUT
 */
 
-// /STROBE (IN) (INT0)
-#define PAR_STROBE_BIT          0
+// /STROBE (IN)
+#define PAR_STROBE_BIT          6
 #define PAR_STROBE_MASK         _BV(PAR_STROBE_BIT)
-#define PAR_STROBE_PORT         PORTF
-#define PAR_STROBE_PIN          PINF
-#define PAR_STROBE_DDR          DDRF
+#define PAR_STROBE_PORT         PORTE
+#define PAR_STROBE_PIN          PINE
+#define PAR_STROBE_DDR          DDRE
 
-#define PAR_STROBE_INT          INT0
-#define PAR_STROBE_VECT         INT0_vect
-#define PAR_STROBE_ISC          ISC01
+#define PAR_STROBE_INT          INT6
+#define PAR_STROBE_VECT         INT6_vect
+#define PAR_STROBE_ISC          ISC61
+#define PAR_STROBE_EICR         EICRB
 
 // SELECT (IN) (INT1)
-#define PAR_SELECT_BIT          6
+#define PAR_SELECT_BIT          7
 #define PAR_SELECT_MASK         _BV(PAR_SELECT_BIT)
-#define PAR_SELECT_PORT         PORTF
-#define PAR_SELECT_PIN          PINF
-#define PAR_SELECT_DDR          DDRF
+#define PAR_SELECT_PORT         PORTB
+#define PAR_SELECT_PIN          PINB
+#define PAR_SELECT_DDR          DDRB
 
 // POUT (IN)
-#define PAR_POUT_BIT            5
+#define PAR_POUT_BIT            6
 #define PAR_POUT_MASK           _BV(PAR_POUT_BIT)
-#define PAR_POUT_PORT           PORTF
-#define PAR_POUT_PIN            PINF
-#define PAR_POUT_DDR            DDRF
+#define PAR_POUT_PORT           PORTB
+#define PAR_POUT_PIN            PINB
+#define PAR_POUT_DDR            DDRB
 
 // BUSY (OUT)
-#define PAR_BUSY_BIT            4
+#define PAR_BUSY_BIT            5
 #define PAR_BUSY_MASK           _BV(PAR_BUSY_BIT)
-#define PAR_BUSY_PORT           PORTF
-#define PAR_BUSY_PIN            PINF
-#define PAR_BUSY_DDR            DDRF
+#define PAR_BUSY_PORT           PORTB
+#define PAR_BUSY_PIN            PINB
+#define PAR_BUSY_DDR            DDRB
 
 // /ACK (OUT)
-#define PAR_ACK_BIT             1
+#define PAR_ACK_BIT             4
 #define PAR_ACK_MASK            _BV(PAR_ACK_BIT)
-#define PAR_ACK_PORT            PORTF
-#define PAR_ACK_PIN             PINF
-#define PAR_ACK_DDR             DDRF
+#define PAR_ACK_PORT            PORTB
+#define PAR_ACK_PIN             PINB
+#define PAR_ACK_DDR             DDRB

@@ -21,6 +21,7 @@
 #define PAR_STROBE_INT          INT0
 #define PAR_STROBE_VECT         INT0_vect
 #define PAR_STROBE_ISC          ISC01
+#define PAR_STROBE_EICR         MCUCR
 
 // SELECT (IN) (INT1)
 #define PAR_SELECT_BIT          3

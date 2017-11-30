@@ -62,11 +62,10 @@ void strobe_init(void)
   // setup int irq
   cli();
   // falling edge on INTx -> strobe detect
+  PAR_STROBE_EICR = _BV(PAR_STROBE_ISC);
 #ifdef GICR
-  MCUCR = _BV(PAR_STROBE_ISC);
   GICR = _BV(PAR_STROBE_INT);
 #else
-  EICRA = _BV(PAR_STROBE_ISC);
   EIMSK = _BV(PAR_STROBE_INT);
 #endif
   sei();
