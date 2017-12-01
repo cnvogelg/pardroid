@@ -13,13 +13,6 @@
 #include "led.h"
 #include "timer.h"
 
-#ifdef CONFIG_SPI
-#include "spi.h"
-#endif
-#ifdef CONFIG_DRIVER_SDCARD
-#include "sdcard.h"
-#endif
-
 #include "proto_low.h"
 
 // define the tests you want
@@ -28,6 +21,7 @@
 //#define TEST_TIMER_TIMEOUT
 //#define TEST_SDCARD
 //#define TEST_SPI
+//#define TEST_WIZNET
 
 #ifdef TEST_WAIT_WATCHDOG
 static void test_wait_watchdog(void)
@@ -68,10 +62,15 @@ static void test_timer_timeout(void)
 #endif
 
 #ifdef TEST_SDCARD
+#include "spi.h"
+#include "sdcard.h"
+
 static u08 sdbuf[512];
 
 static void test_sdcard(void)
 {
+  spi_init();
+
   // init card
   uart_send_pstring(PSTR("sdcard: "));
   u08 res = sdcard_init();
@@ -136,8 +135,11 @@ static void test_sdcard(void)
 #endif
 
 #ifdef TEST_SPI
+#include "spi.h"
+
 static void test_spi(void)
 {
+  spi_init();
   spi_set_speed(SPI_SPEED_MAX);
 
   spi_enable_cs0();
@@ -194,13 +196,34 @@ static void test_spi(void)
 }
 #endif
 
+#ifdef TEST_WIZNET
+#include "spi.h"
+#include "wiznet.h"
+
+static void test_wiznet(void)
+{
+  spi_init();
+
+  uart_send_pstring(PSTR("wiznet: "));
+  wiznet_init();
+
+  u08 mac[6] = { 0x1a,0x11,0xaf,0xa0,0x47,0x11 };
+  wiznet_set_mac(mac);
+  u08 addr[4] = { 192,168,2,42 };
+  wiznet_set_src_addr(addr);
+  u08 mask[4] = { 255,255,255,0 };
+  wiznet_set_net_mask(mask);
+  u08 gw[4] = { 192,168,2,1 };
+  wiznet_set_src_addr(gw);
+
+  uart_send_crlf();
+}
+#endif
+
 int main(void)
 {
   system_init();
   //led_init();
-#ifdef CONFIG_SPI
-  spi_init();
-#endif
 
   uart_init();
   uart_send_pstring(PSTR("parbox: test-base!"));
@@ -226,10 +249,22 @@ int main(void)
 #ifdef TEST_SDCARD
   test_sdcard();
 #endif
+#ifdef TEST_WIZNET
+  test_wiznet();
+#endif
 
   for(int i=0;i<100;i++) {
     system_wdt_reset();
+#ifdef TEST_WIZNET
+    u08 up = wiznet_is_link_up();
+    if(up) {
+      uart_send('*');
+    } else {
+      uart_send('.');
+    }
+#else
     uart_send('.');
+#endif
     timer_delay(200);
   }
 

@@ -72,6 +72,10 @@ ifdef CONFIG_DRIVER_SDCARD
 DRIVER_SRCS += sdcard.c drv_sdcard.c
 DRIVER_INCLUDES += src/driver/sdcard
 endif
+ifdef CONFIG_DRIVER_WIZNET
+DRIVER_SRCS += wiznet_low.c wiznet.c wiz_reg.c
+DRIVER_INCLUDES += src/driver/wiznet
+endif
 
 # common includes
 INCLUDES := src
@@ -94,6 +98,9 @@ TEST_BASE_SRCS += crc.c
 endif
 ifdef CONFIG_DRIVER_SDCARD
 TEST_BASE_SRCS += sdcard.c
+endif
+ifdef CONFIG_DRIVER_WIZNET
+TEST_BASE_SRCS += wiznet_low.c wiznet.c wiz_reg.c
 endif
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)
