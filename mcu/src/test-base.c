@@ -21,7 +21,7 @@
 //#define TEST_TIMER_TIMEOUT
 //#define TEST_SDCARD
 //#define TEST_SPI
-//#define TEST_WIZNET
+#define TEST_WIZNET
 
 #ifdef TEST_WAIT_WATCHDOG
 static void test_wait_watchdog(void)
