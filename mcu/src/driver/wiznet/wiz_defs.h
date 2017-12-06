@@ -42,6 +42,7 @@
 #define WIZ_REG_MEMSIZE_8KB         0x08
 #define WIZ_REG_MEMSIZE_16KB        0x10
 
+#define WIZ_SOCKET_MODE_MASK        0x0f
 #define WIZ_SOCKET_MODE_CLOSED      0x00
 #define WIZ_SOCKET_MODE_TCP         0x01
 #define WIZ_SOCKET_MODE_UDP         0x02

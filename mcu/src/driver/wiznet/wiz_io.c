@@ -1,6 +1,9 @@
 #include "autoconf.h"
 #include "types.h"
 
+#define DEBUG 0
+#include "debug.h"
+
 #include "spi.h"
 
 #include "wiz_io.h"
@@ -8,7 +11,7 @@
 
 // configure socket count
 #define NUM_SOCKETS  CONFIG_DRIVER_WIZNET_NUM_SOCKETS
-#define MEM_SIZE     (32 / NUM_SOCKETS)
+#define MEM_SIZE     ((32 / NUM_SOCKETS) * 1024)
 #define MEM_MASK     (MEM_SIZE - 1)
 #define TX_BASE(s)   (0x8000 + s * MEM_SIZE)
 #define RX_BASE(s)   (0xc000 + s * MEM_SIZE)
