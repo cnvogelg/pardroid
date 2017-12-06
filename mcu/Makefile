@@ -82,31 +82,39 @@ INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base
-INCLUDES += src/proto src/handler src/driver
+INCLUDES += src/proto src/handler src/driver src/test
 INCLUDES += ../common/src
 INCLUDES += $(DRIVER_INCLUDES)
 VPATH=$(INCLUDES)
 
+# ----- test firmware images -----
 # test-base
 TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
-ifdef CONFIG_SPI
-TEST_BASE_SRCS += spi.c
-endif
-ifdef CONFIG_CRC
-TEST_BASE_SRCS += crc.c
-endif
-ifdef CONFIG_DRIVER_SDCARD
-TEST_BASE_SRCS += sdcard.c
-endif
-ifdef CONFIG_DRIVER_WIZNET
-TEST_BASE_SRCS += wiznet_low.c wiznet.c wiz_io.c
-endif
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)
-$(eval $(call dist-pbl,test-base-fw))
 $(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-sdcard
+ifdef CONFIG_DRIVER_SDCARD
+TEST_SDCARD_SRCS = $(ALL_BASE_SRCS)
+TEST_SDCARD_SRCS += test-sdcard.c sdcard.c spi.c crc.c
+FW_ID_test-sdcard-fw = 0x8004
+FW_VER_test-scard-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-sdcard-fw))
+$(eval $(call make-firmware,test-sdcard-fw,$(TEST_SDCARD_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
+# test-wiznet
+ifdef CONFIG_DRIVER_WIZNET
+TEST_WIZNET_SRCS = $(ALL_BASE_SRCS)
+TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c spi.c
+FW_ID_test-wiznet-fw = 0x8005
+FW_VER_test-wiznet-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-wiznet-fw))
+$(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
+endif
 
 # test-proto
 TEST_PROTO_SRCS = $(ALL_BASE_SRCS)
@@ -127,11 +135,13 @@ $(eval $(call dist-pbl,test-handler-fw))
 $(eval $(call dist-hex,test-handler-fw))
 $(eval $(call make-firmware,test-handler-fw,$(TEST_HANDLER_SRCS),$(CONFIG_MAX_ROM)))
 
+ifndef DEBUG
 ifdef CONFIG_BOOTLOADER
 # bootloader
 BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c flash.c
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
+endif
 endif
 
 DEFAULT_FIRMWARE=test-proto-fw
