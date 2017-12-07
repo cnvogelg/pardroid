@@ -20,6 +20,78 @@
 
 u08 buf[UDP_PACKET_SIZE];
 
+static void udp_test(void)
+{
+  // get socket
+  uart_send_pstring(PSTR("socket: "));
+  u08 sock = wiznet_find_free_socket();
+  uart_send_hex_byte(sock);
+  uart_send_crlf();
+
+  // udp open
+  uart_send_pstring(PSTR("udp open: "));
+  u08 ok = wiznet_udp_open(sock, 4242);
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
+
+  for(u16 i=0;i<UDP_PACKET_SIZE;i++) {
+    buf[i] = (u08)(i & 0xff);
+  }
+  u08 dst_ip[4] = { 192,168,2,100 };
+  u16 dst_port = 4242;
+
+  // send packets
+  uart_send_pstring(PSTR("udp send: "));
+  for(u08 i=0;i<100;i++) {
+    buf[0] = i;
+
+    // send packet
+    ok = wiznet_udp_send(sock, buf, UDP_PACKET_SIZE, dst_ip, dst_port);
+    uart_send_hex_byte(ok);
+    uart_send('.');
+
+    // wait for packet
+    timer_ms_t t0 = timer_millis();
+    u08 pending = 0;
+    while(1) {
+      pending = wiznet_udp_is_recv_pending(sock);
+      if(pending) {
+        break;
+      }
+      if(timer_millis_timed_out(t0, 200)) {
+        break;
+      }
+      system_wdt_reset();
+    }
+
+    // receive packet
+    if(pending) {
+      u08 ip[4];
+      u16 port;
+      u16 size = wiznet_udp_recv(sock, buf, UDP_PACKET_SIZE, ip, &port);
+      uart_send('=');
+      uart_send_hex_word(size);
+
+      // check seq num
+      if(buf[0] != i) {
+        uart_send('!');
+        uart_send_crlf();
+        for(u16 i=0; i<UDP_PACKET_SIZE; i++) {
+          uart_send_hex_byte(buf[i]);
+          uart_send(' ');
+        }
+      }
+    }
+    uart_send(',');
+  }
+
+  // udp close
+  uart_send_pstring(PSTR("udp close: "));
+  ok = wiznet_udp_close(sock);
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
+}
+
 
 int main(void)
 {
@@ -62,40 +134,13 @@ int main(void)
   }
   uart_send_crlf();
 
-  // get socket
-  uart_send_pstring(PSTR("socket: "));
-  u08 sock = wiznet_find_free_socket();
-  uart_send_hex_byte(sock);
-  uart_send_crlf();
+  udp_test();
 
-  // udp open
-  uart_send_pstring(PSTR("udp open: "));
-  u08 ok = wiznet_udp_open(sock, 4242);
-  uart_send_hex_byte(ok);
-  uart_send_crlf();
-
-  for(u16 i=0;i<UDP_PACKET_SIZE;i++) {
-    buf[i] = (u08)(i & 0xff);
-  }
-  u08 dst_ip[4] = { 192,168,2,100 };
-  u16 dst_port = 4242;
-
-  // send packets
-  uart_send_pstring(PSTR("udp send: "));
-  for(u08 i=0;i<100;i++) {
-    buf[0] = i;
-    ok = wiznet_udp_send(sock, buf, UDP_PACKET_SIZE, dst_ip, dst_port);
-    uart_send_hex_byte(ok);
-    uart_send('.');
+  for(u08 i=0;i<20;i++) {
     system_wdt_reset();
-    timer_delay(200);
+    uart_send('.');
+    timer_delay(100);
   }
-
-  // udp close
-  uart_send_pstring(PSTR("udp close: "));
-  ok = wiznet_udp_close(sock);
-  uart_send_hex_byte(ok);
-  uart_send_crlf();
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();

@@ -166,7 +166,7 @@ u16 wiz_io_get_tx_free(u08 sock)
   return v0;
 }
 
-void wiz_io_tx_buffer_write(u08 sock, u16 offset, const u08 *buf, u16 len, u08 update)
+void wiz_io_tx_buffer_write(u08 sock, u16 offset, const u08 *buf, u16 len)
 {
   u16 ptr = wiz_io_socket_reg_read_word(sock, WIZ_REG_SOCKET_TX_WRITE_PTR);
   ptr += offset;
@@ -183,15 +183,16 @@ void wiz_io_tx_buffer_write(u08 sock, u16 offset, const u08 *buf, u16 len, u08 u
   } else {
     write_buf(addr, buf, len);
   }
-
-  // update pointer?
-  if(update) {
-    ptr += len;
-    wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_TX_WRITE_PTR, ptr);
-  }
 }
 
-void wiz_io_rx_buffer_read(u08 sock, u16 offset, u08 *buf, u16 len, u08 update)
+void wiz_io_tx_buffer_confirm(u08 sock, u16 len)
+{
+  u16 ptr = wiz_io_socket_reg_read_word(sock, WIZ_REG_SOCKET_TX_WRITE_PTR);
+  ptr += len;
+  wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_TX_WRITE_PTR, ptr);
+}
+
+void wiz_io_rx_buffer_read(u08 sock, u16 offset, u08 *buf, u16 len)
 {
   u16 ptr = wiz_io_socket_reg_read_word(sock, WIZ_REG_SOCKET_RX_READ_PTR);
   ptr += offset;
@@ -208,10 +209,11 @@ void wiz_io_rx_buffer_read(u08 sock, u16 offset, u08 *buf, u16 len, u08 update)
   } else {
     read_buf(addr, buf, len);
   }
+}
 
-  // update pointer?
-  if(update) {
-    ptr += len;
-    wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_RX_READ_PTR, ptr);
-  }
+void wiz_io_rx_buffer_confirm(u08 sock, u16 len)
+{
+  u16 ptr = wiz_io_socket_reg_read_word(sock, WIZ_REG_SOCKET_RX_READ_PTR);
+  ptr += len;
+  wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_RX_READ_PTR, ptr);
 }
