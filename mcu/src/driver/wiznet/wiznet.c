@@ -17,6 +17,7 @@
 // configure socket count
 #define NUM_SOCKETS  CONFIG_DRIVER_WIZNET_NUM_SOCKETS
 #define MEM_SIZE     (32 / NUM_SOCKETS)
+#define MEM_BYTES    (MEM_SIZE * 1024)
 
 #define WIZ_CMD_TIMEOUT   100
 
@@ -69,12 +70,37 @@ u08 exec_cmd(u08 sock, u08 cmd)
   // CMD reg is cleared if command was accepted
   timer_ms_t t0 = timer_millis();
   while(wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_CMD)) {
+    system_wdt_reset();
     if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_CMD_TIMEOUT;
     }
-    system_wdt_reset();
   }
   return WIZNET_RESULT_OK;
+}
+
+u08 wait_state(u08 sock, u08 state)
+{
+  timer_ms_t t0 = timer_millis();
+  while(1) {
+    system_wdt_reset();
+    u08 sr = read_status(sock);
+    if(sr == state) {
+      break;
+    }
+    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+      return WIZNET_RESULT_STATE_TIMEOUT;
+    }
+  }
+  return WIZNET_RESULT_OK;
+}
+
+u08 exec_cmd_state(u08 sock, u08 cmd, u08 state)
+{
+  u08 res = exec_cmd(sock, cmd);
+  if(res != WIZNET_RESULT_OK) {
+    return res;
+  }
+  return wait_state(sock, state);
 }
 
 // ----- API -----
@@ -157,29 +183,19 @@ u08 wiznet_find_free_socket()
   return WIZNET_NO_SOCKET;
 }
 
-u08 wiznet_udp_open(u08 sock, u16 my_port)
-{
-  write_mode(sock, WIZ_SOCKET_MODE_UDP);
-  set_src_port(sock, my_port);
-  return exec_cmd(sock, WIZ_SOCKET_CMD_OPEN);
-}
-
-u08 wiznet_udp_close(u08 sock)
-{
-  u08 res = exec_cmd(sock, WIZ_SOCKET_CMD_CLOSE);
-  write_ir(sock, 0xff);
-  write_mode(sock, WIZ_SOCKET_MODE_CLOSED);
-  return res;
-}
-
-static u08 udp_send_cmd(u08 sock)
+static u08 send_cmd(u08 sock)
 {
   u08 res = exec_cmd(sock, WIZ_SOCKET_CMD_SEND);
   if(res != WIZNET_RESULT_OK) {
     return res;
   }
 
+  timer_ms_t t0 = timer_millis();
   while(1) {
+    system_wdt_reset();
+    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+      return WIZNET_RESULT_SEND_TIMEOUT;
+    }
     u08 ir = read_ir(sock);
     if((ir & WIZ_SOCKET_IR_SEND_OK) == WIZ_SOCKET_IR_SEND_OK) {
       write_ir(sock, WIZ_SOCKET_IR_SEND_OK);
@@ -192,8 +208,30 @@ static u08 udp_send_cmd(u08 sock)
   }
 }
 
+// ---------- UDP ----------
+
+u08 wiznet_udp_open(u08 sock, u16 my_port)
+{
+  write_mode(sock, WIZ_SOCKET_MODE_UDP);
+  set_src_port(sock, my_port);
+  return exec_cmd_state(sock, WIZ_SOCKET_CMD_OPEN, WIZ_SOCKET_STATUS_UDP);
+}
+
+u08 wiznet_udp_close(u08 sock)
+{
+  u08 res = exec_cmd_state(sock, WIZ_SOCKET_CMD_CLOSE, WIZ_SOCKET_STATUS_CLOSED);
+  write_ir(sock, 0xff);
+  write_mode(sock, WIZ_SOCKET_MODE_CLOSED);
+  return res;
+}
+
 u08 wiznet_udp_send(u08 sock, const u08 *buf, const wiz_udp_pkt_t *pkt)
 {
+  u16 free = wiz_io_get_tx_free(0);
+  if(free < pkt->len) {
+    return WIZNET_RESULT_NO_MEMORY;
+  }
+
   set_dest_addr(sock, pkt->addr);
   set_dest_port(sock, pkt->port);
 
@@ -201,7 +239,16 @@ u08 wiznet_udp_send(u08 sock, const u08 *buf, const wiz_udp_pkt_t *pkt)
   wiz_io_tx_buffer_write(sock, 0, buf, pkt->len);
   wiz_io_tx_buffer_confirm(sock, pkt->len);
 
-  return udp_send_cmd(sock);
+  return send_cmd(sock);
+}
+
+u08 wiznet_udp_send_begin(u08 sock, const wiz_udp_pkt_t *pkt)
+{
+  u16 free = wiz_io_get_tx_free(0);
+  if(free < pkt->len) {
+    return WIZNET_RESULT_NO_MEMORY;
+  }
+  return WIZNET_RESULT_OK;
 }
 
 void wiznet_udp_send_data(u08 sock, u16 offset, const u08 *buf, u16 len)
@@ -216,13 +263,16 @@ u08  wiznet_udp_send_end(u08 sock, const wiz_udp_pkt_t *pkt)
   set_dest_addr(sock, pkt->addr);
   set_dest_port(sock, pkt->port);
 
-  return udp_send_cmd(sock);
+  return send_cmd(sock);
 }
 
 u08 wiznet_udp_is_recv_pending(u08 sock, wiz_udp_pkt_t *pkt)
 {
   u16 size = wiz_io_get_rx_size(sock);
   if(size == 0) {
+    if(pkt != 0) {
+      pkt->len = 0;
+    }
     return 0;
   }
 
@@ -289,3 +339,116 @@ u08 wiznet_udp_recv_end(u08 sock, const wiz_udp_pkt_t *pkt)
   return exec_cmd(sock, WIZ_SOCKET_CMD_RECV);
 }
 
+// ---------- ETH ----------
+
+u08  wiznet_eth_open(u08 filter)
+{
+  u08 mode = WIZ_SOCKET_MODE_MACRAW;
+  if(filter) {
+    mode |= WIZ_MASK_MAC_FILTER;
+  }
+  write_mode(0, mode);
+  return exec_cmd_state(0, WIZ_SOCKET_CMD_OPEN, WIZ_SOCKET_STATUS_MACRAW);
+}
+
+u08  wiznet_eth_close(void)
+{
+  u08 res = exec_cmd_state(0, WIZ_SOCKET_CMD_CLOSE, WIZ_SOCKET_STATUS_CLOSED);
+  write_ir(0, 0xff);
+  write_mode(0, WIZ_SOCKET_MODE_CLOSED);
+  return res;
+}
+
+u08  wiznet_eth_send(const u08 *buf, u16 len)
+{
+  u08 ok = wiznet_eth_send_begin(len);
+  if(ok != WIZNET_RESULT_OK) {
+    return ok;
+  }
+
+  wiz_io_tx_buffer_write(0, 0, buf, len);
+  wiz_io_tx_buffer_confirm(0, len);
+
+  return send_cmd(0);
+}
+
+u08  wiznet_eth_send_begin(u16 len)
+{
+  if(len > MEM_BYTES) {
+    return WIZNET_RESULT_NO_MEMORY;
+  }
+
+  timer_ms_t t0 = timer_millis();
+  while(1) {
+    system_wdt_reset();
+    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+      return WIZNET_RESULT_SIZE_TIMEOUT;
+    }
+
+    u16 free = wiz_io_get_tx_free(0);
+    if(free >= len) {
+      break;
+    }
+  }
+  return WIZNET_RESULT_OK;
+}
+
+void wiznet_eth_send_data(u16 offset, const u08 *buf, u16 len)
+{
+  wiz_io_tx_buffer_write(0, offset, buf, len);
+}
+
+u08  wiznet_eth_send_end(u16 len)
+{
+  wiz_io_tx_buffer_confirm(0, len);
+
+  return send_cmd(0);
+}
+
+u08  wiznet_eth_is_recv_pending(void)
+{
+  u16 size = wiz_io_get_rx_size(0);
+  return size > 0;
+}
+
+u08  wiznet_eth_recv(u08 *buf, u16 max_len, u16 *len)
+{
+  wiznet_eth_recv_begin(len);
+
+  u16 copy_size = *len;
+  if(max_len < copy_size) {
+    copy_size = max_len;
+  }
+
+  wiz_io_rx_buffer_read(0, 2, buf, copy_size);
+  wiz_io_rx_buffer_confirm(0, *len + 2);
+
+  // trigger next receive
+  return exec_cmd(0, WIZ_SOCKET_CMD_RECV);
+}
+
+u08  wiznet_eth_recv_begin(u16 *len)
+{
+  // read packet size
+  u08 tmp[2];
+  wiz_io_rx_buffer_read(0, 0, tmp, 2);
+  u16 size = tmp[0] << 8 | tmp[1];
+
+  // size seems to be including the size field!
+  *len = size - 2;
+
+  return WIZNET_RESULT_OK;
+}
+
+void wiznet_eth_recv_data(u16 offset, u08 *buf, u16 len)
+{
+  wiz_io_rx_buffer_read(0, offset + 2, buf, len);
+}
+
+u08  wiznet_eth_recv_end(u16 size)
+{
+  wiz_io_rx_buffer_confirm(0, size + 2);
+
+  // trigger next receive
+  return exec_cmd(0, WIZ_SOCKET_CMD_RECV);
+}

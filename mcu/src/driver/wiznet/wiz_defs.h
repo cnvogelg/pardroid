@@ -12,6 +12,7 @@
 
 #define WIZ_MASK_RESET              0x80
 #define WIZ_MASK_LINK_UP            0x20
+#define WIZ_MASK_MAC_FILTER         0x40
 
 #define WIZ_REG_SOCKET_MODE         0x00
 #define WIZ_REG_SOCKET_CMD          0x01

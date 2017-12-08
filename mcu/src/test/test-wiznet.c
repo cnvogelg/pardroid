@@ -16,14 +16,18 @@
 #include "spi.h"
 #include "wiznet.h"
 
-#define UDP_PACKET_SIZE 512
+#define PACKET_SIZE 512
 
-u08 buf[UDP_PACKET_SIZE];
+//#define UDP_TEST
+#define ETH_TEST
 
+u08 buf[PACKET_SIZE];
+
+#ifdef UDP_TEST
 static void udp_test(u08 partial)
 {
   // get socket
-  uart_send_pstring(PSTR("socket: "));
+  uart_send_pstring(PSTR("udp socket: "));
   u08 sock = wiznet_find_free_socket();
   uart_send_hex_byte(sock);
   uart_send_crlf();
@@ -34,13 +38,13 @@ static void udp_test(u08 partial)
   uart_send_hex_byte(ok);
   uart_send_crlf();
 
-  for(u16 i=0;i<UDP_PACKET_SIZE;i++) {
+  for(u16 i=0;i<PACKET_SIZE;i++) {
     buf[i] = (u08)(i & 0xff);
   }
   wiz_udp_pkt_t pkt = {
     .addr = { 192,168,2,100 },
     .port = 4242,
-    .len = UDP_PACKET_SIZE
+    .len = PACKET_SIZE
   };
 
   // send packets
@@ -50,7 +54,8 @@ static void udp_test(u08 partial)
 
     // send packet
     if(partial) {
-      const u16 off = UDP_PACKET_SIZE / 2;
+      const u16 off = PACKET_SIZE / 2;
+      wiznet_udp_send_begin(sock, &pkt);
       wiznet_udp_send_data(sock, 0, buf, off);
       wiznet_udp_send_data(sock, off, &buf[off], off);
       ok = wiznet_udp_send_end(sock, &pkt);
@@ -80,12 +85,12 @@ static void udp_test(u08 partial)
       wiz_udp_pkt_t pkt_in;
       if(partial) {
         wiznet_udp_recv_begin(sock, &pkt_in);
-        const u16 off = UDP_PACKET_SIZE / 2;
+        const u16 off = PACKET_SIZE / 2;
         wiznet_udp_recv_data(sock, 0, buf, off);
         wiznet_udp_recv_data(sock, off, &buf[off], off);
         ok = wiznet_udp_recv_end(sock, &pkt_in);
       } else {
-        ok = wiznet_udp_recv(sock, buf, UDP_PACKET_SIZE, &pkt_in);
+        ok = wiznet_udp_recv(sock, buf, PACKET_SIZE, &pkt_in);
       }
       uart_send('=');
       uart_send_hex_byte(ok);
@@ -96,7 +101,7 @@ static void udp_test(u08 partial)
       if(buf[0] != i) {
         uart_send('!');
         uart_send_crlf();
-        for(u16 i=0; i<UDP_PACKET_SIZE; i++) {
+        for(u16 i=0; i<PACKET_SIZE; i++) {
           uart_send_hex_byte(buf[i]);
           uart_send(' ');
         }
@@ -111,7 +116,95 @@ static void udp_test(u08 partial)
   uart_send_hex_byte(ok);
   uart_send_crlf();
 }
+#endif
 
+#ifdef ETH_TEST
+static void eth_test(u08 partial)
+{
+  // eth open
+  uart_send_pstring(PSTR("eth open: "));
+  u08 ok = wiznet_eth_open(1);
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
+
+  for(u16 i=0;i<PACKET_SIZE;i++) {
+    buf[i] = (u08)(i & 0xff);
+  }
+
+  // send packets
+  for(u08 i=0;i<100;i++) {
+    buf[0] = i;
+
+    uart_send_pstring(PSTR("eth send: "));
+    if(partial) {
+      uart_send_pstring(PSTR("partial: "));
+    }
+    uart_send_hex_byte(i);
+    uart_send(':');
+
+    // send packet
+    if(partial) {
+      const u16 off = PACKET_SIZE / 2;
+      ok = wiznet_eth_send_begin(PACKET_SIZE);
+      if(ok == WIZNET_RESULT_OK) {
+        wiznet_eth_send_data(0, buf, off);
+        wiznet_eth_send_data(off, &buf[off], off);
+        ok = wiznet_eth_send_end(PACKET_SIZE);
+      }
+    } else {
+      ok = wiznet_eth_send(buf, PACKET_SIZE);
+    }
+    uart_send_hex_byte(ok);
+    uart_send('+');
+
+    // wait for packet
+    timer_ms_t t0 = timer_millis();
+    u08 pending = 0;
+    while(1) {
+      pending = wiznet_eth_is_recv_pending();
+      if(pending) {
+        break;
+      }
+      if(timer_millis_timed_out(t0, 200)) {
+        break;
+      }
+      system_wdt_reset();
+    }
+
+    // incoming?
+    if(pending) {
+      u16 in_size;
+      if(partial) {
+        wiznet_eth_recv_begin(&in_size);
+        const u16 off = PACKET_SIZE / 2;
+        wiznet_eth_recv_data(0, buf, off);
+        wiznet_eth_recv_data(off, &buf[off], off);
+        ok = wiznet_eth_recv_end(in_size);
+      } else {
+        ok = wiznet_eth_recv(buf, PACKET_SIZE, &in_size);
+      }
+      uart_send('=');
+      uart_send_hex_byte(ok);
+      uart_send(',');
+      uart_send_hex_word(in_size);
+      uart_send(':');
+
+      // show eth header
+      for(u16 i=0; i<18; i++) {
+        uart_send_hex_byte(buf[i]);
+        uart_send(' ');
+      }
+    }
+    uart_send_crlf();
+  }
+
+  // eth close
+  uart_send_pstring(PSTR("eth close: "));
+  ok = wiznet_eth_close();
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
+}
+#endif
 
 int main(void)
 {
@@ -154,8 +247,14 @@ int main(void)
   }
   uart_send_crlf();
 
+#ifdef UDP_TEST
   udp_test(0);
   udp_test(1);
+#endif
+#ifdef ETH_TEST
+  eth_test(0);
+  eth_test(1);
+#endif
 
   for(u08 i=0;i<20;i++) {
     system_wdt_reset();
