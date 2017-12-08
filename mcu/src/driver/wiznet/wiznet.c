@@ -172,16 +172,8 @@ u08 wiznet_udp_close(u08 sock)
   return res;
 }
 
-u08 wiznet_udp_send(u08 sock, const u08 *buf, u16 len,
-                    const u08 addr[4], u16 port)
+static u08 udp_send_cmd(u08 sock)
 {
-  set_dest_addr(sock, addr);
-  set_dest_port(sock, port);
-
-  // copy data
-  wiz_io_tx_buffer_write(sock, 0, buf, len);
-  wiz_io_tx_buffer_confirm(sock, len);
-
   u08 res = exec_cmd(sock, WIZ_SOCKET_CMD_SEND);
   if(res != WIZNET_RESULT_OK) {
     return res;
@@ -200,35 +192,68 @@ u08 wiznet_udp_send(u08 sock, const u08 *buf, u16 len,
   }
 }
 
-u08 wiznet_udp_is_recv_pending(u08 sock)
+u08 wiznet_udp_send(u08 sock, const u08 *buf, const wiz_udp_pkt_t *pkt)
 {
-  return wiz_io_get_rx_size(sock) > 0;
+  set_dest_addr(sock, pkt->addr);
+  set_dest_port(sock, pkt->port);
+
+  // copy data
+  wiz_io_tx_buffer_write(sock, 0, buf, pkt->len);
+  wiz_io_tx_buffer_confirm(sock, pkt->len);
+
+  return udp_send_cmd(sock);
 }
 
-u16 wiznet_udp_recv(u08 sock, u08 *buf, u16 max_len,
-                    u08 addr[4], u16 *port)
+void wiznet_udp_send_data(u08 sock, u16 offset, const u08 *buf, u16 len)
 {
-  u16 rx_size = wiz_io_get_rx_size(sock);
-  if(rx_size == 0) {
+  wiz_io_tx_buffer_write(sock, offset, buf, len);
+}
+
+u08  wiznet_udp_send_end(u08 sock, const wiz_udp_pkt_t *pkt)
+{
+  wiz_io_tx_buffer_confirm(sock, pkt->len);
+
+  set_dest_addr(sock, pkt->addr);
+  set_dest_port(sock, pkt->port);
+
+  return udp_send_cmd(sock);
+}
+
+u08 wiznet_udp_is_recv_pending(u08 sock, wiz_udp_pkt_t *pkt)
+{
+  u16 size = wiz_io_get_rx_size(sock);
+  if(size == 0) {
     return 0;
   }
 
-  // read wiz UDP header
-  u08 tmp[8];
-  wiz_io_rx_buffer_read(sock, 0, tmp, 8);
+  // fill packet info
+  if(pkt != 0) {
+    u08 tmp[8];
+    wiz_io_rx_buffer_read(sock, 0, tmp, 8);
 
-  // copy IP
-  for(u08 i=0;i<4;i++) {
-    addr[i] = tmp[i];
+    // copy IP
+    for(u08 i=0;i<4;i++) {
+      pkt->addr[i] = tmp[i];
+    }
+    // copy port
+    pkt->port  = tmp[4] << 8 | tmp[5];
+    // set size
+    pkt->len = tmp[6] << 8 | tmp[7];
   }
-  // copy port
-  *port  = tmp[4] << 8 | tmp[5];
 
-  u16 size = tmp[6] << 8 | tmp[7];
+  return 1;
+}
+
+u08 wiznet_udp_recv(u08 sock, u08 *buf, u16 max_len,
+                    wiz_udp_pkt_t *pkt)
+{
+  if(!wiznet_udp_is_recv_pending(sock, pkt)) {
+    return WIZNET_RESULT_NO_DATA;
+  }
 
   // packet fits into buffer
-  u16 read_size = size;
-  if(max_len < size) {
+  u16 read_size = pkt->len;
+  if(max_len < pkt->len) {
     read_size = max_len;
   }
 
@@ -236,11 +261,31 @@ u16 wiznet_udp_recv(u08 sock, u08 *buf, u16 max_len,
   wiz_io_rx_buffer_read(sock, 8, buf, read_size);
 
   // confirm full buffer
-  wiz_io_rx_buffer_confirm(sock, size + 8);
+  wiz_io_rx_buffer_confirm(sock, pkt->len + 8);
 
   // trigger next receive
-  exec_cmd(sock, WIZ_SOCKET_CMD_RECV);
+  return exec_cmd(sock, WIZ_SOCKET_CMD_RECV);
+}
 
-  return read_size;
+u08  wiznet_udp_recv_begin(u08 sock, wiz_udp_pkt_t *pkt)
+{
+  if(!wiznet_udp_is_recv_pending(sock, pkt)) {
+    return WIZNET_RESULT_NO_DATA;
+  }
+  return WIZNET_RESULT_OK;
+}
+
+void  wiznet_udp_recv_data(u08 sock, u16 offset, u08 *buf, u16 len)
+{
+  wiz_io_rx_buffer_read(sock, offset + 8, buf, len);
+}
+
+u08 wiznet_udp_recv_end(u08 sock, const wiz_udp_pkt_t *pkt)
+{
+  // confirm full buffer
+  wiz_io_rx_buffer_confirm(sock, pkt->len + 8);
+
+  // trigger next receive
+  return exec_cmd(sock, WIZ_SOCKET_CMD_RECV);
 }
 

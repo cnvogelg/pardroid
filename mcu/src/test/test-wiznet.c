@@ -20,7 +20,7 @@
 
 u08 buf[UDP_PACKET_SIZE];
 
-static void udp_test(void)
+static void udp_test(u08 partial)
 {
   // get socket
   uart_send_pstring(PSTR("socket: "));
@@ -37,8 +37,11 @@ static void udp_test(void)
   for(u16 i=0;i<UDP_PACKET_SIZE;i++) {
     buf[i] = (u08)(i & 0xff);
   }
-  u08 dst_ip[4] = { 192,168,2,100 };
-  u16 dst_port = 4242;
+  wiz_udp_pkt_t pkt = {
+    .addr = { 192,168,2,100 },
+    .port = 4242,
+    .len = UDP_PACKET_SIZE
+  };
 
   // send packets
   uart_send_pstring(PSTR("udp send: "));
@@ -46,7 +49,15 @@ static void udp_test(void)
     buf[0] = i;
 
     // send packet
-    ok = wiznet_udp_send(sock, buf, UDP_PACKET_SIZE, dst_ip, dst_port);
+    if(partial) {
+      const u16 off = UDP_PACKET_SIZE / 2;
+      wiznet_udp_send_data(sock, 0, buf, off);
+      wiznet_udp_send_data(sock, off, &buf[off], off);
+      ok = wiznet_udp_send_end(sock, &pkt);
+
+    } else {
+      ok = wiznet_udp_send(sock, buf, &pkt);
+    }
     uart_send_hex_byte(ok);
     uart_send('.');
 
@@ -54,7 +65,7 @@ static void udp_test(void)
     timer_ms_t t0 = timer_millis();
     u08 pending = 0;
     while(1) {
-      pending = wiznet_udp_is_recv_pending(sock);
+      pending = wiznet_udp_is_recv_pending(sock, 0);
       if(pending) {
         break;
       }
@@ -66,11 +77,20 @@ static void udp_test(void)
 
     // receive packet
     if(pending) {
-      u08 ip[4];
-      u16 port;
-      u16 size = wiznet_udp_recv(sock, buf, UDP_PACKET_SIZE, ip, &port);
+      wiz_udp_pkt_t pkt_in;
+      if(partial) {
+        wiznet_udp_recv_begin(sock, &pkt_in);
+        const u16 off = UDP_PACKET_SIZE / 2;
+        wiznet_udp_recv_data(sock, 0, buf, off);
+        wiznet_udp_recv_data(sock, off, &buf[off], off);
+        ok = wiznet_udp_recv_end(sock, &pkt_in);
+      } else {
+        ok = wiznet_udp_recv(sock, buf, UDP_PACKET_SIZE, &pkt_in);
+      }
       uart_send('=');
-      uart_send_hex_word(size);
+      uart_send_hex_byte(ok);
+      uart_send(',');
+      uart_send_hex_word(pkt_in.len);
 
       // check seq num
       if(buf[0] != i) {
@@ -134,7 +154,8 @@ int main(void)
   }
   uart_send_crlf();
 
-  udp_test();
+  udp_test(0);
+  udp_test(1);
 
   for(u08 i=0;i<20;i++) {
     system_wdt_reset();
