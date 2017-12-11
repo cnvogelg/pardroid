@@ -32,7 +32,6 @@
 static u08 Enc28j60Bank;
 static u16 gNextPacketPtr;
 static u08 is_full_duplex;
-static u08 rev;
 
 // ----- basic SPI ops -----
 
@@ -150,7 +149,7 @@ u08 enc28j60_init(u08 *rev_ret)
   }
 
   // return rev
-  rev = readRegByte(EREVID);
+  u08 rev = readRegByte(EREVID);
   // microchip forgot to step the number on the silcon when they
   // released the revision B7. 6 is now rev B7. We still have
   // to see what they do when they release B8. At the moment
@@ -177,6 +176,7 @@ u08 enc28j60_setup(const u08 macaddr[6], u08 flags)
   } else {
     enc28j60_disable_broadcast(); // change to add ERXFCON_BCEN recommended by epam
   }
+  is_full_duplex = (flags & ENC28J60_FLAGS_FULL_DUPLEX);
 
   // BIST pattern generator?
   writeReg(EPMM0, 0x303f);
@@ -191,7 +191,6 @@ u08 enc28j60_setup(const u08 macaddr[6], u08 flags)
   }
   writeRegByte(MACON3, mac3val);
 
-  is_full_duplex = (flags & ENC28J60_FLAGS_FULL_DUPLEX);
   if(is_full_duplex) {
     writeRegByte(MABBIPG, 0x15);
     writeReg(MAIPG, 0x0012);
@@ -296,6 +295,38 @@ void enc28j60_send(const u08 *data, u16 size)
   writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
 }
 
+void enc28j60_send_begin(void)
+{
+  // prepare tx buffer write
+  writeReg(EWRPT, TXSTART_INIT);
+  writeOp(ENC28J60_WRITE_BUF_MEM, 0, 0x00);
+}
+
+void enc28j60_send_seek(u16 abs_pos)
+{
+  writeReg(EWRPT, TXSTART_INIT + 1 + abs_pos); // skip 1 control byte
+}
+
+void enc28j60_send_data(const u08 *data, u16 size)
+{
+  writeBuf(size, data);
+}
+
+void enc28j60_send_end(u16 total_size)
+{
+  // wait for tx ready
+  while (readOp(ENC28J60_READ_CTRL_REG, ECON1) & ECON1_TXRTS) {
+    if (readRegByte(EIR) & EIR_TXERIF) {
+        writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRST);
+        writeOp(ENC28J60_BIT_FIELD_CLR, ECON1, ECON1_TXRST);
+    }
+  }
+
+  // initiate send
+  writeReg(ETXND, TXSTART_INIT + total_size);
+  writeOp(ENC28J60_BIT_FIELD_SET, ECON1, ECON1_TXRTS);
+}
+
 // ---------- recv ----------
 
 inline static void next_pkt(void)
@@ -348,6 +379,37 @@ u08 enc28j60_recv(u08 *data, u16 max_size, u16 *got_size)
 
   next_pkt();
   return result;
+}
+
+u08 enc28j60_recv_begin(u16 *got_size)
+{
+  writeReg(ERDPT, gNextPacketPtr);
+
+  // read chip's packet header
+  u08 status = read_hdr(got_size);
+
+  // was a receive error?
+  if ((status & 0x80)==0) {
+    next_pkt();
+    return ENC28J60_RESULT_RX_ERROR;
+  }
+
+  return ENC28J60_RESULT_OK;
+}
+
+void enc28j60_recv_seek(u16 abs_pos)
+{
+  writeReg(ERDPT, gNextPacketPtr + 6 + abs_pos); // skip 6 header bytes
+}
+
+void enc28j60_recv_data(u08 *data, u16 size)
+{
+  readBuf(size, data);
+}
+
+void enc28j60_recv_end(void)
+{
+  next_pkt();
 }
 
 // ---------- has_recv ----------

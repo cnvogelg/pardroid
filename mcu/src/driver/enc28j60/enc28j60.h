@@ -27,6 +27,7 @@
 #ifndef ENC28J60_H
 #define ENC28J60_H
 
+#define ENC28J60_FLAGS_NONE             0
 #define ENC28J60_FLAGS_FULL_DUPLEX      1
 #define ENC28J60_FLAGS_BROADCAST        2
 
@@ -36,6 +37,7 @@
 #define ENC28J60_RESULT_RX_TOO_LARGE    3
 
 extern u08 enc28j60_init(u08 *rev_ret);
+
 extern u08 enc28j60_setup(const u08 macaddr[6], u08 flags);
 extern void enc28j60_enable(void);
 extern void enc28j60_disable(void);
@@ -45,6 +47,15 @@ extern u08 enc28j60_is_link_up(void);
 extern u08 enc28j60_get_pending_packets(void);
 
 extern void enc28j60_send(const u08 *data, u16 size);
+extern void enc28j60_send_begin(void);
+extern void enc28j60_send_data(const u08 *data, u16 size);
+extern void enc28j60_send_seek(u16 abs_pos);
+extern void enc28j60_send_end(u16 total_size);
+
 extern u08 enc28j60_recv(u08 *data, u16 max_size, u16 *got_size);
+extern u08 enc28j60_recv_begin(u16 *got_size);
+extern void enc28j60_recv_data(u08 *data, u16 size);
+extern void enc28j60_recv_seek(u16 abs_pos);
+extern void enc28j60_recv_end(void);
 
 #endif

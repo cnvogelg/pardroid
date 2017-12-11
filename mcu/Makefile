@@ -96,6 +96,16 @@ FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
+# test-enc28j60
+ifdef CONFIG_DRIVER_ENC28J60
+TEST_ENC28J60_SRCS = $(ALL_BASE_SRCS)
+TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c spi.c
+FW_ID_test-enc28j60-fw = 0x8006
+FW_VER_test-enc28j60-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-enc28j60-fw))
+$(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
 # test-sdcard
 ifdef CONFIG_DRIVER_SDCARD
 TEST_SDCARD_SRCS = $(ALL_BASE_SRCS)
