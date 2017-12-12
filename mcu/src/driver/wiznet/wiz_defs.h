@@ -8,6 +8,7 @@
 #define WIZ_REG_BASE_NET_MASK       0x05
 #define WIZ_REG_BASE_SRC_MAC        0x09
 #define WIZ_REG_BASE_SRC_ADDR       0x0f
+#define WIZ_REG_BASE_VERSION        0x1f
 #define WIZ_REG_BASE_PHY_STATUS     0x35
 
 #define WIZ_MASK_RESET              0x80

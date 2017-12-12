@@ -219,8 +219,14 @@ int main(void)
 
   spi_init();
 
-  uart_send_pstring(PSTR("wiznet: init"));
-  wiznet_init();
+  uart_send_pstring(PSTR("wiznet: init: rev="));
+  wiznet_reset();
+  u08 rev;
+  u08 ok = wiznet_init(&rev);
+  uart_send_hex_byte(rev);
+  uart_send_pstring(PSTR(" ok="));
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
 
   u08 mac[6] = { 0x1a,0x11,0xaf,0xa0,0x47,0x11 };
   wiznet_set_mac(mac);

@@ -105,12 +105,21 @@ u08 exec_cmd_state(u08 sock, u08 cmd, u08 state)
 
 // ----- API -----
 
-void wiznet_init(void)
+void wiznet_reset(void)
 {
   wiznet_low_reset();
   timer_delay(200); // 150ms in data sheet WIZ820io
 
   wiz_io_base_reg_write(WIZ_REG_BASE_MODE, WIZ_MASK_RESET);
+}
+
+u08 wiznet_init(u08 *rev)
+{
+  // get version
+  *rev = wiz_io_base_reg_read(WIZ_REG_BASE_VERSION);
+  if((*rev == 0) || (*rev == 0xff)) {
+    return WIZNET_RESULT_NO_DEVICE;
+  }
 
   // configure socket rx/tx buffer size
   u08 socket = 0;
@@ -124,6 +133,7 @@ void wiznet_init(void)
     wiz_io_socket_reg_write(socket, WIZ_REG_SOCKET_TX_MEMSIZE, 0);
     socket++;
   }
+  return WIZNET_RESULT_OK;
 }
 
 void wiznet_set_mac(const u08 mac[6])

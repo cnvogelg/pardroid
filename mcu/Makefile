@@ -126,6 +126,15 @@ $(eval $(call dist-hex,test-wiznet-fw))
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
+# test-net
+TEST_NET_SRCS = $(ALL_BASE_SRCS)
+TEST_NET_SRCS += test-net.c driver.c
+TEST_NET_SRCS += $(DRIVER_SRCS)
+FW_ID_test-net-fw = 0x8007
+FW_VER_test-net-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-net-fw))
+$(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
+
 # test-proto
 TEST_PROTO_SRCS = $(ALL_BASE_SRCS)
 TEST_PROTO_SRCS += test-proto.c

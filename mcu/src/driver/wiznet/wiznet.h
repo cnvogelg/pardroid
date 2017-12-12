@@ -10,6 +10,7 @@
 #define WIZNET_RESULT_SIZE_TIMEOUT  4
 #define WIZNET_RESULT_NO_DATA       5
 #define WIZNET_RESULT_NO_MEMORY     6
+#define WIZNET_RESULT_NO_DEVICE     7
 
 typedef struct {
   u08  addr[4];
@@ -17,7 +18,8 @@ typedef struct {
   u16  len;
 } wiz_udp_pkt_t;
 
-extern void wiznet_init(void);
+extern void wiznet_reset(void);
+extern u08  wiznet_init(u08 *rev);
 
 extern void wiznet_set_mac(const u08 mac[6]);
 extern void wiznet_set_src_addr(const u08 addr[4]);
