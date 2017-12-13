@@ -6,13 +6,13 @@
 
 #include "debug.h"
 #include "driver.h"
-#include "drv_enc28j60.h"
+#include "eth_enc.h"
 #include "enc28j60.h"
 #include  "uartutil.h"
 
 static u08 init(u08 did)
 {
-  uart_send_pstring(PSTR("enc28j60: "));
+  uart_send_pstring(PSTR("eth_enc: "));
   u08 rev;
   u08 status = enc28j60_init(&rev);
   if(status == ENC28J60_RESULT_OK) {
@@ -23,26 +23,13 @@ static u08 init(u08 did)
   } else {
     uart_send_pstring(PSTR("NOT FOUND!"));
     uart_send_crlf();
-    return DRIVER_INIT_FAILED;
+    return DRIVER_ERROR_INIT_FAILED;
   }
 }
 
-static u16 read(u08 did, u08 *buf, u16 size)
-{
-  DS("dNr:"); DW(size); DNL;
-  return size;
-}
-
-static u16 write(u08 did, u08 *buf, u16 size)
-{
-  DS("dNw:"); DW(size); DNL;
-  return size;
-}
-
-DRIVER_BEGIN(enc28j60)
+DRIVER_BEGIN(eth_enc)
   .init_func = init,
-  .read_func = read,
-  .write_func = write,
+  // consts
   .mtu_max = 0,
   .mtu_min = 0
 DRIVER_END

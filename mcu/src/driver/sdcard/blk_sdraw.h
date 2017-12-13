@@ -3,6 +3,6 @@
 
 #include "driver.h"
 
-DRIVER_DEFINE(sdcard)
+DRIVER_DEFINE(blk_sdraw)
 
 #endif

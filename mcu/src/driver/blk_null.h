@@ -3,6 +3,6 @@
 
 #include "driver.h"
 
-DRIVER_DEFINE(null)
+DRIVER_DEFINE(blk_null)
 
 #endif

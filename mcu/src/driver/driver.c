@@ -23,12 +23,12 @@ void driver_init(u08 num)
     drv_init_func_t f = (drv_init_func_t)read_rom_rom_ptr(&drv->init_func);
     if(f != 0) {
       if(f(did) == DRIVER_OK) {
-        data->flags = DRIVER_FLAG_INIT;
+        data->open_slots = 0;
       } else {
-        data->flags = 0;
+        data->open_slots = DRIVER_NO_INIT;
       }
     } else {
-      data->flags = DRIVER_FLAG_INIT;
+      data->open_slots = 0;
     }
   }
 }
@@ -40,67 +40,77 @@ void driver_work(u08 num)
     driver_data_t *data = DRIVER_GET_DATA(did);
     drv_work_func_t f = (drv_work_func_t)read_rom_rom_ptr(&drv->work_func);
     if(f != 0) {
-      f(did, data->flags);
+      f(did, data);
     }
   }
 }
 
-u08 driver_open(u08 did)
+u08 driver_open(u08 did, u08 slot)
 {
-  driver_ptr_t hnd = driver_get(did);
-  if(hnd != 0) {
-    drv_open_func_t f = (drv_open_func_t)read_rom_rom_ptr(&hnd->open_func);
+  driver_ptr_t drv = driver_get(did);
+  if(drv != 0) {
+    driver_data_t *data = DRIVER_GET_DATA(did);
+
+    // was init successfull?
+    if(data->open_slots == DRIVER_NO_INIT) {
+      return DRIVER_ERROR_INIT_FAILED;
+    }
+
+    // check slot
+    u08 num_slots = driver_get_num_slots(did);
+    if(slot >= num_slots) {
+      return DRIVER_ERROR_WRONG_SLOT;
+    }
+
+    // is already open?
+    u08 mask = 1 << slot;
+    if((data->open_slots & mask) == mask) {
+      return DRIVER_ERROR_ALREADY_OPEN;
+    }
+
+    // ok to open
+    drv_open_func_t f = (drv_open_func_t)read_rom_rom_ptr(&drv->open_func);
+    u08 ok = DRIVER_OK;
     if(f != 0) {
-      return f(did);
-    } else {
-      return DRIVER_OK;
+      ok = f(did, slot);
     }
+    if(ok == DRIVER_OK) {
+      data->open_slots |= mask;
+    }
+    return ok;
   } else {
-    return DRIVER_ERROR_INDEX;
+    return DRIVER_ERROR_NO_DRIVER;
   }
 }
 
-void driver_close(u08 did)
+u08 driver_close(u08 did, u08 slot)
 {
-  driver_ptr_t hnd = driver_get(did);
-  if(hnd != 0) {
-    drv_close_func_t f = (drv_close_func_t)read_rom_rom_ptr(&hnd->close_func);
+  driver_ptr_t drv = driver_get(did);
+  if(drv != 0) {
+    driver_data_t *data = DRIVER_GET_DATA(did);
+
+    // check slot
+    u08 num_slots = driver_get_num_slots(did);
+    if(slot >= num_slots) {
+      return DRIVER_ERROR_WRONG_SLOT;
+    }
+
+    // is really open?
+    u08 mask = 1 << slot;
+    if((data->open_slots & mask) == 0) {
+      return DRIVER_ERROR_NOT_OPEN;
+    }
+
+    // close func (if any)
+    drv_close_func_t f = (drv_close_func_t)read_rom_rom_ptr(&drv->close_func);
     if(f != 0) {
-      return f(did);
+      f(did, slot);
     }
-  }
-}
 
-u16 driver_read(u08 did, u08 *buf, u16 size)
-{
-  driver_ptr_t hnd = driver_get(did);
-  if(hnd != 0) {
-    drv_read_func_t f = (drv_read_func_t)read_rom_rom_ptr(&hnd->read_func);
-    return f(did, buf, size);
+    // clear mask
+    data->open_slots &= ~mask;
+    return DRIVER_OK;
   } else {
-    return 0;
-  }
-}
-
-u16 driver_write(u08 did, u08 *buf, u16 size)
-{
-  driver_ptr_t hnd = driver_get(did);
-  if(hnd != 0) {
-    drv_write_func_t f = (drv_write_func_t)read_rom_rom_ptr(&hnd->write_func);
-    return f(did, buf, size);
-  } else {
-    return 0;
-  }
-}
-
-void driver_get_mtu(u08 did, u16 *mtu_max, u16 *mtu_min)
-{
-  driver_ptr_t hnd = driver_get(did);
-  if(hnd != 0) {
-    *mtu_max = read_rom_word(&hnd->mtu_max);
-    *mtu_min = read_rom_word(&hnd->mtu_min);
-  } else {
-    *mtu_max = 0;
-    *mtu_min = 0;
+    return DRIVER_ERROR_NO_DRIVER;
   }
 }

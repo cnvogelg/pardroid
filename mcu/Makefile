@@ -57,7 +57,7 @@ ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
 
 # drivers
-DRIVER_SRCS = driver.c drv_null.c
+DRIVER_SRCS = driver.c blk_null.c
 ifdef CONFIG_SPI
 DRIVER_SRCS += spi.c
 endif
@@ -65,11 +65,11 @@ ifdef CONFIG_CRC
 DRIVER_SRCS += crc.c
 endif
 ifdef CONFIG_DRIVER_ENC28J60
-DRIVER_SRCS += enc28j60.c drv_enc28j60.c
+DRIVER_SRCS += enc28j60.c eth_enc.c
 DRIVER_INCLUDES += src/driver/enc28j60
 endif
 ifdef CONFIG_DRIVER_SDCARD
-DRIVER_SRCS += sdcard.c drv_sdcard.c
+DRIVER_SRCS += sdcard.c blk_sdraw.c
 DRIVER_INCLUDES += src/driver/sdcard
 endif
 ifdef CONFIG_DRIVER_WIZNET

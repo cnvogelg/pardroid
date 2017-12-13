@@ -3,14 +3,14 @@
 
 #include "autoconf.h"
 
-#include "drv_null.h"
+#include "blk_null.h"
 
 #ifdef CONFIG_DRIVER_ENC28J60
-#include "drv_enc28j60.h"
+#include "eth_enc.h"
 #endif
 
 #ifdef CONFIG_DRIVER_SDCARD
-#include "drv_sdcard.h"
+#include "blk_sdraw.h"
 #endif
 
 #endif
