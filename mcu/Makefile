@@ -48,6 +48,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
+PARAM_SRCS = param.c param_def.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c knok.c
@@ -82,7 +83,7 @@ INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base
-INCLUDES += src/proto src/handler src/driver src/test
+INCLUDES += src/proto src/handler src/driver src/test src/param
 INCLUDES += ../common/src
 INCLUDES += $(DRIVER_INCLUDES)
 VPATH=$(INCLUDES)
@@ -127,7 +128,7 @@ $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)
 endif
 
 # test-net
-TEST_NET_SRCS = $(ALL_BASE_SRCS)
+TEST_NET_SRCS = $(ALL_BASE_SRCS) $(PARAM_SRCS)
 TEST_NET_SRCS += test-net.c driver.c
 TEST_NET_SRCS += $(DRIVER_SRCS)
 FW_ID_test-net-fw = 0x8007

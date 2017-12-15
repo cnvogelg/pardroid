@@ -2,6 +2,7 @@
 #define ARCH_H
 
 #include <avr/pgmspace.h>
+#include <avr/eeprom.h>
 
 typedef PGM_P rom_pchar;
 typedef char *ram_pchar;

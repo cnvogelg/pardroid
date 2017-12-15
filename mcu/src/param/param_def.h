@@ -1,0 +1,10 @@
+#ifndef PARAM_DEF_H
+#define PARAM_DEF_H
+
+PARAM_FUNC_BLOCK_DECLARE(mac_addr, 6)
+PARAM_FUNC_BLOCK_DECLARE(ip_addr, 4)
+PARAM_FUNC_BLOCK_DECLARE(net_mask, 4)
+PARAM_FUNC_BLOCK_DECLARE(ip_gw, 4)
+PARAM_FUNC_BYTE_DECLARE(boot_blk_dev)
+
+#endif

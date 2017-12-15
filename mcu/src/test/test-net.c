@@ -14,6 +14,7 @@
 #include "timer.h"
 
 #include "spi.h"
+#include "param.h"
 
 #include "driver.h"
 #include "driver_list.h"
@@ -34,6 +35,8 @@ int main(void)
   uart_send_crlf();
 
   rom_info();
+
+  param_init();
 
   spi_init();
 
