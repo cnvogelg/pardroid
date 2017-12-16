@@ -16,12 +16,14 @@ PARAM_TABLE_DECLARE
 PARAM_VERSION_DECLARE
 PARAM_DEF_TOTAL_DECLARE
 
-// eeprom base structure
-static param_eep_t eep EEMEM;
-
 // state of param
 static u08 eep_state = PARAM_EEP_INVALID;
 
+#define EEP_CRC         (uint16_t *)PARAM_EEP_OFFSET_CRC
+#define EEP_SIZE        (uint16_t *)PARAM_EEP_OFFSET_SIZE
+#define EEP_VERSION     (uint8_t *)PARAM_EEP_OFFSET_VERSION
+#define EEP_DATA        (uint8_t *)PARAM_EEP_OFFSET_DATA
+#define EEP_DATA_OFF(o) (uint8_t *)(PARAM_EEP_OFFSET_DATA + o)
 
 void param_init(void)
 {
@@ -39,7 +41,7 @@ static u16 calc_eep_crc(u16 my_size)
 {
   /* calc crc */
   u16 my_crc = 0;
-  const uint8_t *ptr = &eep.data;
+  const uint8_t *ptr = EEP_DATA;
   for(u16 i=0;i<my_size;i++) {
     u08 val = eeprom_read_byte(ptr);
     my_crc = crc_xmodem_update(my_crc, val);
@@ -52,9 +54,9 @@ u08 param_check(void)
 {
   eep_state = PARAM_EEP_INVALID;
 
-  u16 crc = eeprom_read_word(&eep.crc);
-  u16 size = eeprom_read_word(&eep.size);
-  u08 version = eeprom_read_byte(&eep.version);
+  u16 crc = eeprom_read_word(EEP_CRC);
+  u16 size = eeprom_read_word(EEP_SIZE);
+  u08 version = eeprom_read_byte(EEP_VERSION);
 
   u16 my_size = PARAM_GET_DEF_TOTAL();
   if(size != my_size) {
@@ -80,9 +82,9 @@ void param_sync(void)
   u08 my_version = read_rom_char(&param_version);
   u16 my_size = read_rom_word(&param_total_size);
   u16 my_crc = calc_eep_crc(my_size);
-  eeprom_update_word(&eep.crc, my_crc);
-  eeprom_update_word(&eep.size, my_size);
-  eeprom_update_byte(&eep.version, my_version);
+  eeprom_write_word(EEP_CRC, my_crc);
+  eeprom_write_word(EEP_SIZE, my_size);
+  eeprom_write_byte(EEP_VERSION, my_version);
   eep_state = PARAM_EEP_VALID;
 }
 
@@ -94,9 +96,9 @@ void param_reset(void)
     u08 size = read_rom_char(&def->size);
     u16 offset = read_rom_word(&def->offset);
     rom_pchar rom_data = read_rom_rom_ptr(&def->def_val);
-    uint8_t *eep_data = &eep.data + offset;
+    uint8_t *eep_data = EEP_DATA_OFF(offset);
     for(u08 s=0;s<size;s++) {
-      eeprom_update_byte(eep_data, read_rom_char(rom_data));
+      eeprom_write_byte(eep_data, read_rom_char(rom_data));
       eep_data++;
       rom_data++;
     }
@@ -111,7 +113,7 @@ u08  param_is_eep_valid(void)
 
 static void dump_block(u08 size, u16 offset, u08 sep)
 {
-  uint8_t *eep_data = &eep.data + offset;
+  uint8_t *eep_data = EEP_DATA_OFF(offset);
   for(u08 i=0;i<size;i++) {
     u08 val = eeprom_read_byte(eep_data);
     eep_data++;
@@ -174,7 +176,7 @@ void param_dump(void)
         }
       case PARAM_TYPE_STRING:
         {
-          uint8_t *eep_data = &eep.data + offset;
+          uint8_t *eep_data = EEP_DATA_OFF(offset);
           while(1) {
             u08 v = eeprom_read_byte(eep_data);
             eep_data++;
@@ -209,14 +211,14 @@ u08  param_get_byte(param_def_ptr_t def)
   }
   else {
     u16 offset = read_rom_word(&def->offset);
-    return eeprom_read_byte(&eep.data + offset);
+    return eeprom_read_byte(EEP_DATA_OFF(offset));
   }
 }
 
 void param_set_byte(param_def_ptr_t def, u08 val)
 {
   u16 offset = read_rom_word(&def->offset);
-  eeprom_update_byte(&eep.data + offset, val);
+  eeprom_write_byte(EEP_DATA_OFF(offset), val);
   if(eep_state == PARAM_EEP_VALID) {
     eep_state = PARAM_EEP_DIRTY;
   }
@@ -236,7 +238,7 @@ u16  param_get_word(param_def_ptr_t def)
   }
   else {
     u16 offset = read_rom_word(&def->offset);
-    uint16_t *ptr = (uint16_t *)(&eep.data + offset);
+    uint16_t *ptr = (uint16_t *)EEP_DATA_OFF(offset);
     return eeprom_read_word(ptr);
   }
 }
@@ -244,8 +246,8 @@ u16  param_get_word(param_def_ptr_t def)
 void param_set_word(param_def_ptr_t def, u16 val)
 {
   u16 offset = read_rom_word(&def->offset);
-  uint16_t *ptr = (uint16_t *)(&eep.data + offset);
-  eeprom_update_word(ptr, val);
+  uint16_t *ptr = (uint16_t *)EEP_DATA_OFF(offset);
+  eeprom_write_word(ptr, val);
   if(eep_state == PARAM_EEP_VALID) {
     eep_state = PARAM_EEP_DIRTY;
   }
@@ -265,20 +267,16 @@ u32  param_get_long(param_def_ptr_t def)
   }
   else {
     u16 offset = read_rom_word(&def->offset);
-    uint16_t *ptr = (uint16_t *)(&eep.data + offset);
-    return (u32)eeprom_read_word(ptr) << 16 |
-           (u32)eeprom_read_word(ptr+1);
+    uint32_t *ptr = (uint32_t *)EEP_DATA_OFF(offset);
+    return eeprom_read_dword(ptr);
   }
 }
 
 void param_set_long(param_def_ptr_t def, u32 val)
 {
   u16 offset = read_rom_word(&def->offset);
-  u16 hi = (u16)(val >> 16);
-  u16 lo = (u16)(val & 0xffff);
-  uint16_t *ptr = (uint16_t *)(&eep.data + offset);
-  eeprom_update_word(ptr, hi);
-  eeprom_update_word(ptr+1, lo);
+  uint32_t *ptr = (uint32_t *)EEP_DATA_OFF(offset);
+  eeprom_write_dword(ptr, val);
   if(eep_state == PARAM_EEP_VALID) {
     eep_state = PARAM_EEP_DIRTY;
   }
@@ -299,7 +297,7 @@ void param_get_block(param_def_ptr_t def, u08 *data)
 {
   u16 offset = read_rom_word(&def->offset);
   u08 size = read_rom_char(&def->size);
-  uint8_t *eep_data = &eep.data + offset;
+  uint8_t *eep_data = EEP_DATA_OFF(offset);
   eeprom_read_block(data, eep_data, size);
 }
 
@@ -307,6 +305,6 @@ void param_set_block(param_def_ptr_t def, const u08 *data)
 {
   u16 offset = read_rom_word(&def->offset);
   u08 size = read_rom_char(&def->size);
-  uint8_t *eep_data = &eep.data + offset;
-  eeprom_update_block(data, eep_data, size);
+  uint8_t *eep_data = EEP_DATA_OFF(offset);
+  eeprom_write_block(data, eep_data, size);
 }

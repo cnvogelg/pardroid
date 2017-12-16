@@ -29,14 +29,10 @@ struct param_def {
 typedef struct param_def param_def_t;
 typedef const param_def_t *param_def_ptr_t;
 
-struct param_eep {
-  uint16_t    crc;
-  uint16_t    size;
-  uint8_t     version;
-  u08         pad;
-  uint8_t     data; // first data byte
-};
-typedef struct param_eep param_eep_t;
+#define PARAM_EEP_OFFSET_CRC        0
+#define PARAM_EEP_OFFSET_SIZE       2
+#define PARAM_EEP_OFFSET_VERSION    3
+#define PARAM_EEP_OFFSET_DATA       4
 
 // param definition
 #define PARAM_DEF(t,o,s,n) \
