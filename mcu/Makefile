@@ -97,6 +97,14 @@ FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
+# test-param
+TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
+TEST_PARAM_SRCS += test-param.c
+FW_ID_test-param-fw = 0x8008
+FW_VER_test-param-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-param-fw))
+$(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
+
 # test-enc28j60
 ifdef CONFIG_DRIVER_ENC28J60
 TEST_ENC28J60_SRCS = $(ALL_BASE_SRCS)

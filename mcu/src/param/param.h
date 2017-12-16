@@ -39,7 +39,7 @@ struct param_eep {
 typedef struct param_eep param_eep_t;
 
 // param definition
-#define PARAM_DEF(t,s,o,n) \
+#define PARAM_DEF(t,o,s,n) \
   static const char param_name_ ## n[] ROM_ATTR = #n; \
   static const param_def_t param_def_ ## n ROM_ATTR = \
   { .type=t, .size=s, .offset=o, .name=param_name_ ## n, \
@@ -114,6 +114,7 @@ extern u08  param_check(void);
 extern void param_sync(void);
 extern void param_reset(void);
 extern u08  param_is_eep_valid(void);
+extern void param_dump(void);
 
 extern u08  param_get_byte_default(param_def_ptr_t def);
 extern u08  param_get_byte(param_def_ptr_t def);

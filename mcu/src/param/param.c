@@ -8,6 +8,8 @@
 
 #include "param.h"
 #include "crc.h"
+#include "uart.h"
+#include "uartutil.h"
 
 // version and size as defined in ROM
 PARAM_TABLE_DECLARE
@@ -105,6 +107,92 @@ void param_reset(void)
 u08  param_is_eep_valid(void)
 {
   return eep_state != PARAM_EEP_INVALID;
+}
+
+static void dump_block(u08 size, u16 offset, u08 sep)
+{
+  uint8_t *eep_data = &eep.data + offset;
+  for(u08 i=0;i<size;i++) {
+    u08 val = eeprom_read_byte(eep_data);
+    eep_data++;
+    uart_send_hex_byte(val);
+    if(i<(size-1)) {
+      uart_send(sep);
+    }
+  }
+}
+
+void param_dump(void)
+{
+  uart_send_pstring(PSTR("param:"));
+  uart_send_crlf();
+  u08 ts = PARAM_TABLE_GET_SIZE();
+  for(u08 i=0;i<ts;i++) {
+    const param_def_t *def = (const param_def_t *)read_rom_rom_ptr(&param_table[i]);
+    rom_pchar name = read_rom_rom_ptr(&def->name);
+    u08 type = read_rom_char(&def->type);
+    u08 size = read_rom_char(&def->size);
+    u16 offset = read_rom_word(&def->offset);
+
+    uart_send_pstring(name);
+    uart_send_pstring(PSTR(": ["));
+    uart_send_hex_byte(type);
+    uart_send(',');
+    uart_send_hex_byte(size);
+    uart_send('+');
+    uart_send_hex_word(offset);
+    uart_send_pstring(PSTR("] = "));
+
+    switch(type) {
+      case PARAM_TYPE_BYTE:
+        {
+          u08 val = param_get_byte(def);
+          uart_send_hex_byte(val);
+          break;
+        }
+      case PARAM_TYPE_WORD:
+        {
+          u16 val = param_get_word(def);
+          uart_send_hex_word(val);
+          break;
+        }
+      case PARAM_TYPE_LONG:
+        {
+          u32 val = param_get_long(def);
+          uart_send_hex_long(val);
+          break;
+        }
+      case PARAM_TYPE_MAC_ADDR:
+        {
+          dump_block(size, offset, ':');
+          break;
+        }
+      case PARAM_TYPE_IP_ADDR:
+        {
+          dump_block(size, offset, '.');
+          break;
+        }
+      case PARAM_TYPE_STRING:
+        {
+          uint8_t *eep_data = &eep.data + offset;
+          while(1) {
+            u08 v = eeprom_read_byte(eep_data);
+            eep_data++;
+            if(v == 0) {
+              break;
+            }
+            uart_send(v);
+          }
+          break;
+        }
+      default:
+        {
+          dump_block(size, offset, ' ');
+          break;
+        }
+    }
+    uart_send_crlf();
+  }
 }
 
 // ----- byte -----
