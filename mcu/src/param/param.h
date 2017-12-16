@@ -31,8 +31,8 @@ typedef const param_def_t *param_def_ptr_t;
 
 #define PARAM_EEP_OFFSET_CRC        0
 #define PARAM_EEP_OFFSET_SIZE       2
-#define PARAM_EEP_OFFSET_VERSION    3
-#define PARAM_EEP_OFFSET_DATA       4
+#define PARAM_EEP_OFFSET_VERSION    4
+#define PARAM_EEP_OFFSET_DATA       6
 
 // param definition
 #define PARAM_DEF(t,o,s,n) \
@@ -54,7 +54,7 @@ typedef const param_def_t *param_def_ptr_t;
   const u16 param_total_size ROM_ATTR = n;
 #define PARAM_DEF_TOTAL_DECLARE \
   extern const u16 param_total_size ROM_ATTR;
-#define PARAM_GET_DEF_TOTAL()    read_rom_char(&param_total_size)
+#define PARAM_GET_DEF_TOTAL()    read_rom_word(&param_total_size)
 
 #define PARAM_VERSION(v) \
   const u08 param_version ROM_ATTR = v;

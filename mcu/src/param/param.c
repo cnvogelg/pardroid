@@ -58,7 +58,10 @@ u08 param_check(void)
   u16 size = eeprom_read_word(EEP_SIZE);
   u08 version = eeprom_read_byte(EEP_VERSION);
 
+  DS("crc="); DW(crc); DS(",size="); DW(size); DS(",version="); DB(version); DNL;
+
   u16 my_size = PARAM_GET_DEF_TOTAL();
+  DS("mysize="); DW(my_size); DNL;
   if(size != my_size) {
     return PARAM_CHECK_WRONG_SIZE;
   }
@@ -82,6 +85,7 @@ void param_sync(void)
   u08 my_version = read_rom_char(&param_version);
   u16 my_size = read_rom_word(&param_total_size);
   u16 my_crc = calc_eep_crc(my_size);
+  DS("sync my_size="); DW(my_size); DNL;
   eeprom_write_word(EEP_CRC, my_crc);
   eeprom_write_word(EEP_SIZE, my_size);
   eeprom_write_byte(EEP_VERSION, my_version);
@@ -103,6 +107,7 @@ void param_reset(void)
       rom_data++;
     }
   }
+  param_sync();
   eep_state = PARAM_EEP_VALID;
 }
 
