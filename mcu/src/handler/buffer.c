@@ -6,7 +6,9 @@
 #include "buffer.h"
 #include "debug.h"
 
+#ifndef NULL
 #define NULL (void *)0
+#endif
 
 struct mem_info {
     struct mem_info *prev;

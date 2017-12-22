@@ -44,6 +44,12 @@ CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 # dist tag
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
+# generated bootstrap code
+BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/bootstrap
+BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
+BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
+BOOTSTRAP_GEN = scripts/genbootstrap.py
+
 # base sources
 COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c $(BASE_ARCH_SRCS)
@@ -51,7 +57,8 @@ BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PARAM_SRCS = param.c param_def.c crc.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
-PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c knok.c
+PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
+PROTO_EXT_SRCS += bootstrap.c knok.c
 ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
@@ -86,7 +93,7 @@ INCLUDES += src/base
 INCLUDES += src/proto src/handler src/driver src/test src/param
 INCLUDES += ../common/src
 INCLUDES += $(DRIVER_INCLUDES)
-VPATH=$(INCLUDES)
+VPATH=$(INCLUDES) $(BUILD_DIR)
 
 # ----- test firmware images -----
 # test-base
@@ -176,3 +183,8 @@ DEFAULT_FIRMWARE=test-proto-fw
 
 # rules
 include scripts/common-rules.mk
+
+# bootstrap rules
+$(BOOTSTRAP_H) $(BOOTSTRAP_C): $(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE)
+	@echo "  BOOTSTRAP from $(BOOTSTRAP_CODE)"
+	$(H)$(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE) $(BOOTSTRAP_C) $(BOOTSTRAP_H)

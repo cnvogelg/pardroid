@@ -34,7 +34,6 @@ strobe_low_init:
     sbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     ret
 
-
     ; ----- strobe_low_exit -----
     ; void strobe_low_exit(void)
     ; leave initial strobe phase
@@ -59,4 +58,51 @@ strobe_low_exit:
 strobe_low_get_data:
     data_in
     mov     r24, r18
+    ret
+
+
+    ; ----- strobe_low_begin_send -----
+    ; void strobe_low_begin_send(u08 data)
+    ; in: r24 = data
+    .section .text.strobe_low_begin_send
+    .global  strobe_low_begin_send
+strobe_low_begin_send:
+    ; BUSY input (SEL, POUT are alread input)
+    cbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
+    sbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    ; set data
+    mov     r18,r24
+    data_out_prepare
+    data_out_set
+    ; set data output
+    ddr_out
+    ret
+
+
+    ; ----- strobe_low_end_send -----
+    ; void strobe_low_end_send(void)
+    .section .text.strobe_low_end_send
+    .global  strobe_low_end_send
+strobe_low_end_send:
+    ; BUSY output again (lo)
+    sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
+    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    ; ddr input
+    ddr_in
+    ; set input
+    ldi     r18,0xff
+    data_out_prepare
+    data_out_set
+    ret
+
+
+    ; ----- strobe_low_set_data -----
+    ; void strobe_low_set_data(u08 data)
+    ; in: r24 = data
+    .section .text.strobe_low_set_data
+    .global  strobe_low_set_data
+strobe_low_set_data:
+    mov      r18,r24
+    data_out_prepare
+    data_out_set
     ret
