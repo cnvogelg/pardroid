@@ -49,6 +49,10 @@ BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/bootstrap
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
 BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
 BOOTSTRAP_GEN = scripts/genbootstrap.py
+# generated bootrexx code
+BOOTREXX_CODE = ../amiga/src/bootstrap/boot.rexx
+BOOTREXX_H = $(BUILD_DIR)/bootrexx.h
+BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
 COMMON_SRCS = machtag.c fwid.c
@@ -58,7 +62,7 @@ PARAM_SRCS = param.c param_def.c crc.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
-PROTO_EXT_SRCS += bootstrap.c knok.c
+PROTO_EXT_SRCS += bootstrap.c bootrexx.c knok.c
 ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
@@ -187,4 +191,10 @@ include scripts/common-rules.mk
 # bootstrap rules
 $(BOOTSTRAP_H) $(BOOTSTRAP_C): $(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE)
 	@echo "  BOOTSTRAP from $(BOOTSTRAP_CODE)"
-	$(H)$(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE) $(BOOTSTRAP_C) $(BOOTSTRAP_H)
+	$(H)$(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE) $(BOOTSTRAP_C) $(BOOTSTRAP_H) \
+		bootstrap $(VERSION_MAJOR) $(VERSION_MINOR)
+
+$(BOOTREXX_H) $(BOOTREXX_C): $(BOOTSTRAP_GEN) $(BOOTREXX_CODE)
+	@echo "  BOOTREXX from $(BOOTREXX_CODE)"
+	$(H)$(BOOTSTRAP_GEN) $(BOOTREXX_CODE) $(BOOTREXX_C) $(BOOTREXX_H) \
+		bootrexx

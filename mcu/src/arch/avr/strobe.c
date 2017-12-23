@@ -141,7 +141,7 @@ static void strobe_write_func(void)
 {
   // nothing more to send...
   if(send_size == 0) {
-    strobe_low_set_data(0xff);
+    strobe_low_set_data(0);
     state = STROBE_FLAG_GOT_STROBE | STROBE_FLAG_ALL_SENT;
   } else {
     state = STROBE_FLAG_GOT_STROBE;
