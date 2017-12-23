@@ -1,5 +1,6 @@
 #include "autoconf.h"
 #include "types.h"
+#include "arch.h"
 
 #define DEBUG CONFIG_DEBUG_KNOK
 
@@ -7,6 +8,7 @@
 
 #include "knok.h"
 #include "strobe.h"
+#include "uart.h"
 #include "uartutil.h"
 #include "system.h"
 #include "timer.h"
@@ -44,6 +46,7 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
 
   timer_ms_t t0 = timer_millis();
   u08 count = 0;
+  u08 led = 1;
   while(1) {
     if(timer_millis_timed_out(t0, interval)) {
       flag = strobe_read_flag();
@@ -61,12 +64,17 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
         goto end_upload;
       }
 
+      // toggle led
+      led = !led;
+      led_set(led);
+
       t0 = timer_millis();
     }
     // keep wd happy
     system_wdt_reset();
   }
 
+  led_on();
   uart_send('{');
 
   // wait for transfer end
@@ -106,12 +114,14 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
   }
 
   uart_send('}');
+  led_off();
 
   // wait for transfer termination on Amiga side
   t0 = timer_millis();
   count = 0;
   interval = 1000;
   busy_count = 0;
+  led = 0;
   while(1) {
     if(timer_millis_timed_out(t0, interval)) {
       // a filled buffer causes a delayed ack
@@ -140,6 +150,10 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
         break;
       }
 
+      // toggle led
+      led = !led;
+      led_set(led);
+
       // next timer round
       t0 = timer_millis();
 
@@ -164,11 +178,12 @@ void knok_main(void)
   uart_send_pstring(PSTR("knok:"));
   strobe_init();
   led_init();
+  led_on();
 
-  u08 led = 1;
-  led_set(led);
   timer_ms_t t0 = timer_millis();
   u08 stay = 1;
+  u08 led = 1;
+  u16 led_interval = 100;
   while(stay) {
     // got a strobe key?
     u32 key;
@@ -198,10 +213,11 @@ void knok_main(void)
     }
 
     // blink led per second
-    if(timer_millis_timed_out(t0, 500)) {
+    if(timer_millis_timed_out(t0, led_interval)) {
       t0 = timer_millis();
       led = !led;
       led_set(led);
+      led_interval = led ? 2000 : 100;
     }
 
     // keep wd happy
@@ -210,6 +226,7 @@ void knok_main(void)
 
   strobe_exit();
   led_exit();
+
   uart_send_pstring(PSTR("boot!"));
   uart_send_crlf();
 }
