@@ -2,38 +2,37 @@
 arg inf outf
 if inf="" then inf="par:"
 if outf="" then outf="ram:s2"
-say "stage1" inf outf
-/* hdr */
+say "s1" inf outf
 open('1',inf)
-hdr=readch('1',16)
-knok=substr(hdr,1,4)
-if knok ~= "KNOK" then do
- say "no KNOK!"
+h=readch('1',16)
+o="KNOK"
+if substr(h,1,4)~=o then do
+ say o
  exit 10
 end
-size=c2d(substr(hdr,5,4))
-cs=substr(hdr,9,4)
-/* data */
-blk=1024
-left=size
-ms=d2c(0,4)
+s=c2d(substr(h,5,4))
+z=substr(h,9,4)
+b=1024
+l=s
+y=d2c(0,4)
 open('2',outf,'W')
-do while left>0
- rem=left
- if rem>blk then rem=blk
- left=left-rem
- data=readch('1',rem)
- writech('2',data)
- do i=1 to rem by 4
-  ms=f(substr(data,i,4),ms)
+do while l>0
+ r=l
+ if r>b then r=b
+ l=l-r
+ say l
+ d=readch('1',r)
+ writech('2',d)
+ do i=1 to r by 4
+  y=f(substr(d,i,4),y)
  end
 end
 close('1'); close('2')
-if ms ~= cs then do
- say "CHECK SUM ERROR!"
- exit 10
+if y ~= z then do
+ say "CHKSUM!"
+ exit 20
 end
-say "stage2"
+say "s2"
 address command outf
 exit
 f: procedure
