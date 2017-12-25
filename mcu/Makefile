@@ -48,6 +48,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/bootstrap
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
 BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
+BOOTSTRAP_KNOK = $(BUILD_DIR)/bootstrap.knok
 BOOTSTRAP_GEN = scripts/genbootstrap.py
 # generated bootrexx code
 BOOTREXX_CODE = ../amiga/src/bootstrap/boot.rexx
@@ -192,7 +193,7 @@ include scripts/common-rules.mk
 $(BOOTSTRAP_H) $(BOOTSTRAP_C): $(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE)
 	@echo "  BOOTSTRAP from $(BOOTSTRAP_CODE)"
 	$(H)$(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE) $(BOOTSTRAP_C) $(BOOTSTRAP_H) \
-		bootstrap $(VERSION_MAJOR) $(VERSION_MINOR)
+		bootstrap $(VERSION_MAJOR) $(VERSION_MINOR) $(BOOTSTRAP_KNOK)
 
 $(BOOTREXX_H) $(BOOTREXX_C): $(BOOTSTRAP_GEN) $(BOOTREXX_CODE)
 	@echo "  BOOTREXX from $(BOOTREXX_CODE)"

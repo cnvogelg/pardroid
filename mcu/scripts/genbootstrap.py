@@ -10,18 +10,20 @@ import struct
 
 # get params
 nargs = len(sys.argv)
-if nargs != 5 and nargs != 7:
-  print("Usage: <in_data> <out.c> <out.h> <name> [ver_maj] [ver_min]")
+if nargs != 5 and nargs != 8:
+  print("Usage: <in_data> <out.c> <out.h> <name> [ver_maj] [ver_min] [out_knok]")
   sys.exit(1)
 
 in_bin = sys.argv[1]
 out_src = sys.argv[2]
 out_hdr = sys.argv[3]
 name = sys.argv[4]
-if nargs == 7:
+if nargs == 8:
   version = (int(sys.argv[5]), int(sys.argv[6]))
+  knok_file = sys.argv[7]
 else:
   version = None
+  knok_file = None
 
 up_name = name.upper()
 low_name = name.lower()
@@ -31,7 +33,7 @@ with open(in_bin, "rb") as fh:
   rom_data = fh.read()
 
 size = len(rom_data)
-print("size:", size)
+print("size:  %08x" % size)
 
 # append header?
 # +0: KNOK
@@ -55,17 +57,25 @@ if version is not None:
   for n in range(num_longs):
     l = struct.unpack_from(">I", rom_data, pos)[0]
     check_sum = (check_sum + l) & 0xffffffff
+    print("%08x" % check_sum)
     pos +=4
-  check_sum = 0x100000000 - check_sum
-  print("check_sum: %04x" % check_sum)
+  print("check: %08x" % check_sum)
   # create header
   hdr_data = b"KNOK" + struct.pack(">IIHH", size, check_sum, version[0], version[1])
   rom_data = hdr_data + rom_data
-  total_size = len(hdr_data) + size
+  total_size = len(rom_data)
   header_size = len(hdr_data)
 else:
   total_size = size
   header_size = 0
+
+print("hdr:   %08x" % header_size)
+print("total: %08x" % total_size)
+
+# dump knok file
+if knok_file is not None:
+  with open(knok_file, "wb") as fh:
+    fh.write(rom_data)
 
 # write header
 with open(out_hdr, "w") as fh:
