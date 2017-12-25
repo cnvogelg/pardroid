@@ -1,7 +1,7 @@
 /* boot.rexx */
 arg inf outf
 if inf="" then inf="par:"
-if outf="" then outf="ram:stage2"
+if outf="" then outf="ram:s2"
 say "stage1" inf outf
 /* hdr */
 open('1',inf)
@@ -37,19 +37,16 @@ say "stage2"
 address command outf
 exit
 f: procedure
- parse arg v,cs
- hi=c2d(substr(cs,1,2))
- lo=c2d(substr(cs,3,2))
- vhi=c2d(substr(v,1,2))
- vlo=c2d(substr(v,3,2))
- lo=vlo+lo
- hi=vhi+hi
- max=65536
- if lo>=max then do
-  hi=hi+1
-  lo=lo-max
+ parse arg va,cs
+ m=65536
+ r=0
+ do i=3 to 1 by -2
+  v=c2d(substr(va,i,2))
+  c=c2d(substr(cs,i,2))+v+r
+  if c>=m then do
+    r=1
+    c=c-m
+  end
+  e.i=d2c(c,2)
  end
- if hi>=max then do
-  hi=hi-max
- end
- return d2c(hi,2)||d2c(lo,2)
+ return e.1||e.3
