@@ -29,8 +29,6 @@
 
 #include "autoconf.h"
 
-#ifdef CONFIG_SPI
-
 #include <avr/io.h>
 
 #include "types.h"
@@ -60,7 +58,5 @@ inline void spi_disable_cs0(void) { PORTB |= SPI_SS_MASK; }
 
 inline void spi_enable_cs1(void) { SPI_SS1_PORT &= ~SPI_SS1_MASK; }
 inline void spi_disable_cs1(void) { SPI_SS1_PORT |= SPI_SS1_MASK; }
-
-#endif // CONFIG_SPI
 
 #endif // SPI_H

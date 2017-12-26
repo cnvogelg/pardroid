@@ -57,7 +57,7 @@ BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = timer.c strobe.c $(BASE_ARCH_SRCS)
+BASE_SRCS = timer.c strobe.c spi.c crc.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PARAM_SRCS = param.c param_def.c crc.c
 # pamela
@@ -75,12 +75,6 @@ HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
 
 # drivers
 DRIVER_SRCS = driver.c blk_null.c
-ifdef CONFIG_SPI
-DRIVER_SRCS += spi.c
-endif
-ifdef CONFIG_CRC
-DRIVER_SRCS += crc.c
-endif
 ifdef CONFIG_DRIVER_ENC28J60
 DRIVER_SRCS += enc28j60.c eth_enc.c
 DRIVER_INCLUDES += src/driver/enc28j60

@@ -29,8 +29,6 @@
 
 #include "autoconf.h"
 
-#ifdef CONFIG_SPI
-
 #include "types.h"
 #include "spi_pins.h"
 
@@ -49,7 +47,5 @@ static inline u08 spi_in(void) { return spi_xfer(0xff); }
 
 #define spi_enable_cs1()  spi_pins_cs1_lo()
 #define spi_disable_cs1() spi_pins_cs1_hi()
-
-#endif // CONFIG_SPI
 
 #endif // SPI_H
