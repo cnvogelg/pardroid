@@ -8,7 +8,7 @@
 #include "types.h"
 #include "arch.h"
 
-#include "parbox.h"
+#include "pamela.h"
 #include "pblfile.h"
 #include "bootloader.h"
 #include "machtag.h"
@@ -108,7 +108,7 @@ static int flash_func(bl_flash_data_t *fd, void *user_data)
   return BOOTLOADER_RET_OK;
 }
 
-static int do_flash(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_flash(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 {
   int bl_res;
 
@@ -174,7 +174,7 @@ static int post_verify_func(bl_flash_data_t *fd, void *user_data)
   }
 }
 
-static int do_verify(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_verify(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 {
   int bl_res;
 
@@ -208,7 +208,7 @@ static int do_verify(parbox_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 int dosmain(void)
 {
   struct RDArgs *args;
-  parbox_handle_t pb;
+  pamela_handle_t pb;
   pblfile_t pf;
 
   /* First parse args */
@@ -251,11 +251,11 @@ int dosmain(void)
     }
   }
 
-  /* open parbox */
+  /* open pamela */
   if(file_result == PBLFILE_OK) {
-    /* setup parbox */
-    int pb_res = parbox_init(&pb, (struct Library *)SysBase);
-    if(pb_res == PARBOX_OK) {
+    /* setup pamela */
+    int pb_res = pamela_init(&pb, (struct Library *)SysBase);
+    if(pb_res == PAMELA_OK) {
       bootinfo_t bi;
 
       PutStr("Entering bootloader...");
@@ -306,9 +306,9 @@ int dosmain(void)
         show_error(bl_res);
       }
 
-      parbox_exit(&pb);
+      pamela_exit(&pb);
     } else {
-      Printf("FAILED parbox: %s\n", parbox_perror(pb_res));
+      Printf("FAILED pamela: %s\n", pamela_perror(pb_res));
       res = RETURN_ERROR;
     }
 

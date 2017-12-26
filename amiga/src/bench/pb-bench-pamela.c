@@ -9,7 +9,7 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "parbox.h"
+#include "pamela.h"
 #include "proto.h"
 #include "bench.h"
 
@@ -52,7 +52,7 @@ static ULONG get_size(void)
 
 static void bench_action(void *user_data)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
   proto_handle_t *ph = pb->proto;
   PutStr("action bench");
 
@@ -64,7 +64,7 @@ static void bench_action(void *user_data)
 
 typedef int (*loop_func_t)(proto_handle_t *ph, void *user_data);
 
-static void run_loop(parbox_handle_t *pb, ULONG num, ULONG size,
+static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
                      loop_func_t func, void *user_data)
 {
   ULONG sum_size = 0;
@@ -121,7 +121,7 @@ static int func_msg_write_read(proto_handle_t *ph, void *user_data)
 
 static void bench_msg_write(void *user_data)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
   proto_handle_t *ph = pb->proto;
   ULONG num = get_num();
   ULONG size = get_size();
@@ -142,7 +142,7 @@ static void bench_msg_write(void *user_data)
 
 static void bench_msg_read(void *user_data)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
   proto_handle_t *ph = pb->proto;
   ULONG num = get_num();
   ULONG size = get_size();
@@ -163,7 +163,7 @@ static void bench_msg_read(void *user_data)
 
 static void bench_msg_write_read(void *user_data)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
   proto_handle_t *ph = pb->proto;
   ULONG num = get_num();
   ULONG size = get_size();
@@ -195,7 +195,7 @@ static bench_def_t all_benches[] = {
 int dosmain(void)
 {
   struct RDArgs *args;
-  parbox_handle_t pb;
+  pamela_handle_t pb;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -206,16 +206,16 @@ int dosmain(void)
 
   int res = RETURN_ERROR;
 
-  /* setup parbox */
-  res = parbox_init(&pb, (struct Library *)SysBase);
-  if(res == PARBOX_OK) {
+  /* setup pamela */
+  res = pamela_init(&pb, (struct Library *)SysBase);
+  if(res == PAMELA_OK) {
 
     /* run test */
     res = bench_main(all_benches, params.bench, &pb);
 
-    parbox_exit(&pb);
+    pamela_exit(&pb);
   } else {
-    PutStr(parbox_perror(res));
+    PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");
   }
 

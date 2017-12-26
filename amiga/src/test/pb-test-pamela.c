@@ -9,7 +9,7 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "parbox.h"
+#include "pamela.h"
 #include "proto.h"
 #include "test.h"
 #include "tests_proto.h"
@@ -85,7 +85,7 @@ void setup_test_config(test_param_t *p)
 int dosmain(void)
 {
   struct RDArgs *args;
-  parbox_handle_t pb;
+  pamela_handle_t pb;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -96,9 +96,9 @@ int dosmain(void)
 
   int res = RETURN_ERROR;
 
-  /* setup parbox */
-  res = parbox_init(&pb, (struct Library *)SysBase);
-  if(res == PARBOX_OK) {
+  /* setup pamela */
+  res = pamela_init(&pb, (struct Library *)SysBase);
+  if(res == PAMELA_OK) {
 
     /* setup test */
     test_param_t param;
@@ -108,9 +108,9 @@ int dosmain(void)
     /* run test */
     res = test_main(all_tests, &param);
 
-    parbox_exit(&pb);
+    pamela_exit(&pb);
   } else {
-    PutStr(parbox_perror(res));
+    PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");
   }
 

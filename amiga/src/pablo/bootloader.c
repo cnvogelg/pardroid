@@ -10,7 +10,7 @@
 #include "proto.h"
 #include "reg.h"
 
-int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
+int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 {
   int res;
   proto_handle_t *ph = pb->proto;
@@ -65,7 +65,7 @@ int bootloader_enter(parbox_handle_t *pb, bootinfo_t *bi)
   return bootloader_update_fw_info(pb, bi);
 }
 
-int bootloader_update_fw_info(parbox_handle_t *pb, bootinfo_t *bi)
+int bootloader_update_fw_info(pamela_handle_t *pb, bootinfo_t *bi)
 {
   int res;
   proto_handle_t *ph = pb->proto;
@@ -114,7 +114,7 @@ int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf)
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_flash(parbox_handle_t *pb, bootinfo_t *bi,
+int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
                      bl_flash_cb_t pre_flash_func,
                      void *user_data)
 {
@@ -164,7 +164,7 @@ int bootloader_flash(parbox_handle_t *pb, bootinfo_t *bi,
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_read(parbox_handle_t *pb, bootinfo_t *bi,
+int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
                     bl_read_cb_t pre_read_func,
                     bl_read_cb_t post_read_func,
                     void *user_data)
@@ -229,7 +229,7 @@ int bootloader_read(parbox_handle_t *pb, bootinfo_t *bi,
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_leave(parbox_handle_t *pb)
+int bootloader_leave(pamela_handle_t *pb)
 {
   int res;
   proto_handle_t *ph = pb->proto;

@@ -12,7 +12,7 @@
 #include "types.h"
 #include "arch.h"
 
-#include "parbox.h"
+#include "pamela.h"
 #include "proto.h"
 #include "proto_shared.h"
 #include "fwid.h"
@@ -38,7 +38,7 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
 
 int test_reset(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   int res = proto_reset(pb->proto);
   if(res == 0) {
     return 0;
@@ -51,7 +51,7 @@ int test_reset(test_t *t, test_param_t *p)
 
 int test_knok(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   int res = proto_knok_check(pb->proto);
   if(res == PROTO_KNOK_NOT_FOUND) {
     return 0;
@@ -64,7 +64,7 @@ int test_knok(test_t *t, test_param_t *p)
 
 int test_ping(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   int res = proto_action(pb->proto, PROTO_ACTION_PING);
   if(res == 0) {
     return 0;
@@ -77,7 +77,7 @@ int test_ping(test_t *t, test_param_t *p)
 
 int test_func_write(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   UWORD v = 0x4711;
 
   int res = proto_function_write(pb->proto, PROTO_FUNC_REGADDR_SET, v);
@@ -91,7 +91,7 @@ int test_func_write(test_t *t, test_param_t *p)
 
 int test_func_read(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   UWORD v;
 
   int res = proto_function_read(pb->proto, PROTO_FUNC_REGADDR_GET, &v);
@@ -105,7 +105,7 @@ int test_func_read(test_t *t, test_param_t *p)
 
 int test_func_write_read(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   UWORD v = (UWORD)p->iter + test_bias;
 
   /* write */
@@ -138,7 +138,7 @@ int test_func_write_read(test_t *t, test_param_t *p)
 
 int test_offset_write_read(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   UWORD v = (UWORD)p->iter + test_bias;
   v %= PROTO_MAX_CHANNEL;
 
@@ -174,7 +174,7 @@ int test_offset_write_read(test_t *t, test_param_t *p)
 
 int test_msg_empty(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   int res = proto_msg_write_single(pb->proto, test_channel, 0, 0);
   if(res != 0) {
     p->error = proto_perror(res);
@@ -202,7 +202,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
 
 int test_msg_tiny(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   ULONG data = 0xdeadbeef;
   int res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
@@ -297,7 +297,7 @@ static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
 
 static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
   if(mem_w == 0) {
@@ -368,7 +368,7 @@ int test_msg_size(test_t *t, test_param_t *p)
 
 int test_msg_size_max(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   UWORD max_bytes;
 
   /* read max size from firmware */
@@ -384,7 +384,7 @@ int test_msg_size_max(test_t *t, test_param_t *p)
 
 int test_msg_size_chunks(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   ULONG size = get_default_size();
   if(size < 4) {
     size = 4;
@@ -476,7 +476,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
 
 int test_msg_write(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
@@ -504,7 +504,7 @@ int test_msg_write(test_t *t, test_param_t *p)
 
 int test_msg_write_too_large(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   UWORD size;
 
@@ -544,7 +544,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
 
 int test_msg_read(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   ULONG size = get_default_size();
   ULONG size_r = get_size(size);
 
@@ -572,7 +572,7 @@ int test_msg_read(test_t *t, test_param_t *p)
 
 int test_msg_read_too_large(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   UWORD size;
 
@@ -613,7 +613,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 
 int test_status_read_pending(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   /* update status */
   int res = status_update(pb->proto, &pb->status);
@@ -690,7 +690,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
 
 int test_status_ack_irq(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   /* alloc ack signal */
   BYTE ackSig = AllocSignal(-1);
@@ -767,7 +767,7 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
 
 int test_status_error(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
  /* update status */
   int res = status_update(pb->proto, &pb->status);
@@ -849,7 +849,7 @@ int test_status_error(test_t *t, test_param_t *p)
 
 int test_status_attach_detach(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
  /* update status */
   int res = status_update(pb->proto, &pb->status);
@@ -917,7 +917,7 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
 
 int test_base_regs(test_t *t, test_param_t *p)
 {
-  parbox_handle_t *pb = (parbox_handle_t *)p->user_data;
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
   UWORD fw_version, machtag, fw_id, error;
 

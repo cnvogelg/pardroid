@@ -14,14 +14,14 @@
 #include "proto_shared.h"
 #include "engine.h"
 #include "worker.h"
-#include "parbox.h"
+#include "pamela.h"
 #include "channel.h"
 
 #define NUM_CHANNELS  PROTO_MAX_CHANNEL
 
 struct engine_handle {
   worker_def_t      worker_def;
-  parbox_handle_t   parbox;
+  pamela_handle_t   pamela;
   struct Library   *sys_base;
   struct SignalSemaphore sem;
   channel_t         *channels[NUM_CHANNELS];
@@ -35,10 +35,10 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
 {
   engine_handle_t *eh = (engine_handle_t *)user_data;
 
-  /* setup parbox */
-  parbox_handle_t *ph = &eh->parbox;
-  int res = parbox_init(ph, eh->sys_base);
-  if(res != PARBOX_OK) {
+  /* setup pamela */
+  pamela_handle_t *ph = &eh->pamela;
+  int res = pamela_init(ph, eh->sys_base);
+  if(res != PAMELA_OK) {
     eh->result = ENGINE_RET_INIT_FAILED;
     return FALSE;
   }
@@ -46,8 +46,8 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
   /* setup signal-based timer */
   struct timer_handle *th = ph->timer;
   if(timer_sig_init(th) == -1) {
-    parbox_exit(ph);
-    eh->result = ENGINE_RET_INIT_FAILED | PARBOX_ERROR_TIMER;
+    pamela_exit(ph);
+    eh->result = ENGINE_RET_INIT_FAILED | PAMELA_ERROR_TIMER;
     return FALSE;
   }
 
@@ -61,19 +61,19 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
 static void shutdown(void *user_data)
 {
   engine_handle_t *eh = (engine_handle_t *)user_data;
-  parbox_handle_t *ph = &eh->parbox;
+  pamela_handle_t *ph = &eh->pamela;
 
   /* cleanup signal-based timer */
   struct timer_handle *th = ph->timer;
   timer_sig_exit(th);
 
-  /* cleanup parbox */
-  parbox_exit(ph);
+  /* cleanup pamela */
+  pamela_exit(ph);
 }
 
 static BOOL do_write(engine_handle_t *eh, channel_t *c, request_t *r)
 {
-  proto_handle_t *ph = eh->parbox.proto;
+  proto_handle_t *ph = eh->pamela.proto;
   UWORD num_words = r->length >> 1;
 
   /* perform immediate write */
@@ -158,7 +158,7 @@ engine_handle_t *engine_start(int *result, struct Library *SysBase, const char *
 
   /* setup worker task */
   worker_def_t *wd = &eh->worker_def;
-  wd->task_name = "parbox_engine";
+  wd->task_name = "pamela_engine";
   wd->port_name = port_name;
   wd->user_data = eh;
   wd->startup = startup;

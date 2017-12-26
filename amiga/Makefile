@@ -14,7 +14,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
-INCLUDES+=src/parbox src/engine src/pablo
+INCLUDES+=src/pamela src/engine src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
@@ -27,9 +27,9 @@ WORKER_SRCS = worker.c
 TEST_SRCS = test.c
 BENCH_SRCS = bench.c
 
-PARBOX_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
-PARBOX_SRCS += parbox.c reg.c offset.c status.c
-PARBOX_SRCS += engine.c request.c channel.c
+PAMELA_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
+PAMELA_SRCS += pamela.c reg.c offset.c status.c
+ENGINE_SRCS += engine.c request.c channel.c
 
 # ---- mini tests
 # test-pario
@@ -49,30 +49,30 @@ TEST_WORKER_SRCS = test-worker.c $(WORKER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-worker,$(TEST_WORKER_SRCS)))
 
 # test-engine
-TEST_ENGINE_SRCS = test-engine.c $(PARBOX_SRCS)
+TEST_ENGINE_SRCS = test-engine.c $(PAMELA_SRCS) $(ENGINE_SRCS)
 $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 
 # ----- tests
-# pb-test-proto
-PB_TEST_PROTO_SRCS = pb-test-proto.c $(PARBOX_SRCS) $(TEST_SRCS) tests_proto.c
-$(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
+# pb-test-pamela
+PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_proto.c
+$(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
 
 # ----- bench
 # pb-bench-proto
-PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PARBOX_SRCS) $(BENCH_SRCS)
+PB_BENCH_PROTO_SRCS = pb-bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
 $(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
 
 # ----- tools
 # parbox-engine
-PARBOX_ENGINE_SRCS = parbox-engine.c $(PARBOX_SRCS)
+PARBOX_ENGINE_SRCS = parbox-engine.c $(PAMELA_SRCS) $(ENGINE_SRCS)
 $(eval $(call make-program,parbox-engine,$(PARBOX_ENGINE_SRCS)))
 
 # parbox-client
-PARBOX_CLIENT_SRCS = parbox-client.c $(PARBOX_SRCS)
+PARBOX_CLIENT_SRCS = parbox-client.c $(PAMELA_SRCS) $(ENGINE_SRCS)
 $(eval $(call make-program,parbox-client,$(PARBOX_CLIENT_SRCS)))
 
 # pablo
-PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PARBOX_SRCS)
+PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PAMELA_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 
 # bootstrap: crunched pablo
