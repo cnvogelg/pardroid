@@ -57,7 +57,6 @@ if version is not None:
   for n in range(num_longs):
     l = struct.unpack_from(">I", rom_data, pos)[0]
     check_sum = (check_sum + l) & 0xffffffff
-    print("%08x" % check_sum)
     pos +=4
   print("check: %08x" % check_sum)
   # create header

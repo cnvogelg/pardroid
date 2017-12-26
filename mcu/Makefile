@@ -60,11 +60,12 @@ COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
 PARAM_SRCS = param.c param_def.c crc.c
+# pamela
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
 PROTO_EXT_SRCS += bootstrap.c bootrexx.c knok.c
-ALL_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
 HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
@@ -95,7 +96,7 @@ INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base
-INCLUDES += src/proto src/handler src/driver src/test src/param
+INCLUDES += src/pamela src/handler src/driver src/test src/param
 INCLUDES += ../common/src
 INCLUDES += $(DRIVER_INCLUDES)
 VPATH=$(INCLUDES) $(BUILD_DIR)
@@ -119,7 +120,7 @@ $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-enc28j60
 ifdef CONFIG_DRIVER_ENC28J60
-TEST_ENC28J60_SRCS = $(ALL_BASE_SRCS)
+TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c spi.c
 FW_ID_test-enc28j60-fw = 0x8006
 FW_VER_test-enc28j60-fw = $(VERSION_TAG)
@@ -129,7 +130,7 @@ endif
 
 # test-sdcard
 ifdef CONFIG_DRIVER_SDCARD
-TEST_SDCARD_SRCS = $(ALL_BASE_SRCS)
+TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_SDCARD_SRCS += test-sdcard.c sdcard.c spi.c crc.c
 FW_ID_test-sdcard-fw = 0x8004
 FW_VER_test-scard-fw = $(VERSION_TAG)
@@ -139,7 +140,7 @@ endif
 
 # test-wiznet
 ifdef CONFIG_DRIVER_WIZNET
-TEST_WIZNET_SRCS = $(ALL_BASE_SRCS)
+TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c spi.c
 FW_ID_test-wiznet-fw = 0x8005
 FW_VER_test-wiznet-fw = $(VERSION_TAG)
@@ -148,7 +149,7 @@ $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)
 endif
 
 # test-net
-TEST_NET_SRCS = $(ALL_BASE_SRCS) $(PARAM_SRCS)
+TEST_NET_SRCS = $(PAMELA_SRCS) $(PARAM_SRCS)
 TEST_NET_SRCS += test-net.c driver.c
 TEST_NET_SRCS += $(DRIVER_SRCS)
 FW_ID_test-net-fw = 0x8007
@@ -156,17 +157,17 @@ FW_VER_test-net-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-net-fw))
 $(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
 
-# test-proto
-TEST_PROTO_SRCS = $(ALL_BASE_SRCS)
-TEST_PROTO_SRCS += test-proto.c
-FW_ID_test-proto-fw = 0x8002
-FW_VER_test-proto-fw = $(VERSION_TAG)
-$(eval $(call dist-pbl,test-proto-fw))
-$(eval $(call dist-hex,test-proto-fw))
-$(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
+# test-pamela
+TEST_PAMELA_SRCS = $(PAMELA_SRCS)
+TEST_PAMELA_SRCS += test-pamela.c
+FW_ID_test-pamela-fw = 0x8002
+FW_VER_test-pamela-fw = $(VERSION_TAG)
+$(eval $(call dist-pbl,test-pamela-fw))
+$(eval $(call dist-hex,test-pamela-fw))
+$(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-handler
-TEST_HANDLER_SRCS = $(ALL_BASE_SRCS)
+TEST_HANDLER_SRCS = $(PAMELA_SRCS)
 TEST_HANDLER_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
 TEST_HANDLER_SRCS += test-handler.c
 FW_ID_test-handler-fw = 0x8003
