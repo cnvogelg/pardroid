@@ -15,14 +15,17 @@
 #include "led.h"
 
 // get generated bootstrap code
+#ifdef CONFIG_BOOTSTRAP
 #include "bootstrap.h"
 #include "bootrexx.h"
+#endif
 
 #define SEND_OK                  0
 #define SEND_NOT_STARTED         1
 #define SEND_ABORTED             2
 #define SEND_NOT_FINISHED        3
 
+#ifdef CONFIG_BOOTSTRAP
 static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
 {
   u08 res = SEND_OK;
@@ -172,6 +175,7 @@ end_upload:
 
   return res;
 }
+#endif /* CONFIG_BOOTSTRAP */
 
 void knok_main(void)
 {
@@ -190,6 +194,7 @@ void knok_main(void)
     if(strobe_get_key(&key)) {
       DL(key); DNL;
       switch(key) {
+#ifdef CONFIG_BOOTSTRAP
         // upload raw bootstrap code without header (for wb1.3 type)
         case KNOK_KEY_BOOT:
           knok_upload((rom_pchar)(bootstrap_code + BOOTSTRAP_HEADER_SIZE),
@@ -205,6 +210,7 @@ void knok_main(void)
           knok_upload((rom_pchar)bootstrap_code, sizeof(bootstrap_code),
                       PSTR("RXBT"));
           break;
+#endif
         // driver wants to enter device
         case STROBE_KEY_EXIT:
           stay = 0;

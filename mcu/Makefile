@@ -64,7 +64,10 @@ PARAM_SRCS = param.c param_def.c crc.c
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
 PROTO_EXT_SRCS = base_reg.c status.c tables.c offset.c
-PROTO_EXT_SRCS += bootstrap.c bootrexx.c knok.c
+ifdef CONFIG_BOOTSTRAP
+PROTO_EXT_SRCS += bootstrap.c bootrexx.c
+endif
+PROTO_EXT_SRCS += knok.c
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
