@@ -31,11 +31,11 @@ extern void strobe_low_end_send(void);
 extern void strobe_low_set_data(u08 data);
 
 static volatile u08 state;
-static volatile u08 strobe_count;
+static u08 strobe_count;
 static volatile u32 strobe_key;
 
-static volatile rom_pchar send_data;
-static volatile u16 send_size;
+static rom_pchar send_data;
+static u16 send_size;
 
 typedef void (*strobe_func_t)(void);
 
@@ -50,9 +50,6 @@ ISR(PAR_STROBE_VECT)
 static void strobe_read_func(void)
 {
   u08 data = strobe_low_get_data();
-
-  // ack lo
-  ack_lo;
 
   // special toggle byte for knok detection?
   if(data == STROBE_MAGIC_BYTE_LO) {
@@ -78,10 +75,11 @@ static void strobe_read_func(void)
       strobe_count = 0;
     }
   } else {
-    DELAY_1US();
   }
 
-  // ack hi
+  // pulse ack
+  ack_lo;
+  DELAY_1US();
   ack_hi;
 }
 

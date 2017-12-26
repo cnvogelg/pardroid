@@ -84,6 +84,22 @@ static inline void pario_init(void)
   GPIOD_PSOR = DATA_MASK;
 }
 
+static inline void pario_busy_out(void)
+{
+  PORTB_PCR1 = PORT_PCR_MUX(1) | OUT_PORT_FLAGS;
+
+  uint32_t old = GPIOB_PDDR & ~BUSY_MASK;
+  GPIOB_PDDR = old | BUSY_MASK;
+}
+
+static inline void pario_busy_in(void)
+{
+  PORTB_PCR1 = PORT_PCR_MUX(1) | IN_PORT_FLAGS;
+
+  uint32_t old = GPIOB_PDDR & ~BUSY_MASK;
+  GPIOB_PDDR = old;
+}
+
 static force_inline void pario_data_ddr(uint8_t ddr)
 {
   GPIOD_PDDR = (GPIOD_PDDR & ~(DATA_MASK)) | ddr;
@@ -114,6 +130,12 @@ static force_inline int pario_get_select(void)
 static force_inline int pario_get_strobe(void)
 {
   return (GPIOC_PDIR & STROBE_MASK) == STROBE_MASK;
+}
+
+/* knok upload only */
+static force_inline int pario_get_busy(void)
+{
+  return (GPIOB_PDIR & BUSY_MASK) == BUSY_MASK;
 }
 
 // output lines
