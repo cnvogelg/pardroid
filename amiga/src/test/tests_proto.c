@@ -415,15 +415,19 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   UBYTE *c2_buf = mem_w + (c1_words << 1);
 
   /* send buffer */
-  ULONG msgiov_w[] = {
-    words,
-    c1_words,
-    (ULONG)c1_buf,
+  proto_iov_node_t part2_w = {
     c2_words,
-    (ULONG)c2_buf,
+    c2_buf,
     0
   };
-  int res = proto_msg_write(pb->proto, test_channel, msgiov_w);
+  proto_iov_t msgiov_w = {
+    words,
+    0xdead, /* extra */
+    c1_words,
+    c1_buf,
+    &part2_w
+  };
+  int res = proto_msg_write(pb->proto, test_channel, &msgiov_w);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -436,27 +440,31 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   c2_words = words_r - c1_words;
 
   /* receive buffer */
-  ULONG msgiov_r[] = {
-    words_r,
-    c1_words,
-    (ULONG)c1_buf,
+  proto_iov_node_t part2_r = {
     c2_words,
-    (ULONG)c2_buf,
+    c2_buf,
     0
   };
-  res = proto_msg_read(pb->proto, test_channel, msgiov_r);
+  proto_iov_t msgiov_r = {
+    words_r,
+    0,
+    c1_words,
+    c1_buf,
+    &part2_r
+  };
+  res = proto_msg_read(pb->proto, test_channel, &msgiov_r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
-  UWORD got_words = (UWORD)(msgiov_r[0] & 0xffff);
+  UWORD got_words = (UWORD)(msgiov_r.total_words & 0xffff);
 
   /* check buf size */
   if(got_words != words) {
     p->error = "size mismatch";
     p->section = "compare";
-    sprintf(p->extra, "w=%04lx r=%04lx", words, msgiov_r[0]);
+    sprintf(p->extra, "w=%04lx r=%04x", words, msgiov_r.total_words);
     return 1;
   }
 
@@ -466,6 +474,14 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
+    return 1;
+  }
+
+  /* check extra */
+  if(msgiov_w.extra != msgiov_r.extra) {
+    p->error = "extra mismatch";
+    p->section = "compare";
+    sprintf(p->extra, "w=%04x r=%04x", msgiov_w.extra, msgiov_r.extra);
     return 1;
   }
 

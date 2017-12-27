@@ -4,6 +4,7 @@
 #include "pario.h"
 #include "timer.h"
 #include "proto_shared.h"
+#include "proto_iov.h"
 
 #define PROTO_RET_OK                0
 #define PROTO_RET_RAK_INVALID       1
@@ -42,8 +43,8 @@ extern int proto_function_write(proto_handle_t *ph, UBYTE num, UWORD data);
 extern int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data);
 extern int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data);
 
-extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
-extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, ULONG *msgiov);
+extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
+extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
 
 extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
 extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words);

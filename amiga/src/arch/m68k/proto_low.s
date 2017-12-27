@@ -698,18 +698,18 @@ plrrl_abort:
 ; --- proto_low_write_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to blkiov
+;      a2 = ptr to proto_iov
 ;      d0 = cmd
 ; out: d0 = result
 ;
-; blkiov: ULONG[]
-; [0]  total size of block in words | (extra << 24) | (channel << 16)
-; [1]  first chunk size in words
-; [2]  pointer to data of first chunk
-; [3]  second chunk size in words
-; [4]  pointer to second chunk data
-; ...
-; [n]  0 (size) (last chunk tag)
+; proto_iov
+; +0:  UWORD  total_words
+; +2:  UWORD  extra
+; node:
+; +4:  ULONG  chunk_words
+; +8:  UBYTE  *chunk_data
+; +12: node   *next_node
+;
 _proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
@@ -720,15 +720,14 @@ _proto_low_write_block:
         clk_lo
 
         ; prepare size while waiting for slave
-        move.l          (a2)+,d1 ; total size in words
-        move.w          d1,d5
+        move.w          (a2)+,d1        ; total size in words
+        move.w          d1,d5           ; d5=hi size
         lsr.w           #8,d5
 
-        ; prepare extra/channel values (high word of iov[0])
-        move.l          d1,d6
-        swap            d6
-        move.w          d6,d0 ; d6 = channel
-        lsr.w           #8,d0 ; d0 = extra
+        ; prepare extra value
+        move.w          (a2)+,d6
+        move.w          d6,d0           ; d0=hi extra
+        lsr.w           #8,d0
 
         ; wait for slave sync
         wait_rak_lo     plmw_abort
@@ -738,9 +737,9 @@ _proto_low_write_block:
         ddr_out
 
         ; send extra/channel
-        set_data        d0 ; extra
+        set_data        d0 ; hi extra
         clk_lo
-        set_data        d6 ; channel
+        set_data        d6 ; lo extra
         clk_hi
 
         ; send size
@@ -763,13 +762,14 @@ _proto_low_write_block:
         bset            d3,d5 ; d5 = clk_hi
 
 plmw_chunks:
-        ; get chunk size and buffer pointer
+        ; get chunk size
         move.l          (a2)+,d1
         ; last chunk?
         tst.w           d1
         beq.s           plmw_done
         ; enter chunk copy loop
         subq.w          #1,d1 ; for dbra
+        ; get chunk buffer pointer
         move.l          (a2)+,a0
 
         ; data block loop
@@ -782,6 +782,12 @@ plmw_loop:
         clk_set         d5
 
         dbra            d1,plmw_loop
+
+        ; read next node
+        move.l          (a2),d0
+        tst.l           d0
+        beq.s           plmw_done
+        move.l          d0,a2
         bra.s           plmw_chunks
 
 plmw_done:
@@ -810,10 +816,9 @@ plmw_abort:
 ; --- proto_low_read_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to blkiov (see above)
+;      a2 = ptr to proto_iov (see above)
 ;      d0 = cmd byte
 ; out: d0 = result
-;      blkiov[0] = extra << 24 | channel << 16 | recv_words
 _proto_low_read_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
@@ -828,7 +833,7 @@ _proto_low_read_block:
         moveq           #0,d6
         moveq           #0,d7
         ; get max size given in blkiov
-        move.l          (a2),d1
+        move.w          (a2),d1
 
         ; final slave sync
         wait_rak_lo     plmr_abort
@@ -839,14 +844,13 @@ _proto_low_read_block:
 
         ; read channel/extra
         clk_lo
-        get_data        d7 ; extra
+        get_data        d7 ; hi extra
         clk_hi
-        get_data        d6 ; channel
+        get_data        d6 ; lo extra
 
-        ; combine (extra+channel) and move to high word of d7
+        ; combine extra and move to high word of d7
         lsl.w           #8,d7
         or.w            d6,d7
-        swap            d7
 
         ; read size
         clk_lo
@@ -857,9 +861,11 @@ _proto_low_read_block:
         ; combine size lo/hi -> d5
         lsl.w           #8,d5
         or.w            d6,d5
-        ; store real size in blkiov[0] (combined with channel+extra)
-        or.w            d5,d7
-        move.l          d7,(a2)+
+
+        ; store size+extra in iov
+        move.w          d5,(a2)+
+        move.w          d7,(a2)+
+
         ; check size
         tst.w           d5 ; empty message
         beq.s           plmr_done_ok
@@ -909,8 +915,17 @@ plmr_copy_loop:
         ; done?
         tst.w           d5
         beq.s           plmr_done_ok
+
         ; nope. next chunk
+        move.l          (a2),d0
+        tst.l           d0
+        beq.s           plmr_iov_invalid  ; still data but no chunk!
+        move.l          d0,a2
         bra.s           plmr_chunk
+
+plmr_iov_invalid:
+        moveq           #RET_MSG_TOO_LARGE,d0
+        bra.s           plmr_done
 
 plmr_done_ok:
         ; ok

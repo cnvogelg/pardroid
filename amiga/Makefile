@@ -79,8 +79,9 @@ $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 PROGRAMS += bootstrap
 bootstrap: $(BIN_DIR)/bootstrap
 $(BIN_DIR)/bootstrap: $(BIN_DIR)/pablo
-	@echo "BOOTSTRAP"
-	$(H)shrinkler -h $< $@
+	@echo "  BOOTSTRAP "
+	$(H)shrinkler -h $< $@ >/dev/null
+	@stat -f '%z bytes' $@
 
 # rules
 include scripts/common-rules.mk

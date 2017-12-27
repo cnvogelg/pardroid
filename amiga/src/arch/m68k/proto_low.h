@@ -1,6 +1,8 @@
 #ifndef PROTO_LOW_H
 #define PROTO_LOW_H
 
+#include "proto_iov.h"
+
 extern ASM UBYTE proto_low_get_status(REG(a0, struct pario_port *port));
 
 extern ASM int proto_low_knok_check(REG(a0, struct pario_port *port));
@@ -48,10 +50,10 @@ extern ASM int proto_low_write_long(REG(a0, struct pario_port *port),
 extern ASM int proto_low_read_block(REG(a0, struct pario_port *port),
                                     REG(a1, volatile UBYTE *timeout_flag),
                                     REG(d0, UBYTE cmd),
-                                    REG(a2, ULONG *msgiov));
+                                    REG(a2, proto_iov_t *msgiov));
 extern ASM int proto_low_write_block(REG(a0, struct pario_port *port),
                                      REG(a1, volatile UBYTE *timeout_flag),
                                      REG(d0, UBYTE cmd),
-                                     REG(a2, ULONG *msgiov));
+                                     REG(a2, proto_iov_t *msgiov));
 
 #endif
