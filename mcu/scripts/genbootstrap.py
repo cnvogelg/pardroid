@@ -10,19 +10,17 @@ import struct
 
 # get params
 nargs = len(sys.argv)
-if nargs != 5 and nargs != 8:
-  print("Usage: <in_data> <out.c> <out.h> <name> [ver_maj] [ver_min] [out_knok]")
+if nargs != 5 and nargs != 6:
+  print("Usage: <in_data> <out.c> <out.h> <name> [out_knok]")
   sys.exit(1)
 
 in_bin = sys.argv[1]
 out_src = sys.argv[2]
 out_hdr = sys.argv[3]
 name = sys.argv[4]
-if nargs == 8:
-  version = (int(sys.argv[5]), int(sys.argv[6]))
-  knok_file = sys.argv[7]
+if nargs == 6:
+  knok_file = sys.argv[5]
 else:
-  version = None
   knok_file = None
 
 up_name = name.upper()
@@ -33,16 +31,14 @@ with open(in_bin, "rb") as fh:
   rom_data = fh.read()
 
 size = len(rom_data)
-print("size:  %08x" % size)
+print("size:  %04x" % size)
 
 # append header?
 # +0: KNOK
-# +4: size
-# +8: check
-# +12: ver_maj
-# +14: ver_min
-# =16
-if version is not None:
+# +4: size word
+# +6: check sum word
+# =8
+if knok_file is not None:
   # pad to long
   rem = size % 4
   if rem != 0:
@@ -51,30 +47,28 @@ if version is not None:
     rom_data += "\x00" * size
     print("pad:", size)
   # calc check sum
-  num_longs = size // 4
+  num_words = size // 2
   pos = 0
   check_sum = 0
-  for n in range(num_longs):
-    l = struct.unpack_from(">I", rom_data, pos)[0]
-    check_sum = (check_sum + l) & 0xffffffff
-    pos +=4
-  print("check: %08x" % check_sum)
+  for n in range(num_words):
+    l = struct.unpack_from(">H", rom_data, pos)[0]
+    check_sum = (check_sum + l) & 0xffff
+    pos += 2
+  print("check: %04x" % check_sum)
   # create header
-  hdr_data = b"KNOK" + struct.pack(">IIHH", size, check_sum, version[0], version[1])
+  hdr_data = b"KNOK" + struct.pack(">HH", size, check_sum)
   rom_data = hdr_data + rom_data
   total_size = len(rom_data)
   header_size = len(hdr_data)
+  # dump file
+  with open(knok_file, "wb") as fh:
+    fh.write(rom_data)
 else:
   total_size = size
   header_size = 0
 
-print("hdr:   %08x" % header_size)
-print("total: %08x" % total_size)
-
-# dump knok file
-if knok_file is not None:
-  with open(knok_file, "wb") as fh:
-    fh.write(rom_data)
+print("hdr:   %04x" % header_size)
+print("total: %04x" % total_size)
 
 # write header
 with open(out_hdr, "w") as fh:
