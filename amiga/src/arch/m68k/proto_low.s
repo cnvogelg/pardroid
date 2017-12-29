@@ -217,28 +217,22 @@ delay   MACRO
 ; ----- functions -----------------------------------------------------------
 
 ; --- proto_low_knok_check ---
-; send knok magic byte to boot firmware
+; check if we are currently running in knok mode
 ;
 ;   in:
 ;       a0      struct pario_port *port
 ;   out:
-;       d0      0=no nok, 1=nok active
+;       d0      0=no knok mode dected, 1=knok mode active
 _proto_low_knok_check:
         movem.l d2-d7/a2-a6,-(sp)
 
         ; setup regs with port values and read old ctrl value
         setup_port_regs
 
-        ; knok not found
+        ; assume knok not found
         moveq          #0,d0
 
-        ; d1=SELECT BIT
-        move.b         PO_SEL_BIT(a0),d1
-
-        ; SEL should be HI
-        btst           d1,(a5)
-        beq.s          plkc_end
-        ; BUSY should be LO
+        ; BUSY should be LO in knok mode
         btst           d2,(a5)
         bne.s          plkc_end
 
@@ -248,7 +242,6 @@ _proto_low_knok_check:
         move.b        #$f1,(a3)
         ; wait a bit
         delay
-        clk_lo
         ; check busy value (expect HI)
         btst          d2,(a5)
         beq.s         plkc_end
@@ -257,7 +250,6 @@ _proto_low_knok_check:
         move.b        #$f2,(a3)
         ; wait a bit
         delay
-        clk_hi
         ; check busy value  (expect LO)
         btst          d2,(a5)
         bne.s         plkc_end
@@ -271,9 +263,8 @@ plkc_end:
         rts
 
 
-
 ; --- proto_low_knok_exit ---
-; wait for knok sequence and
+; if we are in knok mode try to escape it
 ;
 ;   in:
 ;       a0      struct pario_port *port
@@ -287,6 +278,7 @@ _proto_low_knok_exit:
         setup_port_regs
 
 plkb_retry:
+        ; 3 toggle rounds must be passed
         moveq          #2,d1
 
         ; timeout?
@@ -298,7 +290,6 @@ plkb_loop:
         move.b        #$f1,(a3)
         ; wait a bit
         delay
-        clk_lo
         ; check busy value (expect HI)
         btst          d2,(a5)
         beq.s         plkb_retry
@@ -307,16 +298,30 @@ plkb_loop:
         move.b        #$f2,(a3)
         ; wait a bit
         delay
-        clk_hi
         ; check busy value  (expect LO)
         btst          d2,(a5)
         bne.s         plkb_retry
 
+        ; next pass
         dbra          d1,plkb_loop
 
         ; sequence is ok
-        ; send magic boot byte
+        ; send magic boot byte to leave knok mode
         move.b        #$f3, (a3)
+
+        ; now wait for busy to become high
+plkb_check_busy:
+        ; timeout?
+        tst.b   (a1)
+        bne.s   plkb_timeout
+
+        ; BUSY should be high
+        btst           d2,(a5)
+        beq.s          plkb_check_busy
+        delay
+        ; check BUSY again
+        btst           d2,(a5)
+        beq.s          plkb_check_busy
 
         ; ok
         moveq   #RET_OK,d0

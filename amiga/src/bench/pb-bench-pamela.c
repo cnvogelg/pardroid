@@ -210,8 +210,17 @@ int dosmain(void)
   res = pamela_init(&pb, (struct Library *)SysBase);
   if(res == PAMELA_OK) {
 
-    /* run test */
-    res = bench_main(all_benches, params.bench, &pb);
+    /* reset firmware */
+    res = proto_reset(pb.proto);
+    if(res == PROTO_RET_OK) {
+
+      /* run test */
+      res = bench_main(all_benches, params.bench, &pb);
+
+    } else {
+      PutStr(proto_perror(res));
+      PutStr(" -> ABORT\n");
+    }
 
     pamela_exit(&pb);
   } else {
