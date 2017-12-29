@@ -43,15 +43,15 @@ extern void func_regaddr_get(u16 *valp);
 extern void func_reg_write(u16 *valp);
 extern void func_reg_read(u16 *valp);
 
-extern void func_offslot_set(u16 *valp);
-extern void func_offslot_get(u16 *valp);
-extern void func_offset_get(u32 *valp);
-extern void func_offset_set(u32 *valp);
+extern void func_regladdr_set(u16 *valp);
+extern void func_regladdr_get(u16 *valp);
+extern void func_regl_write(u32 *valp);
+extern void func_regl_read(u32 *valp);
 
 // ----- external API for register access -----
 extern void func_api_set_reg(u08 reg,u16 val);
 extern u16  func_api_get_reg(u08 reg);
-extern void func_api_set_offset(u08 slot, u32 val);
-extern u32  func_api_get_offset(u08 slot);
+extern void func_api_set_regl(u08 slot, u32 val);
+extern u32  func_api_get_regl(u08 slot);
 
 #endif

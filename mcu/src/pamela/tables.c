@@ -35,13 +35,13 @@ FUNC_TABLE_BEGIN
   FUNC_TABLE_SET_FUNC(func_reg_write),
   // --- offsets ---
   // 4
-  FUNC_TABLE_GET_FUNC(func_offslot_get),
+  FUNC_TABLE_GET_FUNC(func_regladdr_get),
   // 5
-  FUNC_TABLE_SET_FUNC(func_offslot_set),
+  FUNC_TABLE_SET_FUNC(func_regladdr_set),
   // 6
-  FUNC_TABLE_GET_FUNC_LONG(func_offset_get),
+  FUNC_TABLE_GET_FUNC_LONG(func_regl_read),
   // 7
-  FUNC_TABLE_SET_FUNC_LONG(func_offset_set),
+  FUNC_TABLE_SET_FUNC_LONG(func_regl_write),
 FUNC_TABLE_END
 
 

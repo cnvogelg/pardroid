@@ -71,7 +71,8 @@ PROTO_EXT_SRCS += knok.c
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
-HANDLER_SRCS = handler.c handler_reg.c buffer.c msgio.c hnd_echo.c hnd_null.c
+HANDLER_SRCS = handler.c handler_reg.c handler_regl.c buffer.c msgio.c
+HANDLER_SRCS += hnd_echo.c hnd_null.c
 
 # drivers
 DRIVER_SRCS = driver.c blk_null.c

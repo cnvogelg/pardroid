@@ -86,6 +86,20 @@ REG_TABLE_BEGIN(test)
 REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
 REG_TABLE_SETUP(test)
 
+// long registers
+
+static u32 regl_val;
+
+void func_api_set_regl(u08 slot, u32 val)
+{
+  regl_val = val;
+}
+
+u32 func_api_get_regl(u08 slot)
+{
+  return regl_val;
+}
+
 // message buffer handling
 
 u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)

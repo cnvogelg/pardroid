@@ -25,7 +25,6 @@
 #include "driver.h"
 #include "driver_list.h"
 
-
 // define my app id
 BASE_REG_APPID(FWID_TEST_HANDLER)
 

@@ -13,7 +13,7 @@
 #include "func.h"
 
 static u08 regaddr;
-static u08 offslot;
+static u08 regladdr;
 
 // --- registers ---
 
@@ -51,32 +51,36 @@ void func_reg_read(u16 *valp)
   DC('.'); DNL;
 }
 
-// --- offsets ---
+// --- long registers ---
 
-void func_offslot_set(u16 *valp)
+void func_regladdr_set(u16 *valp)
 {
-  offslot = (u08)(*valp);
-  DS("Ow:"); DB(offslot); DNL;
+  regladdr = (u08)(*valp & 0xff);
+  DS("RAS:"); DB(regladdr); DNL;
 }
 
-void func_offslot_get(u16 *valp)
+void func_regladdr_get(u16 *valp)
 {
-  *valp = offslot;
-  DS("Or:"); DB(offslot); DNL;
+  *valp = regladdr;
+  DS("RAG:"); DB(regladdr); DNL;
 }
 
-void func_offset_set(u32 *valp)
+void func_regl_write(u32 *valp)
 {
-  u32 offset = *valp;
-  DS("os:"); DL(offset); DNL;
-  func_api_set_offset(offslot, offset);
+  DS("RW:");
+  u32 val = *valp;
+  DB(regladdr); DC('='); DL(val); DNL;
+  func_api_set_regl(regladdr, val);
+  DC('.'); DNL;
 }
 
-void func_offset_get(u32 *valp)
+void func_regl_read(u32 *valp)
 {
-  u32 offset = func_api_get_offset(offslot);
-  DS("og:"); DL(offset); DNL;
-  *valp = offset;
+  DS("RR:"); DB(regladdr); DC('=');
+  u32 val = func_api_get_regl(regladdr);
+  DL(val);
+  *valp = val;
+  DC('.'); DNL;
 }
 
 static void func_handle_word(func_word_t func, u08 flags)
