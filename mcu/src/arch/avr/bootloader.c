@@ -137,7 +137,7 @@ int main(void)
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader
 
-u08 *proto_api_read_msg_prepare(u08 chan, u16 *size)
+u08 *proto_api_read_msg_prepare(u08 chan, u16 *size, u16 *extra)
 {
   *size = SPM_PAGESIZE;
   uart_send('r');
@@ -158,7 +158,7 @@ u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
   return page_buf;
 }
 
-void proto_api_write_msg_done(u08 chan, u16 size)
+void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
 {
   if(size == SPM_PAGESIZE) {
     uart_send('(');

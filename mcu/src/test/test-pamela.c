@@ -21,7 +21,7 @@
 #define MAX_BUFFER_SIZE 1024
 
 static u08 buffer[MAX_BUFFER_SIZE];
-
+static u16 extra_val;
 
 // sim functions
 static void sim_pending(u16 *valp, u08 mode)
@@ -88,10 +88,11 @@ REG_TABLE_SETUP(test)
 
 // message buffer handling
 
-u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size)
+u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
 {
-  DS("[R#"); DB(chn); DC('+'); DW(test_size); DC(']');
+  DS("[R#"); DB(chn); DC('+'); DW(test_size); DC('%'); DW(extra_val); DC(']');
   *ret_size = test_size;
+  *extra = extra_val;
   return buffer;
 }
 
@@ -107,10 +108,11 @@ u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
   return buffer;
 }
 
-void proto_api_write_msg_done(u08 chn, u16 size)
+void proto_api_write_msg_done(u08 chn, u16 size, u16 extra)
 {
-  DS("[w#"); DB(chn); DC(':'); DW(size); DC(']'); DNL;
+  DS("[w#"); DB(chn); DC(':'); DW(size);DC('%'); DW(extra); DC(']'); DNL;
   test_size = size;
+  extra_val = extra;
 }
 
 

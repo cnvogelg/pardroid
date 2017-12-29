@@ -10,7 +10,7 @@
 
 static u08 *data;
 
-u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size)
+u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
 {
   DS("[R:");
   data = 0;
@@ -95,7 +95,7 @@ u08 *msgio_write_msg_prepare(u08 chn, u16 *max_size)
   return data;
 }
 
-void msgio_write_msg_done(u08 chn, u16 size)
+void msgio_write_msg_done(u08 chn, u16 size, u16 extra)
 {
   DS("[W-:");
   if(data != 0) {
@@ -113,7 +113,7 @@ void msgio_write_msg_done(u08 chn, u16 size)
 
 
 /* aliases for proto API functions */
-u08 *proto_api_read_msg_prepare(u08 chn, u16 *size) __attribute__ ((weak, alias("msgio_read_msg_prepare")));
+u08 *proto_api_read_msg_prepare(u08 chn, u16 *size, u16 *extra) __attribute__ ((weak, alias("msgio_read_msg_prepare")));
 void proto_api_read_msg_done(u08 chn) __attribute__ ((weak, alias("msgio_read_msg_done")));
 u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size) __attribute__ ((weak, alias("msgio_write_msg_prepare")));
-void proto_api_write_msg_done(u08 chn) __attribute__ ((weak, alias("msgio_write_msg_done")));
+void proto_api_write_msg_done(u08 chn, u16 size, u16 extra) __attribute__ ((weak, alias("msgio_write_msg_done")));

@@ -16,3 +16,4 @@ LDFLAGS_BOOTLOADER := -Wl,--section-start=.text=$(CONFIG_BOOTLOADER_ADDR)
 LDFLAGS_BOOTLOADER += -Wl,--relax -nostartfiles -nostdlib
 
 PROTO_ARCH_SRCS = proto_low_asm.S strobe_low_asm.S led.c
+BOOTLOADER_ARCH_SRCS = proto_low_boot.S

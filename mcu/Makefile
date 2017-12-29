@@ -176,7 +176,8 @@ $(eval $(call make-firmware,test-handler-fw,$(TEST_HANDLER_SRCS),$(CONFIG_MAX_RO
 ifndef DEBUG
 ifdef CONFIG_BOOTLOADER
 # bootloader
-BOOTLOADER_SRCS = $(BASE_SRCS) $(PROTO_SRCS) bootloader.c flash.c
+BOOTLOADER_SRCS = $(BASE_SRCS) proto.c reg.c action.c func.c bootloader.c flash.c
+BOOTLOADER_SRCS += $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
 endif
