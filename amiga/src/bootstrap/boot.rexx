@@ -1,6 +1,11 @@
 /* boot.rexx */
-arg inf outf
-if inf="" then inf="par:"
+arg outf inf
+if inf="" then do
+ inf="par:"
+ open('0',inf,'W')
+ writech('0',"RXBT")
+ close('0')
+end
 if outf="" then outf="ram:s2"
 say "s1" inf outf
 open('1',inf)
@@ -14,7 +19,7 @@ s=c2d(substr(h,5,4))
 z=substr(h,9,4)
 b=1024
 l=s
-y=d2c(0,4)
+say "size" s
 open('2',outf,'W')
 do while l>0
  r=l
@@ -23,11 +28,23 @@ do while l>0
  say l
  d=readch('1',r)
  writech('2',d)
+end
+close('1'); close('2')
+say "check"
+open('1',outf)
+l=s
+y=d2c(0,4)
+do while l>0
+ r=l
+ if r>b then r=b
+ l=l-r
+ say l
+ d=readch('1',r)
  do i=1 to r by 4
   y=f(substr(d,i,4),y)
  end
 end
-close('1'); close('2')
+close('1')
 if y ~= z then do
  say "CHKSUM!"
  exit 20

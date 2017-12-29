@@ -83,6 +83,7 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
   // wait for transfer end
   t0 = timer_millis();
   count = 0;
+  interval = 1000;
   u08 busy_count = 0;
   while((flag & STROBE_FLAG_ALL_SENT)==0) {
     if(timer_millis_timed_out(t0, interval)) {
@@ -122,7 +123,6 @@ static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
   // wait for transfer termination on Amiga side
   t0 = timer_millis();
   count = 0;
-  interval = 1000;
   busy_count = 0;
   led = 0;
   while(1) {
