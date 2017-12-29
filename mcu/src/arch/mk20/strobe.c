@@ -100,6 +100,8 @@ void strobe_init(void)
 
   attachInterruptVector(IRQ_PORTC, my_portc_isr);
 
+  NVIC_ENABLE_IRQ(IRQ_PORTC);
+
   __enable_irq();
 }
 
