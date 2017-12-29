@@ -59,8 +59,8 @@ $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
 
 # ----- bench
 # pb-bench-proto
-PB_BENCH_PROTO_SRCS = pb-bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
-$(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
+PB_BENCH_PAMELA_SRCS = pb-bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
+$(eval $(call make-program,pb-bench-pamela,$(PB_BENCH_PAMELA_SRCS)))
 
 # ----- tools
 # parbox-engine
