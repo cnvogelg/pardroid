@@ -12,6 +12,8 @@
 #define DC(x)  uart_send(x)
 // debug string
 #define DS(x)  uart_send_pstring(PSTR(x))
+// debug string
+#define DSB(x) uart_send_string((const char *)x)
 // debug byte
 #define DB(x)  uart_send_hex_byte(x)
 // debug word

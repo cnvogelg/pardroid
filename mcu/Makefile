@@ -88,6 +88,10 @@ ifdef CONFIG_DRIVER_WIZNET
 DRIVER_SRCS += wiznet_low.c wiznet.c wiz_io.c
 DRIVER_INCLUDES += src/driver/wiznet
 endif
+ifdef CONFIG_DRIVER_UFAT
+DRIVER_SRCS += ufat.c
+DRIVER_INCLUDES += src/driver/ufat
+endif
 
 # common includes
 INCLUDES := src
@@ -119,7 +123,7 @@ $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 # test-enc28j60
 ifdef CONFIG_DRIVER_ENC28J60
 TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c spi.c
+TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
 FW_ID_test-enc28j60-fw = 0x8006
 FW_VER_test-enc28j60-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-enc28j60-fw))
@@ -129,7 +133,7 @@ endif
 # test-sdcard
 ifdef CONFIG_DRIVER_SDCARD
 TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_SDCARD_SRCS += test-sdcard.c sdcard.c spi.c crc.c
+TEST_SDCARD_SRCS += test-sdcard.c sdcard.c
 FW_ID_test-sdcard-fw = 0x8004
 FW_VER_test-scard-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-sdcard-fw))
@@ -139,11 +143,21 @@ endif
 # test-wiznet
 ifdef CONFIG_DRIVER_WIZNET
 TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c spi.c
+TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c
 FW_ID_test-wiznet-fw = 0x8005
 FW_VER_test-wiznet-fw = $(VERSION_TAG)
 $(eval $(call dist-hex,test-wiznet-fw))
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
+# test-ufat
+ifdef CONFIG_DRIVER_UFAT
+TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
+FW_ID_test-ufat-fw = 0x8008
+FW_VER_test-ufat-fw = $(VERSION_TAG)
+$(eval $(call dist-hex,test-ufat-fw))
+$(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-net
