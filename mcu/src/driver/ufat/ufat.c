@@ -22,7 +22,7 @@ static u08 read_part_table(ufat_disk_t *disk, u32 *part_offset)
 {
   // read first block
   u08 *buf = disk->tmp_buf;
-  int res = ufat_io_read_block(0, buf);
+  u08 res = ufat_io_read_block(0, buf);
   if(res != UFAT_RESULT_OK) {
     return res;
   }
@@ -54,7 +54,7 @@ static u08 read_boot_sector(ufat_disk_t *disk, u32 part_offset)
 {
   // read boot block
   u08 *buf = disk->tmp_buf;
-  int res = ufat_io_read_block(part_offset, buf);
+  u08 res = ufat_io_read_block(part_offset, buf);
   if(res != UFAT_RESULT_OK) {
     return res;
   }
@@ -124,6 +124,9 @@ static u08 read_boot_sector(ufat_disk_t *disk, u32 part_offset)
     // adjust FAT32 root dir location
     disk->root_start = disk->data_start + (root_clus - 2) * disk->sec_per_clus;
     disk->root_secs = disk->sec_per_clus; // first cluster for now
+    disk->fat_shift = 2; // cluster * 4 for FAT offset
+  } else {
+    disk->fat_shift = 1; // cluster * 2 for FAT offset
   }
   DS("root_start:"); DL(disk->root_start); DNL;
   DS("root_secs:"); DL(disk->root_secs); DNL;
@@ -174,7 +177,7 @@ static u08 dir_scan(ufat_disk_t *disk, ufat_dir_entry_t *de, ufat_scan_func_t fu
   while((num > 0) && (!is_last)) {
     // read dir block
     DS("dir block:"); DL(lba); DNL;
-    int res = ufat_io_read_block(lba, buf);
+    u08 res = ufat_io_read_block(lba, buf);
     if(res != UFAT_RESULT_OK) {
       return res;
     }
@@ -311,3 +314,152 @@ u08 ufat_root_find(ufat_disk_t *disk, ufat_dir_entry_t *de, const u08 *name)
     return UFAT_RESULT_ENTRY_NOT_FOUND;
   }
 }
+
+/* ----- read file ----- */
+
+u08 ufat_read_file_init(const ufat_disk_t *disk, const ufat_dir_entry_t *de,
+                        ufat_read_file_t *rf)
+{
+  rf->left_bytes = de->size_bytes;
+  rf->cur_clus = de->start_clus;
+  rf->cur_lba = disk->data_start + (de->start_clus - 2) * disk->sec_per_clus;
+  rf->next_clus = de->start_clus;
+  rf->cur_sec = 0;
+  rf->num_cont_clus = 0;
+  return UFAT_RESULT_OK;
+}
+
+static u08 find_next_cluster(const ufat_disk_t *disk, ufat_read_file_t *rf)
+{
+  u32 clus = rf->next_clus;
+
+  DS("--find_next: clus="); DL(clus); DNL;
+
+  // calc fat location of cluster
+  u32 fat_byte_off = clus << disk->fat_shift;
+  u16 blk_off = (u16)(fat_byte_off & 0x1ff);
+  u32 fat_blk = fat_byte_off >> 9; // div by 512 sector size
+  fat_blk += disk->fat_start;
+
+  // read fat block
+  u08 *buf = disk->tmp_buf;
+  DS("fat block:"); DL(fat_blk); DS(",off="); DW(blk_off); DNL;
+  u08 res = ufat_io_read_block(fat_blk, buf);
+  if(res != UFAT_RESULT_OK) {
+    return res;
+  }
+
+  // scan fat block
+  u32  cur_clus = get_long(buf, blk_off);
+
+  // sanity check
+  if(disk->flags & UFAT_FLAG_FAT32) {
+    if(cur_clus == 0x0ffffff8) {
+      DS("EOC32??");
+      return UFAT_RESULT_EARLY_CHAIN_END;
+    }
+  } else {
+    if(cur_clus == 0xfff8) {
+      DS("EOC16??");
+      return UFAT_RESULT_EARLY_CHAIN_END;
+    }
+  }
+
+  // setup new current cluster/lba
+  rf->cur_clus = cur_clus;
+  rf->cur_lba = disk->data_start + (cur_clus - 2) * disk->sec_per_clus;
+  DS("new cur_clus:"); DL(rf->cur_clus); DNL;
+  DS("new cur_lba:"); DL(rf->cur_lba); DNL;
+
+  // scan cluster chain if it is continous in current block?
+  u08 num_cont_clus = 0;
+  blk_off += 1 << disk->fat_shift;
+  while(blk_off < 512) {
+    u32 next_clus = get_long(buf, blk_off);
+    // next cluster is not consecutive
+    if(next_clus != cur_clus + 1) {
+      cur_clus = next_clus;
+      break;
+      DC('!');
+    }
+    num_cont_clus++;
+    cur_clus = next_clus;
+    blk_off += 1 << disk->fat_shift;
+    DC('.');
+  }
+  DNL;
+
+  DS("num_cont_clus:"); DB(num_cont_clus); DNL;
+  DS("next_clus:"); DL(cur_clus); DNL;
+
+  rf->num_cont_clus = num_cont_clus;
+  rf->next_clus = cur_clus;
+
+  return UFAT_RESULT_OK;
+}
+
+u08 ufat_read_file_next(const ufat_disk_t *disk, ufat_read_file_t *rf,
+                        u16 *size)
+{
+  // nothing to do?
+  if(rf->left_bytes == 0) {
+    *size = UFAT_READ_FILE_EOF;
+    return UFAT_RESULT_OK;
+  }
+
+#if 0
+  // state dump
+  DS("left_bytes:"); DL(rf->left_bytes); DNL;
+  DS("cur_lba:"); DL(rf->cur_lba); DNL;
+  DS("cur_clus:"); DL(rf->cur_clus); DNL;
+  DS("next_clust:"); DL(rf->next_clus); DNL;
+  DS("cur_sec:"); DB(rf->cur_sec); DNL;
+  DS("num_cont_clus:"); DB(rf->num_cont_clus); DNL;
+#endif
+
+  // save data lba
+  u32 lba = rf->cur_lba;
+
+  // adjust left size
+  if(rf->left_bytes <= 512) {
+    *size = UFAT_READ_FILE_EOF | (u16)(rf->left_bytes);
+    rf->left_bytes = 0;
+  }
+  // regular intermediate block
+  else {
+    *size = 512;
+    rf->left_bytes -= 512;
+
+    rf->cur_sec++;
+    // last sector in cluster consumed?
+    if(rf->cur_sec == disk->sec_per_clus) {
+      // reset sector count
+      rf->cur_sec = 0;
+      // now search next cluster:
+      // still continous clusters available?
+      if(rf->num_cont_clus > 0) {
+        rf->cur_clus++;
+        rf->cur_lba++;
+        rf->num_cont_clus--;
+      }
+      // no, read FAT to find out following clusters
+      else {
+        u08 res = find_next_cluster(disk, rf);
+        if(res != UFAT_RESULT_OK) {
+          return res;
+        }
+      }
+    }
+    // no, stay in cluster
+    else {
+      rf->cur_lba++;
+    }
+  }
+
+  // finally read block
+#if 0
+  DS("data block:"); DL(lba); DS(","); DL(rf->left_bytes); DNL;
+#endif
+  return ufat_io_read_block(lba, disk->tmp_buf);
+}
+

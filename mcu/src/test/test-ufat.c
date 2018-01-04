@@ -15,10 +15,12 @@
 #include "spi.h"
 #include "sdcard.h"
 #include "ufat.h"
+#include "crc.h"
 
 static u08 sdbuf[512];
 static ufat_disk_t disk;
 static ufat_dir_entry_t entry;
+static ufat_read_file_t read_file;
 
 u08 ufat_io_read_block(u32 lba, u08 *data)
 {
@@ -52,6 +54,46 @@ static u08 dump_func(const ufat_dir_entry_t *e, void *user_data)
   uart_send_string((const char *)e->name);
   uart_send_crlf();
   return UFAT_SCAN_CONTINUE;
+}
+
+static void test_read_file(void)
+{
+  uart_send_pstring(PSTR("read_file_init:"));
+  u08 res = ufat_read_file_init(&disk, &entry, &read_file);
+  uart_send_hex_byte(res);
+  uart_send_crlf();
+  if(res != UFAT_RESULT_OK) {
+    return;
+  }
+
+  uart_send_pstring(PSTR("read_file_next:"));
+  u16 crc = 0;
+  u32 total = 0;
+  u08 *buf = disk.tmp_buf;
+  u08 is_last = 0;
+  while(!is_last) {
+    u16 size;
+    res = ufat_read_file_next(&disk, &read_file, &size);
+    if(res != UFAT_RESULT_OK) {
+      uart_send_hex_byte(res);
+      uart_send_crlf();
+      return;
+    }
+    if(size & UFAT_READ_FILE_EOF) {
+      is_last = 1;
+    }
+    size &= UFAT_READ_FILE_SIZE_MASK;
+    for(u16 i=0;i<size;i++) {
+      crc = crc_xmodem_update(crc, buf[i]);
+      total++;
+    }
+    uart_send('.');
+  }
+  uart_send_pstring(PSTR("total:"));
+  uart_send_hex_long(total);
+  uart_send_pstring(PSTR(",crc:"));
+  uart_send_hex_word(crc);
+  uart_send_crlf();
 }
 
 static void test_ufat(void)
@@ -100,7 +142,7 @@ static void test_ufat(void)
   }
 
   // find entry
-  u08 *name = (u08 *)"wb311.hdf";
+  u08 *name = (u08 *)"readme.txt";
   uart_send_pstring(PSTR("ufat_root_find:"));
   uart_send_string((const char *)name);
   res = ufat_root_find(&disk, &entry, name);
@@ -108,6 +150,19 @@ static void test_ufat(void)
   uart_send_crlf();
   if(res == UFAT_RESULT_OK) {
     dump_func(&entry, NULL);
+    test_read_file();
+  }
+
+  // find entry
+  u08 *name2 = (u08 *)"wb311.hdf";
+  uart_send_pstring(PSTR("ufat_root_find:"));
+  uart_send_string((const char *)name2);
+  res = ufat_root_find(&disk, &entry, name2);
+  uart_send_hex_byte(res);
+  uart_send_crlf();
+  if(res == UFAT_RESULT_OK) {
+    dump_func(&entry, NULL);
+    test_read_file();
   }
 }
 
