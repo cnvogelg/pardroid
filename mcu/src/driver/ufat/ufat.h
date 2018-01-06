@@ -10,6 +10,9 @@
 #define UFAT_RESULT_UNSUPPORTED_FAT       6
 #define UFAT_RESULT_ENTRY_NOT_FOUND       7
 #define UFAT_RESULT_EARLY_CHAIN_END       8
+#define UFAT_RESULT_WRONG_SIZE_FOR_BLK_IO 9
+#define UFAT_RESULT_INVALID_BLK_NO        10
+#define UFAT_RESULT_BLK_IO_MAP_TOO_SMALL  11
 
 /* external API has to be defined */
 extern u08 ufat_io_read_block(u32 lba, u08 *data);
@@ -26,6 +29,8 @@ extern u08 ufat_io_write_block(u32 lba, const u08 *data);
 
 #define UFAT_READ_FILE_EOF                0x8000
 #define UFAT_READ_FILE_SIZE_MASK          0x7fff
+
+#define UFAT_CLU_MAP_MAX_ENTRY            0xffff
 
 struct ufat_disk {
   u08  *tmp_buf;
@@ -60,6 +65,19 @@ struct ufat_read_file {
 };
 typedef struct ufat_read_file ufat_read_file_t;
 
+#define UFAT_MAX_BLK_IO_ENTRIES           3
+
+struct ufat_blk_io {
+  u32   num_blks;
+  u32   num_cluster;
+  u16   sec_in_last;
+  struct clu_map {
+    u32  cluster;
+    u16  num_cont_clus;
+  } clu_map[UFAT_MAX_BLK_IO_ENTRIES];
+};
+typedef struct ufat_blk_io ufat_blk_io_t;
+
 typedef u08 (*ufat_scan_func_t)(const ufat_dir_entry_t *e, void *user_data);
 
 /* public API */
@@ -75,5 +93,15 @@ extern u08 ufat_read_file_init(const ufat_disk_t *disk, const ufat_dir_entry_t *
                                ufat_read_file_t *rf);
 extern u08 ufat_read_file_next(const ufat_disk_t *disk, ufat_read_file_t *rf,
                                u16 *size);
+
+/* random access block I/O */
+extern u08 ufat_blk_io_init(const ufat_disk_t *disk, const ufat_dir_entry_t *de,
+                            ufat_blk_io_t *bio);
+extern u08 ufat_blk_io_map(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                           u32 blk_no, u32 *lba);
+extern u08 ufat_blk_io_read(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                            u32 blk_no, u08 *buf);
+extern u08 ufat_blk_io_write(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                             u32 blk_no, const u08 *buf);
 
 #endif

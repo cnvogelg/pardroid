@@ -463,3 +463,182 @@ u08 ufat_read_file_next(const ufat_disk_t *disk, ufat_read_file_t *rf,
   return ufat_io_read_block(lba, disk->tmp_buf);
 }
 
+/* ----- block i/o ------ */
+
+static u08 build_clu_map(const ufat_disk_t *disk, ufat_blk_io_t *bio, u32 cluster)
+{
+  struct clu_map *clu_map = &bio->clu_map[0];
+
+  // init first entry
+  clu_map->cluster = cluster;
+  clu_map->num_cont_clus = 0;
+
+  // mini map with a single cluster only?
+  if(bio->num_blks <= disk->sec_per_clus) {
+    DS("mini map!"); DNL;
+    return UFAT_RESULT_OK;
+  }
+
+  u32 fat_byte_off;
+  u32 blk_off;
+  u32 fat_blk;
+  u08 num = 0;
+
+new_fat_block:
+  // prepare to read FAT block containing the first cluster
+  // and calc fat location of cluster in block
+  fat_byte_off = cluster << disk->fat_shift;
+  blk_off = (u16)(fat_byte_off & 0x1ff);
+  fat_blk = fat_byte_off >> 9; // div by 512 sector size
+  fat_blk += disk->fat_start;
+
+  while(1) {
+    // read fat block
+    u08 *buf = disk->tmp_buf;
+    DS("fat block:"); DL(fat_blk); DS(",off="); DW(blk_off); DNL;
+    u08 res = ufat_io_read_block(fat_blk, buf);
+    if(res != UFAT_RESULT_OK) {
+      return res;
+    }
+
+    // scan cluster chain of current FAT block
+    // if it is continous in current block?
+    DS("CUR:@"); DL(cluster);
+    while(blk_off < 512) {
+      u32 next_clus = get_long(buf, blk_off);
+
+      // end of chain?
+      if((next_clus & 0x0ffffff8) == 0x0ffffff8) {
+        DS("EOC"); DW(clu_map->num_cont_clus); DNL;
+        return UFAT_RESULT_OK;
+      }
+
+      // next cluster is not consecutive
+      if(next_clus != cluster + 1) {
+        DW(clu_map->num_cont_clus); DNL;
+        DS("NEW:@"); DL(next_clus); DNL;
+        // no more cluster entries?
+        if(num == UFAT_MAX_BLK_IO_ENTRIES) {
+          DS("MAP TOO SMALL!"); DNL;
+          return UFAT_RESULT_BLK_IO_MAP_TOO_SMALL;
+        }
+        // create new
+        clu_map++;
+        num++;
+        clu_map->cluster = next_clus;
+        clu_map->num_cont_clus = 0;
+        cluster = next_clus;
+        goto new_fat_block;
+      }
+      // current entry is full
+      else if(clu_map->num_cont_clus == UFAT_CLU_MAP_MAX_ENTRY) {
+        DS("FULL"); DW(clu_map->num_cont_clus); DNL;
+        if(num == UFAT_MAX_BLK_IO_ENTRIES) {
+          DS("MAP TOO SMALL");
+          return UFAT_RESULT_BLK_IO_MAP_TOO_SMALL;
+        }
+        // create new
+        clu_map++;
+        num++;
+        clu_map->cluster = next_clus;
+        clu_map->num_cont_clus = 0;
+      }
+      // update current
+      else {
+        clu_map->num_cont_clus++;
+        DC('.');
+      }
+
+      // next entry in fat block
+      cluster = next_clus;
+      blk_off += 1 << disk->fat_shift;
+    }
+
+    // end of current block reached... read next fat block
+    DS("NEXT FAT"); DNL;
+    fat_blk++;
+    blk_off = 0;
+  }
+  return UFAT_RESULT_OK;
+}
+
+u08 ufat_blk_io_init(const ufat_disk_t *disk, const ufat_dir_entry_t *de,
+                     ufat_blk_io_t *bio)
+{
+  /* check file size */
+  u32 size = de->size_bytes;
+  /* enforce block alignment */
+  if((size & 0x1ff) != 0) {
+    return UFAT_RESULT_WRONG_SIZE_FOR_BLK_IO;
+  }
+  bio->num_blks = size >> 9;
+  bio->num_cluster = (bio->num_blks + disk->sec_per_clus - 1) / disk->sec_per_clus;
+  bio->sec_in_last = bio->num_blks % disk->sec_per_clus;
+  DS("blk_io_init:num_blks="); DL(bio->num_blks);
+  DS(",num_cluster:"); DL(bio->num_cluster);
+  DS(",sec_in_last:"); DW(bio->sec_in_last); DNL;
+
+  /* setup cluster map */
+  return build_clu_map(disk, bio, de->start_clus);
+}
+
+u08 ufat_blk_io_map(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                    u32 blk_no, u32 *lba)
+{
+  if(blk_no >= bio->num_blks) {
+    return UFAT_RESULT_INVALID_BLK_NO;
+  }
+
+  // calc clu no and sec in cluster of file
+  u32 clu_no = blk_no / disk->sec_per_clus;
+  u32 sec = blk_no % disk->sec_per_clus;
+  DS("io_map:clu_no="); DL(clu_no); DS(",sec="); DL(sec); DNL;
+
+  // scan throug map
+  struct clu_map *clu_map = &bio->clu_map[0];
+  u32 cluster = 0;
+  for(u08 num = 0;num < UFAT_MAX_BLK_IO_ENTRIES;num++) {
+    DS(" clu_map#"); DB(num); DC(':'); DL(clu_map->cluster);
+    DC('+'); DW(clu_map->num_cont_clus); DNL;
+
+    /* does fit in current range? */
+    u16 cont_clus = clu_map->num_cont_clus;
+    if(clu_no <= cont_clus) {
+      cluster = clu_map->cluster + clu_no;
+      // calc lba
+      *lba = disk->data_start + (cluster - 2) * disk->sec_per_clus;
+      DS("clu"); DL(cluster); DS("->lba="); DL(*lba); DNL;
+      return UFAT_RESULT_OK;
+    }
+
+    /* next entry */
+    clu_no -= cont_clus + 1;
+    clu_map++;
+  }
+
+  // no more cluster entries but still not found!
+  DS("too small??");
+  return UFAT_RESULT_BLK_IO_MAP_TOO_SMALL;
+}
+
+u08 ufat_blk_io_read(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                     u32 blk_no, u08 *buf)
+{
+  u32 lba = 0;
+  u08 res = ufat_blk_io_map(disk, bio, blk_no, &lba);
+  if(res != UFAT_RESULT_OK) {
+    return res;
+  }
+  return ufat_io_read_block(lba, buf);
+}
+
+u08 ufat_blk_io_write(const ufat_disk_t *disk, ufat_blk_io_t *bio,
+                             u32 blk_no, const u08 *buf)
+{
+  u32 lba = 0;
+  u08 res = ufat_blk_io_map(disk, bio, blk_no, &lba);
+  if(res != UFAT_RESULT_OK) {
+    return res;
+  }
+  return ufat_io_write_block(lba, buf);
+}

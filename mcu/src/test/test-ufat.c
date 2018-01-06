@@ -20,7 +20,10 @@
 static u08 sdbuf[512];
 static ufat_disk_t disk;
 static ufat_dir_entry_t entry;
+#ifdef TEST_READ_FILE
 static ufat_read_file_t read_file;
+#endif
+static ufat_blk_io_t bio;
 
 u08 ufat_io_read_block(u32 lba, u08 *data)
 {
@@ -56,6 +59,7 @@ static u08 dump_func(const ufat_dir_entry_t *e, void *user_data)
   return UFAT_SCAN_CONTINUE;
 }
 
+#ifdef TEST_READ_FILE
 static void test_read_file(void)
 {
   uart_send_pstring(PSTR("read_file_init:"));
@@ -93,6 +97,33 @@ static void test_read_file(void)
   uart_send_hex_long(total);
   uart_send_pstring(PSTR(",crc:"));
   uart_send_hex_word(crc);
+  uart_send_crlf();
+}
+#endif
+
+static void test_blk_io(void)
+{
+  uart_send_pstring(PSTR("blk_io_init:"));
+  u08 res = ufat_blk_io_init(&disk, &entry, &bio);
+  uart_send_hex_byte(res);
+  uart_send_crlf();
+  if(res != UFAT_RESULT_OK) {
+    return;
+  }
+
+  for(u32 i=0;i<1000;i+=100) {
+    uart_send_pstring(PSTR("read#"));
+    uart_send_hex_long(i);
+    res = ufat_blk_io_read(&disk, &bio, i, sdbuf);
+    uart_send_pstring(PSTR("->res="));
+    uart_send_hex_byte(res);
+    uart_send_crlf();
+    if(res != UFAT_RESULT_OK) {
+      return;
+    }
+  }
+
+  uart_send_pstring(PSTR("done."));
   uart_send_crlf();
 }
 
@@ -150,7 +181,9 @@ static void test_ufat(void)
   uart_send_crlf();
   if(res == UFAT_RESULT_OK) {
     dump_func(&entry, NULL);
+#ifdef TEST_READ_FILE
     test_read_file();
+#endif
   }
 
   // find entry
@@ -162,7 +195,10 @@ static void test_ufat(void)
   uart_send_crlf();
   if(res == UFAT_RESULT_OK) {
     dump_func(&entry, NULL);
+#ifdef TEST_READ_FILE
     test_read_file();
+#endif
+    test_blk_io();
   }
 }
 
