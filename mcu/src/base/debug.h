@@ -40,6 +40,7 @@
 
 #define DC(x)
 #define DS(x)
+#define DSB(x)
 #define DB(x)
 #define DW(x)
 #define DL(x)

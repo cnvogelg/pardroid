@@ -606,7 +606,7 @@ u08 ufat_blk_io_map(const ufat_disk_t *disk, ufat_blk_io_t *bio,
     if(clu_no <= cont_clus) {
       cluster = clu_map->cluster + clu_no;
       // calc lba
-      *lba = disk->data_start + (cluster - 2) * disk->sec_per_clus;
+      *lba = disk->data_start + (cluster - 2) * disk->sec_per_clus + sec;
       DS("clu"); DL(cluster); DS("->lba="); DL(*lba); DNL;
       return UFAT_RESULT_OK;
     }

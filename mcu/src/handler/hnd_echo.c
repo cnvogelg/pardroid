@@ -6,7 +6,7 @@
 
 #include "handler.h"
 #include "hnd_echo.h"
-#include "buffer.h"
+#include "mem.h"
 #include "debug.h"
 
 static u08 *data;
@@ -32,7 +32,7 @@ static u08 echo_read(u08 chn, u16 *size, u08 *buf)
     } else {
       *size = 0;
     }
-    buffer_free(data);
+    mem_free(data);
     data = 0;
   } else {
     *size = 0;
@@ -44,7 +44,7 @@ static u08 echo_read(u08 chn, u16 *size, u08 *buf)
 static u08 echo_write(u08 chn, u16 size, u08 *buf)
 {
   DS("Ew:"); DW(size); DC('@'); DP(buf);
-  data = buffer_alloc(size);
+  data = mem_alloc(size);
   data_size = size;
   DC('@'); DP(data); DNL;
   if(data != 0) {

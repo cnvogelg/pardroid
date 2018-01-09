@@ -6,7 +6,7 @@
 
 #include "debug.h"
 #include "handler.h"
-#include "buffer.h"
+#include "mem.h"
 
 static u08 *data;
 
@@ -27,7 +27,7 @@ u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
   handler_data_t *hdata = HANDLER_GET_DATA(chn);
   u16 mtu_size = hdata->mtu;
   DW(mtu_size); DC('>');
-  data = buffer_alloc(mtu_size);
+  data = mem_alloc(mtu_size);
   if(data == 0) {
     DC('O');
     handler_set_status(chn, HANDLER_NO_MEMORY);
@@ -42,7 +42,7 @@ u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
   if(status == HANDLER_OK) {
     /* shrink buffer */
     if(size < mtu_size) {
-      buffer_shrink(data, size);
+      mem_shrink(data, size);
     }
     /* buffer ok */
     *ret_size = size;
@@ -51,7 +51,7 @@ u08 *msgio_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
 
   /* cleanup buffer on error */
   DC('!');
-  buffer_free(data);
+  mem_free(data);
   data = 0;
   return 0;
 }
@@ -60,7 +60,7 @@ void msgio_read_msg_done(u08 chn)
 {
   if(data != 0) {
     /* free buffer */
-    buffer_free(data);
+    mem_free(data);
   }
   DC(']'); DNL;
 }
@@ -82,7 +82,7 @@ u08 *msgio_write_msg_prepare(u08 chn, u16 *max_size)
   handler_data_t *hdata = HANDLER_GET_DATA(chn);
   u16 mtu_size = hdata->mtu;
   DW(mtu_size); DC('>');
-  data = buffer_alloc(mtu_size);
+  data = mem_alloc(mtu_size);
   if(data == 0) {
     DC('O');
     handler_set_status(chn, HANDLER_NO_MEMORY);
@@ -105,7 +105,7 @@ void msgio_write_msg_done(u08 chn, u16 size, u16 extra)
     handler_set_status(chn, status);
 
     /* free buffer */
-    buffer_free(data);
+    mem_free(data);
     data = 0;
   }
   DC(']'); DNL;

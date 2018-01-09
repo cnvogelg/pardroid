@@ -1,10 +1,14 @@
 #include "autoconf.h"
 
-#define DEBUG CONFIG_DEBUG_BUFFER
+#define DEBUG CONFIG_DEBUG_MEM
 
 #include "types.h"
-#include "buffer.h"
+#include "mem.h"
+#include "mem_int.h"
 #include "debug.h"
+#include "uart.h"
+#include "uartutil.h"
+#include "system.h"
 
 #ifndef NULL
 #define NULL (void *)0
@@ -17,29 +21,43 @@ struct mem_info {
 };
 typedef struct mem_info mem_info_t;
 
+#define heap_end  (mem_end - CONFIG_STACK_SIZE)
+#define guard_ptr (heap_end + 1)
+#define max_free  (u16)(heap_end - mem_start)
+
 // declare buffer storage
-static u08 data[CONFIG_BUFFER_SIZE];
 static u16 free_total;
 static mem_info_t *first_mi;
 
-void buffer_init(void)
+void mem_init(void)
 {
-  mem_info_t *mi = (mem_info_t *)data;
+  mem_info_t *mi = (mem_info_t *)mem_start;
   mi->prev = NULL;
   mi->next = NULL;
-  mi->size = CONFIG_BUFFER_SIZE;
+  mi->size = max_free;
 
   first_mi = mi;
-  free_total = CONFIG_BUFFER_SIZE;
-  DS("Bi:@"); DP(data); DC('+'); DW(free_total); DNL;
+  free_total = max_free;
+  DS("Bi:@"); DP(mem_int_start); DC('+'); DW(free_total); DNL;
+
+  // place guard
+  *(guard_ptr) = 0x42;
 }
 
-u16 buffer_get_free(void)
+void mem_check(void)
+{
+  if(*guard_ptr != 0x42) {
+    uart_send_pstring(PSTR("mem_check: FAILED!!\n"));
+    system_sys_reset();
+  }
+}
+
+u16 mem_get_free(void)
 {
   return free_total;
 }
 
-u08 *buffer_alloc(u16 size)
+u08 *mem_alloc(u16 size)
 {
   u16 real_size = size;
 
@@ -202,7 +220,7 @@ static void free_internal(u08 *ptr, u16 size)
   DC('}'); DNL;
 }
 
-void buffer_free(u08 *ptr)
+void mem_free(u08 *ptr)
 {
   /* get pointer of size field */
   u08 *sp = ptr - 2;
@@ -222,7 +240,7 @@ void buffer_free(u08 *ptr)
   free_internal(sp, size);
 }
 
-void buffer_shrink(u08 *ptr, u16 new_real_size)
+void mem_shrink(u08 *ptr, u16 new_real_size)
 {
   /* get pointer of size field */
   u08 *sp = ptr - 2;

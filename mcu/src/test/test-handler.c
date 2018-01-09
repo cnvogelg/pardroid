@@ -15,7 +15,7 @@
 #include "proto.h"
 #include "proto_shared.h"
 #include "status.h"
-#include "buffer.h"
+#include "mem.h"
 
 #include "handler.h"
 #include "handler_reg.h"
@@ -63,7 +63,7 @@ int main(void)
   DC('+');
   proto_init(PROTO_STATUS_INIT);
   status_init();
-  buffer_init();
+  mem_init();
   DRIVER_INIT();
   HANDLER_INIT();
   DC('-'); DNL;

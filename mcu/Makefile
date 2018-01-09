@@ -58,7 +58,7 @@ BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 # base sources
 COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c spi.c crc.c $(BASE_ARCH_SRCS)
-BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c
+BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PARAM_SRCS = param.c param_def.c crc.c
 # pamela
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
@@ -71,7 +71,7 @@ PROTO_EXT_SRCS += knok.c
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 
 # handler
-HANDLER_SRCS = handler.c handler_reg.c handler_regl.c buffer.c msgio.c
+HANDLER_SRCS = handler.c handler_reg.c handler_regl.c msgio.c
 HANDLER_SRCS += hnd_echo.c hnd_null.c
 
 # drivers
