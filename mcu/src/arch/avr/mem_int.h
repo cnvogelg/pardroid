@@ -9,4 +9,6 @@ extern char __heap_start;
 #define mem_end   ((char *)(RAMEND + 1))
 #define mem_start (&__heap_start)
 
+#define stack_pointer() ((char *)AVR_STACK_POINTER_REG)
+
 #endif
