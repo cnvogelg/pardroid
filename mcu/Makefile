@@ -88,9 +88,9 @@ ifdef CONFIG_DRIVER_WIZNET
 DRIVER_SRCS += wiznet_low.c wiznet.c wiz_io.c
 DRIVER_INCLUDES += src/driver/wiznet
 endif
-ifdef CONFIG_DRIVER_UFAT
-DRIVER_SRCS += ufat.c
-DRIVER_INCLUDES += src/driver/ufat
+ifdef CONFIG_TOOL_UFAT
+TOOL_SRCS += ufat.c
+TOOL_INCLUDES += src/driver/ufat
 endif
 
 # common includes
@@ -98,9 +98,9 @@ INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base
-INCLUDES += src/pamela src/handler src/driver src/test src/param
+INCLUDES += src/pamela src/paloma src/handler src/driver src/test src/param
 INCLUDES += ../common/src
-INCLUDES += $(DRIVER_INCLUDES)
+INCLUDES += $(DRIVER_INCLUDES) $(TOOL_INCLUDES)
 VPATH=$(INCLUDES) $(BUILD_DIR)
 
 # ----- test firmware images -----
@@ -151,7 +151,7 @@ $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)
 endif
 
 # test-ufat
-ifdef CONFIG_DRIVER_UFAT
+ifdef CONFIG_TOOL_UFAT
 TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
 FW_ID_test-ufat-fw = 0x8008
