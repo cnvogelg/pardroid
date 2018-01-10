@@ -69,6 +69,7 @@ PROTO_EXT_SRCS += bootstrap.c bootrexx.c
 endif
 PROTO_EXT_SRCS += knok.c
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
+PAMELA_SRCS += pamela.c
 
 # handler
 HANDLER_SRCS = handler.c handler_reg.c handler_regl.c msgio.c

@@ -15,7 +15,7 @@
 #include "system.h"
 #include "status.h"
 #include "base_reg.h"
-#include "knok.h"
+#include "pamela.h"
 
 // max size of message buffer
 #define MAX_BUFFER_SIZE 1024
@@ -135,23 +135,16 @@ int main(void)
   system_init();
 
   uart_init();
-  uart_send_pstring(PSTR("parbox: test-proto!"));
+  uart_send_pstring(PSTR("parbox: test-pamela!"));
   uart_send_crlf();
 
   rom_info();
 
-  // wait for knockin seq
-  knok_main();
-
-  DC('+');
-  proto_init(PROTO_STATUS_INIT);
-  status_init();
-  DC('-'); DNL;
+  pamela_init();
 
   while(1) {
     system_wdt_reset();
-    proto_handle();
-    status_handle();
+    pamela_handle();
   }
 
   return 0;
