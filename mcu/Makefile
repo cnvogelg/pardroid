@@ -73,7 +73,7 @@ PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 PAMELA_SRCS += pamela.c
 
 # paloma
-PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c
+PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c channel.c
 PALOMA_SRCS += paloma.c
 
 # handlers

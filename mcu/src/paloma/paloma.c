@@ -4,9 +4,12 @@
 
 #include "handler.h"
 #include "driver.h"
+#include "channel.h"
 
 void paloma_init(void)
 {
+  channel_init();
+
   u08 drv_num = DRIVER_GET_TABLE_SIZE();
   driver_reset(drv_num);
   driver_init(drv_num);

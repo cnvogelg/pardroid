@@ -8,6 +8,7 @@
 #define HANDLER_CLOSED          3
 #define HANDLER_NO_MEMORY       4
 #define HANDLER_NO_FUNC         5
+#define HANDLER_NO_CHANNEL      6
 
 /* flags */
 #define HANDLER_FLAG_NONE          0
@@ -38,6 +39,7 @@ typedef struct handler handler_t;
 struct handler_data {
   u08  flags;
   u08  status;
+  u08  channel;
   u16  mtu;
 };
 typedef struct handler_data handler_data_t;
