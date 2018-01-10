@@ -60,6 +60,7 @@ COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c spi.c crc.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PARAM_SRCS = param.c param_def.c crc.c
+
 # pamela
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 PROTO_SRCS += proto.c reg.c action.c func.c
@@ -71,8 +72,11 @@ PROTO_EXT_SRCS += knok.c
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS) $(PROTO_EXT_SRCS)
 PAMELA_SRCS += pamela.c
 
-# handler
-HANDLER_SRCS = handler.c handler_reg.c handler_regl.c msgio.c
+# paloma
+PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c
+PALOMA_SRCS += paloma.c
+
+# handlers
 HANDLER_SRCS += hnd_echo.c hnd_null.c
 
 # drivers
@@ -91,7 +95,7 @@ DRIVER_INCLUDES += src/driver/wiznet
 endif
 ifdef CONFIG_TOOL_UFAT
 TOOL_SRCS += ufat.c
-TOOL_INCLUDES += src/driver/ufat
+TOOL_INCLUDES += src/tools/ufat
 endif
 
 # common includes
@@ -179,15 +183,15 @@ $(eval $(call dist-pbl,test-pamela-fw))
 $(eval $(call dist-hex,test-pamela-fw))
 $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
-# test-handler
-TEST_HANDLER_SRCS = $(PAMELA_SRCS)
-TEST_HANDLER_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
-TEST_HANDLER_SRCS += test-handler.c
-FW_ID_test-handler-fw = 0x8003
-FW_VER_test-handler-fw = $(VERSION_TAG)
-$(eval $(call dist-pbl,test-handler-fw))
-$(eval $(call dist-hex,test-handler-fw))
-$(eval $(call make-firmware,test-handler-fw,$(TEST_HANDLER_SRCS),$(CONFIG_MAX_ROM)))
+# test-paloma
+TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)
+TEST_PALOMA_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
+TEST_PALOMA_SRCS += test-paloma.c
+FW_ID_test-paloma-fw = 0x8003
+FW_VER_test-paloma-fw = $(VERSION_TAG)
+$(eval $(call dist-pbl,test-paloma-fw))
+$(eval $(call dist-hex,test-paloma-fw))
+$(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
 ifndef DEBUG
 ifdef CONFIG_BOOTLOADER

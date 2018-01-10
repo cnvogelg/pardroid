@@ -12,9 +12,6 @@
 #include "uart.h"
 #include "uartutil.h"
 #include "base_reg.h"
-#include "proto.h"
-#include "proto_shared.h"
-#include "status.h"
 #include "mem.h"
 
 #include "handler.h"
@@ -24,6 +21,9 @@
 
 #include "driver.h"
 #include "driver_list.h"
+
+#include "pamela.h"
+#include "paloma.h"
 
 // define my app id
 BASE_REG_APPID(FWID_TEST_HANDLER)
@@ -53,27 +53,21 @@ DRIVER_TABLE_END
 int main(void)
 {
   system_init();
+  mem_init();
 
   uart_init();
-  uart_send_pstring(PSTR("parbox: test-handler!"));
+  uart_send_pstring(PSTR("parbox: test-paloma!"));
   uart_send_crlf();
 
   rom_info();
 
-  DC('+');
-  proto_init(PROTO_STATUS_INIT);
-  status_init();
-  mem_init();
-  DRIVER_INIT();
-  HANDLER_INIT();
-  DC('-'); DNL;
+  pamela_init();
+  paloma_init();
 
   while(1) {
     system_wdt_reset();
-    proto_handle();
-    status_handle();
-    DRIVER_WORK();
-    HANDLER_WORK();
+    pamela_handle();
+    paloma_handle();
   }
 
   return 0;

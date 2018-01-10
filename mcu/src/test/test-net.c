@@ -40,13 +40,14 @@ int main(void)
 
   spi_init();
 
-  DRIVER_RESET();
-  DRIVER_INIT();
+  u08 num = DRIVER_GET_TABLE_SIZE();
+  driver_reset(num);
+  driver_init(num);
 
   // main loop
   while(1) {
     system_wdt_reset();
-    DRIVER_WORK();
+    driver_work(num);
   }
 
   uart_send_pstring(PSTR("reset..."));

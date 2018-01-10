@@ -91,10 +91,6 @@ extern driver_data_t driver_data_table[];
 #define DRIVER_BEGIN(name)          const driver_t drv_ ## name ROM_ATTR = {
 #define DRIVER_END                  };
 
-#define DRIVER_RESET()              driver_reset(DRIVER_TABLE_SIZE)
-#define DRIVER_INIT()               driver_init(DRIVER_TABLE_SIZE)
-#define DRIVER_WORK()               driver_work(DRIVER_TABLE_SIZE)
-
 #define DRIVER_GET_DATA(x)          &driver_data_table[x]
 
 // function factories

@@ -63,9 +63,6 @@ extern handler_data_t handler_data_table[];
 #define HANDLER_BEGIN(name)          const handler_t hnd_ ## name ROM_ATTR = {
 #define HANDLER_END                  };
 
-#define HANDLER_INIT()               handler_init(HANDLER_TABLE_SIZE)
-#define HANDLER_WORK()               handler_work(HANDLER_TABLE_SIZE)
-
 #define HANDLER_GET_DATA(x)          &handler_data_table[x]
 
 
