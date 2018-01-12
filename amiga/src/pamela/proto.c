@@ -80,18 +80,31 @@ int proto_knok_exit(proto_handle_t *ph)
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_knok_exit(port, timeout_flag);
+  int result = proto_low_knok_enter_exit(port, timeout_flag, 1);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_reset(proto_handle_t *ph)
+int proto_knok_wait(proto_handle_t *ph)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+
+  // wait until knok mode is active
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_knok_enter_exit(port, timeout_flag, 0);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_reset(proto_handle_t *ph, int exit_knok)
 {
   int res;
 
   // if knok active then leave first
-  if(proto_knok_check(ph)) {
+  if(proto_knok_check(ph) == PROTO_KNOK_FOUND) {
     res = proto_knok_exit(ph);
     if(res != PROTO_RET_OK) {
       return res;
@@ -105,7 +118,11 @@ int proto_reset(proto_handle_t *ph)
   }
 
   // perform knok exit
-  return proto_knok_exit(ph);
+  if(exit_knok) {
+    return proto_knok_exit(ph);
+  } else {
+    return proto_knok_wait(ph);
+  }
 }
 
 int proto_action(proto_handle_t *ph, UBYTE num)

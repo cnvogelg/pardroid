@@ -14,13 +14,7 @@
 #include "base_reg.h"
 #include "mem.h"
 
-#include "handler.h"
 #include "handler_reg.h"
-#include "hnd_echo.h"
-#include "hnd_null.h"
-
-#include "driver.h"
-#include "driver_list.h"
 
 #include "pamela.h"
 #include "paloma.h"
@@ -30,25 +24,6 @@ BASE_REG_APPID(FWID_TEST_HANDLER)
 
 // set register table
 REG_TABLE_SETUP(handler)
-
-// handler
-HANDLER_TABLE_BEGIN
-  HANDLER_TABLE_ENTRY(echo),
-  HANDLER_TABLE_ENTRY(echo),
-  HANDLER_TABLE_ENTRY(null)
-HANDLER_TABLE_END
-
-// driver
-DRIVER_TABLE_BEGIN
-  DRIVER_TABLE_ENTRY(blk_null),
-#ifdef CONFIG_DRIVER_ENC28J60
-  DRIVER_TABLE_ENTRY(eth_enc),
-#endif
-#ifdef CONFIG_DRIVER_SDCARD
-  DRIVER_TABLE_ENTRY(blk_sdraw),
-#endif
-DRIVER_TABLE_END
-
 
 int main(void)
 {

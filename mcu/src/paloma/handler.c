@@ -16,6 +16,8 @@ static handler_ptr_t get_handler(u08 hid)
 
 void handler_init(u08 num)
 {
+  DS("HI:");
+
   for(u08 hid=0;hid<num;hid++) {
     handler_ptr_t hnd = get_handler(hid);
     u08 flags = HANDLER_FLAG_NONE;
@@ -24,7 +26,9 @@ void handler_init(u08 num)
     // init func
     hnd_init_func_t f = (hnd_init_func_t)read_rom_rom_ptr(&hnd->init_func);
     if(f != 0) {
+      DS("init("); DB(hid); DC(':');
       status = f(hid);
+      DB(status); DC(')');
       if(status == HANDLER_OK) {
         flags = HANDLER_FLAG_INIT;
       }
@@ -40,6 +44,8 @@ void handler_init(u08 num)
     data->channel = CHANNEL_INVALID;
     data->mtu = read_rom_word(&hnd->mtu_max);
   }
+
+  DNL;
 }
 
 void handler_work(u08 num)
@@ -56,21 +62,26 @@ void handler_work(u08 num)
 
 u08 handler_open(u08 hid)
 {
+  DS("HO:"); DB(hid); DC(':');
+
   /* valid index? */
   u08 max = HANDLER_GET_TABLE_SIZE();
   if(hid >= max) {
+    DS("idx!"); DNL;
     return HANDLER_ERROR_INDEX;
   }
 
   /* not already open? */
   handler_data_t *data = HANDLER_GET_DATA(hid);
   if(data->flags & HANDLER_FLAG_OPEN) {
+    DS("open?"); DNL;
     return HANDLER_ALREADY_OPEN;
   }
 
   /* allocate channel for handler */
   u08 chn = channel_alloc(hid);
   if(chn == CHANNEL_INVALID) {
+    DS("no_chan!"); DNL;
     return HANDLER_NO_CHANNEL;
   }
   data->channel = chn;
@@ -80,7 +91,9 @@ u08 handler_open(u08 hid)
   hnd_open_func_t f = (hnd_open_func_t)read_rom_rom_ptr(&hnd->open_func);
   u08 status = HANDLER_OK;
   if(f != 0) {
+    DS("open(");
     status = f(hid);
+    DB(status); DC(')');
   }
 
   /* set flag */
@@ -96,15 +109,19 @@ u08 handler_open(u08 hid)
 
 u08 handler_close(u08 hid)
 {
+  DS("HC:");
+
   /* valid index? */
   u08 max = HANDLER_GET_TABLE_SIZE();
   if(hid >= max) {
+    DS("ifx!"); DNL;
     return HANDLER_ERROR_INDEX;
   }
 
   /* not already open? */
   handler_data_t *data = HANDLER_GET_DATA(hid);
   if((data->flags & HANDLER_FLAG_OPEN) == HANDLER_FLAG_OPEN) {
+    DS("closed?"); DNL;
     return HANDLER_CLOSED;
   }
 
@@ -112,7 +129,9 @@ u08 handler_close(u08 hid)
   handler_ptr_t hnd = get_handler(hid);
   hnd_close_func_t f = (hnd_close_func_t)read_rom_rom_ptr(&hnd->close_func);
   if(f != 0) {
+    DS("close(");
     f(hid);
+    DC(')');
   }
 
   /* free channel */
@@ -122,6 +141,8 @@ u08 handler_close(u08 hid)
   data->flags &= ~HANDLER_FLAG_OPEN;
   data->status = HANDLER_OK;
   data->channel = CHANNEL_INVALID;
+
+  DNL;
   return HANDLER_OK;
 }
 

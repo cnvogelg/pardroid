@@ -9,32 +9,24 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "pamela.h"
+#include "paloma.h"
 #include "proto.h"
 #include "test.h"
-#include "tests_pamela.h"
+#include "tests_paloma.h"
 
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
-   "Bias/K/N,Size/K/N,"
-   "AddSize/K/N,SubSize/K/N,"
-   "Channel/K/N";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
   char *test;
   ULONG *delay;
-  ULONG *bias;
-  ULONG *size;
-  ULONG *add_size;
-  ULONG *sub_size;
-  ULONG *channel;
 } params_t;
 static params_t params;
 
 /* define tests */
 static test_t all_tests[] = {
-  TESTS_PAMELA_ALL
+  TESTS_PALOMA_ALL
   { NULL, NULL, NULL }
 };
 
@@ -56,36 +48,13 @@ void setup_test_config(test_param_t *p)
   p->num_iter = num;
   p->delay = delay;
   p->test_name = params.test;
-
-  /* proto test setup */
-  UWORD size = 0;
-  if(params.size) {
-    size = (UWORD)*params.size;
-  }
-  UWORD bias = 0;
-  if(params.bias) {
-    bias = (UWORD)*params.bias;
-  }
-  UWORD add_size = 0;
-  if(params.add_size) {
-    add_size = (UWORD)*params.add_size;
-  }
-  UWORD sub_size = 0;
-  if(params.sub_size) {
-    sub_size = (UWORD)*params.sub_size;
-  }
-  UBYTE channel = 0;
-  if(params.channel) {
-    channel = (UBYTE)*params.channel;
-  }
-
-  tests_proto_config(size, bias, add_size, sub_size, channel);
 }
 
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t pb;
+  pamela_handle_t pam;
+  paloma_handle_t pal;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -97,18 +66,27 @@ int dosmain(void)
   int res = RETURN_ERROR;
 
   /* setup pamela */
-  res = pamela_init(&pb, (struct Library *)SysBase);
+  res = pamela_init(&pam, (struct Library *)SysBase);
   if(res == PAMELA_OK) {
 
-    /* setup test */
-    test_param_t param;
-    param.user_data = &pb;
-    setup_test_config(&param);
+    /* setup paloma */
+    res = paloma_init(&pal, &pam);
+    if(res == PALOMA_OK) {
 
-    /* run test */
-    res = test_main(all_tests, &param);
+      /* setup test */
+      test_param_t param;
+      param.user_data = &pal;
+      setup_test_config(&param);
 
-    pamela_exit(&pb);
+      /* run test */
+      res = test_main(all_tests, &param);
+
+      paloma_exit(&pal);
+    } else {
+      PutStr(paloma_perror(res));
+      PutStr(" -> ABORT\n");
+    }
+    pamela_exit(&pam);
   } else {
     PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");

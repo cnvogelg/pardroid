@@ -211,7 +211,7 @@ int dosmain(void)
   if(res == PAMELA_OK) {
 
     /* reset firmware */
-    res = proto_reset(pb.proto);
+    res = proto_reset(pb.proto, 1);
     if(res == PROTO_RET_OK) {
 
       /* run test */

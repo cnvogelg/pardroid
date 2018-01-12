@@ -7,7 +7,7 @@
         include         "proto.i"
 
         xdef            _proto_low_knok_check
-        xdef            _proto_low_knok_exit
+        xdef            _proto_low_knok_enter_exit
         xdef            _proto_low_get_status
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
@@ -211,6 +211,8 @@ delay   MACRO
         tst.b           (a5)
         tst.b           (a5)
         tst.b           (a5)
+        tst.b           (a5)
+        tst.b           (a5)
         ENDM
 
 
@@ -258,20 +260,21 @@ _proto_low_knok_check:
         moveq         #1,d0
 
 plkc_end:
-        clk_hi
         movem.l (sp)+,d2-d7/a2-a6
         rts
 
 
-; --- proto_low_knok_exit ---
-; if we are in knok mode try to escape it
+; --- proto_low_knok_enter_exit ---
+; first check if we are in knok mode
+; if exit flag is set then escape it otherwise stay
 ;
 ;   in:
+;       d0      0=enter, 1=exit
 ;       a0      struct pario_port *port
 ;       a1      volatile UBYTE *timeout_flag
 ;   out:
 ;       d0      return error code
-_proto_low_knok_exit:
+_proto_low_knok_enter_exit:
         movem.l d2-d7/a2-a6,-(sp)
 
         ; setup regs with port values and read old ctrl value
@@ -305,7 +308,13 @@ plkb_loop:
         ; next pass
         dbra          d1,plkb_loop
 
-        ; sequence is ok
+        ; sequence is ok -> knok mode is alive
+
+        ; shall we enter knok only?
+        tst.w         d0
+        beq.s         plkb_ok
+
+        ; ok. exit now.
         ; send magic boot byte to leave knok mode
         move.b        #$f3, (a3)
 
@@ -323,6 +332,7 @@ plkb_check_busy:
         btst           d2,(a5)
         beq.s          plkb_check_busy
 
+plkb_ok:
         ; ok
         moveq   #RET_OK,d0
 plkb_end:

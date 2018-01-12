@@ -13,11 +13,8 @@
 #include "arch.h"
 
 #include "pamela.h"
-#include "proto.h"
-#include "proto_shared.h"
+
 #include "fwid.h"
-#include "reg.h"
-#include "offset.h"
 #include "test.h"
 
 static UWORD test_size;
@@ -39,7 +36,7 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
 int test_reset(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
-  int res = proto_reset(pb->proto);
+  int res = proto_reset(pb->proto, 1);
   if(res == 0) {
     return 0;
   } else {
@@ -49,17 +46,51 @@ int test_reset(test_t *t, test_param_t *p)
   }
 }
 
-int test_knok(test_t *t, test_param_t *p)
+int test_knok_enter_leave(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+
+  // make sure knok mode is not enabled
   int res = proto_knok_check(pb->proto);
-  if(res == PROTO_KNOK_NOT_FOUND) {
-    return 0;
-  } else {
+  if(res == PROTO_KNOK_FOUND) {
     p->error = "KNOK found!";
-    p->section = "knok";
+    p->section = "init";
     return 1;
   }
+
+  // try to enter knock mode
+  res = proto_reset(pb->proto, 0);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "knok enter";
+    return res;
+  }
+
+  // make sure knok mode is enabled
+  res = proto_knok_check(pb->proto);
+  if(res == PROTO_KNOK_NOT_FOUND) {
+    p->error = "KNOK not found!";
+    p->section = "main";
+    return 1;
+  }
+
+  // try to leave knock mode
+  res = proto_knok_exit(pb->proto);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "knok leave";
+    return res;
+  }
+
+  // make sure knok mode is not enabled
+  res = proto_knok_check(pb->proto);
+  if(res == PROTO_KNOK_FOUND) {
+    p->error = "KNOK found!";
+    p->section = "init";
+    return 1;
+  }
+
+  return 0;
 }
 
 int test_ping(test_t *t, test_param_t *p)

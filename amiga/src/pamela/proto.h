@@ -31,8 +31,9 @@ extern UBYTE proto_get_status(proto_handle_t *ph);
 
 extern int proto_knok_check(proto_handle_t *ph);
 extern int proto_knok_exit(proto_handle_t *ph);
+extern int proto_knok_wait(proto_handle_t *ph);
 
-extern int proto_reset(proto_handle_t *ph);
+extern int proto_reset(proto_handle_t *ph, int exit_knok);
 
 extern int proto_action(proto_handle_t *ph, UBYTE num);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2]);

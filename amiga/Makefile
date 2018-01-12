@@ -14,7 +14,7 @@ DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
-INCLUDES+=src/pamela src/engine src/pablo
+INCLUDES+=src/pamela src/engine src/pablo src/paloma
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src
 VPATH=$(INCLUDES)
@@ -29,6 +29,9 @@ BENCH_SRCS = bench.c
 
 PAMELA_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
 PAMELA_SRCS += pamela.c reg.c offset.c status.c
+
+PALOMA_SRCS = paloma.c
+
 ENGINE_SRCS += engine.c request.c channel.c
 
 # ---- mini tests
@@ -56,6 +59,10 @@ $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 # pb-test-pamela
 PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_pamela.c
 $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
+
+# pb-test-paloma
+PB_TEST_PALOMA_SRCS = pb-test-paloma.c $(PAMELA_SRCS) $(PALOMA_SRCS) $(TEST_SRCS) tests_paloma.c
+$(eval $(call make-program,pb-test-paloma,$(PB_TEST_PALOMA_SRCS)))
 
 # ----- bench
 # pb-bench-proto

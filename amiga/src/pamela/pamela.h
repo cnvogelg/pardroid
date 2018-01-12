@@ -4,7 +4,10 @@
 #include "pario.h"
 #include "timer.h"
 #include "proto.h"
+#include "proto_shared.h"
 #include "status.h"
+#include "reg.h"
+#include "offset.h"
 
 /* pamela init error codes */
 #define PAMELA_OK             0
@@ -17,6 +20,7 @@ struct pamela_handle {
   struct timer_handle *timer;
   struct proto_handle *proto;
   struct pario_port *port;
+  struct Library *sys_base;
   status_data_t  status;
 };
 

@@ -13,6 +13,7 @@ int pamela_init(pamela_handle_t *pb, struct Library *SysBase)
   pb->timer = NULL;
   pb->proto = NULL;
   pb->port = NULL;
+  pb->sys_base = SysBase;
 
   pb->pario = pario_init(SysBase);
   if(pb->pario == NULL) {

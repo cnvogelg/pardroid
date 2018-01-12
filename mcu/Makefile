@@ -77,10 +77,10 @@ PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c channel.c
 PALOMA_SRCS += paloma.c
 
 # handlers
-HANDLER_SRCS += hnd_echo.c hnd_null.c
+HANDLER_SRCS += hnd_echo.c hnd_null.c handler_list.c
 
 # drivers
-DRIVER_SRCS = driver.c blk_null.c
+DRIVER_SRCS = driver.c blk_null.c driver_list.c
 ifdef CONFIG_DRIVER_ENC28J60
 DRIVER_SRCS += enc28j60.c eth_enc.c
 DRIVER_INCLUDES += src/driver/enc28j60
