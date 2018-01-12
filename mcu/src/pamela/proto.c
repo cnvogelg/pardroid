@@ -80,10 +80,10 @@ void proto_handle(void)
   u08 chn = cmd & PROTO_CMD_SUB_MASK;
   switch(grp) {
     case PROTO_CMD_MSG_WRITE:
-      msg_write(chn);
+      proto_api_write_msg(chn);
       break;
     case PROTO_CMD_MSG_READ:
-      msg_read(chn);
+      proto_api_read_msg(chn);
       break;
     case PROTO_CMD_ACTION:
       action(chn);
@@ -95,3 +95,6 @@ void proto_handle(void)
 
   in_cmd = 0xff;
 }
+
+void proto_api_read_msg(u08 chn) __attribute__ ((weak, alias("msg_read")));
+void proto_api_write_msg(u08 chn) __attribute__ ((weak, alias("msg_write")));
