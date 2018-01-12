@@ -51,7 +51,7 @@ int reg_base_get_fw_id(proto_handle_t *ph, UWORD *fw_id)
   return reg_get(ph, BASE_REG_FW_ID, fw_id);
 }
 
-int reg_base_get_error(proto_handle_t *ph, UWORD *num_regs)
+int reg_base_get_event_mask(proto_handle_t *ph, UWORD *event_mask)
 {
-  return reg_get(ph, BASE_REG_ERROR, num_regs);
+  return reg_get(ph, BASE_REG_ERROR, event_mask);
 }

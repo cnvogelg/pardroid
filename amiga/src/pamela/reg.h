@@ -10,6 +10,6 @@ extern int reg_set(proto_handle_t *ph, UWORD num, UWORD val);
 extern int reg_base_get_fw_version(proto_handle_t *ph, UWORD *version);
 extern int reg_base_get_fw_machtag(proto_handle_t *ph, UWORD *machtag);
 extern int reg_base_get_fw_id(proto_handle_t *ph, UWORD *fw_id);
-extern int reg_base_get_error(proto_handle_t *ph, UWORD *error);
+extern int reg_base_get_event_mask(proto_handle_t *ph, UWORD *event_mask);
 
 #endif

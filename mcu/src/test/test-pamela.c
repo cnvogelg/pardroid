@@ -43,7 +43,7 @@ static void sim_error(u16 *valp, u08 mode)
   if(mode == REG_MODE_WRITE) {
     u08 e = *valp & 0xff;
     DS("sim:e"); DB(e); DNL;
-    status_set_error(e);
+    status_set_events(e);
   }
 }
 

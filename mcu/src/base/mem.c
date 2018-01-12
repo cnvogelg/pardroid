@@ -38,7 +38,7 @@ void mem_init(void)
 
   first_mi = mi;
   free_total = max_free;
-  DS("Bi:@"); DP(mem_int_start); DC('+'); DW(free_total); DNL;
+  DS("Bi:@"); DP(mem_start); DC('+'); DW(free_total); DNL;
 
   // place guard
   *(guard_ptr) = 0x42;

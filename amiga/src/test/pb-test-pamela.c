@@ -12,7 +12,7 @@
 #include "pamela.h"
 #include "proto.h"
 #include "test.h"
-#include "tests_proto.h"
+#include "tests_pamela.h"
 
 
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"

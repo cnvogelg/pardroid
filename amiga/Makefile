@@ -54,7 +54,7 @@ $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 
 # ----- tests
 # pb-test-pamela
-PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_proto.c
+PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_pamela.c
 $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
 
 # ----- bench

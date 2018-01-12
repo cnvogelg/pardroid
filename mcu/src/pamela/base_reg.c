@@ -15,10 +15,10 @@ REG_TABLE_BEGIN(base)
   REG_TABLE_RO_ROM_W(fw_version),
   REG_TABLE_RO_ROM_W(fw_machtag),
   REG_TABLE_RO_ROM_W(fw_id),
-  REG_TABLE_RO_FUNC(base_reg_get_error)
+  REG_TABLE_RO_FUNC(base_reg_get_event_mask)
 REG_TABLE_END(base, 0, 0)
 
-void base_reg_get_error(u16 *valp, u08 mode)
+void base_reg_get_event_mask(u16 *valp, u08 mode)
 {
-  *valp = status_get_error();
+  *valp = status_get_events();
 }

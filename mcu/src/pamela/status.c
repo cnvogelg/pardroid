@@ -13,7 +13,7 @@
 #include "proto.h"
 
 static u08 attached;
-static u08 error_code;
+static u08 events;
 static u08 pending_channel;
 static u08 irq_triggered;
 static u08 old_state;
@@ -21,7 +21,7 @@ static u08 old_state;
 void status_init(void)
 {
   attached = 0;
-  error_code = STATUS_NO_ERROR;
+  events = STATUS_NO_EVENTS;
   pending_channel = STATUS_NO_CHANNEL;
   irq_triggered = 0;
   old_state = 0;
@@ -45,6 +45,7 @@ void status_update(void)
   if(bits != old_state) {
     u08 cmd = proto_current_cmd();
     if(cmd == 0xff) {
+      // no command running -> update state now
       old_state = bits;
       DS("sw:"); DB(bits);
       u08 done = proto_low_set_status(bits);
@@ -54,8 +55,14 @@ void status_update(void)
         DS("?"); DNL;
       }
     } else {
+      // delay setting status as command is currently running
+      // status will be set after command ends
       DS("s-"); DNL;
     }
+    // trigger an IRQ to report status change
+    DS("I+"); DNL;
+    proto_low_ack_lo();
+    irq_triggered = 1;
   }
 }
 
@@ -66,8 +73,8 @@ u08 status_get_current(void)
   if(attached) {
     bits |= PROTO_STATUS_ATTACHED;
   }
-  if(error_code != 0) {
-    bits |= PROTO_STATUS_ERROR;
+  if(events != 0) {
+    bits |= PROTO_STATUS_EVENTS;
   }
   // if a channel is pending
   else if(pending_channel != STATUS_NO_CHANNEL) {
@@ -77,31 +84,31 @@ u08 status_get_current(void)
   return bits;
 }
 
-void status_set_error(u08 code)
+void status_set_events(u08 evmsk)
 {
-  error_code = code;
-  DS("e:"); DB(error_code); DNL;
+  events = evmsk;
+  DS("e:"); DB(events); DNL;
   status_update();
 }
 
-void status_set_error_mask(u08 mask)
+void status_set_event_mask(u08 mask)
 {
-  error_code |= mask;
-  DS("e+"); DB(error_code); DNL;
+  events |= mask;
+  DS("e+"); DB(events); DNL;
   status_update();
 }
 
-void status_clear_error_mask(u08 mask)
+void status_clear_event_mask(u08 mask)
 {
-  error_code &= ~mask;
-  DS("e-"); DB(error_code); DNL;
+  events &= ~mask;
+  DS("e-"); DB(events); DNL;
   status_update();
 }
 
-u08 status_get_error(void)
+u08 status_get_events(void)
 {
-  DS("e:"); DB(error_code); DNL;
-  return error_code;
+  DS("e:"); DB(events); DNL;
+  return events;
 }
 
 void status_attach(void)
@@ -130,11 +137,6 @@ void status_set_pending(u08 channel)
 {
   // no channel pending yet -> trigger ack irq
   DS("p+"); DB(channel); DNL;
-  if(pending_channel == STATUS_NO_CHANNEL) {
-    DS("I+"); DNL;
-    proto_low_ack_lo();
-    irq_triggered = 1;
-  }
   pending_channel = channel;
   status_update();
 }

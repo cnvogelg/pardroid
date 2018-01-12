@@ -625,7 +625,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 }
 
 #define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
-#define REG_SIM_ERROR   (PROTO_REGOFFSET_USER + 6)
+#define REG_SIM_EVENT   (PROTO_REGOFFSET_USER + 6)
 
 int test_status_read_pending(test_t *t, test_param_t *p)
 {
@@ -781,7 +781,7 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_status_error(test_t *t, test_param_t *p)
+int test_status_events(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
@@ -800,17 +800,17 @@ int test_status_error(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* create an error */
-  UBYTE error = (UBYTE)(p->iter + test_bias);
-  if(error == 0) {
-    error = 1;
+  /* create an event */
+  UBYTE event = (UBYTE)(p->iter + test_bias);
+  if(event == 0) {
+    event = 1;
   }
 
-  /* simulate an error */
-  res = reg_set(pb->proto, REG_SIM_ERROR, error);
+  /* simulate an event */
+  res = reg_set(pb->proto, REG_SIM_EVENT, event);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "sim_error #1";
+    p->section = "sim_event #1";
     return res;
   }
 
@@ -822,26 +822,26 @@ int test_status_error(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* assume error is set */
-  if(pb->status.flags != STATUS_FLAGS_ERROR) {
-    p->error = "status not error";
+  /* assume event is set */
+  if(pb->status.flags != STATUS_FLAGS_EVENTS) {
+    p->error = "status has no events";
     p->section = "main";
     return 1;
   }
 
-  /* check if correct error code was returned */
-  if(pb->status.error != error) {
-    p->error = "wrong error returned";
+  /* check if correct event mask was returned */
+  if(pb->status.event_mask != event) {
+    p->error = "wrong event mask returned";
     p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", error, pb->status.error);
+    sprintf(p->extra, "got=%02x want=%02x", event, pb->status.event_mask);
     return 1;
   }
 
-  /* simulate error removal */
-  reg_set(pb->proto, REG_SIM_ERROR, 0);
+  /* simulate event removal */
+  res = reg_set(pb->proto, REG_SIM_EVENT, 0);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "sim_error #2";
+    p->section = "sim_event #2";
     return res;
   }
 
@@ -935,7 +935,7 @@ int test_base_regs(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
-  UWORD fw_version, machtag, fw_id, error;
+  UWORD fw_version, machtag, fw_id, event;
 
   /* get fw_version */
   int res = reg_base_get_fw_version(pb->proto, &fw_version);
@@ -961,8 +961,8 @@ int test_base_regs(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* get error */
-  res = reg_base_get_error(pb->proto, &error);
+  /* get event */
+  res = reg_base_get_event_mask(pb->proto, &event);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_error failed";
@@ -976,8 +976,8 @@ int test_base_regs(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* assume no error */
-  if(error != 0) {
+  /* assume no event */
+  if(event != 0) {
     p->error = "device error set!";
     p->section = "check";
     return 1;

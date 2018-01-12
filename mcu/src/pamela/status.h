@@ -1,7 +1,7 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#define STATUS_NO_ERROR 0
+#define STATUS_NO_EVENTS  0
 #define STATUS_NO_CHANNEL 0xff
 
 extern void status_init(void);
@@ -10,10 +10,10 @@ extern void status_handle(void);
 
 extern u08  status_get_current(void);
 
-extern void status_set_error(u08 code);
-extern void status_set_error_mask(u08 mask);
-extern void status_clear_error_mask(u08 mask);
-extern u08  status_get_error(void);
+extern void status_set_events(u08 evmsk);
+extern void status_set_event_mask(u08 mask);
+extern void status_clear_event_mask(u08 mask);
+extern u08  status_get_events(void);
 
 extern void status_attach(void);
 extern void status_detach(void);

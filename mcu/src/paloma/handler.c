@@ -170,9 +170,9 @@ void handler_set_status(u08 chn, u08 status)
     data->status = status;
     u08 mask = 1 << chn;
     if(status == HANDLER_OK) {
-      status_clear_error_mask(mask);
+      status_clear_event_mask(mask);
     } else {
-      status_set_error_mask(mask);
+      status_set_event_mask(mask);
     }
   }
 }
