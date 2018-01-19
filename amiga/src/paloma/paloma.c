@@ -13,7 +13,8 @@ int paloma_init(paloma_handle_t *ph, pamela_handle_t *pm)
   ph->pamela_error = PAMELA_OK;
 
   /* perform a device reset first */
-  int res = proto_reset(pm->proto, 1);
+  proto_handle_t *proto = pamela_get_proto(pm);
+  int res = proto_reset(proto, 1);
   if(res != PAMELA_OK) {
     ph->pamela_error = res;
     return PALOMA_ERROR_IN_PAMELA;
@@ -25,7 +26,8 @@ int paloma_init(paloma_handle_t *ph, pamela_handle_t *pm)
 void paloma_exit(paloma_handle_t *ph)
 {
   /* on palome exit return device into knok mode */
-  proto_reset(ph->pamela->proto, 0);
+  proto_handle_t *proto = pamela_get_proto(ph->pamela);
+  proto_reset(proto, 0);
 }
 
 const char *paloma_perror(int res)

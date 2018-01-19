@@ -21,7 +21,7 @@
 
 struct engine_handle {
   worker_def_t      worker_def;
-  pamela_handle_t   pamela;
+  pamela_handle_t  *pamela;
   struct Library   *sys_base;
   struct SignalSemaphore sem;
   channel_t         *channels[NUM_CHANNELS];
@@ -36,23 +36,24 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
   engine_handle_t *eh = (engine_handle_t *)user_data;
 
   /* setup pamela */
-  pamela_handle_t *ph = &eh->pamela;
-  int res = pamela_init(ph, eh->sys_base);
+  int res;
+  pamela_handle_t *ph = pamela_init(eh->sys_base, &res);
   if(res != PAMELA_OK) {
     eh->result = ENGINE_RET_INIT_FAILED;
     return FALSE;
   }
+  eh->pamela = ph;
 
   /* setup signal-based timer */
-  struct timer_handle *th = ph->timer;
-  if(timer_sig_init(th) == -1) {
+  res = pamela_init_events(ph);
+  if(res != PAMELA_OK) {
     pamela_exit(ph);
     eh->result = ENGINE_RET_INIT_FAILED | PAMELA_ERROR_TIMER;
     return FALSE;
   }
 
   /* store timer sigmask */
-  *user_sig_mask = timer_sig_get_mask(th);
+  *user_sig_mask = pamela_get_timer_sigmask(ph);
 
   eh->result = ENGINE_RET_OK;
   return TRUE;
@@ -61,11 +62,10 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
 static void shutdown(void *user_data)
 {
   engine_handle_t *eh = (engine_handle_t *)user_data;
-  pamela_handle_t *ph = &eh->pamela;
+  pamela_handle_t *ph = eh->pamela;
 
   /* cleanup signal-based timer */
-  struct timer_handle *th = ph->timer;
-  timer_sig_exit(th);
+  pamela_exit_events(ph);
 
   /* cleanup pamela */
   pamela_exit(ph);
@@ -73,7 +73,7 @@ static void shutdown(void *user_data)
 
 static BOOL do_write(engine_handle_t *eh, channel_t *c, request_t *r)
 {
-  proto_handle_t *ph = eh->pamela.proto;
+  proto_handle_t *ph = pamela_get_proto(eh->pamela);
   UWORD num_words = r->length >> 1;
 
   /* perform immediate write */

@@ -36,7 +36,9 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
 int test_reset(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
-  int res = proto_reset(pb->proto, 1);
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  int res = proto_reset(proto, 1);
   if(res == 0) {
     return 0;
   } else {
@@ -49,9 +51,10 @@ int test_reset(test_t *t, test_param_t *p)
 int test_knok_enter_leave(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   // make sure knok mode is not enabled
-  int res = proto_knok_check(pb->proto);
+  int res = proto_knok_check(proto);
   if(res == PROTO_KNOK_FOUND) {
     p->error = "KNOK found!";
     p->section = "init";
@@ -59,7 +62,7 @@ int test_knok_enter_leave(test_t *t, test_param_t *p)
   }
 
   // try to enter knock mode
-  res = proto_reset(pb->proto, 0);
+  res = proto_reset(proto, 0);
   if(res != PROTO_RET_OK) {
     p->error = proto_perror(res);
     p->section = "knok enter";
@@ -67,7 +70,7 @@ int test_knok_enter_leave(test_t *t, test_param_t *p)
   }
 
   // make sure knok mode is enabled
-  res = proto_knok_check(pb->proto);
+  res = proto_knok_check(proto);
   if(res == PROTO_KNOK_NOT_FOUND) {
     p->error = "KNOK not found!";
     p->section = "main";
@@ -75,7 +78,7 @@ int test_knok_enter_leave(test_t *t, test_param_t *p)
   }
 
   // try to leave knock mode
-  res = proto_knok_exit(pb->proto);
+  res = proto_knok_exit(proto);
   if(res != PROTO_RET_OK) {
     p->error = proto_perror(res);
     p->section = "knok leave";
@@ -83,7 +86,7 @@ int test_knok_enter_leave(test_t *t, test_param_t *p)
   }
 
   // make sure knok mode is not enabled
-  res = proto_knok_check(pb->proto);
+  res = proto_knok_check(proto);
   if(res == PROTO_KNOK_FOUND) {
     p->error = "KNOK found!";
     p->section = "init";
@@ -96,7 +99,9 @@ int test_knok_enter_leave(test_t *t, test_param_t *p)
 int test_ping(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
-  int res = proto_action(pb->proto, PROTO_ACTION_PING);
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  int res = proto_action(proto, PROTO_ACTION_PING);
   if(res == 0) {
     return 0;
   } else {
@@ -109,9 +114,10 @@ int test_ping(test_t *t, test_param_t *p)
 int test_func_write(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   UWORD v = 0x4711;
 
-  int res = proto_function_write(pb->proto, PROTO_FUNC_REGADDR_SET, v);
+  int res = proto_function_write(proto, PROTO_FUNC_REGADDR_SET, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -123,9 +129,10 @@ int test_func_write(test_t *t, test_param_t *p)
 int test_func_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   UWORD v;
 
-  int res = proto_function_read(pb->proto, PROTO_FUNC_REGADDR_GET, &v);
+  int res = proto_function_read(proto, PROTO_FUNC_REGADDR_GET, &v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -137,10 +144,11 @@ int test_func_read(test_t *t, test_param_t *p)
 int test_func_write_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   UWORD v = (UWORD)p->iter + test_bias;
 
   /* write */
-  int res = proto_function_write(pb->proto, PROTO_FUNC_REGADDR_SET, v);
+  int res = proto_function_write(proto, PROTO_FUNC_REGADDR_SET, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -149,7 +157,7 @@ int test_func_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read(pb->proto, PROTO_FUNC_REGADDR_GET, &r);
+  res = proto_function_read(proto, PROTO_FUNC_REGADDR_GET, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -170,13 +178,15 @@ int test_func_write_read(test_t *t, test_param_t *p)
 int test_offset_write_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
   UWORD v = (UWORD)p->iter + test_bias;
   v %= PROTO_MAX_CHANNEL;
 
   ULONG val = 0xdeadbeef + v;
 
   /* write offset */
-  int res = offset_set(pb->proto, v, val);
+  int res = offset_set(proto, v, val);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "set";
@@ -185,7 +195,7 @@ int test_offset_write_read(test_t *t, test_param_t *p)
 
   /* read offset */
   ULONG off;
-  res = offset_get(pb->proto, v, &off);
+  res = offset_get(proto, v, &off);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get";
@@ -206,7 +216,9 @@ int test_offset_write_read(test_t *t, test_param_t *p)
 int test_msg_empty(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
-  int res = proto_msg_write_single(pb->proto, test_channel, 0, 0);
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  int res = proto_msg_write_single(proto, test_channel, 0, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -214,7 +226,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   }
 
   UWORD size = 0;
-  res = proto_msg_read_single(pb->proto, test_channel, 0, &size);
+  res = proto_msg_read_single(proto, test_channel, 0, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -234,8 +246,10 @@ int test_msg_empty(test_t *t, test_param_t *p)
 int test_msg_tiny(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
   ULONG data = 0xdeadbeef;
-  int res = proto_msg_write_single(pb->proto, test_channel, (UBYTE *)&data, 2);
+  int res = proto_msg_write_single(proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -243,7 +257,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   }
 
   UWORD size = 2;
-  res = proto_msg_read_single(pb->proto, test_channel, (UBYTE *)&data, &size);
+  res = proto_msg_read_single(proto, test_channel, (UBYTE *)&data, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -329,6 +343,7 @@ static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
 static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
   if(mem_w == 0) {
@@ -351,7 +366,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
   UWORD words = size>>1;
 
   /* send buffer */
-  int res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
+  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -360,7 +375,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  res = proto_msg_read_single(pb->proto, test_channel, mem_r, &got_words);
+  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -400,10 +415,11 @@ int test_msg_size(test_t *t, test_param_t *p)
 int test_msg_size_max(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   UWORD max_bytes;
 
   /* read max size from firmware */
-  int res = reg_get(pb->proto, REG_MAX_BYTES, &max_bytes);
+  int res = reg_get(proto, REG_MAX_BYTES, &max_bytes);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -416,6 +432,8 @@ int test_msg_size_max(test_t *t, test_param_t *p)
 int test_msg_size_chunks(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
   ULONG size = get_default_size();
   if(size < 4) {
     size = 4;
@@ -458,7 +476,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     c1_buf,
     &part2_w
   };
-  int res = proto_msg_write(pb->proto, test_channel, &msgiov_w);
+  int res = proto_msg_write(proto, test_channel, &msgiov_w);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -483,7 +501,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     c1_buf,
     &part2_r
   };
-  res = proto_msg_read(pb->proto, test_channel, &msgiov_r);
+  res = proto_msg_read(proto, test_channel, &msgiov_r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -524,6 +542,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
 int test_msg_write(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
@@ -538,7 +557,7 @@ int test_msg_write(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* send buffer */
-  int res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
+  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -552,11 +571,12 @@ int test_msg_write(test_t *t, test_param_t *p)
 int test_msg_write_too_large(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   UWORD size;
 
   /* read max size from firmware */
-  int res = reg_get(pb->proto, REG_MAX_BYTES, &size);
+  int res = reg_get(proto, REG_MAX_BYTES, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -578,7 +598,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* send buffer and expect msg to large */
-  res = proto_msg_write_single(pb->proto, test_channel, mem_w, words);
+  res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -592,6 +612,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
 int test_msg_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
   ULONG size = get_default_size();
   ULONG size_r = get_size(size);
 
@@ -606,7 +627,7 @@ int test_msg_read(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  int res = proto_msg_read_single(pb->proto, test_channel, mem_r, &got_words);
+  int res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -620,11 +641,12 @@ int test_msg_read(test_t *t, test_param_t *p)
 int test_msg_read_too_large(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   UWORD size;
 
   /* read max size from firmware */
-  int res = reg_get(pb->proto, REG_MAX_BYTES, &size);
+  int res = reg_get(proto, REG_MAX_BYTES, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -644,7 +666,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* receive buffer */
-  res = proto_msg_read_single(pb->proto, test_channel, mem_r, &words);
+  res = proto_msg_read_single(proto, test_channel, mem_r, &words);
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -655,23 +677,54 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   return 0;
 }
 
+/* ---------- status tests ----------------------------------------------- */
+
 #define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
 #define REG_SIM_EVENT   (PROTO_REGOFFSET_USER + 6)
+
+int test_status_timer_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, 1, 0, 0);
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  if((got & pamela_get_timer_sigmask(pb)) == 0) {
+    p->error = "no timer triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  if(got & pamela_get_event_sigmask(pb)) {
+    p->error = "ack triggered?!";
+    p->section = "main";
+    return 1;
+  }
+
+  return 0;
+}
 
 int test_status_read_pending(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   /* update status */
-  int res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #1";
-    return res;
-  }
+  status_data_t *status = pamela_update_status(pb);
 
   /* assume no flags set */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "pre";
     return 1;
@@ -680,7 +733,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim_pending */
-  res = reg_set(pb->proto, REG_SIM_PENDING, channel);
+  int res = reg_set(proto, REG_SIM_PENDING, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -688,29 +741,24 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #2";
-    return res;
-  }
+  pamela_update_status(pb);
 
   /* assume pending is set */
-  if(pb->status.flags != STATUS_FLAGS_PENDING) {
+  if(status->flags != STATUS_FLAGS_PENDING) {
     p->error = "status not pending";
     p->section = "main";
     return 1;
   }
 
   /* check that channel is set */
-  if(pb->status.pending_channel != channel) {
+  if(status->pending_channel != channel) {
     p->error = "wrong channel in status";
     p->section = "status";
-    sprintf(p->extra, "got=%02x want=%02x", (UWORD)pb->status.pending_channel, channel);
+    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status->pending_channel, channel);
   }
 
   /* sim_pending with no channel (0xff) */
-  res = reg_set(pb->proto, REG_SIM_PENDING, 0xff);
+  res = reg_set(proto, REG_SIM_PENDING, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
@@ -718,15 +766,10 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #3";
-    return res;
-  }
+  pamela_update_status(pb);
 
   /* assume pending is cleared again */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "post";
     return 1;
@@ -735,37 +778,21 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_status_ack_irq(test_t *t, test_param_t *p)
+int test_status_read_pending_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
-  /* alloc ack signal */
-  BYTE ackSig = AllocSignal(-1);
-  if(ackSig == -1) {
-    p->error = "no signal";
-    p->section = "init";
-    return 1;
-  }
-
-  /* setup ack irq handler */
-  struct Task *task = FindTask(NULL);
-  int error = pario_setup_ack_irq(pb->pario, task, ackSig);
-  if(error) {
-    p->error = "setup ack irq";
-    p->section = "init";
-    return 1;
-  }
-
-  /* setup signal timer */
-  error = timer_sig_init(pb->timer);
-  if(error == -1) {
-    p->error = "setup timer";
-    p->section = "init";
-    return 1;
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
   }
 
   /* sim pending */
-  int res = reg_set(pb->proto, REG_SIM_PENDING, 0);
+  res = reg_set(proto, REG_SIM_PENDING, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -773,37 +800,26 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
   }
 
   /* wait for either timeout or ack */
-  ULONG tmask = timer_sig_get_mask(pb->timer);
-  ULONG amask = 1 << ackSig;
-  ULONG mask =  tmask | amask;
-  timer_sig_start(pb->timer, 1, 0);
-  ULONG got = Wait(mask);
-  timer_sig_stop(pb->timer);
+  ULONG got = pamela_wait_event(pb, 1, 0, 0);
 
   /* sim pend_req_rem to restore state */
-  res = reg_set(pb->proto, REG_SIM_PENDING, 0xff);
+  res = reg_set(proto, REG_SIM_PENDING, 0xff);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
     return res;
   }
 
-  /* timer cleanup */
-  timer_sig_exit(pb->timer);
+  /* cleanup events */
+  pamela_exit_events(pb);
 
-  /* cleanup ack irq */
-  pario_cleanup_ack_irq(pb->pario);
-
-  /* free signal */
-  FreeSignal(ackSig);
-
-  if(got & tmask) {
+  if(got & pamela_get_timer_sigmask(pb)) {
     p->error = "timer triggered";
     p->section = "main";
     return 1;
   }
 
-  if((got & amask) == 0) {
+  if((got & pamela_get_event_sigmask(pb)) == 0) {
     p->error = "no ack triggered";
     p->section = "main";
     return 1;
@@ -815,17 +831,13 @@ int test_status_ack_irq(test_t *t, test_param_t *p)
 int test_status_events(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
- /* update status */
-  int res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #1";
-    return res;
-  }
+  /* update status */
+  status_data_t *status = pamela_update_status(pb);
 
   /* assume no flags set */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "pre";
     return 1;
@@ -838,38 +850,33 @@ int test_status_events(test_t *t, test_param_t *p)
   }
 
   /* simulate an event */
-  res = reg_set(pb->proto, REG_SIM_EVENT, event);
+  int res = reg_set(proto, REG_SIM_EVENT, event);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #1";
     return res;
   }
 
- /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #2";
-    return res;
-  }
+  /* update status */
+  pamela_update_status(pb);
 
   /* assume event is set */
-  if(pb->status.flags != STATUS_FLAGS_EVENTS) {
+  if(status->flags != STATUS_FLAGS_EVENTS) {
     p->error = "status has no events";
     p->section = "main";
     return 1;
   }
 
   /* check if correct event mask was returned */
-  if(pb->status.event_mask != event) {
+  if(status->event_mask != event) {
     p->error = "wrong event mask returned";
     p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", event, pb->status.event_mask);
+    sprintf(p->extra, "got=%02x want=%02x", event, status->event_mask);
     return 1;
   }
 
   /* simulate event removal */
-  res = reg_set(pb->proto, REG_SIM_EVENT, 0);
+  res = reg_set(proto, REG_SIM_EVENT, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #2";
@@ -877,15 +884,10 @@ int test_status_events(test_t *t, test_param_t *p)
   }
 
   /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #3";
-    return res;
-  }
+  pamela_update_status(pb);
 
   /* assume error is not set */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "post";
     return 1;
@@ -897,47 +899,38 @@ int test_status_events(test_t *t, test_param_t *p)
 int test_status_attach_detach(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
- /* update status */
-  int res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #1";
-    return res;
-  }
+  /* update status */
+  status_data_t *status = pamela_update_status(pb);
 
   /* assume no flags set */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "pre";
     return 1;
   }
 
   /* attach device */
-  res = proto_action(pb->proto, PROTO_ACTION_ATTACH);
+  int res = proto_action(proto, PROTO_ACTION_ATTACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "attach failed";
     return res;
   }
 
- /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #2";
-    return res;
-  }
+  /* update status */
+  pamela_update_status(pb);
 
   /* assume attached flag set */
-  if(pb->status.flags != STATUS_FLAGS_ATTACHED) {
+  if(status->flags != STATUS_FLAGS_ATTACHED) {
     p->error = "status not attached";
     p->section = "main";
     return 1;
   }
 
   /* detach device */
-  res = proto_action(pb->proto, PROTO_ACTION_DETACH);
+  res = proto_action(proto, PROTO_ACTION_DETACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "detach failed";
@@ -945,15 +938,10 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
   }
 
   /* update status */
-  res = status_update(pb->proto, &pb->status);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "status_update #3";
-    return res;
-  }
+  pamela_update_status(pb);
 
   /* assume error is not set */
-  if(pb->status.flags != STATUS_FLAGS_INIT) {
+  if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "post";
     return 1;
@@ -965,11 +953,12 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
 int test_base_regs(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
 
   UWORD fw_version, machtag, fw_id, event;
 
   /* get fw_version */
-  int res = reg_base_get_fw_version(pb->proto, &fw_version);
+  int res = reg_base_get_fw_version(proto, &fw_version);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_fw_version failed";
@@ -977,7 +966,7 @@ int test_base_regs(test_t *t, test_param_t *p)
   }
 
   /* get machtag */
-  res = reg_base_get_fw_machtag(pb->proto, &machtag);
+  res = reg_base_get_fw_machtag(proto, &machtag);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_fw_machtag failed";
@@ -985,7 +974,7 @@ int test_base_regs(test_t *t, test_param_t *p)
   }
 
   /* get fw_id */
-  res = reg_base_get_fw_id(pb->proto, &fw_id);
+  res = reg_base_get_fw_id(proto, &fw_id);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_fw_id failed";
@@ -993,7 +982,7 @@ int test_base_regs(test_t *t, test_param_t *p)
   }
 
   /* get event */
-  res = reg_base_get_event_mask(pb->proto, &event);
+  res = reg_base_get_event_mask(proto, &event);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "get_error failed";

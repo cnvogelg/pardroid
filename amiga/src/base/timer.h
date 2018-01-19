@@ -2,6 +2,7 @@
 #define TIMER_H
 
 struct timer_handle;
+typedef struct timer_handle timer_handle_t;
 
 extern struct timer_handle *timer_init(struct Library *SysBase);
 extern void timer_exit(struct timer_handle *th);

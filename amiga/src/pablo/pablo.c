@@ -208,7 +208,7 @@ static int do_verify(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t pb;
+  pamela_handle_t *pb;
   pblfile_t pf;
 
   /* First parse args */
@@ -254,12 +254,13 @@ int dosmain(void)
   /* open pamela */
   if(file_result == PBLFILE_OK) {
     /* setup pamela */
-    int pb_res = pamela_init(&pb, (struct Library *)SysBase);
+    int pb_res;
+    pb = pamela_init((struct Library *)SysBase, &pb_res);
     if(pb_res == PAMELA_OK) {
       bootinfo_t bi;
 
       PutStr("Entering bootloader...");
-      int bl_res = bootloader_enter(&pb, &bi);
+      int bl_res = bootloader_enter(pb, &bi);
       if(bl_res == BOOTLOADER_RET_OK) {
         PutStr("ok\n");
         show_bootinfo(&bi);
@@ -278,12 +279,12 @@ int dosmain(void)
 
         // flash?
         if((bl_res == BOOTLOADER_RET_OK) && params.flash) {
-          bl_res = do_flash(&pb, &bi, &pf);
+          bl_res = do_flash(pb, &bi, &pf);
         }
 
         // verify?
         if((bl_res == BOOTLOADER_RET_OK) && (params.verify || params.flash)) {
-          bl_res = do_verify(&pb, &bi, &pf);
+          bl_res = do_verify(pb, &bi, &pf);
         }
 
         // leave bootloader? - only if no error occurred
@@ -292,7 +293,7 @@ int dosmain(void)
         }
         else if(bl_res == BOOTLOADER_RET_OK) {
           PutStr("Leaving bootloader...");
-          bl_res = bootloader_leave(&pb);
+          bl_res = bootloader_leave(pb);
           if(bl_res == BOOTLOADER_RET_OK) {
             PutStr("ok\n");
           } else {
@@ -306,7 +307,7 @@ int dosmain(void)
         show_error(bl_res);
       }
 
-      pamela_exit(&pb);
+      pamela_exit(pb);
     } else {
       Printf("FAILED pamela: %s\n", pamela_perror(pb_res));
       res = RETURN_ERROR;

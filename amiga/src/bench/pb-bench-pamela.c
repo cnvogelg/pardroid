@@ -53,7 +53,7 @@ static ULONG get_size(void)
 static void bench_action(void *user_data)
 {
   pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
   PutStr("action bench");
 
   ULONG deltas[2] = { 0,0 };
@@ -67,13 +67,16 @@ typedef int (*loop_func_t)(proto_handle_t *ph, void *user_data);
 static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
                      loop_func_t func, void *user_data)
 {
+  timer_handle_t *timer = pamela_get_timer(pb);
+  proto_handle_t *proto = pamela_get_proto(pb);
+
   ULONG sum_size = 0;
   ULONG i;
   time_stamp_t start, end;
-  timer_eclock_get(pb->timer, &start);
+  timer_eclock_get(timer, &start);
 
   for(i=0;i<num;i++) {
-    int status = func(pb->proto, user_data);
+    int status = func(proto, user_data);
     if(status != PROTO_RET_OK) {
       Printf("ERROR: %lu = %s\n", status, proto_perror(status));
       break;
@@ -81,11 +84,11 @@ static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
     sum_size += size;
   }
 
-  timer_eclock_get(pb->timer, &end);
+  timer_eclock_get(timer, &end);
   time_stamp_t delta;
   timer_eclock_delta(&end, &start, &delta);
 
-  ULONG us = timer_eclock_to_us(pb->timer, &delta);
+  ULONG us = timer_eclock_to_us(timer, &delta);
   ULONG kbps = (sum_size * 1000UL) / us;
   Printf("#%lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, us, kbps);
 }
@@ -122,7 +125,7 @@ static int func_msg_write_read(proto_handle_t *ph, void *user_data)
 static void bench_msg_write(void *user_data)
 {
   pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
   ULONG num = get_num();
   ULONG size = get_size();
   Printf("message write: num=%lu, size=%lu\n", num, size);
@@ -143,7 +146,7 @@ static void bench_msg_write(void *user_data)
 static void bench_msg_read(void *user_data)
 {
   pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
   ULONG num = get_num();
   ULONG size = get_size();
   Printf("message read: num=%lu, size=%lu\n", num, size);
@@ -164,7 +167,7 @@ static void bench_msg_read(void *user_data)
 static void bench_msg_write_read(void *user_data)
 {
   pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
   ULONG num = get_num();
   ULONG size = get_size();
   Printf("message write/read: num=%lu, size=%lu\n", num, size);
@@ -195,7 +198,7 @@ static bench_def_t all_benches[] = {
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t pb;
+  pamela_handle_t *pb;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -207,22 +210,24 @@ int dosmain(void)
   int res = RETURN_ERROR;
 
   /* setup pamela */
-  res = pamela_init(&pb, (struct Library *)SysBase);
-  if(res == PAMELA_OK) {
+  int init_res;
+  pb = pamela_init((struct Library *)SysBase, &init_res);
+  if(init_res == PAMELA_OK) {
 
     /* reset firmware */
-    res = proto_reset(pb.proto, 1);
+    proto_handle_t *proto = pamela_get_proto(pb);
+    res = proto_reset(proto, 1);
     if(res == PROTO_RET_OK) {
 
       /* run test */
-      res = bench_main(all_benches, params.bench, &pb);
+      res = bench_main(all_benches, params.bench, pb);
 
     } else {
       PutStr(proto_perror(res));
       PutStr(" -> ABORT\n");
     }
 
-    pamela_exit(&pb);
+    pamela_exit(pb);
   } else {
     PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");

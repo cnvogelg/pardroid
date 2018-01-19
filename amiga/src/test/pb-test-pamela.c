@@ -85,7 +85,7 @@ void setup_test_config(test_param_t *p)
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t pb;
+  pamela_handle_t *ph;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -97,18 +97,19 @@ int dosmain(void)
   int res = RETURN_ERROR;
 
   /* setup pamela */
-  res = pamela_init(&pb, (struct Library *)SysBase);
-  if(res == PAMELA_OK) {
+  int init_res;
+  ph = pamela_init((struct Library *)SysBase, &init_res);
+  if(init_res == PAMELA_OK) {
 
     /* setup test */
     test_param_t param;
-    param.user_data = &pb;
+    param.user_data = ph;
     setup_test_config(&param);
 
     /* run test */
     res = test_main(all_tests, &param);
 
-    pamela_exit(&pb);
+    pamela_exit(ph);
   } else {
     PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");

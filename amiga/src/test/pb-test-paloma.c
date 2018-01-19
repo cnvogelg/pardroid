@@ -53,7 +53,7 @@ void setup_test_config(test_param_t *p)
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t pam;
+  pamela_handle_t *pam;
   paloma_handle_t pal;
 
   /* First parse args */
@@ -66,11 +66,12 @@ int dosmain(void)
   int res = RETURN_ERROR;
 
   /* setup pamela */
-  res = pamela_init(&pam, (struct Library *)SysBase);
+  int init_res;
+  pam = pamela_init((struct Library *)SysBase, &init_res);
   if(res == PAMELA_OK) {
 
     /* setup paloma */
-    res = paloma_init(&pal, &pam);
+    res = paloma_init(&pal, pam);
     if(res == PALOMA_OK) {
 
       /* setup test */
@@ -86,7 +87,7 @@ int dosmain(void)
       PutStr(paloma_perror(res));
       PutStr(" -> ABORT\n");
     }
-    pamela_exit(&pam);
+    pamela_exit(pam);
   } else {
     PutStr(pamela_perror(res));
     PutStr(" -> ABORT\n");

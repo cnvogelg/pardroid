@@ -13,10 +13,10 @@
 int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 {
   int res;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
 
-  /* first ping device */
-  res = proto_action(ph, PROTO_ACTION_PING);
+  /* first reset device */
+  res = proto_reset(ph, 1);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_PING | res;
   }
@@ -68,7 +68,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 int bootloader_update_fw_info(pamela_handle_t *pb, bootinfo_t *bi)
 {
   int res;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
 
   /* firmware crc */
   res = reg_get(ph, BOOTLOADER_REG_FW_CRC, &bi->fw_crc);
@@ -119,7 +119,7 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
                      void *user_data)
 {
   int res;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
 
   UWORD page_size = bi->page_size;
   UWORD page_words = page_size >> 1;
@@ -170,7 +170,7 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
                     void *user_data)
 {
   int res;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
 
   UWORD page_size = bi->page_size;
   UWORD page_words = page_size >> 1;
@@ -232,22 +232,10 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
 int bootloader_leave(pamela_handle_t *pb)
 {
   int res;
-  proto_handle_t *ph = pb->proto;
+  proto_handle_t *ph = pamela_get_proto(pb);
 
   /* reset device */
-  res = proto_action(ph, PROTO_ACTION_RESET);
-  if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_NO_BOOTLOADER | res;
-  }
-
-  /* try multiple times to ping the device */
-  for(int i=0;i<5;i++) {
-    /* ping device */
-    res = proto_action(ph, PROTO_ACTION_PING);
-    if(res == PROTO_RET_OK) {
-      break;
-    }
-  }
+  res = proto_reset(ph, 1);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_PING | res;
   }

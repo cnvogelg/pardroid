@@ -21,8 +21,9 @@ int test_msg_write(test_t *t, test_param_t *p);
 int test_msg_read(test_t *t, test_param_t *p);
 int test_msg_write_too_large(test_t *t, test_param_t *p);
 int test_msg_read_too_large(test_t *t, test_param_t *p);
+int test_status_timer_sig(test_t *t, test_param_t *p);
 int test_status_read_pending(test_t *t, test_param_t *p);
-int test_status_ack_irq(test_t *t, test_param_t *p);
+int test_status_read_pending_sig(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
@@ -44,8 +45,9 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_msg_read, "mr", "read message of given size"}, \
   { test_msg_write_too_large, "mwtl", "write too large message"}, \
   { test_msg_read_too_large, "mrtl", "read too large message"}, \
+  { test_status_timer_sig, "sts", "test status timeout signal"}, \
   { test_status_read_pending, "sp", "test status read pending flag"}, \
-  { test_status_ack_irq, "sa", "test ack irq on first pending read request"}, \
+  { test_status_read_pending_sig, "spi", "test ack irq on read pending flag"}, \
   { test_status_events, "se", "test status event mask" }, \
   { test_status_attach_detach, "sad", "test attach/detach" }, \
   { test_base_regs, "br", "test base regs" }, \

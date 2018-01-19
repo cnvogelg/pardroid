@@ -14,13 +14,12 @@ void status_init(status_data_t *data)
 {
   data->pending_channel = STATUS_NO_CHANNEL;
   data->event_mask = STATUS_NO_EVENTS;
-  data->flags = STATUS_FLAGS_INIT;
+  data->flags = STATUS_FLAGS_NONE;
+  data->last_res = PROTO_RET_OK;
 }
 
-int status_update(proto_handle_t *ph, status_data_t *data)
+void status_update(proto_handle_t *ph, status_data_t *data)
 {
-  int res = PROTO_RET_OK;
-
   // get state byte
   UBYTE state = proto_get_status(ph);
 
@@ -32,7 +31,7 @@ int status_update(proto_handle_t *ph, status_data_t *data)
     data->flags &= ~STATUS_FLAGS_EVENTS;
     data->flags |= STATUS_FLAGS_PENDING;
   } else {
-    data->flags = 0;
+    data->flags = STATUS_FLAGS_NONE;
     data->pending_channel = STATUS_NO_CHANNEL;
     data->event_mask = STATUS_NO_EVENTS;
     if(state & PROTO_STATUS_BOOTLOADER) {
@@ -44,12 +43,15 @@ int status_update(proto_handle_t *ph, status_data_t *data)
     if(state & PROTO_STATUS_EVENTS) {
       data->flags |= STATUS_FLAGS_EVENTS;
 
-      // try to read error mask
+      // try to read event mask
       UWORD e;
-      res = reg_base_get_event_mask(ph, &e);
-      data->event_mask = (UBYTE)e;
+      data->last_res = reg_base_get_event_mask(ph, &e);
+      if(data->last_res == PROTO_RET_OK) {
+        data->event_mask = (UBYTE)e;
+      } else {
+        data->flags |= STATUS_FLAGS_NO_MASK;
+        data->event_mask = 0;
+      }
     }
   }
-
-  return res;
 }
