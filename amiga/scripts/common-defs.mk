@@ -17,6 +17,8 @@ ASFLAGS = $(ASFLAGS_COMMON) $(CFLAGS_INCLUDES) $(ASFLAGS_ARCH)
 LDFLAGS_DEBUG = -g
 LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_ARCH) $(LDFLAGS_DEBUG)
 
+LHASFX_STUB = contrib/lhasfx/lhasfx.stub
+
 # ----- program generation -----
 # list of programs, created by make-prgoram
 PROGRAMS :=
@@ -36,7 +38,6 @@ map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 define make-program
 PROGRAMS += $1
 BIN_FILES += $(BIN_DIR)/$1
-DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 .PHONY: $1
 $1: $(BIN_DIR)/$1
@@ -44,9 +45,15 @@ $1: $(BIN_DIR)/$1
 $(BIN_DIR)/$1: $(call map-src-to-tgt,$2 $(PRG_SRCS))
 	@echo "  LD   $$(@F)"
 	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+
+endef
+
+# dist-program
+# $1 = program name
+define dist-program
+DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 $(DIST_DIR)/$1$(DIST_TAG): $(BIN_DIR)/$1
-	@echo "  DIST  $$(@F)"
+	@echo "  DIST $$(@F)"
 	$(H)cp $$< $$@
 endef
 
@@ -56,7 +63,6 @@ endef
 define crunch-program
 PROGRAMS += $1
 BIN_FILES += $(BIN_DIR)/$1
-DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 .PHONY: $1
 $1: $(BIN_DIR)/$1
@@ -65,10 +71,37 @@ $(BIN_DIR)/$1: $(BIN_DIR)/$2
 	@echo "  CRUNCH  $$(@F)"
 	$(H)$(CRUNCHER) $$< $$@
 	@stat -f '  -> %z bytes' $$@
+endef
 
-$(DIST_DIR)/$1$(DIST_TAG): $(BIN_DIR)/$1
-	@echo "  DIST  $$(@F)"
-	$(H)cp $$< $$@
+# create-lha
+# $1 = out lha file
+# $2 = contents
+define create-lha
+PROGRAMS += $1
+BIN_FILES += $(BIN_DIR)/$1
+
+.PHONY: $1
+$1: $(BIN_DIR)/$1
+
+$(BIN_DIR)/$1: $(patsubst %,$(BIN_DIR)/%,$2)
+	@echo "  LHA  $$(@F)"
+	$(H)cd $(BIN_DIR) && $(LHA) $1 $2
+	@stat -f '  -> %z bytes' $$@
+endef
+
+# sfx-lha
+# $1 = out run file
+# $2 = in lha file
+define sfx-lha
+PROGRAMS += $1
+BIN_FILES += $(BIN_DIR)/$1
+
+.PHONY: $1
+$1: $(BIN_DIR)/$1
+
+$(BIN_DIR)/$1: $(BIN_DIR)/$2
+	@echo "  SFX  $$(@F)"
+	$(H)cat $(LHASFX_STUB) $$< > $$@
 endef
 
 # create dirs

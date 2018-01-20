@@ -56,15 +56,18 @@ $(eval $(call make-program,test-engine,$(TEST_ENGINE_SRCS)))
 # pb-test-pamela
 PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_pamela.c
 $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
+$(eval $(call dist-program,pb-test-pamela))
 
 # pb-test-paloma
 PB_TEST_PALOMA_SRCS = pb-test-paloma.c $(PAMELA_SRCS) $(PALOMA_SRCS) $(TEST_SRCS) tests_paloma.c
 $(eval $(call make-program,pb-test-paloma,$(PB_TEST_PALOMA_SRCS)))
+$(eval $(call dist-program,pb-test-paloma))
 
 # ----- bench
 # pb-bench-proto
 PB_BENCH_PAMELA_SRCS = pb-bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
 $(eval $(call make-program,pb-bench-pamela,$(PB_BENCH_PAMELA_SRCS)))
+$(eval $(call dist-program,pb-bench-pamela))
 
 # ----- tools
 # parbox-engine
@@ -78,11 +81,20 @@ $(eval $(call make-program,parbox-client,$(PARBOX_CLIENT_SRCS)))
 # pablo
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PAMELA_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
+$(eval $(call dist-program,pablo))
 
-# bootstrap
+# ----- bootstrap
+# boot.bin
 BOOTSTRAP_SRCS = bootstrap.c $(PAMELA_SRCS)
 $(eval $(call make-program,bootstrap,$(PABLO_SRCS)))
 $(eval $(call crunch-program,boot.bin,bootstrap))
+$(eval $(call dist-program,boot.bin))
+
+# boot.run
+BOOTRUN_FILES = pablo
+$(eval $(call create-lha,boot.lha,$(BOOTRUN_FILES)))
+$(eval $(call sfx-lha,boot.run,boot.lha))
+$(eval $(call dist-program,boot.run))
 
 # rules
 include scripts/common-rules.mk

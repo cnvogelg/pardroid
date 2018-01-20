@@ -1,6 +1,7 @@
 CC=vc
 AS=vasmm68k_mot
 CRUNCHER=shrinkler >/dev/null -h
+LHA=lha a -0
 
 VBCC_TOOLCHAIN ?= /opt/m68k-amigaos/m68k-amigaos/vbcc/
 MINSTART_OBJ = $(VBCC_TOOLCHAIN)/lib/minstart.o
