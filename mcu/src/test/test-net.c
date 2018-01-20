@@ -17,14 +17,6 @@
 #include "param.h"
 
 #include "driver.h"
-#include "driver_list.h"
-
-// driver
-DRIVER_TABLE_BEGIN
-#ifdef CONFIG_DRIVER_ENC28J60
-  DRIVER_TABLE_ENTRY(eth_enc),
-#endif
-DRIVER_TABLE_END
 
 int main(void)
 {

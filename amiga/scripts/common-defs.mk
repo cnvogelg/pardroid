@@ -50,6 +50,27 @@ $(DIST_DIR)/$1-$(DIST_TAG): $(BIN_DIR)/$1
 	$(H)cp $$< $$@
 endef
 
+# crunch-program rules
+# $1 = out program name
+# $2 = in program name
+define crunch-program
+PROGRAMS += $1
+BIN_FILES += $(BIN_DIR)/$1
+DIST_FILES += $(call map-dist,$1-$(DIST_TAG))
+
+.PHONY: $1
+$1: $(BIN_DIR)/$1
+
+$(BIN_DIR)/$1: $(BIN_DIR)/$2
+	@echo "  CRUNCH  $$(@F)"
+	$(H)$(CRUNCHER) $$< $$@
+	@stat -f '  -> %z bytes' $$@
+
+$(DIST_DIR)/$1-$(DIST_TAG): $(BIN_DIR)/$1
+	@echo "  DIST  $$(@F)"
+	$(H)cp $$< $$@
+endef
+
 # create dirs
 ifneq "$(MAKECMDGOALS)" "clean"
 create_dir = $(shell test -d $1 || mkdir -p $1)

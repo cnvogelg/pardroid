@@ -82,13 +82,10 @@ $(eval $(call make-program,parbox-client,$(PARBOX_CLIENT_SRCS)))
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PAMELA_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 
-# bootstrap: crunched pablo
-PROGRAMS += bootstrap
-bootstrap: $(BIN_DIR)/bootstrap
-$(BIN_DIR)/bootstrap: $(BIN_DIR)/pablo
-	@echo "  BOOTSTRAP "
-	$(H)shrinkler -h $< $@ >/dev/null
-	@stat -f '%z bytes' $@
+# bootstrap
+BOOTSTRAP_SRCS = bootstrap.c $(PAMELA_SRCS)
+$(eval $(call make-program,bootstrap,$(PABLO_SRCS)))
+$(eval $(call crunch-program,boot.bin,bootstrap))
 
 # rules
 include scripts/common-rules.mk

@@ -8,7 +8,6 @@
 
 #include "bootloader.h"
 #include "uart.h"
-#include "uartutil.h"
 #include "proto.h"
 #include "proto_low.h"
 #include "flash.h"
@@ -24,12 +23,22 @@ static u08 page_buf[SPM_PAGESIZE];
 
 // action
 ACTION_TABLE_BEGIN
-  ACTION_PROTO_BOOTLOADER
+  // 0: PING
+  ACTION_TABLE_FUNC(action_ping),
+  // 1: PING
+  ACTION_TABLE_FUNC(action_ping),
+  // 2: BOOTLOADER
+  ACTION_TABLE_FUNC_FLAGS(action_bootloader, ACTION_FLAG_NO_REPLY),
+  // 3: RESET
+  ACTION_TABLE_FUNC_FLAGS(action_reset, ACTION_FLAG_END_BEFORE),
 ACTION_TABLE_END
 
 // ----- functions -----
 FUNC_TABLE_BEGIN
-  FUNC_PROTO_BOOTLOADER
+  FUNC_TABLE_GET_FUNC(func_regaddr_get),
+  FUNC_TABLE_SET_FUNC(func_regaddr_set),
+  FUNC_TABLE_GET_FUNC(func_reg_read),
+  FUNC_TABLE_SET_FUNC(func_reg_write),
 FUNC_TABLE_END
 
 // ro registers
@@ -114,7 +123,6 @@ int main(void)
       u16 rom_mach_tag = pablo_get_mach_tag();
       if(rom_mach_tag == MACHTAG) {
         uart_send('O');
-        uart_send_crlf();
         // run app if valid
         run_app(rst_flag);
       }
@@ -148,7 +156,6 @@ u08 *proto_api_read_msg_prepare(u08 chan, u16 *size, u16 *extra)
 void proto_api_read_msg_done(u08 chan, u08 status)
 {
   uart_send('.');
-  uart_send_crlf();
 }
 
 u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
@@ -169,7 +176,6 @@ void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
     uart_send('?');
     status = BOOT_STATUS_INVALID_PAGE_SIZE;
   }
-  uart_send_crlf();
 }
 
 u08 proto_api_get_end_status(void)

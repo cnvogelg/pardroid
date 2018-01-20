@@ -35,6 +35,7 @@ all-configs:
 
 dist-configs:
 	@for a in $(ALL_CONFIGS) ; do \
+		echo "--- $$a ---" ; \
 		$(MAKE) CONFIG=$$a dist || exit 1 ; \
 	done
 

@@ -17,6 +17,8 @@ help:
 clean:
 	@rm -rf $(DIST_NAME) $(DIST_NAME).zip
 	@rm -rf $(SNAP_NAME) $(SNAP_NAME).zip
+	@rm -rf amiga/DIST amiga/BUILD
+	@rm -rf mcu/DIST mcu/BUILD
 
 dist:
 	@$(MAKE) pack PACK_NAME=$(DIST_NAME)
@@ -29,10 +31,10 @@ pack:
 	@rm -rf $(PACK_NAME) $(PACK_NAME).zip
 	# amiga
 	@mkdir -p $(PACK_NAME)/amiga
-	@$(MAKE) -C amiga dist DIST_DIR=$(PWD)/$(PACK_NAME)/amiga
+	@$(MAKE) -C amiga dist DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/amiga
 	# mcu
 	@mkdir -p $(PACK_NAME)/mcu
-	@$(MAKE) -C mcu dist-configs DIST_DIR=$(PWD)/$(PACK_NAME)/mcu
+	@$(MAKE) -C mcu dist-configs DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/mcu
 	# other files
 	@cp -a $(DISTFILES) $(PACK_NAME)
 	@zip -r $(PACK_NAME).zip $(PACK_NAME)

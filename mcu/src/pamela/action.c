@@ -12,10 +12,6 @@
 #include "status.h"
 #include "proto.h"
 
-void action_nop(void)
-{
-}
-
 void action_ping(void)
 {
   DC('p'); DNL;
@@ -53,7 +49,7 @@ void action_handle(u08 num)
   if(num >= max) {
     DC('?'); DNL;
     // wait for invalid action to time out
-    proto_low_wait_cflg_hi();
+    action_ping();
     return;
   } else {
     u08 flags = read_rom_char(&action_table[num].flags);

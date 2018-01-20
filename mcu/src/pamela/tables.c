@@ -8,8 +8,8 @@
 
 // ----- actions -----
 ACTION_TABLE_BEGIN
-  // 0: NOP
-  ACTION_TABLE_FUNC_FLAGS(action_nop, ACTION_FLAG_NO_REPLY),
+  // 0: PING
+  ACTION_TABLE_FUNC(action_ping),
   // 1: PING
   ACTION_TABLE_FUNC(action_ping),
   // 2: BOOTLOADER

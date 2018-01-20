@@ -30,12 +30,6 @@ extern const func_table_entry_t func_table[] ROM_ATTR;
 #define FUNC_TABLE_GET_FUNC_LONG(x)    { .func.flong = x, .flags = FUNC_FLAG_NONE|FUNC_FLAG_LONG }
 #define FUNC_TABLE_SET_FUNC_LONG(x)    { .func.flong = x, .flags = FUNC_FLAG_SET|FUNC_FLAG_LONG }
 
-#define FUNC_PROTO_BOOTLOADER \
-  FUNC_TABLE_GET_FUNC(func_regaddr_get), \
-  FUNC_TABLE_SET_FUNC(func_regaddr_set), \
-  FUNC_TABLE_GET_FUNC(func_reg_read), \
-  FUNC_TABLE_SET_FUNC(func_reg_write), \
-
 extern void func_handle(u08 num);
 
 extern void func_regaddr_set(u16 *valp);

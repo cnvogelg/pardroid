@@ -45,7 +45,7 @@ CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
 
 # generated bootstrap code
-BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/bootstrap
+BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/boot.bin
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
 BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
 BOOTSTRAP_KNOK = $(BUILD_DIR)/bootstrap.knok
@@ -196,7 +196,8 @@ $(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)
 ifndef DEBUG
 ifdef CONFIG_BOOTLOADER
 # bootloader
-BOOTLOADER_SRCS = $(BASE_SRCS) proto.c reg.c action.c func.c bootloader.c flash.c
+BOOTLOADER_SRCS = uart.c system.c pablo.c
+BOOTLOADER_SRCS += proto.c reg.c action.c func.c bootloader.c flash.c
 BOOTLOADER_SRCS += $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
