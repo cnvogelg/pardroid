@@ -41,9 +41,6 @@ dummy := $(info arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH))
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
 CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 
-# dist tag
-DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
-
 # generated bootstrap code
 BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/boot.bin
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h

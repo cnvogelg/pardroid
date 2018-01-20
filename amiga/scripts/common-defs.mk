@@ -36,7 +36,7 @@ map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 define make-program
 PROGRAMS += $1
 BIN_FILES += $(BIN_DIR)/$1
-DIST_FILES += $(call map-dist,$1-$(DIST_TAG))
+DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 .PHONY: $1
 $1: $(BIN_DIR)/$1
@@ -45,7 +45,7 @@ $(BIN_DIR)/$1: $(call map-src-to-tgt,$2 $(PRG_SRCS))
 	@echo "  LD   $$(@F)"
 	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+
 
-$(DIST_DIR)/$1-$(DIST_TAG): $(BIN_DIR)/$1
+$(DIST_DIR)/$1$(DIST_TAG): $(BIN_DIR)/$1
 	@echo "  DIST  $$(@F)"
 	$(H)cp $$< $$@
 endef
@@ -56,7 +56,7 @@ endef
 define crunch-program
 PROGRAMS += $1
 BIN_FILES += $(BIN_DIR)/$1
-DIST_FILES += $(call map-dist,$1-$(DIST_TAG))
+DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 .PHONY: $1
 $1: $(BIN_DIR)/$1
@@ -66,7 +66,7 @@ $(BIN_DIR)/$1: $(BIN_DIR)/$2
 	$(H)$(CRUNCHER) $$< $$@
 	@stat -f '  -> %z bytes' $$@
 
-$(DIST_DIR)/$1-$(DIST_TAG): $(BIN_DIR)/$1
+$(DIST_DIR)/$1$(DIST_TAG): $(BIN_DIR)/$1
 	@echo "  DIST  $$(@F)"
 	$(H)cp $$< $$@
 endef

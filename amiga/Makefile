@@ -9,9 +9,6 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 # version
 include ../version.mk
 
-# dist tag
-DIST_TAG=$(CONFIG_BASE)-$(VERSION_MAJOR).$(VERSION_MINOR)
-
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/pamela src/engine src/pablo src/paloma

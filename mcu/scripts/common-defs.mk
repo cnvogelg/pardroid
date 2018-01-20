@@ -78,14 +78,14 @@ endef
 # dist-pablo
 # $1 = program name
 define dist-pbl
-DIST_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
-PBL_FILES += $(call map-dist,$1-$(DIST_TAG).pbl)
+DIST_FILES += $(call map-dist,$1$(DIST_TAG).pbl)
+PBL_FILES += $(call map-dist,$1$(DIST_TAG).pbl)
 FILES_$1 += $(call map-bin,$1.pbl)
 
 $1-prog-img: $(call map-bin,$1.img) $1-check
 	$(call prog-firmware,$$<,$$(<F))
 
-$(DIST_DIR)/$1-$(DIST_TAG).pbl: $(BIN_DIR)/$1.pbl
+$(DIST_DIR)/$1$(DIST_TAG).pbl: $(BIN_DIR)/$1.pbl
 	@echo "  DIST  $$(@F)"
 	$(H)cp $$< $$@
 endef
@@ -93,10 +93,10 @@ endef
 # dist-hex
 # $1 = program name
 define dist-hex
-DIST_FILES += $(call map-dist,$1-$(DIST_TAG).hex)
+DIST_FILES += $(call map-dist,$1$(DIST_TAG).hex)
 FILES_$1 += $(call map-bin,$1.hex)
 
-$(DIST_DIR)/$1-$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
+$(DIST_DIR)/$1$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
 	@echo "  DIST  $$(@F)"
 	$(H)cp $$< $$@
 endef
