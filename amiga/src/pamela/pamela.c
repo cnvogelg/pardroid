@@ -131,6 +131,9 @@ int pamela_init_events(pamela_handle_t *ph)
   ph->ack_irq_sigmask = 1 << ph->ack_irq_signal;
   ph->timer_sigmask = 1 << ph->timer_signal;
 
+  /* initial status update */
+  status_update(ph->proto, &ph->status);
+
   return PAMELA_OK;
 }
 

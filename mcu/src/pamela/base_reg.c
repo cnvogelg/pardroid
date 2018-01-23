@@ -21,4 +21,6 @@ REG_TABLE_END(base, 0, 0)
 void base_reg_get_event_mask(u16 *valp, u08 mode)
 {
   *valp = status_get_events();
+  // clear events after reading
+  status_clear_events();
 }

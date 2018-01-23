@@ -10,6 +10,7 @@ extern void status_handle(void);
 
 extern u08  status_get_current(void);
 
+extern void status_clear_events(void);
 extern void status_set_events(u08 evmsk);
 extern void status_set_event_mask(u08 mask);
 extern void status_clear_event_mask(u08 mask);

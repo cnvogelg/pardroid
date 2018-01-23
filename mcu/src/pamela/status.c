@@ -99,6 +99,13 @@ u08 status_get_current(void)
   return bits;
 }
 
+void status_clear_events(void)
+{
+  events = 0;
+  DS("e=0"); DNL;
+  status_update();
+}
+
 void status_set_events(u08 evmsk)
 {
   events = evmsk;

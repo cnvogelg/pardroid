@@ -16,12 +16,19 @@ void status_init(status_data_t *data)
   data->event_mask = STATUS_NO_EVENTS;
   data->flags = STATUS_FLAGS_NONE;
   data->last_res = PROTO_RET_OK;
+  data->last_state = 0xff;
 }
 
-void status_update(proto_handle_t *ph, status_data_t *data)
+int status_update(proto_handle_t *ph, status_data_t *data)
 {
   // get state byte
   UBYTE state = proto_get_status(ph);
+
+  // anything changed?
+  if(state == data->last_state) {
+    return FALSE;
+  }
+  data->last_state = state;
 
   // decode state byte
   // a read is pending
@@ -54,4 +61,5 @@ void status_update(proto_handle_t *ph, status_data_t *data)
       }
     }
   }
+  return TRUE;
 }

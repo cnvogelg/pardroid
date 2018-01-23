@@ -15,11 +15,11 @@ typedef struct {
   UBYTE  pending_channel;
   UBYTE  event_mask;
   UBYTE  flags;
-  UBYTE  pad;
+  UBYTE  last_state;
   int    last_res;
 } status_data_t;
 
 extern void status_init(status_data_t *data);
-extern void status_update(proto_handle_t *ph, status_data_t *data);
+extern int status_update(proto_handle_t *ph, status_data_t *data);
 
 #endif

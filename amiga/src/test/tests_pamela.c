@@ -782,6 +782,7 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
 
   /* init events */
   int res = pamela_init_events(pb);
@@ -791,16 +792,39 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
     return res;
   }
 
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  UWORD channel = (p->iter + test_bias) & 7;
+
   /* sim pending */
-  res = reg_set(proto, REG_SIM_PENDING, 0);
+  res = reg_set(proto, REG_SIM_PENDING, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
     return res;
   }
 
-  /* wait for either timeout or ack */
+  /* wait for either timeout or event */
   ULONG got = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume pending is set */
+  if(status->flags != STATUS_FLAGS_PENDING) {
+    p->error = "status not pending";
+    p->section = "main";
+    return 1;
+  }
+
+  /* check that channel is set */
+  if(status->pending_channel != channel) {
+    p->error = "wrong channel in status";
+    p->section = "status";
+    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status->pending_channel, channel);
+  }
 
   /* sim pend_req_rem to restore state */
   res = reg_set(proto, REG_SIM_PENDING, 0xff);
@@ -810,9 +834,20 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
     return res;
   }
 
+  /* wait again and assume return to non-pending state */
+  ULONG got2 = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume pending is cleared again */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "post";
+    return 1;
+  }
+
   /* cleanup events */
   pamela_exit_events(pb);
 
+  /* first wait: assume event: pending */
   if(got & pamela_get_timer_sigmask(pb)) {
     p->error = "timer triggered";
     p->section = "main";
@@ -820,6 +855,19 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
   }
 
   if((got & pamela_get_event_sigmask(pb)) == 0) {
+    p->error = "no ack triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  /* second wait: assume event: no pending*/
+  if(got2 & pamela_get_timer_sigmask(pb)) {
+    p->error = "timer triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  if((got2 & pamela_get_event_sigmask(pb)) == 0) {
     p->error = "no ack triggered";
     p->section = "main";
     return 1;
@@ -857,7 +905,7 @@ int test_status_events(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* update status */
+  /* update status: consume event and read event mask */
   pamela_update_status(pb);
 
   /* assume event is set */
@@ -875,21 +923,136 @@ int test_status_events(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* simulate event removal */
-  res = reg_set(proto, REG_SIM_EVENT, 0);
+  /* read event register and assume it to be cleared */
+  UWORD val;
+  res = reg_base_get_event_mask(proto, &val);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #2";
     return res;
   }
+  if(val != 0) {
+    p->error = "event mask not cleared";
+    p->section = "after";
+    return 1;
+  }
 
-  /* update status */
+  /* update status again. no event */
   pamela_update_status(pb);
 
   /* assume error is not set */
   if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_status_events_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
+  }
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* create an event */
+  UBYTE event = (UBYTE)(p->iter + test_bias);
+  if(event == 0) {
+    event = 1;
+  }
+
+  /* simulate an event */
+  res = reg_set(proto, REG_SIM_EVENT, event);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "sim_event #1";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume event is set */
+  if(status->flags != STATUS_FLAGS_EVENTS) {
+    p->error = "status has no events";
+    p->section = "main";
+    return 1;
+  }
+
+  /* check if correct event mask was returned */
+  if(status->event_mask != event) {
+    p->error = "wrong event mask returned";
+    p->section = "main";
+    sprintf(p->extra, "got=%02x want=%02x", event, status->event_mask);
+    return 1;
+  }
+
+  /* read event register and assume it to be cleared */
+  UWORD val;
+  res = reg_base_get_event_mask(proto, &val);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "sim_event #2";
+    return res;
+  }
+  if(val != 0) {
+    p->error = "event mask not cleared";
+    p->section = "after";
+    return 1;
+  }
+
+  /* wait again and assume timeout, no more events */
+  ULONG got2 = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume error is not set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "post";
+    return 1;
+  }
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  /* first wait: assume event */
+  if(got & pamela_get_timer_sigmask(pb)) {
+    p->error = "timer triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  if((got & pamela_get_event_sigmask(pb)) == 0) {
+    p->error = "no ack triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  /* second wait: assume time out */
+  if((got2 & pamela_get_timer_sigmask(pb)) == 0) {
+    p->error = "no timer triggered";
+    p->section = "after";
+    return 1;
+  }
+
+  if(got2 & pamela_get_event_sigmask(pb)) {
+    p->error = "ack triggered";
+    p->section = "after";
     return 1;
   }
 
@@ -944,6 +1107,95 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
   if(status->flags != STATUS_FLAGS_NONE) {
     p->error = "status not init";
     p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_status_attach_detach_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
+  }
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* attach device */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach failed";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume attached flag set */
+  if(status->flags != STATUS_FLAGS_ATTACHED) {
+    p->error = "status not attached";
+    p->section = "main";
+    return 1;
+  }
+
+  /* detach device */
+  res = proto_action(proto, PROTO_ACTION_DETACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "detach failed";
+    return res;
+  }
+
+  /* wait again and assume event: detach */
+  ULONG got2 = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume error is not set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "post";
+    return 1;
+  }
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  /* first wait: assume event */
+  if(got & pamela_get_timer_sigmask(pb)) {
+    p->error = "timer triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  if((got & pamela_get_event_sigmask(pb)) == 0) {
+    p->error = "no ack triggered";
+    p->section = "main";
+    return 1;
+  }
+
+  /* second wait: assume time out */
+  if((got2 & pamela_get_timer_sigmask(pb)) == 0) {
+    p->error = "no timer triggered";
+    p->section = "after";
+    return 1;
+  }
+
+  if(got2 & pamela_get_event_sigmask(pb)) {
+    p->error = "ack triggered";
+    p->section = "after";
     return 1;
   }
 

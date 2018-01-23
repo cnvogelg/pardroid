@@ -25,6 +25,7 @@ int test_status_timer_sig(test_t *t, test_param_t *p);
 int test_status_read_pending(test_t *t, test_param_t *p);
 int test_status_read_pending_sig(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);
+int test_status_events_sig(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
 
@@ -47,9 +48,11 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_msg_read_too_large, "mrtl", "read too large message"}, \
   { test_status_timer_sig, "sts", "test status timeout signal"}, \
   { test_status_read_pending, "sp", "test status read pending flag"}, \
-  { test_status_read_pending_sig, "spi", "test ack irq on read pending flag"}, \
+  { test_status_read_pending_sig, "spi", "test signal on read pending flag"}, \
   { test_status_events, "se", "test status event mask" }, \
+  { test_status_events_sig, "sei", "test signal on status event mask" }, \
   { test_status_attach_detach, "sad", "test attach/detach" }, \
+  { test_status_attach_detach_sig, "sadi", "test signal on attach/detach" }, \
   { test_base_regs, "br", "test base regs" }, \
 
 #endif
