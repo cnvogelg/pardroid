@@ -75,15 +75,17 @@ $(BIN_DIR)/$1.elf: $(call map-src-to-tgt,$2)
 	$(H)$(CC) $(CFLAGS) $$^ -o $$@ $(LDFLAGS) $4
 endef
 
-# dist-pablo
+# make-pbl
+# $1 = program name
+define make-pbl
+PBL_FILES += $(call map-dist,$1$(DIST_TAG).pbl)
+FILES_$1 += $(call map-bin,$1.pbl)
+endef
+
+# dist-pbl
 # $1 = program name
 define dist-pbl
 DIST_FILES += $(call map-dist,$1$(DIST_TAG).pbl)
-PBL_FILES += $(call map-dist,$1$(DIST_TAG).pbl)
-FILES_$1 += $(call map-bin,$1.pbl)
-
-$1-prog-img: $(call map-bin,$1.img) $1-check
-	$(call prog-firmware,$$<,$$(<F))
 
 $(DIST_DIR)/$1$(DIST_TAG).pbl: $(BIN_DIR)/$1.pbl
 	@echo "  DIST  $$(@F)"
@@ -94,7 +96,6 @@ endef
 # $1 = program name
 define dist-hex
 DIST_FILES += $(call map-dist,$1$(DIST_TAG).hex)
-FILES_$1 += $(call map-bin,$1.hex)
 
 $(DIST_DIR)/$1$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
 	@echo "  DIST  $$(@F)"

@@ -111,7 +111,6 @@ TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
 FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-base-fw))
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-param
@@ -119,7 +118,6 @@ TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
 FW_ID_test-param-fw = 0x8008
 FW_VER_test-param-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-param-fw))
 $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-enc28j60
@@ -128,7 +126,6 @@ TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
 FW_ID_test-enc28j60-fw = 0x8006
 FW_VER_test-enc28j60-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-enc28j60-fw))
 $(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
@@ -138,7 +135,6 @@ TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_SDCARD_SRCS += test-sdcard.c sdcard.c
 FW_ID_test-sdcard-fw = 0x8004
 FW_VER_test-scard-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-sdcard-fw))
 $(eval $(call make-firmware,test-sdcard-fw,$(TEST_SDCARD_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
@@ -148,7 +144,6 @@ TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c
 FW_ID_test-wiznet-fw = 0x8005
 FW_VER_test-wiznet-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-wiznet-fw))
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
@@ -158,7 +153,6 @@ TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
 FW_ID_test-ufat-fw = 0x8008
 FW_VER_test-ufat-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-ufat-fw))
 $(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
@@ -168,7 +162,6 @@ TEST_NET_SRCS += test-net.c driver.c
 TEST_NET_SRCS += $(DRIVER_SRCS)
 FW_ID_test-net-fw = 0x8007
 FW_VER_test-net-fw = $(VERSION_TAG)
-$(eval $(call dist-hex,test-net-fw))
 $(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-pamela
@@ -177,6 +170,7 @@ TEST_PAMELA_SRCS += test-pamela.c
 FW_ID_test-pamela-fw = 0x8002
 FW_VER_test-pamela-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-pamela-fw))
+$(eval $(call gen-pbl,test-pamela-fw))
 $(eval $(call dist-hex,test-pamela-fw))
 $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
@@ -187,6 +181,7 @@ TEST_PALOMA_SRCS += test-paloma.c
 FW_ID_test-paloma-fw = 0x8003
 FW_VER_test-paloma-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-paloma-fw))
+$(eval $(call gen-pbl,test-paloma-fw))
 $(eval $(call dist-hex,test-paloma-fw))
 $(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
