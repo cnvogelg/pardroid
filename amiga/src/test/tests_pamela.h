@@ -27,6 +27,7 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);
 int test_status_events_sig(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
+int test_status_attach_detach_sig(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
 
 #define TESTS_PAMELA_ALL \
