@@ -30,11 +30,28 @@ void status_init(void)
 void status_handle(void)
 {
   // reset irq if it was set
-  if(irq_triggered) {
+  if(irq_triggered == 1) {
     irq_triggered = 0;
     proto_low_ack_hi();
     DS("I-"); DNL;
   }
+}
+
+static void trigger_irq(void)
+{
+  // trigger an IRQ to report status change
+  DS("I+"); DNL;
+  proto_low_ack_lo();
+  irq_triggered = 1;
+}
+
+static u08 after_cmd(void)
+{
+  // delayed irq?
+  if(irq_triggered == 2) {
+    trigger_irq();
+  }
+  return status_get_current();
 }
 
 void status_update(void)
@@ -54,15 +71,13 @@ void status_update(void)
       } else {
         DS("?"); DNL;
       }
+      trigger_irq();
     } else {
       // delay setting status as command is currently running
       // status will be set after command ends
       DS("s-"); DNL;
+      irq_triggered = 2;
     }
-    // trigger an IRQ to report status change
-    DS("I+"); DNL;
-    proto_low_ack_lo();
-    irq_triggered = 1;
   }
 }
 
@@ -153,4 +168,4 @@ u08 status_is_pending(void)
   return pending_channel != STATUS_NO_CHANNEL;
 }
 
-u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));
+u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("after_cmd")));
