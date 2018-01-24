@@ -26,4 +26,8 @@ extern void pario_cleanup_ack_irq(struct pario_handle *ph);
 
 extern struct pario_port *pario_get_port(struct pario_handle *ph);
 
+extern UWORD pario_get_ack_irq_counter(struct pario_handle *ph);
+extern UWORD pario_get_signal_counter(struct pario_handle *ph);
+extern void pario_confirm_ack_irq(struct pario_handle *ph);
+
 #endif

@@ -21,6 +21,7 @@ struct timer_handle {
   struct timerequest timerReq;
   struct timerequest sigTimerReq;
   struct Library *timerBase;
+  ULONG           timerSigMask;
   ULONG           eClockFreq;
   ULONG           syncSigMask;
   BYTE            syncSig;
@@ -215,7 +216,9 @@ BYTE timer_sig_init(struct timer_handle *th)
     th->sigTimerReq.tr_node.io_Device = th->timerReq.tr_node.io_Device;
     th->sigTimerReq.tr_node.io_Unit = th->timerReq.tr_node.io_Unit;
     th->sigTimerReq.tr_node.io_Command = TR_ADDREQUEST;
-    th->sigTimerReq.tr_node.io_Flags = IOF_QUICK;
+    th->sigTimerReq.tr_node.io_Flags = 0;
+
+    th->timerSigMask = 1UL << th->sigTimerPort->mp_SigBit;
 
     return th->sigTimerPort->mp_SigBit;
   } else {
@@ -234,7 +237,9 @@ void timer_sig_exit(struct timer_handle *th)
     th->initFlags &= ~16;
 
     struct IORequest *req = (struct IORequest *)&th->sigTimerReq;
-    AbortIO(req);
+    if(!CheckIO(req)) {
+      AbortIO(req);
+    }
     WaitIO(req);
 
     DeleteMsgPort(th->sigTimerPort);
@@ -245,12 +250,15 @@ void timer_sig_start(struct timer_handle *th, ULONG secs, ULONG micros)
 {
   th->sigTimerReq.tr_time.tv_secs = secs;
   th->sigTimerReq.tr_time.tv_micro = micros;
+  SetSignal(0, th->timerSigMask);
   SendIO((struct IORequest*)&th->sigTimerReq);
 }
 
 void timer_sig_stop(struct timer_handle *th)
 {
   struct IORequest *req = (struct IORequest *)&th->sigTimerReq;
-  AbortIO(req);
+  if(!CheckIO(req)) {
+    AbortIO(req);
+  }
   WaitIO(req);
 }

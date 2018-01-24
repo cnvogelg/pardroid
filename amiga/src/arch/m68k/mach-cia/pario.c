@@ -24,6 +24,10 @@ struct pario_handle {
   struct Library *sysBase; /* +0: sysBase */
   struct Task *sigTask;    /* +4: sigTask */
   ULONG sigMask;           /* +8: sigMask */
+  UWORD sent_signal;       /* +12: signal already sent */
+  UWORD irq_counter;       /* +14: count irqs */
+  UWORD sig_counter;       /* +16: count signals sent */
+  UWORD dummy;
 
   ULONG initFlags;
   struct Library *miscBase;
@@ -169,6 +173,13 @@ int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE sign
   ph->sigTask = sigTask;
   ph->sigMask = 1 << signal;
 
+  ph->irq_counter = 0;
+  ph->sig_counter = 0;
+  ph->sent_signal = 0;
+
+  // clear signal
+  SetSignal(0, ph->sigMask);
+
   Disable();
   if (!AddICRVector(CIAABase, CIAICRB_FLG, &ph->ackIrq)) {
     /* disable pending irqs first */
@@ -207,5 +218,25 @@ void pario_cleanup_ack_irq(struct pario_handle *ph)
   /* remove vector */
   RemICRVector(CIAABase, CIAICRB_FLG, &ph->ackIrq);
 
+  // clear signal
+  SetSignal(0, ph->sigMask);
+
   ph->initFlags &= ~4;
 }
+
+UWORD pario_get_ack_irq_counter(struct pario_handle *ph)
+{
+  return ph->irq_counter;
+}
+
+UWORD pario_get_signal_counter(struct pario_handle *ph)
+{
+  return ph->sig_counter;
+}
+
+void pario_confirm_ack_irq(struct pario_handle *ph)
+{
+  ph->sent_signal = 0;
+  SetSignal(0, ph->sigMask);
+}
+

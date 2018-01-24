@@ -12,14 +12,6 @@ int paloma_init(paloma_handle_t *ph, pamela_handle_t *pm)
   ph->pamela = pm;
   ph->pamela_error = PAMELA_OK;
 
-  /* perform a device reset first */
-  proto_handle_t *proto = pamela_get_proto(pm);
-  int res = proto_reset(proto, 1);
-  if(res != PAMELA_OK) {
-    ph->pamela_error = res;
-    return PALOMA_ERROR_IN_PAMELA;
-  }
-
   return PALOMA_OK;
 }
 

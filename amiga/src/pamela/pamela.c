@@ -61,9 +61,16 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res)
     return NULL;
   }
 
+  /* perform a device reset first */
+  *res = proto_reset(ph->proto, 1);
+  if(*res != PAMELA_OK) {
+    pamela_exit(ph);
+    return NULL;
+  }
+
+  /* init status */
   status_init(&ph->status);
 
-  *res = PAMELA_OK;
   return ph;
 }
 
@@ -121,7 +128,7 @@ int pamela_init_events(pamela_handle_t *ph)
 
   /* setup signal timer */
   ph->timer_signal = timer_sig_init(ph->timer);
-  if(error == -1) {
+  if(ph->timer_signal == -1) {
     pario_cleanup_ack_irq(ph->pario);
     FreeSignal(ph->ack_irq_signal);
     ph->ack_irq_signal = -1;
@@ -159,10 +166,16 @@ ULONG pamela_wait_event(pamela_handle_t *ph,
                         ULONG timeout_s, ULONG timeout_us, ULONG extra_sigmask)
 {
   /* wait for either timeout or ack */
-  ULONG mask =  ph->ack_irq_sigmask | ph->timer_sigmask | extra_sigmask;
+  ULONG ack_mask = ph->ack_irq_sigmask;
+  ULONG mask = ack_mask | ph->timer_sigmask | extra_sigmask;
   timer_sig_start(ph->timer, timeout_s, timeout_us);
   ULONG got = Wait(mask);
   timer_sig_stop(ph->timer);
+
+  // confirm ack irq
+  if(got & ack_mask) {
+    pario_confirm_ack_irq(ph->pario);
+  }
 
   // update status
   status_update(ph->proto, &ph->status);
@@ -188,6 +201,16 @@ status_data_t *pamela_update_status(pamela_handle_t *ph)
 status_data_t *pamela_get_status(pamela_handle_t *ph)
 {
   return &ph->status;
+}
+
+UWORD pamela_get_num_events(pamela_handle_t *ph)
+{
+  return pario_get_ack_irq_counter(ph->pario);
+}
+
+UWORD pamela_get_num_event_signals(pamela_handle_t *ph)
+{
+  return pario_get_signal_counter(ph->pario);
 }
 
 const char *pamela_perror(int res)

@@ -12,10 +12,14 @@
 #include "proto_shared.h"
 #include "proto.h"
 
+#define IRQ_FLAG_NONE       0
+#define IRQ_FLAG_REQUEST    1
+#define IRQ_FLAG_ACTIVE     2
+
 static u08 attached;
 static u08 events;
 static u08 pending_channel;
-static u08 irq_triggered;
+static u08 irq_flags;
 static u08 old_state;
 
 void status_init(void)
@@ -23,35 +27,25 @@ void status_init(void)
   attached = 0;
   events = STATUS_NO_EVENTS;
   pending_channel = STATUS_NO_CHANNEL;
-  irq_triggered = 0;
+  irq_flags = IRQ_FLAG_NONE;
   old_state = 0;
 }
 
 void status_handle(void)
 {
+  // enable ack irq
+  if(irq_flags & IRQ_FLAG_REQUEST)
+  {
+    irq_flags = IRQ_FLAG_ACTIVE;
+    proto_low_ack_lo();
+    DS("I+"); DNL;
+  }
   // reset irq if it was set
-  if(irq_triggered == 1) {
-    irq_triggered = 0;
+  else if(irq_flags & IRQ_FLAG_ACTIVE) {
+    irq_flags &= ~IRQ_FLAG_ACTIVE;
     proto_low_ack_hi();
     DS("I-"); DNL;
   }
-}
-
-static void trigger_irq(void)
-{
-  // trigger an IRQ to report status change
-  DS("I+"); DNL;
-  proto_low_ack_lo();
-  irq_triggered = 1;
-}
-
-static u08 after_cmd(void)
-{
-  // delayed irq?
-  if(irq_triggered == 2) {
-    trigger_irq();
-  }
-  return status_get_current();
 }
 
 void status_update(void)
@@ -60,24 +54,21 @@ void status_update(void)
 
   // set bits
   if(bits != old_state) {
+    DS("su:"); DB(bits);
     u08 cmd = proto_current_cmd();
     if(cmd == 0xff) {
       // no command running -> update state now
-      old_state = bits;
-      DS("sw:"); DB(bits);
       u08 done = proto_low_set_status(bits);
       if(done) {
         DS("."); DNL;
       } else {
         DS("?"); DNL;
       }
-      trigger_irq();
-    } else {
-      // delay setting status as command is currently running
-      // status will be set after command ends
-      DS("s-"); DNL;
-      irq_triggered = 2;
     }
+    irq_flags |= IRQ_FLAG_REQUEST;
+    old_state = bits;
+  } else {
+    DS("su="); DB(bits); DNL;
   }
 }
 
@@ -175,4 +166,4 @@ u08 status_is_pending(void)
   return pending_channel != STATUS_NO_CHANNEL;
 }
 
-u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("after_cmd")));
+u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));
