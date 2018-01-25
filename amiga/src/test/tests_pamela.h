@@ -22,6 +22,7 @@ int test_msg_read(test_t *t, test_param_t *p);
 int test_msg_write_too_large(test_t *t, test_param_t *p);
 int test_msg_read_too_large(test_t *t, test_param_t *p);
 int test_status_timer_sig(test_t *t, test_param_t *p);
+int test_status_reset_sig(test_t *t, test_param_t *p);
 int test_status_read_pending(test_t *t, test_param_t *p);
 int test_status_read_pending_sig(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);

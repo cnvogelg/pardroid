@@ -54,7 +54,7 @@ void status_update(void)
 
   // set bits
   if(bits != old_state) {
-    DS("su:"); DB(bits);
+    DS("su:"); DB(bits); DC('<'); DB(old_state);
     u08 cmd = proto_current_cmd();
     if(cmd == 0xff) {
       // no command running -> update state now
@@ -65,7 +65,16 @@ void status_update(void)
         DS("?"); DNL;
       }
     }
-    irq_flags |= IRQ_FLAG_REQUEST;
+
+    // issue irq if event or pending was set
+    u08 changed = bits ^ old_state;
+    if((changed & PROTO_STATUS_READ_PENDING) && (bits & PROTO_STATUS_READ_PENDING)) {
+      irq_flags |= IRQ_FLAG_REQUEST;
+    }
+    if((changed & PROTO_STATUS_EVENTS) && (bits & PROTO_STATUS_EVENTS)) {
+      irq_flags |= IRQ_FLAG_REQUEST;
+    }
+
     old_state = bits;
   } else {
     DS("su="); DB(bits); DNL;
