@@ -17,18 +17,20 @@
 #define IRQ_FLAG_ACTIVE     2
 
 static u08 attached;
-static u08 events;
-static u08 pending_channel;
+static u08 event_mask;
+static u08 pending_mask;
 static u08 irq_flags;
 static u08 old_state;
+static u08 pending_channel;
 
 void status_init(void)
 {
   attached = 0;
-  events = STATUS_NO_EVENTS;
-  pending_channel = STATUS_NO_CHANNEL;
+  event_mask = 0;
+  pending_mask = 0;
   irq_flags = IRQ_FLAG_NONE;
   old_state = 0;
+  pending_channel = 7;
 }
 
 void status_handle(void)
@@ -88,50 +90,53 @@ u08 status_get_current(void)
   if(attached) {
     bits |= PROTO_STATUS_ATTACHED;
   }
-  if(events != 0) {
+  if(event_mask != 0) {
     bits |= PROTO_STATUS_EVENTS;
   }
   // if a channel is pending
-  else if(pending_channel != STATUS_NO_CHANNEL) {
+  else if(pending_mask != 0) {
     bits = pending_channel << 4 | PROTO_STATUS_READ_PENDING;
   }
   DS("sr:"); DB(bits); DNL;
   return bits;
 }
 
+// ----- events -----
+
 void status_clear_events(void)
 {
-  events = 0;
-  DS("e=0"); DNL;
+  event_mask = 0;
+  DS("e0"); DNL;
   status_update();
 }
 
 void status_set_events(u08 evmsk)
 {
-  events = evmsk;
-  DS("e:"); DB(events); DNL;
+  event_mask = evmsk;
+  DS("e="); DB(event_mask); DNL;
   status_update();
 }
 
 void status_set_event_mask(u08 mask)
 {
-  events |= mask;
-  DS("e+"); DB(events); DNL;
+  event_mask |= mask;
+  DS("e+"); DB(event_mask); DNL;
   status_update();
 }
 
 void status_clear_event_mask(u08 mask)
 {
-  events &= ~mask;
-  DS("e-"); DB(events); DNL;
+  event_mask &= ~mask;
+  DS("e-"); DB(event_mask); DNL;
   status_update();
 }
 
-u08 status_get_events(void)
+u08 status_get_event_mask(void)
 {
-  DS("e:"); DB(events); DNL;
-  return events;
+  return event_mask;
 }
+
+// ----- attach/detach -----
 
 void status_attach(void)
 {
@@ -155,24 +160,104 @@ void status_detach(void)
   status_update();
 }
 
-void status_set_pending(u08 channel)
+// ----- read pending -----
+
+static u08 find_next_channel(u08 mask, u08 chn)
+{
+  for(u08 i=0;i<8;i++) {
+    chn = (chn + 1) & 7;
+    u08 bmask = 1 << chn;
+    if(mask & bmask) {
+      return chn;
+    }
+  }
+  return 0xff;
+}
+
+static void pending_update(u08 new_mask)
+{
+  // nothing has changed
+  if(new_mask == pending_mask) {
+    DS("u="); DNL;
+    return;
+  }
+
+  u08 do_update = 0;
+
+  // old mask was zero. find next channel
+  if(pending_mask == 0) {
+    // new mask has at least one bit set
+    pending_channel = find_next_channel(new_mask, pending_channel);
+    DS("N="); DB(pending_channel);
+    do_update = 1;
+  }
+  // pending mask was set
+  else {
+    // if current pending channel was cleared then find next
+    u08 pc_mask = 1 << pending_channel;
+    if((pc_mask & new_mask) == 0) {
+      // any remaining pending bits set?
+      u08 rem_mask = new_mask & ~pc_mask;
+      if(rem_mask != 0) {
+        pending_channel = find_next_channel(new_mask, pending_channel);
+        DS("n="); DB(pending_channel);
+      } else {
+        // no pending anymore
+        DC('z');
+      }
+      do_update = 1;
+    }
+    // if current pending channel is still pending then keep it
+    // and do not update status
+    else {
+      DC('k');
+    }
+  }
+
+  // done
+  pending_mask = new_mask;
+  if(do_update) {
+    status_update();
+  }
+
+  DNL;
+}
+
+void status_set_pending(u08 pmask)
 {
   // no channel pending yet -> trigger ack irq
-  DS("p+"); DB(channel); DNL;
-  pending_channel = channel;
-  status_update();
+  DS("p="); DB(pmask);
+  pending_update(pmask);
 }
 
 void status_clear_pending(void)
 {
-  DS("p-"); DNL;
-  pending_channel = STATUS_NO_CHANNEL;
-  status_update();
+  DS("p0");
+  pending_update(0);
 }
 
-u08 status_is_pending(void)
+void status_reset_pending(void)
 {
-  return pending_channel != STATUS_NO_CHANNEL;
+  DS("p0r");
+  pending_update(0);
+  pending_channel = 7;
+}
+
+u08 status_get_pending_mask(void)
+{
+  return pending_mask;
+}
+
+void status_set_pending_mask(u08 mask)
+{
+  DS("p+"); DB(mask);
+  pending_update(pending_mask | mask);
+}
+
+void status_clear_pending_mask(u08 mask)
+{
+  DS("p-"); DB(mask);
+  pending_update(pending_mask & ~mask);
 }
 
 u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));

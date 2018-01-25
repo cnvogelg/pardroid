@@ -1,26 +1,30 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#define STATUS_NO_EVENTS  0
-#define STATUS_NO_CHANNEL 0xff
-
 extern void status_init(void);
 extern void status_update(void);
 extern void status_handle(void);
 
 extern u08  status_get_current(void);
 
+// DEBUG
 extern void status_clear_events(void);
-extern void status_set_events(u08 evmsk);
+extern void status_set_events(u08 emask);
+
 extern void status_set_event_mask(u08 mask);
 extern void status_clear_event_mask(u08 mask);
-extern u08  status_get_events(void);
+extern u08  status_get_event_mask(void);
 
 extern void status_attach(void);
 extern void status_detach(void);
 
-extern void status_set_pending(u08 channel);
+// DEBUG
+extern void status_set_pending(u08 pmask);
 extern void status_clear_pending(void);
-extern u08  status_is_pending(void);
+extern void status_reset_pending(void);
+
+extern u08  status_get_pending_mask(void);
+extern void status_set_pending_mask(u08 mask);
+extern void status_clear_pending_mask(u08 mask);
 
 #endif

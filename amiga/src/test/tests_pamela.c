@@ -682,6 +682,9 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 #define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
 #define REG_SIM_EVENT   (PROTO_REGOFFSET_USER + 6)
 
+#define SIM_PENDING_RESET 0x100
+#define SIM_PENDING_CLEAR 0x200
+
 #define WAIT_S      0UL
 #define WAIT_US     10000UL
 
@@ -784,7 +787,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim_pending */
-  int res = reg_set(proto, REG_SIM_PENDING, channel);
+  int res = reg_set(proto, REG_SIM_PENDING, 1 << channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -810,7 +813,7 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   }
 
   /* sim_pending with no channel (0xff) */
-  res = reg_set(proto, REG_SIM_PENDING, 0xff);
+  res = reg_set(proto, REG_SIM_PENDING, SIM_PENDING_RESET);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
@@ -854,7 +857,7 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
   UWORD channel = (p->iter + test_bias) & 7;
 
   /* sim pending */
-  res = reg_set(proto, REG_SIM_PENDING, channel);
+  res = reg_set(proto, REG_SIM_PENDING, 1 << channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #1";
@@ -880,7 +883,7 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
   }
 
   /* sim pend_req_rem to restore state */
-  res = reg_set(proto, REG_SIM_PENDING, 0xff);
+  res = reg_set(proto, REG_SIM_PENDING, SIM_PENDING_RESET);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_pending #2";
