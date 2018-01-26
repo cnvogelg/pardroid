@@ -68,32 +68,13 @@ UBYTE proto_get_status(proto_handle_t *ph)
   return proto_low_get_status(port);
 }
 
-int proto_knok_check(proto_handle_t *ph)
-{
-  struct pario_port *port = ph->port;
-  return proto_low_knok_check(port);
-}
-
-int proto_knok_exit(proto_handle_t *ph)
+int proto_wait_init(proto_handle_t *ph)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_knok_enter_exit(port, timeout_flag, 1);
-  timer_stop(ph->timer);
-
-  return result;
-}
-
-int proto_knok_wait(proto_handle_t *ph)
-{
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-
-  // wait until knok mode is active
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_knok_enter_exit(port, timeout_flag, 0);
+  int result = proto_low_wait_init(port, timeout_flag);
   timer_stop(ph->timer);
 
   return result;
@@ -103,25 +84,18 @@ int proto_reset(proto_handle_t *ph, int exit_knok)
 {
   int res;
 
-  // if knok active then leave first
-  if(proto_knok_check(ph) == PROTO_KNOK_FOUND) {
-    res = proto_knok_exit(ph);
+  if(exit_knok) {
+    // perform reset action
+    res = proto_action(ph, PROTO_ACTION_RESET);
     if(res != PROTO_RET_OK) {
       return res;
     }
-  }
 
-  // perform reset action
-  res = proto_action(ph, PROTO_ACTION_RESET);
-  if(res != PROTO_RET_OK) {
-    return res;
-  }
-
-  // perform knok exit
-  if(exit_knok) {
-    return proto_knok_exit(ph);
+    // wait for end of knok, i.e. busy/rak went hi
+    return proto_wait_init(ph);
   } else {
-    return proto_knok_wait(ph);
+    // perform delay reset action
+    return proto_action(ph, PROTO_ACTION_DELAY_RESET);
   }
 }
 

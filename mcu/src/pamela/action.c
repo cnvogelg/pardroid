@@ -11,6 +11,7 @@
 #include "action.h"
 #include "status.h"
 #include "proto.h"
+#include "timer.h"
 
 void action_ping(void)
 {
@@ -22,6 +23,14 @@ void action_bootloader(void)
   /* do a sys reset but do not reply to command of master
      this will be done by bootloader itself */
   DC('b'); DNL;
+  system_sys_reset();
+}
+
+void action_delay_reset(void)
+{
+  DC('R'); DNL;
+  system_wdt_reset();
+  timer_delay(200);
   system_sys_reset();
 }
 

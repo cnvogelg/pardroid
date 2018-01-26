@@ -17,6 +17,8 @@
 #define PAMELA_ERROR_NO_SIGNAL  4
 #define PAMELA_ERROR_ACK_IRQ    5
 #define PAMELA_ERROR_TIMER_SIG  6
+#define PAMELA_ERROR_RESET      7
+#define PAMELA_ERROR_WAIT_INIT  8
 
 struct pamela_handle;
 typedef struct pamela_handle pamela_handle_t;

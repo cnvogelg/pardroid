@@ -61,9 +61,18 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res)
     return NULL;
   }
 
+  /* wait for device init if we left knok with proto init */
+  int pres = proto_wait_init(ph->proto);
+  if(pres != PROTO_RET_OK) {
+    *res = PAMELA_ERROR_WAIT_INIT;
+    pamela_exit(ph);
+    return NULL;
+  }
+
   /* perform a device reset first */
-  *res = proto_reset(ph->proto, 1);
-  if(*res != PAMELA_OK) {
+  pres = proto_reset(ph->proto, 1);
+  if(pres != PROTO_RET_OK) {
+    *res = PAMELA_ERROR_RESET;
     pamela_exit(ph);
     return NULL;
   }
@@ -71,6 +80,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res)
   /* init status */
   status_init(&ph->status);
 
+  *res = PAMELA_OK;
   return ph;
 }
 
@@ -233,6 +243,10 @@ const char *pamela_perror(int res)
       return "pamela: ack irq";
     case PAMELA_ERROR_TIMER_SIG:
       return "pamela: timer sig";
+    case PAMELA_ERROR_RESET:
+      return "pamela: failed device reset";
+    case PAMELA_ERROR_WAIT_INIT:
+      return "pamela: failed wait for device init";
     default:
       return "pamela: unknown error!";
   }

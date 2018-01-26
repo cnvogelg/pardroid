@@ -11,11 +11,10 @@
 #define STROBE_FLAG_BUFFER_FILLED  4
 #define STROBE_FLAG_IS_BUSY        8
 
-#define STROBE_KEY_EXIT            0x4b4e4f4b  // KNOK
-
 extern void strobe_init(void);
 extern void strobe_exit(void);
 extern u08  strobe_get_key(u32 *key);
+extern u08  strobe_get_data(void);
 
 extern void strobe_send_begin(rom_pchar data, u16 size);
 extern void strobe_send_end(void);

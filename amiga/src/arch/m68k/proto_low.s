@@ -6,8 +6,7 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_knok_check
-        xdef            _proto_low_knok_enter_exit
+        xdef            _proto_low_wait_init
         xdef            _proto_low_get_status
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
@@ -218,130 +217,41 @@ delay   MACRO
 
 ; ----- functions -----------------------------------------------------------
 
-; --- proto_low_knok_check ---
-; check if we are currently running in knok mode
+; --- proto_low_wait_init ---
+; wait until device is initialized
 ;
 ;   in:
 ;       a0      struct pario_port *port
 ;   out:
-;       d0      0=no knok mode dected, 1=knok mode active
-_proto_low_knok_check:
+;       d0      RET_OK, RET_TIMEOUT
+_proto_low_wait_init:
         movem.l d2-d7/a2-a6,-(sp)
 
         ; setup regs with port values and read old ctrl value
         setup_port_regs
-
-        ; assume knok not found
-        moveq          #0,d0
-
-        ; BUSY should be LO in knok mode
-        btst           d2,(a5)
-        bne.s          plkc_end
-
-        ; now do a live check
-
-        ; set magic byte for BUSY hi
-        move.b        #$f1,(a3)
-        ; wait a bit
-        delay
-        ; check busy value (expect HI)
-        btst          d2,(a5)
-        beq.s         plkc_end
-
-        ; set magic byte for BUSY lo
-        move.b        #$f2,(a3)
-        ; wait a bit
-        delay
-        ; check busy value  (expect LO)
-        btst          d2,(a5)
-        bne.s         plkc_end
-
-        ; knok found!
-        moveq         #1,d0
-
-plkc_end:
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-
-
-; --- proto_low_knok_enter_exit ---
-; first check if we are in knok mode
-; if exit flag is set then escape it otherwise stay
-;
-;   in:
-;       d0      0=enter, 1=exit
-;       a0      struct pario_port *port
-;       a1      volatile UBYTE *timeout_flag
-;   out:
-;       d0      return error code
-_proto_low_knok_enter_exit:
-        movem.l d2-d7/a2-a6,-(sp)
-
-        ; setup regs with port values and read old ctrl value
-        setup_port_regs
-
-plkb_retry:
-        ; 3 toggle rounds must be passed
-        moveq          #2,d1
-
-        ; timeout?
-        tst.b   (a1)
-        bne.s   plkb_timeout
-
-plkb_loop:
-        ; set magic byte for BUSY hi
-        move.b        #$f1,(a3)
-        ; wait a bit
-        delay
-        ; check busy value (expect HI)
-        btst          d2,(a5)
-        beq.s         plkb_retry
-
-        ; set magic byte for BUSY lo
-        move.b        #$f2,(a3)
-        ; wait a bit
-        delay
-        ; check busy value  (expect LO)
-        btst          d2,(a5)
-        bne.s         plkb_retry
-
-        ; next pass
-        dbra          d1,plkb_loop
-
-        ; sequence is ok -> knok mode is alive
-
-        ; shall we enter knok only?
-        tst.w         d0
-        beq.s         plkb_ok
-
-        ; ok. exit now.
-        ; send magic boot byte to leave knok mode
-        move.b        #$f3, (a3)
 
         ; now wait for busy to become high
-plkb_check_busy:
+pwi_check_loop:
         ; timeout?
-        tst.b   (a1)
-        bne.s   plkb_timeout
+        tst.b          (a1)
+        bne.s          pwi_timeout
 
         ; BUSY should be high
         btst           d2,(a5)
-        beq.s          plkb_check_busy
-        delay
-        ; check BUSY again
-        btst           d2,(a5)
-        beq.s          plkb_check_busy
+        beq.s          pwi_check_loop
 
-plkb_ok:
-        ; ok
-        moveq   #RET_OK,d0
-plkb_end:
+        ; data port should be 0
+        tst.b          (a3)
+        bne.s          pwi_check_loop
+
+        ; ok!
+        moveq          #RET_OK,d0
+pwi_end:
         movem.l (sp)+,d2-d7/a2-a6
         rts
-
-plkb_timeout:
-        moveq   #RET_TIMEOUT,d0
-        bra.s   plkb_end
+pwi_timeout:
+        moveq          #RET_TIMEOUT,d0
+        bra.s          pwi_end
 
 
 ; --- proto_low_get_status ---

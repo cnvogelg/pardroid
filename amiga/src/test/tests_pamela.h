@@ -6,7 +6,6 @@
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size, UBYTE channel);
 
 int test_reset(test_t *t, test_param_t *p);
-int test_knok_enter_leave(test_t *t, test_param_t *p);
 int test_ping(test_t *t, test_param_t *p);
 int test_func_write(test_t *t, test_param_t *p);
 int test_func_read(test_t *t, test_param_t *p);
@@ -33,7 +32,6 @@ int test_base_regs(test_t *t, test_param_t *p);
 
 #define TESTS_PAMELA_ALL \
   { test_reset, "reset", "reset parbox device" }, \
-  { test_knok_enter_leave, "kel", "knok enter/leave" }, \
   { test_ping, "ping", "ping parbox device" }, \
   { test_func_read, "fr", "read test function word" }, \
   { test_func_write, "fw", "write test function word" }, \

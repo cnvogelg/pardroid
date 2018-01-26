@@ -35,22 +35,8 @@ static void strobe_read_func(void)
 {
   u08 data = pario_get_data();
 
-  // special toggle byte for knok detection?
-  if(data == STROBE_MAGIC_BYTE_LO) {
-    // lower BUSY
-    pario_busy_lo();
-  }
-  else if(data == STROBE_MAGIC_BYTE_HI) {
-    // high BUSY
-    pario_busy_hi();
-  }
-  // special exit byte?
-  else if(data == STROBE_MAGIC_BYTE_EXIT) {
-    strobe_key = STROBE_KEY_EXIT;
-    state = 1;
-  }
   // readable char?
-  else if((data >= 32) && (data < 128)) {
+  if((data >= 32) && (data < 128)) {
     strobe_key <<= 8;
     strobe_key |= data;
     strobe_count++;
@@ -135,6 +121,11 @@ u08 strobe_get_key(u32 *key)
   __enable_irq();
 
   return exit;
+}
+
+u08 strobe_get_data(void)
+{
+  return pario_get_data();
 }
 
 // ----- send -----

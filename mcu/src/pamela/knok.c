@@ -177,6 +177,17 @@ end_upload:
 }
 #endif /* CONFIG_BOOTSTRAP */
 
+void blink_hello(void)
+{
+  uart_send_pstring(PSTR("helo!"));
+  for(u08 i=0;i<5;i++) {
+    led_on();
+    timer_delay(100);
+    led_off();
+    timer_delay(100);
+  }
+}
+
 void knok_main(void)
 {
   uart_send_pstring(PSTR("knok:"));
@@ -185,10 +196,9 @@ void knok_main(void)
   led_on();
 
   timer_ms_t t0 = timer_millis();
-  u08 stay = 1;
   u08 led = 1;
   u16 led_interval = 100;
-  while(stay) {
+  while(1) {
     // got a strobe key?
     u32 key;
     if(strobe_get_key(&key)) {
@@ -211,11 +221,19 @@ void knok_main(void)
                       PSTR("RXBT"));
           break;
 #endif
-        // driver wants to enter device
-        case STROBE_KEY_EXIT:
-          stay = 0;
+        // blink hello
+        case KNOK_KEY_HELO:
+          blink_hello();
           break;
       }
+    }
+
+    // quick exit by active driver
+    // RESET_ACTION or IDLE_CMD both have ....00xx bits
+    u08 data = strobe_get_data();
+    if((data & 0xfc) == 0xf0) {
+      uart_send_pstring(PSTR("quik"));
+      break;
     }
 
     // blink led per second

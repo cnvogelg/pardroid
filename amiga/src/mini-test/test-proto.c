@@ -13,6 +13,7 @@ int dosmain(void)
 {
     struct pario_handle *ph;
     struct timer_handle *th;
+    int error;
 
     PutStr("test-proto\n");
     ph = pario_init((struct Library *)SysBase);
@@ -25,16 +26,24 @@ int dosmain(void)
             PutStr("proto_init\n");
             struct proto_handle *ph = proto_init(port, th, (struct Library *)SysBase);
             if(ph != NULL) {
-                PutStr("proto_ping\n");
-                int error = proto_action(ph, PROTO_ACTION_PING);
+
+                error = proto_wait_init(ph);
+                Printf("wait -> %ld\n", (LONG)error);
+
+                PutStr("reset");
+                error = proto_action(ph, PROTO_ACTION_RESET);
                 Printf("-> %ld\n", (LONG)error);
                 PutStr("done\n");
 
-                PutStr("bench ping\n");
-                ULONG deltas[2];
-                error = proto_action_bench(ph, PROTO_ACTION_PING, deltas);
-                Printf("-> %ld, delta=%lu, %lu\n",
-                    (LONG)error, deltas[0], deltas[1]);
+                error = proto_wait_init(ph);
+                Printf("wait -> %ld\n", (LONG)error);
+
+                Delay(250); // 5s
+
+                PutStr("delayed reset\n");
+                error = proto_action(ph, PROTO_ACTION_DELAY_RESET);
+                Printf("-> %ld\n", (LONG)error);
+                PutStr("done\n");
 
                 proto_exit(ph);
             } else {

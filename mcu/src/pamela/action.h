@@ -26,6 +26,7 @@ extern const action_table_entry_t action_table[] ROM_ATTR;
 
 extern void action_ping(void);
 extern void action_bootloader(void);
+extern void action_delay_reset(void);
 extern void action_reset(void);
 extern void action_attach(void);
 extern void action_detach(void);

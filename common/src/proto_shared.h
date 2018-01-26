@@ -16,8 +16,8 @@
 #define PROTO_CMD_FUNCTION        0x18
 
 // actions
-#define PROTO_ACTION_IDLE         0x00
-#define PROTO_ACTION_PING         0x01
+#define PROTO_ACTION_PING         0x00
+#define PROTO_ACTION_DELAY_RESET  0x01
 #define PROTO_ACTION_BOOTLOADER   0x02
 #define PROTO_ACTION_RESET        0x03
 #define PROTO_ACTION_ATTACH       0x04

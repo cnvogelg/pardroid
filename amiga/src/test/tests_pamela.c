@@ -48,54 +48,6 @@ int test_reset(test_t *t, test_param_t *p)
   }
 }
 
-int test_knok_enter_leave(test_t *t, test_param_t *p)
-{
-  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
-  proto_handle_t *proto = pamela_get_proto(pb);
-
-  // make sure knok mode is not enabled
-  int res = proto_knok_check(proto);
-  if(res == PROTO_KNOK_FOUND) {
-    p->error = "KNOK found!";
-    p->section = "init";
-    return 1;
-  }
-
-  // try to enter knock mode
-  res = proto_reset(proto, 0);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "knok enter";
-    return res;
-  }
-
-  // make sure knok mode is enabled
-  res = proto_knok_check(proto);
-  if(res == PROTO_KNOK_NOT_FOUND) {
-    p->error = "KNOK not found!";
-    p->section = "main";
-    return 1;
-  }
-
-  // try to leave knock mode
-  res = proto_knok_exit(proto);
-  if(res != PROTO_RET_OK) {
-    p->error = proto_perror(res);
-    p->section = "knok leave";
-    return res;
-  }
-
-  // make sure knok mode is not enabled
-  res = proto_knok_check(proto);
-  if(res == PROTO_KNOK_FOUND) {
-    p->error = "KNOK found!";
-    p->section = "init";
-    return 1;
-  }
-
-  return 0;
-}
-
 int test_ping(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
