@@ -72,27 +72,26 @@ static void status_update(void)
         DC('?');
       }
     }
-
-    // issue irq
-    if(bits & PROTO_STATUS_EVENTS) {
-      if(flags & FLAG_EVENT_IRQ) {
-        flags &= ~FLAG_EVENT_IRQ;
-        DS("Ie");
-        flags |= FLAG_IRQ_REQUEST;
-      }
-    }
-    else if(bits & PROTO_STATUS_READ_PENDING) {
-      if(flags & FLAG_PEND_IRQ) {
-        flags &= ~FLAG_PEND_IRQ;
-        DS("Ip");
-        flags |= FLAG_IRQ_REQUEST;
-      }
-    }
-
     old_state = bits;
     DNL;
   } else {
     DS("su="); DB(bits); DNL;
+  }
+
+  // issue irq
+  if(bits & PROTO_STATUS_EVENTS) {
+    if(flags & FLAG_EVENT_IRQ) {
+      flags &= ~FLAG_EVENT_IRQ;
+      DS("Ie");
+      flags |= FLAG_IRQ_REQUEST;
+    }
+  }
+  else if(bits & PROTO_STATUS_READ_PENDING) {
+    if(flags & FLAG_PEND_IRQ) {
+      flags &= ~FLAG_PEND_IRQ;
+      DS("Ip");
+      flags |= FLAG_IRQ_REQUEST;
+    }
   }
 }
 

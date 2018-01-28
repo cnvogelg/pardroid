@@ -24,6 +24,10 @@ int test_status_timer_sig(test_t *t, test_param_t *p);
 int test_status_reset_event_sig(test_t *t, test_param_t *p);
 int test_status_read_pending(test_t *t, test_param_t *p);
 int test_status_read_pending_sig(test_t *t, test_param_t *p);
+int test_status_read_pending_two(test_t *t, test_param_t *p);
+int test_status_read_pending_refresh(test_t *t, test_param_t *p);
+int test_status_read_pending_refresh_active(test_t *t, test_param_t *p);
+int test_status_read_pending_refresh_inactive(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);
 int test_status_events_sig(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
@@ -47,15 +51,19 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_msg_read, "mr", "read message of given size"}, \
   { test_msg_write_too_large, "mwtl", "write too large message"}, \
   { test_msg_read_too_large, "mrtl", "read too large message"}, \
-  { test_status_timer_sig, "sts", "test status timeout signal"}, \
-  { test_status_reset_event_sig, "srs", "test status event right after reset"}, \
-  { test_status_read_pending, "sp", "test status read pending flag"}, \
-  { test_status_read_pending_sig, "spi", "test signal on read pending flag"}, \
-  { test_status_events, "se", "test status event mask" }, \
-  { test_status_events_sig, "sei", "test signal on status event mask" }, \
-  { test_status_attach_detach, "sad", "test attach/detach" }, \
-  { test_status_attach_detach_sig, "sadi", "test signal on attach/detach" }, \
-  { test_status_attach_reset_sig, "sari", "test signal on attach/reset" }, \
-  { test_base_regs, "br", "test base regs" }, \
+  { test_status_timer_sig, "sts", "status timeout signal"}, \
+  { test_status_reset_event_sig, "srs", "status event right after reset"}, \
+  { test_status_read_pending, "sp", "status read pending flag"}, \
+  { test_status_read_pending_sig, "spi", "signal on read pending flag"}, \
+  { test_status_read_pending_two, "spt", "read pending two channels"}, \
+  { test_status_read_pending_refresh, "spr", "read pending refresh same channel"}, \
+  { test_status_read_pending_refresh_active, "spr", "read pending refresh on active channel"}, \
+  { test_status_read_pending_refresh_inactive, "spr", "read pending refresh on inactive channel"}, \
+  { test_status_events, "se", "status event mask" }, \
+  { test_status_events_sig, "sei", "signal on status event mask" }, \
+  { test_status_attach_detach, "sad", "attach/detach" }, \
+  { test_status_attach_detach_sig, "sadi", "signal on attach/detach" }, \
+  { test_status_attach_reset_sig, "sari", "signal on attach/reset" }, \
+  { test_base_regs, "br", "base regs" }, \
 
 #endif

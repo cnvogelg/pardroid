@@ -33,7 +33,7 @@ int status_update(proto_handle_t *ph, status_data_t *data)
   // decode state byte
   // a read is pending
   if((state & PROTO_STATUS_READ_PENDING) == PROTO_STATUS_READ_PENDING) {
-    data->pending_channel = state & PROTO_STATUS_CHANNEL_MASK;
+    data->pending_channel = (state & PROTO_STATUS_CHANNEL_MASK) >> 4;
     data->event_mask = STATUS_NO_EVENTS;
     data->flags &= ~STATUS_FLAGS_EVENTS;
     data->flags |= STATUS_FLAGS_PENDING;

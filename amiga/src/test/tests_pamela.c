@@ -694,7 +694,7 @@ static int assert_num_events(test_param_t *p, const char *section,
   return 0;
 }
 
-int test_status_timer_sig(test_t *t, test_param_t *p)
+static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
 
@@ -706,13 +706,23 @@ int test_status_timer_sig(test_t *t, test_param_t *p)
     return res;
   }
 
-  /* wait for either timeout or ack */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+  /* call test func */
+  res = func(t, p);
 
   /* cleanup events */
   pamela_exit_events(pb);
 
-  res = assert_timer_mask(p, "main", pb, got);
+  return res;
+}
+
+int run_status_timer_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  int res = assert_timer_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
   }
@@ -720,22 +730,19 @@ int test_status_timer_sig(test_t *t, test_param_t *p)
   return assert_num_events(p, "main", pb, 0, 0);
 }
 
-int test_status_reset_event_sig(test_t *t, test_param_t *p)
+int test_status_timer_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_timer_sig);
+}
+
+int run_status_reset_event_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
   status_data_t *status = pamela_get_status(pb);
 
-  /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    p->error = pamela_perror(res);
-    p->section = "pamela_init_events";
-    return res;
-  }
-
   /* perform reset */
-  res = proto_reset(proto, 1);
+  int res = proto_reset(proto, 1);
   if(res != PROTO_RET_OK) {
     p->error = proto_perror(res);
     p->section = "reset";
@@ -752,9 +759,6 @@ int test_status_reset_event_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* cleanup events */
-  pamela_exit_events(pb);
-
   /* expect status event after reset */
   res = assert_event_mask(p, "main", pb, got);
   if(res != 0) {
@@ -762,6 +766,11 @@ int test_status_reset_event_sig(test_t *t, test_param_t *p)
   }
 
   return 0;
+}
+
+int test_status_reset_event_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_reset_event_sig);
 }
 
 int test_status_read_pending(test_t *t, test_param_t *p)
@@ -828,19 +837,119 @@ int test_status_read_pending(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_status_read_pending_sig(test_t *t, test_param_t *p)
+static int set_read_pending(test_param_t *p, const char *section, pamela_handle_t *pb,
+                            u08 channel, u08 expect_channel, u08 irq)
+{
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* sim pending */
+  int res = reg_set(proto, REG_SIM_PENDING, SIM_PENDING_SET | channel);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = section;
+    return res;
+  }
+
+  /* wait for either timeout or event */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  if(irq) {
+    /* assume it was an event */
+    res = assert_event_mask(p, section, pb, got);
+    if(res != 0) {
+      return res;
+    }
+  } else {
+   /* assume it was a timeout */
+    res = assert_timer_mask(p, section, pb, got);
+    if(res != 0) {
+      return res;
+    }
+  }
+
+  /* assume pending is set */
+  if(status->flags != STATUS_FLAGS_PENDING) {
+    p->error = "status not pending";
+    p->section = section;
+    return 1;
+  }
+
+  /* check that channel is set */
+  if(status->pending_channel != expect_channel) {
+    p->error = "wrong channel in status";
+    p->section = section;
+    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status->pending_channel, expect_channel);
+    return 1;
+  }
+
+  return 0;
+}
+
+static int clear_read_pending(test_param_t *p, const char *section, pamela_handle_t *pb,
+                            u08 channel, u08 expect_channel, u08 irq)
+{
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* sim pending */
+  int res = reg_set(proto, REG_SIM_PENDING, channel);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = section;
+    return res;
+  }
+
+  /* wait for either timeout or event */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  // no channel expected anymore
+  if(expect_channel == 0xff) {
+    /* assume pending is cleared again */
+    if(status->flags != STATUS_FLAGS_NONE) {
+      p->error = "status not cleared";
+      p->section = section;
+      return 1;
+    }
+  } else {
+    /* assume pending is set */
+    if(status->flags != STATUS_FLAGS_PENDING) {
+      p->error = "status not pending";
+      p->section = section;
+      return 1;
+    }
+
+    /* check that channel is set */
+    if(status->pending_channel != expect_channel) {
+      p->error = "wrong channel in status";
+      p->section = section;
+      sprintf(p->extra, "got=%02x want=%02x", (UWORD)status->pending_channel, expect_channel);
+      return 1;
+    }
+  }
+
+  if(irq) {
+    /* assume it was an event */
+    res = assert_event_mask(p, section, pb, got);
+    if(res != 0) {
+      return res;
+    }
+  } else {
+    /* assume it was a timeout */
+    res = assert_timer_mask(p, section, pb, got);
+    if(res != 0) {
+      return res;
+    }
+  }
+
+  return 0;
+}
+
+int run_status_read_pending_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
   status_data_t *status = pamela_get_status(pb);
-
-  /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    p->error = pamela_perror(res);
-    p->section = "pamela_init_events";
-    return res;
-  }
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
@@ -851,64 +960,210 @@ int test_status_read_pending_sig(test_t *t, test_param_t *p)
 
   UWORD channel = (p->iter + test_bias) & 7;
 
-  /* sim pending */
-  res = reg_set(proto, REG_SIM_PENDING, SIM_PENDING_SET | channel);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "sim_pending #1";
-    return res;
-  }
-
-  /* wait for either timeout or event */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* assume pending is set */
-  if(status->flags != STATUS_FLAGS_PENDING) {
-    p->error = "status not pending";
-    p->section = "main";
-    return 1;
-  }
-
-  /* check that channel is set */
-  if(status->pending_channel != channel) {
-    p->error = "wrong channel in status";
-    p->section = "status";
-    sprintf(p->extra, "got=%02x want=%02x", (UWORD)status->pending_channel, channel);
-    return 1;
-  }
-
-  /* sim pend_req_rem to restore state */
-  res = reg_set(proto, REG_SIM_PENDING, channel);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "sim_pending #2";
-    return res;
-  }
-
-  /* wait again and assume timeout */
-  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* assume pending is cleared again */
-  if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
-    p->section = "post";
-    return 1;
-  }
-
-  /* cleanup events */
-  pamela_exit_events(pb);
-
-  res = assert_event_mask(p, "main", pb, got);
+  // set pending channel
+  int res = set_read_pending(p, "set", pb, channel, channel, 1);
   if(res != 0) {
     return res;
   }
 
-  res = assert_timer_mask(p, "post", pb, got2);
+  // clear pending channel
+  res = clear_read_pending(p, "clear", pb, channel, 0xff, 0);
   if(res != 0) {
     return res;
   }
 
   return assert_num_events(p, "main", pb, 1, 1);
+}
+
+int test_status_read_pending_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_read_pending_sig);
+}
+
+int run_status_read_pending_two(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  // set pending channel #0
+  int res = set_read_pending(p, "set#0", pb, 0, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #1 (#0 still active)
+  res = set_read_pending(p, "set#1", pb, 1, 0, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #0 (#1 gets active)
+  res = clear_read_pending(p, "clear#0", pb, 0, 1, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #1 (none active)
+  res = clear_read_pending(p, "clear#1", pb, 1, 0xff, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
+}
+
+int test_status_read_pending_two(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_read_pending_two);
+}
+
+int run_status_read_pending_refresh(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  // set pending channel #0
+  int res = set_read_pending(p, "set#0", pb, 0, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #0 again (refresh)
+  res = set_read_pending(p, "refresh#0", pb, 0, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #0 (none active)
+  res = clear_read_pending(p, "clear#0", pb, 0, 0xff, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
+}
+
+int test_status_read_pending_refresh(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_read_pending_refresh);
+}
+
+int run_status_read_pending_refresh_active(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  // set pending channel #0
+  int res = set_read_pending(p, "set#0", pb, 0, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #1 (#0 still active)
+  res = set_read_pending(p, "set#1", pb, 1, 0, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #0 again (refresh) -> #1 gets active
+  res = set_read_pending(p, "refresh#0", pb, 0, 1, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #1 (#0 active)
+  res = clear_read_pending(p, "clear#1", pb, 1, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #0 (none active)
+  res = clear_read_pending(p, "clear#0", pb, 0, 0xff, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
+}
+
+int test_status_read_pending_refresh_active(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_read_pending_refresh_active);
+}
+
+int run_status_read_pending_refresh_inactive(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  // set pending channel #0
+  int res = set_read_pending(p, "set#0", pb, 0, 0, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #1 (#0 still active)
+  res = set_read_pending(p, "set#1", pb, 1, 0, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  // set pending channel #1 again (refresh) -> #0 stays active
+  res = set_read_pending(p, "refresh#0", pb, 1, 0, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #1 (#0 active)
+  res = clear_read_pending(p, "clear#1", pb, 1, 0, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  // clear pending channel #0 (none active)
+  res = clear_read_pending(p, "clear#0", pb, 0, 0xff, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
+}
+
+int test_status_read_pending_refresh_inactive(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_read_pending_refresh_inactive);
 }
 
 int test_status_events(test_t *t, test_param_t *p)
@@ -984,19 +1239,11 @@ int test_status_events(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_status_events_sig(test_t *t, test_param_t *p)
+int run_status_events_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
   status_data_t *status = pamela_get_status(pb);
-
-  /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    p->error = pamela_perror(res);
-    p->section = "pamela_init_events";
-    return res;
-  }
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
@@ -1010,7 +1257,7 @@ int test_status_events_sig(test_t *t, test_param_t *p)
   channel &= 7;
 
   /* simulate an event */
-  res = reg_set(proto, REG_SIM_EVENT, channel);
+  int res = reg_set(proto, REG_SIM_EVENT, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #1";
@@ -1060,9 +1307,6 @@ int test_status_events_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* cleanup events */
-  pamela_exit_events(pb);
-
   res = assert_event_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
@@ -1074,6 +1318,11 @@ int test_status_events_sig(test_t *t, test_param_t *p)
   }
 
   return assert_num_events(p, "main", pb, 1, 1);
+}
+
+int test_status_events_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_events_sig);
 }
 
 int test_status_attach_detach(test_t *t, test_param_t *p)
@@ -1130,19 +1379,11 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
   return 0;
 }
 
-int test_status_attach_detach_sig(test_t *t, test_param_t *p)
+int run_status_attach_detach_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
   status_data_t *status = pamela_get_status(pb);
-
-  /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    p->error = pamela_perror(res);
-    p->section = "pamela_init_events";
-    return res;
-  }
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
@@ -1152,7 +1393,7 @@ int test_status_attach_detach_sig(test_t *t, test_param_t *p)
   }
 
   /* attach device */
-  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  int res = proto_action(proto, PROTO_ACTION_ATTACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "attach failed";
@@ -1187,9 +1428,6 @@ int test_status_attach_detach_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* cleanup events */
-  pamela_exit_events(pb);
-
   res = assert_timer_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
@@ -1203,19 +1441,16 @@ int test_status_attach_detach_sig(test_t *t, test_param_t *p)
   return assert_num_events(p, "main", pb, 0, 0);
 }
 
-int test_status_attach_reset_sig(test_t *t, test_param_t *p)
+int test_status_attach_detach_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_attach_detach_sig);
+}
+
+int run_status_attach_reset_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
   status_data_t *status = pamela_get_status(pb);
-
-  /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    p->error = pamela_perror(res);
-    p->section = "pamela_init_events";
-    return res;
-  }
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
@@ -1225,7 +1460,7 @@ int test_status_attach_reset_sig(test_t *t, test_param_t *p)
   }
 
   /* attach device */
-  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  int res = proto_action(proto, PROTO_ACTION_ATTACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "attach failed";
@@ -1260,9 +1495,6 @@ int test_status_attach_reset_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* cleanup events */
-  pamela_exit_events(pb);
-
   res = assert_timer_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
@@ -1274,6 +1506,11 @@ int test_status_attach_reset_sig(test_t *t, test_param_t *p)
   }
 
   return 0;
+}
+
+int test_status_attach_reset_sig(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_attach_reset_sig);
 }
 
 int test_base_regs(test_t *t, test_param_t *p)
