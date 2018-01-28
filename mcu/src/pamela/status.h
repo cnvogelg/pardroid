@@ -7,13 +7,9 @@ extern void status_handle(void);
 
 extern u08  status_get_current(void);
 
-// DEBUG
 extern void status_clear_events(void);
-extern void status_set_events(u08 emask);
-
-extern void status_set_event_mask(u08 mask);
-extern void status_clear_event_mask(u08 mask);
 extern u08  status_get_event_mask(void);
+extern void status_set_event(u08 chn);
 
 extern void status_attach(void);
 extern void status_detach(void);

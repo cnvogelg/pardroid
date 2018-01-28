@@ -112,30 +112,19 @@ void status_clear_events(void)
   status_update();
 }
 
-void status_set_events(u08 evmsk)
-{
-  event_mask = evmsk;
-  DS("e="); DB(event_mask); DNL;
-  status_update();
-}
-
-void status_set_event_mask(u08 mask)
-{
-  event_mask |= mask;
-  DS("e+"); DB(event_mask); DNL;
-  status_update();
-}
-
-void status_clear_event_mask(u08 mask)
-{
-  event_mask &= ~mask;
-  DS("e-"); DB(event_mask); DNL;
-  status_update();
-}
-
 u08 status_get_event_mask(void)
 {
   return event_mask;
+}
+
+void status_set_event(u08 chn)
+{
+  if(chn >= PROTO_MAX_CHANNEL) {
+    return;
+  }
+  event_mask |= 1 << chn;
+  DS("e+"); DB(event_mask); DNL;
+  status_update();
 }
 
 // ----- attach/detach -----

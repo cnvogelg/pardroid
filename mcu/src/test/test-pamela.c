@@ -42,12 +42,12 @@ static void sim_pending(u16 *valp, u08 mode)
   }
 }
 
-static void sim_error(u16 *valp, u08 mode)
+static void sim_event(u16 *valp, u08 mode)
 {
   if(mode == REG_MODE_WRITE) {
-    u08 e = *valp & 0xff;
-    DS("sim:e"); DB(e); DNL;
-    status_set_events(e);
+    u08 chn = *valp & 0xff;
+    DS("sim:e"); DB(chn); DNL;
+    status_set_event(chn);
   }
 }
 
@@ -86,7 +86,7 @@ REG_TABLE_BEGIN(test)
   REG_TABLE_RW_FUNC(func_test_size),    // user+3
   REG_TABLE_RW_RAM_W(test_word),        // user+4
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
-  REG_TABLE_RW_FUNC(sim_error)          // user+6
+  REG_TABLE_RW_FUNC(sim_event)          // user+6
 REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
 REG_TABLE_SETUP(test)
 

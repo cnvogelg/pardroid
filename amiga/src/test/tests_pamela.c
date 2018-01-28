@@ -884,13 +884,11 @@ int test_status_events(test_t *t, test_param_t *p)
   }
 
   /* create an event */
-  UBYTE event = (UBYTE)(p->iter + test_bias);
-  if(event == 0) {
-    event = 1;
-  }
+  UBYTE channel = (UBYTE)(p->iter + test_bias);
+  channel &= 7;
 
   /* simulate an event */
-  int res = reg_set(proto, REG_SIM_EVENT, event);
+  int res = reg_set(proto, REG_SIM_EVENT, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #1";
@@ -908,10 +906,11 @@ int test_status_events(test_t *t, test_param_t *p)
   }
 
   /* check if correct event mask was returned */
-  if(status->event_mask != event) {
+  UBYTE mask = 1 << channel;
+  if(status->event_mask != mask) {
     p->error = "wrong event mask returned";
     p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", event, status->event_mask);
+    sprintf(p->extra, "got=%02x want=%02x", mask, status->event_mask);
     return 1;
   }
 
@@ -963,14 +962,12 @@ int test_status_events_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* create an event */
-  UBYTE event = (UBYTE)(p->iter + test_bias);
-  if(event == 0) {
-    event = 1;
-  }
+  /* select a channel */
+  UBYTE channel = (UBYTE)(p->iter + test_bias);
+  channel &= 7;
 
   /* simulate an event */
-  res = reg_set(proto, REG_SIM_EVENT, event);
+  res = reg_set(proto, REG_SIM_EVENT, channel);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "sim_event #1";
@@ -988,10 +985,11 @@ int test_status_events_sig(test_t *t, test_param_t *p)
   }
 
   /* check if correct event mask was returned */
-  if(status->event_mask != event) {
+  UBYTE mask = 1 << channel;
+  if(status->event_mask != mask) {
     p->error = "wrong event mask returned";
     p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", event, status->event_mask);
+    sprintf(p->extra, "got=%02x want=%02x", mask, status->event_mask);
     return 1;
   }
 
