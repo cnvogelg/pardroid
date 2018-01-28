@@ -12,23 +12,24 @@
 #include "proto_shared.h"
 #include "proto.h"
 
-#define IRQ_FLAG_NONE       0
-#define IRQ_FLAG_REQUEST    1
-#define IRQ_FLAG_ACTIVE     2
+#define FLAG_NONE           0
+#define FLAG_IRQ_REQUEST    1
+#define FLAG_IRQ_ACTIVE     2
+#define FLAG_ATTACHED       4
 
-static u08 attached;
+static u08 flags;
 static u08 event_mask;
 static u08 pending_mask;
-static u08 irq_flags;
 static u08 old_state;
 static u08 pending_channel;
 
 void status_init(void)
 {
-  attached = 0;
   event_mask = 0;
   pending_mask = 0;
-  irq_flags = IRQ_FLAG_NONE;
+  // request an irq right after reset
+  // (to report detached state)
+  flags = FLAG_IRQ_REQUEST;
   old_state = 0;
   pending_channel = 7;
 }
@@ -36,15 +37,16 @@ void status_init(void)
 void status_handle(void)
 {
   // enable ack irq
-  if(irq_flags & IRQ_FLAG_REQUEST)
+  if(flags & FLAG_IRQ_REQUEST)
   {
-    irq_flags = IRQ_FLAG_ACTIVE;
+    flags &= ~FLAG_IRQ_REQUEST;
+    flags |=  FLAG_IRQ_ACTIVE;
     proto_low_ack_lo();
     DS("I+"); DNL;
   }
   // reset irq if it was set
-  else if(irq_flags & IRQ_FLAG_ACTIVE) {
-    irq_flags &= ~IRQ_FLAG_ACTIVE;
+  else if(flags & FLAG_IRQ_ACTIVE) {
+    flags &= ~FLAG_IRQ_ACTIVE;
     proto_low_ack_hi();
     DS("I-"); DNL;
   }
@@ -71,10 +73,10 @@ void status_update(void)
     // issue irq if event or pending was set
     u08 changed = bits ^ old_state;
     if((changed & PROTO_STATUS_READ_PENDING) && (bits & PROTO_STATUS_READ_PENDING)) {
-      irq_flags |= IRQ_FLAG_REQUEST;
+      flags |= FLAG_IRQ_REQUEST;
     }
     if((changed & PROTO_STATUS_EVENTS) && (bits & PROTO_STATUS_EVENTS)) {
-      irq_flags |= IRQ_FLAG_REQUEST;
+      flags |= FLAG_IRQ_REQUEST;
     }
 
     old_state = bits;
@@ -87,7 +89,7 @@ u08 status_get_current(void)
 {
   // if an error is set then show it always (suppress pending if necessary)
   u08 bits = 0;
-  if(attached) {
+  if(flags & FLAG_ATTACHED) {
     bits |= PROTO_STATUS_ATTACHED;
   }
   if(event_mask != 0) {
@@ -140,9 +142,9 @@ u08 status_get_event_mask(void)
 
 void status_attach(void)
 {
-  if(!attached) {
+  if((flags & FLAG_ATTACHED)==0) {
     DS("sa"); DNL;
-    attached = 1;
+    flags |= FLAG_ATTACHED;
   } else {
     DS("sa?"); DNL;
   }
@@ -151,9 +153,9 @@ void status_attach(void)
 
 void status_detach(void)
 {
-  if(attached) {
+  if(flags & FLAG_ATTACHED) {
     DS("sd"); DNL;
-    attached = 0;
+    flags &= ~FLAG_ATTACHED;
   } else {
     DS("sd?"); DNL;
   }
