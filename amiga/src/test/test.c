@@ -13,10 +13,11 @@ static void print_header(test_t *test, test_param_t *param)
 
 static void print_error(int res, test_param_t *param)
 {
-  Printf("[FAIL]\n        error=%ld  %s  section=%s\n",
+  Printf("[FAIL]\n"
+         "        error=%ld  %s  section=%s\n",
     (LONG)res, param->error, param->section);
   if(param->extra != NULL) {
-    Printf("                %s\n", param->extra);
+    Printf("        %s\n", param->extra);
   }
 }
 

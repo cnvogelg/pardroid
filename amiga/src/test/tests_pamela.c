@@ -678,7 +678,7 @@ static int assert_num_events(test_param_t *p, const char *section,
 
   /* check number of events aka irqs */
   if(num_events != got_events) {
-    p->error = "num events mismatch";
+    p->error = "num events (ack irqs) mismatch";
     p->section = section;
     sprintf(p->extra, "got=%u want=%u", got_events, num_events);
     return 1;
@@ -719,6 +719,50 @@ int test_status_timer_sig(test_t *t, test_param_t *p)
   }
 
   return assert_num_events(p, "main", pb, 0, 0);
+}
+
+int test_status_reset_event_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
+  }
+
+  /* perform reset */
+  res = proto_reset(proto, 1);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "reset";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not none";
+    p->section = "after";
+    return 1;
+  }
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  /* expect status event after reset */
+  res = assert_event_mask(p, "main", pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
 }
 
 int test_status_read_pending(test_t *t, test_param_t *p)
@@ -1158,6 +1202,79 @@ int test_status_attach_detach_sig(test_t *t, test_param_t *p)
   }
 
   return assert_num_events(p, "main", pb, 0, 0);
+}
+
+int test_status_attach_reset_sig(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    p->error = pamela_perror(res);
+    p->section = "pamela_init_events";
+    return res;
+  }
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* attach device */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach failed";
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume attached flag set */
+  if(status->flags != STATUS_FLAGS_ATTACHED) {
+    p->error = "status not attached";
+    p->section = "main";
+    return 1;
+  }
+
+  /* now reset device */
+  res = proto_reset(proto, 1);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "detach failed";
+    return res;
+  }
+
+  /* wait again and assume event: detach */
+  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume error is not set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "post";
+    return 1;
+  }
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  res = assert_timer_mask(p, "main", pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  res = assert_event_mask(p, "post", pb, got2);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
 }
 
 int test_base_regs(test_t *t, test_param_t *p)
