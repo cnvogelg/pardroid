@@ -16,6 +16,8 @@
 #define FLAG_IRQ_REQUEST    1
 #define FLAG_IRQ_ACTIVE     2
 #define FLAG_ATTACHED       4
+#define FLAG_PEND_IRQ       8
+#define FLAG_EVENT_IRQ      16
 
 static u08 flags;
 static u08 event_mask;
@@ -52,34 +54,43 @@ void status_handle(void)
   }
 }
 
-void status_update(void)
+static void status_update(void)
 {
   u08 bits = status_get_current();
 
   // set bits
   if(bits != old_state) {
     DS("su:"); DB(bits); DC('<'); DB(old_state);
+
+    // no command running -> update state now
     u08 cmd = proto_current_cmd();
     if(cmd == 0xff) {
-      // no command running -> update state now
       u08 done = proto_low_set_status(bits);
       if(done) {
-        DS("."); DNL;
+        DC('.');
       } else {
-        DS("?"); DNL;
+        DC('?');
       }
     }
 
-    // issue irq if event or pending was set
-    u08 changed = bits ^ old_state;
-    if((changed & PROTO_STATUS_READ_PENDING) && (bits & PROTO_STATUS_READ_PENDING)) {
-      flags |= FLAG_IRQ_REQUEST;
+    // issue irq
+    if(bits & PROTO_STATUS_EVENTS) {
+      if(flags & FLAG_EVENT_IRQ) {
+        flags &= ~FLAG_EVENT_IRQ;
+        DS("Ie");
+        flags |= FLAG_IRQ_REQUEST;
+      }
     }
-    if((changed & PROTO_STATUS_EVENTS) && (bits & PROTO_STATUS_EVENTS)) {
-      flags |= FLAG_IRQ_REQUEST;
+    else if(bits & PROTO_STATUS_READ_PENDING) {
+      if(flags & FLAG_PEND_IRQ) {
+        flags &= ~FLAG_PEND_IRQ;
+        DS("Ip");
+        flags |= FLAG_IRQ_REQUEST;
+      }
     }
 
     old_state = bits;
+    DNL;
   } else {
     DS("su="); DB(bits); DNL;
   }
@@ -124,6 +135,7 @@ void status_set_event(u08 chn)
   }
   event_mask |= 1 << chn;
   DS("e+"); DB(event_mask); DNL;
+  flags |= FLAG_EVENT_IRQ;
   status_update();
 }
 
@@ -165,90 +177,80 @@ static u08 find_next_channel(u08 mask, u08 chn)
   return 0xff;
 }
 
-static void pending_update(u08 new_mask)
+void status_set_pending(u08 chn)
 {
-  // nothing has changed
-  if(new_mask == pending_mask) {
-    DS("u="); DNL;
+  // no channel pending yet -> trigger ack irq
+  DS("p+"); DB(chn);
+
+  u08 cmask = 1 << chn;
+  u08 irq = 0;
+
+  // channel already set? refresh!
+  if((cmask & pending_mask) == cmask) {
+    // if we are the only pending one then keep it
+    if(pending_mask == cmask) {
+      DC('#');
+      irq = 1;
+    }
+    else {
+      // ir we are the active pending channel then search another one
+      if(pending_channel == chn) {
+        pending_channel = find_next_channel(pending_mask, pending_channel);
+        DC(':'); DB(pending_channel);
+        irq = 1;
+      }
+      // we are not active. do nothing
+      else {
+        DC('.');
+      }
+    }
+  }
+  // this channel was not set yet
+  else {
+    // no pending channel set yet -> take mine
+    if(pending_mask == 0) {
+      DC('!');
+      pending_channel = chn;
+      irq = 1;
+    }
+  }
+
+  // set mask
+  pending_mask |= cmask;
+  DNL;
+  if(irq) {
+    flags |= FLAG_PEND_IRQ;
+  }
+  status_update();
+}
+
+void status_clear_pending(u08 chn)
+{
+  DS("p-"); DB(chn);
+
+  u08 cmask = 1 << chn;
+
+  // nothing to clear...
+  if((cmask & pending_mask) == 0) {
+    DC('?'); DNL;
     return;
   }
 
-  u08 do_update = 0;
+  // clear pending bit
+  pending_mask &= ~cmask;
 
-  // old mask was zero. find next channel
-  if(pending_mask == 0) {
-    // new mask has at least one bit set
-    pending_channel = find_next_channel(new_mask, pending_channel);
-    DS("N="); DB(pending_channel);
-    do_update = 1;
-  }
-  // pending mask was set
-  else {
-    // if current pending channel was cleared then find next
-    u08 pc_mask = 1 << pending_channel;
-    if((pc_mask & new_mask) == 0) {
-      // any remaining pending bits set?
-      u08 rem_mask = new_mask & ~pc_mask;
-      if(rem_mask != 0) {
-        pending_channel = find_next_channel(new_mask, pending_channel);
-        DS("n="); DB(pending_channel);
-      } else {
-        // no pending anymore
-        DC('z');
-      }
-      do_update = 1;
-    }
-    // if current pending channel is still pending then keep it
-    // and do not update status
-    else {
-      DC('k');
+  // was my channel the active pending channel?
+  if(pending_channel == chn) {
+    // need to find a new one?
+    if(pending_mask != 0) {
+        pending_channel = find_next_channel(pending_mask, pending_channel);
+        DC(':'); DB(pending_channel);
+        // trigger irq for that one
+        flags |= FLAG_PEND_IRQ;
     }
   }
-
-  // done
-  pending_mask = new_mask;
-  if(do_update) {
-    status_update();
-  }
-
   DNL;
-}
-
-void status_set_pending(u08 pmask)
-{
-  // no channel pending yet -> trigger ack irq
-  DS("p="); DB(pmask);
-  pending_update(pmask);
-}
-
-void status_clear_pending(void)
-{
-  DS("p0");
-  pending_update(0);
-}
-
-void status_reset_pending(void)
-{
-  DS("p0r");
-  pending_update(0);
-  pending_channel = 7;
-}
-
-u08 status_get_pending_mask(void)
-{
-  return pending_mask;
-}
-
-void status_set_pending_mask(u08 mask)
-{
-  DS("p+"); DB(mask);
-  pending_update(pending_mask | mask);
-}
-
-void status_clear_pending_mask(u08 mask)
-{
-  DS("p-"); DB(mask);
-  pending_update(pending_mask & ~mask);
+  status_update();
 }
 
 u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));

@@ -27,17 +27,15 @@ static u16 extra_val;
 static void sim_pending(u16 *valp, u08 mode)
 {
   if(mode == REG_MODE_WRITE) {
-    u16 v = *valp ;
-    if(v == 0x200) {
-      DS("sim:p-"); DNL;
-      status_clear_pending();
-    } else if(v == 0x100) {
-      DS("sim:p0"); DNL;
-      status_reset_pending();
+    u08 v = (u08)(*valp & 0xff);
+    u08 cmd = v & 0x80;
+    u08 chn = v & 0x7f;
+    if(cmd == 0x00) {
+      DS("sim:p-"); DB(chn); DNL;
+      status_clear_pending(chn);
     } else {
-      u08 w = (u08)(v & 0xff);
-      DS("sim:p+"); DB(w); DNL;
-      status_set_pending(w);
+      DS("sim:p+"); DB(chn); DNL;
+      status_set_pending(chn);
     }
   }
 }
