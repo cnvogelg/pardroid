@@ -1239,6 +1239,48 @@ int test_status_events(test_t *t, test_param_t *p)
   return 0;
 }
 
+static int set_event(test_param_t *p, const char *section, pamela_handle_t *pb,
+                     u08 channel)
+{
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* simulate an event */
+  int res = reg_set(proto, REG_SIM_EVENT, channel);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = section;
+    return res;
+  }
+
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume event */
+  res = assert_event_mask(p, section, pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume event is set */
+  if(status->flags != STATUS_FLAGS_EVENTS) {
+    p->error = "status has no events";
+    p->section = section;
+    return 1;
+  }
+
+  /* check if correct event mask was returned */
+  UBYTE mask = 1 << channel;
+  if(status->event_mask != mask) {
+    p->error = "wrong event mask returned";
+    p->section = section;
+    sprintf(p->extra, "got=%02x want=%02x", mask, status->event_mask);
+    return 1;
+  }
+
+  return 0;
+}
+
 int run_status_events_sig(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
@@ -1256,31 +1298,10 @@ int run_status_events_sig(test_t *t, test_param_t *p)
   UBYTE channel = (UBYTE)(p->iter + test_bias);
   channel &= 7;
 
-  /* simulate an event */
-  int res = reg_set(proto, REG_SIM_EVENT, channel);
+  /* set event */
+  int res = set_event(p, "set_event", pb, channel);
   if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "sim_event #1";
     return res;
-  }
-
-  /* wait for either timeout or ack */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* assume event is set */
-  if(status->flags != STATUS_FLAGS_EVENTS) {
-    p->error = "status has no events";
-    p->section = "main";
-    return 1;
-  }
-
-  /* check if correct event mask was returned */
-  UBYTE mask = 1 << channel;
-  if(status->event_mask != mask) {
-    p->error = "wrong event mask returned";
-    p->section = "main";
-    sprintf(p->extra, "got=%02x want=%02x", mask, status->event_mask);
-    return 1;
   }
 
   /* read event register and assume it to be cleared */
@@ -1307,11 +1328,6 @@ int run_status_events_sig(test_t *t, test_param_t *p)
     return 1;
   }
 
-  res = assert_event_mask(p, "main", pb, got);
-  if(res != 0) {
-    return res;
-  }
-
   res = assert_timer_mask(p, "post", pb, got2);
   if(res != 0) {
     return res;
@@ -1323,6 +1339,65 @@ int run_status_events_sig(test_t *t, test_param_t *p)
 int test_status_events_sig(test_t *t, test_param_t *p)
 {
   return run_with_events(t, p, run_status_events_sig);
+}
+
+int run_status_events_in_pending(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not init";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* select a channel */
+  UBYTE channel = (UBYTE)(p->iter + test_bias);
+  channel &= 7;
+
+  // set pending channel #0
+  int res = set_read_pending(p, "set#0", pb, channel, channel, 1);
+  if(res != 0) {
+    return res;
+  }
+
+  /* set event */
+  res = set_event(p, "event#0", pb, channel);
+  if(res != 0) {
+    return res;
+  }
+
+  /* event that pending is active again */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume event */
+  res = assert_event_mask(p, "post", pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume pending is set again after event */
+  if(status->flags != STATUS_FLAGS_PENDING) {
+    p->error = "status not pending again";
+    p->section = "post";
+    return 1;
+  }
+
+  // clear pending channel #0 (none active)
+  res = clear_read_pending(p, "clear#0", pb, 0, 0xff, 0);
+  if(res != 0) {
+    return res;
+  }
+
+  return 0;
+}
+
+int test_status_events_in_pending(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_events_in_pending);
 }
 
 int test_status_attach_detach(test_t *t, test_param_t *p)

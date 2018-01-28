@@ -72,6 +72,15 @@ static void status_update(void)
         DC('?');
       }
     }
+
+    // if pending state changed and is active then trigger ack
+    u08 changed = (bits ^ old_state) & PROTO_STATUS_READ_PENDING;
+    u08 set = bits & PROTO_STATUS_READ_PENDING;
+    if(changed && set) {
+      DS("'Ic");
+      flags |= FLAG_IRQ_REQUEST;
+    }
+
     old_state = bits;
     DNL;
   } else {

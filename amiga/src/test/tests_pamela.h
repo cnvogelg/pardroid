@@ -30,6 +30,7 @@ int test_status_read_pending_refresh_active(test_t *t, test_param_t *p);
 int test_status_read_pending_refresh_inactive(test_t *t, test_param_t *p);
 int test_status_events(test_t *t, test_param_t *p);
 int test_status_events_sig(test_t *t, test_param_t *p);
+int test_status_events_in_pending(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_status_attach_detach_sig(test_t *t, test_param_t *p);
 int test_status_attach_reset_sig(test_t *t, test_param_t *p);
@@ -61,6 +62,7 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_status_read_pending_refresh_inactive, "spr", "read pending refresh on inactive channel"}, \
   { test_status_events, "se", "status event mask" }, \
   { test_status_events_sig, "sei", "signal on status event mask" }, \
+  { test_status_events_in_pending, "seip", "event arrives while pending" }, \
   { test_status_attach_detach, "sad", "attach/detach" }, \
   { test_status_attach_detach_sig, "sadi", "signal on attach/detach" }, \
   { test_status_attach_reset_sig, "sari", "signal on attach/reset" }, \
