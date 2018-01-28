@@ -116,7 +116,7 @@ $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 # test-param
 TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
-FW_ID_test-param-fw = 0x8008
+FW_ID_test-param-fw = 0x8002
 FW_VER_test-param-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 
@@ -124,7 +124,7 @@ $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 ifdef CONFIG_DRIVER_ENC28J60
 TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
-FW_ID_test-enc28j60-fw = 0x8006
+FW_ID_test-enc28j60-fw = 0x8003
 FW_VER_test-enc28j60-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
 endif
@@ -151,7 +151,7 @@ endif
 ifdef CONFIG_TOOL_UFAT
 TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
-FW_ID_test-ufat-fw = 0x8008
+FW_ID_test-ufat-fw = 0x8006
 FW_VER_test-ufat-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
 endif
@@ -164,13 +164,14 @@ FW_ID_test-net-fw = 0x8007
 FW_VER_test-net-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
 
+# ----- main test suites -----
 # test-pamela
 TEST_PAMELA_SRCS = $(PAMELA_SRCS)
 TEST_PAMELA_SRCS += test-pamela.c
-FW_ID_test-pamela-fw = 0x8002
+FW_ID_test-pamela-fw = 0x9000
 FW_VER_test-pamela-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-pamela-fw))
-$(eval $(call gen-pbl,test-pamela-fw))
+$(eval $(call make-pbl,test-pamela-fw))
 $(eval $(call dist-hex,test-pamela-fw))
 $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
@@ -178,13 +179,14 @@ $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)
 TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)
 TEST_PALOMA_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
 TEST_PALOMA_SRCS += test-paloma.c
-FW_ID_test-paloma-fw = 0x8003
+FW_ID_test-paloma-fw = 0x9001
 FW_VER_test-paloma-fw = $(VERSION_TAG)
 $(eval $(call dist-pbl,test-paloma-fw))
-$(eval $(call gen-pbl,test-paloma-fw))
+$(eval $(call make-pbl,test-paloma-fw))
 $(eval $(call dist-hex,test-paloma-fw))
 $(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
+# ----- bootloader -----
 ifndef DEBUG
 ifdef CONFIG_BOOTLOADER
 # bootloader
@@ -198,10 +200,10 @@ endif
 
 DEFAULT_FIRMWARE=test-proto-fw
 
-# rules
+# ---------- rules ----------
 include scripts/common-rules.mk
 
-# bootstrap rules
+# ----- bootstrap rules -----
 $(BOOTSTRAP_H) $(BOOTSTRAP_C): $(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE)
 	@echo "  BOOTSTRAP from $(BOOTSTRAP_CODE)"
 	$(H)$(BOOTSTRAP_GEN) $(BOOTSTRAP_CODE) $(BOOTSTRAP_C) $(BOOTSTRAP_H) \

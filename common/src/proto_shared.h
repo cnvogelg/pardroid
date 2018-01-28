@@ -36,11 +36,14 @@
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xf0
 #define PROTO_STATUS_INIT         0x00
-#define PROTO_STATUS_BOOTLOADER   0x10
+#define PROOT_STATUS_BUSY         0x10
 #define PROTO_STATUS_ATTACHED     0x20
 #define PROTO_STATUS_EVENTS       0x40
 #define PROTO_STATUS_READ_PENDING 0x80
 #define PROTO_STATUS_CHANNEL_MASK 0x70
+// bootloader flag is "inavlid" regulra state: both events + busy is set
+#define PROTO_STATUS_BOOTLOADER   0x50
+
 
 // register definitions
 #define PROTO_REGOFFSET_BASE             0x00

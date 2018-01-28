@@ -6,14 +6,11 @@ void fwid_decode(u16 fw_id, rom_pchar *res)
 {
   *res = PSTR("?");
   switch(fw_id) {
-    case FWID_TEST_BASE:
-      *res = PSTR("test-base");
+    case FWID_TEST_PAMELA:
+      *res = PSTR("test-pamela");
       break;
-    case FWID_TEST_PROTO:
-      *res = PSTR("test-proto");
-      break;
-    case FWID_TEST_HANDLER:
-      *res = PSTR("test-handler");
+    case FWID_TEST_PALOMA:
+      *res = PSTR("test-paloma");
       break;
   }
 }

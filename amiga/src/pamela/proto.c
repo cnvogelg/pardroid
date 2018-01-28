@@ -86,12 +86,10 @@ int proto_reset(proto_handle_t *ph, int exit_knok)
 
   if(exit_knok) {
     // perform reset action
-    res = proto_action(ph, PROTO_ACTION_RESET);
+    int res = proto_action(ph, PROTO_ACTION_RESET);
     if(res != PROTO_RET_OK) {
       return res;
     }
-
-    // wait for end of knok, i.e. busy/rak went hi
     return proto_wait_init(ph);
   } else {
     // perform delay reset action

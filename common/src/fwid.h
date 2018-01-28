@@ -2,9 +2,8 @@
 #define FWID_H
 
 // firmware ids
-#define FWID_TEST_BASE            0x8001
-#define FWID_TEST_PROTO           0x8002
-#define FWID_TEST_HANDLER         0x8003
+#define FWID_TEST_PAMELA          0x9000
+#define FWID_TEST_PALOMA          0x9001
 
 extern void fwid_decode(u16 fw_id, rom_pchar *res);
 

@@ -1202,8 +1202,8 @@ int test_base_regs(test_t *t, test_param_t *p)
   }
 
   /* check fw_id */
-  if(fw_id != FWID_TEST_PROTO) {
-    p->error = "no proto test firmware!";
+  if(fw_id != FWID_TEST_PAMELA) {
+    p->error = "no pamela test firmware!";
     p->section = "check";
     return 1;
   }

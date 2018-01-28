@@ -67,7 +67,7 @@ int dosmain(void)
 
   /* setup pamela */
   int init_res;
-  pam = pamela_init((struct Library *)SysBase, &init_res);
+  pam = pamela_init((struct Library *)SysBase, &init_res, PAMELA_INIT_NORMAL);
   if(res == PAMELA_OK) {
 
     /* setup paloma */

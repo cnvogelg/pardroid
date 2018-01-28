@@ -20,7 +20,7 @@ struct pamela_handle {
   BYTE   timer_signal;
 };
 
-pamela_handle_t *pamela_init(struct Library *SysBase, int *res)
+pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
 {
   pamela_handle_t *ph = AllocMem(sizeof(pamela_handle_t), MEMF_CLEAR | MEMF_PUBLIC);
   if(ph == NULL) {
@@ -62,19 +62,23 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res)
   }
 
   /* wait for device init if we left knok with proto init */
-  int pres = proto_wait_init(ph->proto);
-  if(pres != PROTO_RET_OK) {
-    *res = PAMELA_ERROR_WAIT_INIT;
-    pamela_exit(ph);
-    return NULL;
+  if((flags & PAMELA_INIT_NO_WAIT) == 0) {
+    int pres = proto_wait_init(ph->proto);
+    if(pres != PROTO_RET_OK) {
+      *res = PAMELA_ERROR_WAIT_INIT;
+      pamela_exit(ph);
+      return NULL;
+    }
   }
 
   /* perform a device reset first */
-  pres = proto_reset(ph->proto, 1);
-  if(pres != PROTO_RET_OK) {
-    *res = PAMELA_ERROR_RESET;
-    pamela_exit(ph);
-    return NULL;
+  if((flags & PAMELA_INIT_NO_RESET) == 0) {
+    int pres = proto_reset(ph->proto, 1);
+    if(pres != PROTO_RET_OK) {
+      *res = PAMELA_ERROR_RESET;
+      pamela_exit(ph);
+      return NULL;
+    }
   }
 
   /* init status */

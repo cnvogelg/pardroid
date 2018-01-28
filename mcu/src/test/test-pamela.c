@@ -74,7 +74,7 @@ static void func_test_size(u16 *val, u08 mode)
 }
 
 // define my app id
-BASE_REG_APPID(FWID_TEST_PROTO)
+BASE_REG_APPID(FWID_TEST_PAMELA)
 
 // registers
 REG_TABLE_BEGIN(test)

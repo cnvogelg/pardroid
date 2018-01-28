@@ -15,12 +15,6 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   int res;
   proto_handle_t *ph = pamela_get_proto(pb);
 
-  /* first reset device */
-  res = proto_reset(ph, 1);
-  if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_NO_PING | res;
-  }
-
   /* try to enter bootloader (ignored if already running */
   res = proto_action(ph, PROTO_ACTION_BOOTLOADER);
   if(res != PROTO_RET_OK) {
@@ -235,7 +229,7 @@ int bootloader_leave(pamela_handle_t *pb)
   proto_handle_t *ph = pamela_get_proto(pb);
 
   /* reset device */
-  res = proto_reset(ph, 1);
+  res = proto_action(ph, PROTO_ACTION_RESET);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_PING | res;
   }

@@ -20,7 +20,7 @@
 #include "paloma.h"
 
 // define my app id
-BASE_REG_APPID(FWID_TEST_HANDLER)
+BASE_REG_APPID(FWID_TEST_PALOMA)
 
 // set register table
 REG_TABLE_SETUP(handler)

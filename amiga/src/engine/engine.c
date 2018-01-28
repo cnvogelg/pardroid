@@ -37,7 +37,7 @@ static BOOL startup(void *user_data, ULONG *user_sig_mask)
 
   /* setup pamela */
   int res;
-  pamela_handle_t *ph = pamela_init(eh->sys_base, &res);
+  pamela_handle_t *ph = pamela_init(eh->sys_base, &res, PAMELA_INIT_NORMAL);
   if(res != PAMELA_OK) {
     eh->result = ENGINE_RET_INIT_FAILED;
     return FALSE;

@@ -40,19 +40,25 @@ static int check_args(void)
   return 0;
 }
 
+static void show_machtag(UWORD mach_tag)
+{
+  char *arch,*mcu,*mach;
+  UBYTE extra;
+  machtag_decode(mach_tag, &arch, &mcu, &mach, &extra);
+  Printf("            machtag=%s-%s-%s-%ld (%04lx)\n",
+     arch, mcu, mach, (ULONG)extra, (ULONG)mach_tag);
+}
+
 static void show_file_info(const char *file_name, pblfile_t *pf)
 {
   Printf("PBL File:   size=%08lx, name='%s'\n", pf->rom_size, file_name);
   UBYTE bl_hi = (UBYTE)(pf->version >> 8);
   UBYTE bl_lo = (UBYTE)(pf->version & 0xff);
-  char *arch,*mcu,*mach;
-  UBYTE extra;
-  machtag_decode(pf->mach_tag, &arch, &mcu, &mach, &extra);
   char *id_str;
   fwid_decode(pf->fw_id, &id_str);
-  Printf("PBL File:   fw=%04lx (%s), %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
-    (ULONG)pf->fw_id, id_str,
-    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)extra, (ULONG)pf->mach_tag);
+  Printf("            fw=%04lx (%s), ver=%ld.%ld\n",
+    (ULONG)pf->fw_id, id_str, (ULONG)bl_hi, (ULONG)bl_lo);
+  show_machtag(pf->mach_tag);
 }
 
 static void show_bootinfo(bootinfo_t *bi)
@@ -62,11 +68,9 @@ static void show_bootinfo(bootinfo_t *bi)
 
   UBYTE bl_hi = (UBYTE)(bi->bl_version >> 8) & 0x7f;
   UBYTE bl_lo = (UBYTE)(bi->bl_version & 0xff);
-  char *arch,*mcu,*mach;
-  UBYTE extra;
-  machtag_decode(bi->bl_mach_tag, &arch, &mcu, &mach, &extra);
-  Printf("Bootloader: %ld.%ld, %s-%s-%s-%ld (%04lx)\n",
-    (ULONG)bl_hi, (ULONG)bl_lo, arch, mcu, mach, (ULONG)extra, (ULONG)bi->bl_mach_tag);
+  Printf("Bootloader: ver=%ld.%ld\n",
+    (ULONG)bl_hi, (ULONG)bl_lo);
+  show_machtag(bi->bl_mach_tag);
 }
 
 static void show_fw_info(bootinfo_t *bi)
@@ -81,10 +85,10 @@ static void show_fw_info(bootinfo_t *bi)
     machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach, &extra);
     char *id_str;
     fwid_decode(bi->fw_id, &id_str);
-    Printf("Firmware:   fw=%04lx (%s), %ld.%ld, %s-%s-%s-%ld (%04lx)  crc=%04lx\n",
-      (ULONG)bi->fw_id, id_str,
-      (ULONG)fw_hi, (ULONG)fw_lo, arch, mcu, mach, (ULONG)extra, (ULONG)bi->fw_mach_tag,
+    Printf("Firmware:   fw=%04lx (%s), ver=%ld.%ld, crc=%04lx\n",
+      (ULONG)bi->fw_id, id_str, (ULONG)fw_hi, (ULONG)fw_lo,
       (ULONG)bi->fw_crc);
+    show_machtag(bi->fw_mach_tag);
   }
 }
 
@@ -255,7 +259,8 @@ int dosmain(void)
   if(file_result == PBLFILE_OK) {
     /* setup pamela */
     int pb_res;
-    pb = pamela_init((struct Library *)SysBase, &pb_res);
+    int flags = PAMELA_INIT_NO_WAIT | PAMELA_INIT_NO_RESET;
+    pb = pamela_init((struct Library *)SysBase, &pb_res, flags);
     if(pb_res == PAMELA_OK) {
       bootinfo_t bi;
 

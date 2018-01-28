@@ -3,8 +3,8 @@
 
 struct pblfile {
   ULONG   rom_size;
-  UWORD   version;
   UWORD   fw_id;
+  UWORD   version;
   UWORD   mach_tag;
   UWORD   pad;
   UBYTE   *data;

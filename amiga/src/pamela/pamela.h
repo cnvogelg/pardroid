@@ -20,10 +20,15 @@
 #define PAMELA_ERROR_RESET      7
 #define PAMELA_ERROR_WAIT_INIT  8
 
+/* init flags */
+#define PAMELA_INIT_NORMAL      0
+#define PAMELA_INIT_NO_WAIT     1
+#define PAMELA_INIT_NO_RESET    2
+
 struct pamela_handle;
 typedef struct pamela_handle pamela_handle_t;
 
-pamela_handle_t *pamela_init(struct Library *SysBase, int *res);
+pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags);
 void pamela_exit(pamela_handle_t *ph);
 
 proto_handle_t *pamela_get_proto(pamela_handle_t *ph);
