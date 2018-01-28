@@ -36,7 +36,7 @@
 // device status: bit 7,6,5 in idle byte (set by device)
 #define PROTO_STATUS_MASK         0xf0
 #define PROTO_STATUS_INIT         0x00
-#define PROOT_STATUS_BUSY         0x10
+#define PROTO_STATUS_BUSY         0x10
 #define PROTO_STATUS_ATTACHED     0x20
 #define PROTO_STATUS_EVENTS       0x40
 #define PROTO_STATUS_READ_PENDING 0x80

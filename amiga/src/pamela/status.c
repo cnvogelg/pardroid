@@ -41,8 +41,8 @@ int status_update(proto_handle_t *ph, status_data_t *data)
     data->flags = STATUS_FLAGS_NONE;
     data->pending_channel = STATUS_NO_CHANNEL;
     data->event_mask = STATUS_NO_EVENTS;
-    if(state & PROTO_STATUS_BOOTLOADER) {
-      data->flags |= STATUS_FLAGS_BOOTLOADER;
+    if(state & PROTO_STATUS_BUSY) {
+      data->flags |= STATUS_FLAGS_BUSY;
     }
     if(state & PROTO_STATUS_ATTACHED) {
       data->flags |= STATUS_FLAGS_ATTACHED;

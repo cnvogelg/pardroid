@@ -8,14 +8,13 @@
 
 static void print_header(test_t *test, test_param_t *param)
 {
-  Printf("Test: %s  [%s]  (Num: %ld, Delay: %ld)\n",
-    test->name, test->description, param->num_iter, param->delay);
+  Printf("[....]  (%-5s)  %s\r", test->name, test->description);
 }
 
-static void print_result(int res, test_param_t *param)
+static void print_error(int res, test_param_t *param)
 {
-  Printf("Result: %ld  %s  in  '%s': %s\n", (LONG)res,
-    param->error, param->section, param->extra);
+  Printf("[FAIL]\n        error=%ld  %s  section=%s  extra=%s\n",
+    (LONG)res, param->error, param->section, param->extra);
 }
 
 static void clear_error(test_param_t *param)
@@ -42,26 +41,25 @@ static int test_run_single(test_t *test, test_param_t *param, int silent, int nu
     res = test->func(test, param);
     if(res == 0) {
       if(!silent) {
-        PutStr("Ok.\n");
+        PutStr("[ ok ]\n");
       }
     }
     else {
       if(silent) {
         print_header(test, param);
       }
-      print_result(res, param);
+      print_error(res, param);
     }
   }
   else {
     /* loop */
     ULONG cnt = 0;
-    int force = 0;
     ULONG num_failed = 0;
     ULONG delay = param->delay;
     while(1) {
       /* break? */
       if(SetSignal(0L,SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C) {
-        PutStr("Abort.\n");
+        PutStr("\nAbort.\n");
         break;
       }
 
@@ -69,17 +67,11 @@ static int test_run_single(test_t *test, test_param_t *param, int silent, int nu
       clear_error(param);
       param->iter = cnt++;
 
+      Printf("[%04ld]\r", cnt);
+
       /* test func */
       res = test->func(test, param);
-      if(res == 0) {
-        if((cnt & 0xff == 0) || force) {
-          Printf("%06ld: ok\r", cnt);
-          force = 0;
-        }
-      }
-      else {
-        print_result(res, param);
-        force = 1;
+      if(res != 0) {
         num_failed++;
       }
 
@@ -93,7 +85,8 @@ static int test_run_single(test_t *test, test_param_t *param, int silent, int nu
         Delay(delay);
       }
     }
-    Printf("Loop Total: %ld, Failed: %ld\n", cnt, num_failed);
+    PutStr("\n----- Loop Result -----\n");
+    Printf("Total: %ld, Failed: %ld\n", cnt, num_failed);
   }
   return res == 0 ? RETURN_OK : RETURN_WARN;
 }
@@ -104,7 +97,9 @@ static int test_run_all(test_t all_tests[], test_param_t *param, int silent)
   ULONG num_failed = 0;
   int final_res = RETURN_OK;
 
-  PutStr("----- All Tests -----\n");
+  if(!silent) {
+    PutStr("----- All Tests -----\n");
+  }
   test_t *t = all_tests;
   while(t->name != NULL) {
     int res = test_run_single(t, param, silent, 1);
@@ -115,7 +110,15 @@ static int test_run_all(test_t all_tests[], test_param_t *param, int silent)
     t++;
     cnt++;
   }
-  Printf("All Total: %ld, Failed: %ld\n", cnt, num_failed);
+
+  if(!silent || num_failed > 0) {
+    if(silent) {
+      PutStr("\n");
+    }
+    Printf("----- Result -----\n");
+    Printf("Total: %ld, Failed: %ld\n", cnt, num_failed);
+  }
+
   return final_res;
 }
 
@@ -168,6 +171,7 @@ int test_main(test_t all_tests[], test_param_t *param)
       ULONG cnt = 0;
       ULONG num_failed = 0;
       int final_res = RETURN_OK;
+      PutStr("----- Loop All Tests -----\n");
       while(1) {
         /* break? */
         if(SetSignal(0L,SIGBREAKF_CTRL_C) & SIGBREAKF_CTRL_C) {
@@ -175,6 +179,7 @@ int test_main(test_t all_tests[], test_param_t *param)
           break;
         }
 
+        Printf("#%04ld\r", cnt);
         int res = test_run_all(all_tests, param, 1);
         if(res != RETURN_OK) {
           final_res = res;
@@ -186,7 +191,8 @@ int test_main(test_t all_tests[], test_param_t *param)
           break;
         }
       }
-      Printf("Loop All Total: %ld, Failed: %ld\n", cnt, num_failed);
+      PutStr("----- Result -----\n");
+      Printf("Total: %ld, Failed: %ld\n", cnt, num_failed);
     }
     /* run all tests a single time */
     else {

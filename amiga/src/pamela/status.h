@@ -2,7 +2,7 @@
 #define STATUS_H
 
 #define STATUS_FLAGS_ATTACHED   1
-#define STATUS_FLAGS_BOOTLOADER 2
+#define STATUS_FLAGS_BUSY       2
 #define STATUS_FLAGS_EVENTS     4
 #define STATUS_FLAGS_PENDING    8
 #define STATUS_FLAGS_NONE       0
