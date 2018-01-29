@@ -120,7 +120,6 @@ void func_handle(u08 num)
     DS("f:??"); DNL;
     // wait for invalid action to time out
     proto_low_wait_cflg_hi();
-    return;
   } else {
     u08 flags = read_rom_char(&func_table[num].flags);
 

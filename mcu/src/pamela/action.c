@@ -56,10 +56,12 @@ void action_handle(u08 num)
 {
   u08 max = read_rom_char(&action_table_size);
   if(num >= max) {
+    // dummy action
     DC('?'); DNL;
-    // wait for invalid action to time out
-    action_ping();
-    return;
+    proto_low_action();
+    u08 status = proto_api_get_end_status();
+    proto_low_end(status);
+    DS("as:"); DB(status); DNL;
   } else {
     u08 flags = read_rom_char(&action_table[num].flags);
 
