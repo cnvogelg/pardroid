@@ -1,9 +1,11 @@
 #ifndef BENCH_H
 #define BENCH_H
 
-typedef void (*bench_func_t)(void *user_data);
+struct bench_def;
 
-typedef struct {
+typedef ULONG (*bench_func_t)(struct bench_def *b, void *user_data);
+
+typedef struct bench_def {
   bench_func_t    func;
   const char     *name;
   const char     *description;

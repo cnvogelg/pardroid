@@ -24,9 +24,19 @@ void list_benches(bench_def_t *first)
   PutStr("--- Benchmarks ---\n");
   bench_def_t *def = first;
   while(def->func != NULL) {
-    Printf("%20s  %s\n", def->name, def->description);
+    Printf("%-6s  %s\n", def->name, def->description);
     def++;
   }
+}
+
+static void write_header(bench_def_t *def)
+{
+  Printf("[.....]  (%-5s)  %s\r", def->name, def->description);
+}
+
+static void write_result(ULONG val)
+{
+  Printf("[%5ld]\n", val);
 }
 
 int bench_main(bench_def_t benches[], const char *name, void *user_data)
@@ -39,16 +49,22 @@ int bench_main(bench_def_t benches[], const char *name, void *user_data)
       return RETURN_WARN;
     }
 
-    def->func(user_data);
+    write_header(def);
+    ULONG val = def->func(def, user_data);
+    write_result(val);
   }
   // run all
   else {
     bench_def_t *def = benches;
     while(def->func != NULL) {
-      def->func(user_data);
+      write_header(def);
+      ULONG val = def->func(def, user_data);
+      write_result(val);
       def++;
     }
   }
 
   return RETURN_OK;
 }
+
+

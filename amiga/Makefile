@@ -22,7 +22,7 @@ PROTO_SRCS = proto_low.s proto.c
 TIMER_SRCS = timer.c
 WORKER_SRCS = worker.c
 TEST_SRCS = test.c
-BENCH_SRCS = bench.c
+BENCH_SRCS = bench.c bench_main.c
 
 PAMELA_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(WORKER_SRCS)
 PAMELA_SRCS += pamela.c reg.c offset.c status.c
