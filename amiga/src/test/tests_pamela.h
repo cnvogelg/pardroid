@@ -35,6 +35,7 @@ int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_status_attach_detach_sig(test_t *t, test_param_t *p);
 int test_status_attach_reset_sig(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
+int test_echo_single(test_t *t, test_param_t *p);
 
 #define TESTS_PAMELA_ALL \
   { test_reset, "reset", "reset parbox device" }, \
@@ -67,5 +68,6 @@ int test_base_regs(test_t *t, test_param_t *p);
   { test_status_attach_detach_sig, "sadi", "signal on attach/detach" }, \
   { test_status_attach_reset_sig, "sari", "signal on attach/reset" }, \
   { test_base_regs, "br", "base regs" }, \
+  { test_echo_single, "es", "echo single message" }, \
 
 #endif

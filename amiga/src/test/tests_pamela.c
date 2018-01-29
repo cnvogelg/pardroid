@@ -279,6 +279,18 @@ static void fill_buffer(ULONG size, UBYTE *mem)
   }
 }
 
+static int validate_buffer(ULONG size, UBYTE *mem)
+{
+  UBYTE data = get_start_byte();
+  for(ULONG i=0;i<size;i++) {
+    if(mem[i] != data) {
+      return 1;
+    }
+    data++;
+  }
+  return 0;
+}
+
 static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
 {
   /* check buf */
@@ -633,11 +645,15 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 
 #define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
 #define REG_SIM_EVENT   (PROTO_REGOFFSET_USER + 6)
+#define REG_TEST_MODE   (PROTO_REGOFFSET_USER + 7)
 
 #define SIM_PENDING_SET   0x80
 
 #define WAIT_S      0UL
 #define WAIT_US     10000UL
+
+#define TEST_MODE_NORMAL  0
+#define TEST_MODE_ECHO    1
 
 static int assert_timer_mask(test_param_t *p, const char *section, pamela_handle_t *pb, ULONG got)
 {
@@ -1643,3 +1659,135 @@ int test_base_regs(test_t *t, test_param_t *p)
 
   return 0;
 }
+
+// ---------- test modes ------------------------------------------
+
+static int set_test_mode(test_param_t *p, const char *section,
+                          pamela_handle_t *pb, UBYTE mode)
+{
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  /* sim_pending */
+  int res = reg_set(proto, REG_TEST_MODE, mode);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = section;
+    return res;
+  }
+
+  return 0;
+}
+
+static int run_in_test_mode(test_t *t, test_param_t *p, test_func_t func,
+                     UBYTE mode)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+
+  /* set echo test mode */
+  int res = set_test_mode(p, "init", pb, mode);
+  if(res != 0) {
+    return res;
+  }
+
+  res = run_with_events(t, p, func);
+
+  /* set normal mode */
+  set_test_mode(p, "exit", pb, TEST_MODE_NORMAL);
+
+  return 0;
+}
+
+// ----- ECHO -----
+
+#define MSG_SIZE  512
+
+int run_echo_single(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* alloc buffer */
+  ULONG size = get_default_size();
+  UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
+  if(buf == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+  fill_buffer(size, buf);
+
+  /* send buffer */
+  UWORD words = size>>1;
+  int res = proto_msg_write_single(proto, test_channel, buf, words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  /* wait for pending read */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume event */
+  res = assert_event_mask(p, "wait", pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume pending is set again after event */
+  if(status->flags != STATUS_FLAGS_PENDING) {
+    p->error = "status not pending again";
+    p->section = "wait";
+    return 1;
+  }
+
+  /* expect my channel as pending */
+  if(status->pending_channel != test_channel) {
+    p->error = "wrong pending channel";
+    p->section = "wait";
+    return 1;
+  }
+
+  /* receive buffer */
+  res = proto_msg_read_single(proto, test_channel, buf, &words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return res;
+  }
+
+  /* validate buffer */
+  res = validate_buffer(size, buf);
+  if(res != 0) {
+    p->error = "buffer not valid";
+    p->section = "post";
+    return res;
+  }
+
+  FreeVec(buf);
+
+  /* no more pending */
+  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume event */
+  res = assert_timer_mask(p, "post", pb, got2);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume pending is set again after event */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not none";
+    p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_echo_single(test_t *t, test_param_t *p)
+{
+  return run_in_test_mode(t, p, run_echo_single, TEST_MODE_ECHO);
+}
+

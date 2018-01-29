@@ -10,7 +10,6 @@
 #include "debug.h"
 
 #include "pamela.h"
-#include "proto.h"
 #include "bench.h"
 
 static const char *TEMPLATE =
@@ -24,7 +23,7 @@ typedef struct {
   char *bench;
   ULONG *size;
 } params_t;
-static params_t params = { 0, NULL, NULL };
+static params_t params = { 0, NULL, NULL, NULL };
 
 static ULONG get_num(void)
 {
@@ -48,6 +47,65 @@ static ULONG get_size(void)
   }
 }
 
+/* ----- events helper ----- */
+
+#define WAIT_S      0
+#define WAIT_US     100000UL
+
+static int run_with_events(pamela_handle_t *pb, bench_func_t func)
+{
+  /* init events */
+  int res = pamela_init_events(pb);
+  if(res != PAMELA_OK) {
+    Printf("ERROR: pamela_init_events: %ld %s\n",
+           (LONG)res, proto_perror(res));
+    return res;
+  }
+
+  /* call test func */
+  func(pb);
+
+  /* cleanup events */
+  pamela_exit_events(pb);
+
+  return res;
+}
+
+/* ----- test mode setup ----- */
+
+#define REG_TEST_MODE   (PROTO_REGOFFSET_USER + 7)
+
+#define TEST_MODE_NORMAL  0
+#define TEST_MODE_ECHO    1
+
+static int set_test_mode(pamela_handle_t *pb, UBYTE mode)
+{
+  proto_handle_t *proto = pamela_get_proto(pb);
+  /* set test mode */
+  int res = reg_set(proto, REG_TEST_MODE, mode);
+  if(res != 0) {
+    Printf("ERROR: set_test_mode(%lu): %ld %s\n",
+           (ULONG)mode, (LONG)res, proto_perror(res));
+  }
+  return res;
+}
+
+static int run_in_test_mode(pamela_handle_t *pb, bench_func_t func, UBYTE mode)
+{
+  /* set echo test mode */
+  int res = set_test_mode(pb, mode);
+  if(res != 0) {
+    return res;
+  }
+
+  res = run_with_events(pb, func);
+
+  /* set normal mode */
+  set_test_mode(pb, TEST_MODE_NORMAL);
+
+  return res;
+}
+
 /* benchmark functions */
 
 static void bench_action(void *user_data)
@@ -62,7 +120,9 @@ static void bench_action(void *user_data)
       (LONG)error, deltas[0], deltas[1]);
 }
 
-typedef int (*loop_func_t)(proto_handle_t *ph, void *user_data);
+/* ----- run loop helper ----- */
+
+typedef int (*loop_func_t)(pamela_handle_t *ph, ULONG iter, void *user_data);
 
 static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
                      loop_func_t func, void *user_data)
@@ -76,7 +136,7 @@ static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
   timer_eclock_get(timer, &start);
 
   for(i=0;i<num;i++) {
-    int status = func(proto, user_data);
+    int status = func(pb, i, user_data);
     if(status != PROTO_RET_OK) {
       Printf("ERROR: %lu = %s\n", status, proto_perror(status));
       break;
@@ -90,7 +150,7 @@ static void run_loop(pamela_handle_t *pb, ULONG num, ULONG size,
 
   ULONG us = timer_eclock_to_us(timer, &delta);
   ULONG kbps = (sum_size * 1000UL) / us;
-  Printf("#%lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, us, kbps);
+  Printf("Result #%04lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, us, kbps);
 }
 
 typedef struct {
@@ -98,21 +158,26 @@ typedef struct {
   ULONG  num_words;
 } msgio_data_t;
 
-static int func_msg_write(proto_handle_t *ph, void *user_data)
+/* ----- bench functions ----- */
+
+static int func_msg_write(pamela_handle_t *pb, ULONG iter, void *user_data)
 {
+  proto_handle_t *ph = pamela_get_proto(pb);
   msgio_data_t *data = (msgio_data_t *)user_data;
   return proto_msg_write_single(ph, 0, data->buffer, data->num_words);
 }
 
-static int func_msg_read(proto_handle_t *ph, void *user_data)
+static int func_msg_read(pamela_handle_t *pb, ULONG iter, void *user_data)
 {
+  proto_handle_t *ph = pamela_get_proto(pb);
   msgio_data_t *data = (msgio_data_t *)user_data;
   UWORD size = data->num_words;
   return proto_msg_read_single(ph, 0, data->buffer, &size);
 }
 
-static int func_msg_write_read(proto_handle_t *ph, void *user_data)
+static int func_msg_write_read(pamela_handle_t *pb, ULONG iter, void *user_data)
 {
+  proto_handle_t *ph = pamela_get_proto(pb);
   msgio_data_t *data = (msgio_data_t *)user_data;
   int status = proto_msg_write_single(ph, 0, data->buffer, data->num_words);
   if(status != PROTO_RET_OK) {
@@ -121,6 +186,35 @@ static int func_msg_write_read(proto_handle_t *ph, void *user_data)
   UWORD size = data->num_words;
   return proto_msg_read_single(ph, 0, data->buffer, &size);
 }
+
+static int func_msg_write_read_sig(pamela_handle_t *pb, ULONG iter, void *user_data)
+{
+  proto_handle_t *ph = pamela_get_proto(pb);
+  msgio_data_t *data = (msgio_data_t *)user_data;
+  status_data_t *status = pamela_get_status(pb);
+
+  /* write message */
+  int res = proto_msg_write_single(ph, 0, data->buffer, data->num_words);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  /* wait for read pending signal */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+  Printf("got=%08lx event=%08lx\n", got, pamela_get_event_sigmask(pb));
+
+  /* check status */
+  if(status->flags != STATUS_FLAGS_PENDING) {
+    Printf("#%ld: No read pending?? flags=%lu\n", iter, (ULONG)status->flags);
+  }
+
+  /* read message back */
+  UWORD size = data->num_words;
+  return proto_msg_read_single(ph, 0, data->buffer, &size);
+}
+
+
+/* ----- benchmarks ----- */
 
 static void bench_msg_write(void *user_data)
 {
@@ -185,6 +279,33 @@ static void bench_msg_write_read(void *user_data)
   FreeVec(buf);
 }
 
+static void run_msg_write_read_sig(void *user_data)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
+  proto_handle_t *ph = pamela_get_proto(pb);
+  ULONG num = get_num();
+  ULONG size = get_size();
+  Printf("message write/read+sig: num=%lu, size=%lu\n", num, size);
+
+  UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
+  if(buf == NULL) {
+    PutStr("No Memory!\n");
+    return;
+  }
+
+  ULONG num_words = size >> 1;
+  msgio_data_t data = { buf, num_words };
+  run_loop(pb, num, size * 2, func_msg_write_read_sig, &data);
+
+  FreeVec(buf);
+}
+
+static void bench_msg_write_read_sig(void *user_data)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)user_data;
+  run_in_test_mode(pb, run_msg_write_read_sig, TEST_MODE_ECHO);
+}
+
 /* benchmark table */
 
 static bench_def_t all_benches[] = {
@@ -192,6 +313,7 @@ static bench_def_t all_benches[] = {
   { bench_msg_write, "mw", "message write benchmark" },
   { bench_msg_read, "mr", "message read benchmark" },
   { bench_msg_write_read, "mwr", "message write/read benchmark" },
+  { bench_msg_write_read_sig, "mwrs", "message write/read+sig benchmark" },
   { NULL, NULL, NULL }
 };
 
@@ -214,18 +336,8 @@ int dosmain(void)
   pb = pamela_init((struct Library *)SysBase, &init_res, PAMELA_INIT_NORMAL);
   if(init_res == PAMELA_OK) {
 
-    /* reset firmware */
-    proto_handle_t *proto = pamela_get_proto(pb);
-    res = proto_reset(proto, 1);
-    if(res == PROTO_RET_OK) {
-
-      /* run test */
-      res = bench_main(all_benches, params.bench, pb);
-
-    } else {
-      PutStr(proto_perror(res));
-      PutStr(" -> ABORT\n");
-    }
+    /* run test */
+    res = bench_main(all_benches, params.bench, pb);
 
     pamela_exit(pb);
   } else {

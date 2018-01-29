@@ -24,10 +24,12 @@ int status_update(proto_handle_t *ph, status_data_t *data)
   // get state byte
   UBYTE state = proto_get_status(ph);
 
+#if 0
   // anything changed?
   if(state == data->last_state) {
     return FALSE;
   }
+#endif
   data->last_state = state;
 
   // decode state byte
