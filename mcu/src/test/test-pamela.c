@@ -22,6 +22,11 @@
 
 static u08 buffer[MAX_BUFFER_SIZE];
 static u16 extra_val;
+static u08 test_mode;
+static u16 test_count;
+
+#define TEST_MODE_NORMAL 0
+#define TEST_MODE_ECHO   1
 
 // sim functions
 static void sim_pending(u16 *valp, u08 mode)
@@ -46,6 +51,22 @@ static void sim_event(u16 *valp, u08 mode)
     u08 chn = *valp & 0xff;
     DS("sim:e"); DB(chn); DNL;
     status_set_event(chn);
+  }
+}
+
+static void set_test_mode(u16 *valp, u08 mode)
+{
+  if(mode == REG_MODE_WRITE) {
+    test_mode = *valp & 0xff;
+    DS("test_mode:"); DB(test_mode); DNL;
+  }
+}
+
+static void set_test_count(u16 *valp, u08 mode)
+{
+  if(mode == REG_MODE_WRITE) {
+    test_count = *valp;
+    DS("test_count:"); DW(test_count); DNL;
   }
 }
 
@@ -84,7 +105,9 @@ REG_TABLE_BEGIN(test)
   REG_TABLE_RW_FUNC(func_test_size),    // user+3
   REG_TABLE_RW_RAM_W(test_word),        // user+4
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
-  REG_TABLE_RW_FUNC(sim_event)          // user+6
+  REG_TABLE_RW_FUNC(sim_event),         // user+6
+  REG_TABLE_RW_FUNC(set_test_mode),     // user+7
+  REG_TABLE_RW_FUNC(set_test_count)     // user+8
 REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
 REG_TABLE_SETUP(test)
 
@@ -115,6 +138,10 @@ u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
 void proto_api_read_msg_done(u08 chn, u08 status)
 {
   DS("[r#"); DB(chn); DC(':'); DB(status); DC(']'); DNL;
+
+  if(test_mode == TEST_MODE_ECHO) {
+    status_clear_pending(chn);
+  }
 }
 
 u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
@@ -129,6 +156,10 @@ void proto_api_write_msg_done(u08 chn, u16 size, u16 extra)
   DS("[w#"); DB(chn); DC(':'); DW(size);DC('%'); DW(extra); DC(']'); DNL;
   test_size = size;
   extra_val = extra;
+
+  if(test_mode == TEST_MODE_ECHO) {
+    status_set_pending(chn);
+  }
 }
 
 
