@@ -189,11 +189,8 @@ void handler_set_status(u08 chn, u08 status)
   if(chn < max) {
     handler_data_t *data = HANDLER_GET_DATA(chn);
     data->status = status;
-    u08 mask = 1 << chn;
-    if(status == HANDLER_OK) {
-      status_clear_event_mask(mask);
-    } else {
-      status_set_event_mask(mask);
+    if(status != HANDLER_OK) {
+      status_set_event(chn);
     }
   }
 }
