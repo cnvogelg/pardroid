@@ -201,10 +201,10 @@ static int func_msg_write_read_sig(pamela_handle_t *pb, ULONG iter, void *user_d
 
   /* wait for read pending signal */
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-  Printf("got=%08lx event=%08lx\n", got, pamela_get_event_sigmask(pb));
 
   /* check status */
   if(status->flags != STATUS_FLAGS_PENDING) {
+    Printf("got=%08lx event=%08lx\n", got, pamela_get_event_sigmask(pb));
     Printf("#%ld: No read pending?? flags=%lu\n", iter, (ULONG)status->flags);
   }
 
