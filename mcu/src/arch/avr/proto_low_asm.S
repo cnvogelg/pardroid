@@ -486,10 +486,6 @@ proto_low_write_block:
     wait_clk_lo
     ddr_idle
 
-    ; end sync
-    wait_clk_hi
-    rak_hi
-
     irq_on
     ret
 
@@ -512,10 +508,6 @@ proto_low_read_block:
     ; save r20 (channel) -> r0
     ; warning: r20 gets globbered by first data_out* call!
     mov     r0,r20
-
-    ; save old status value -> r22
-    data_in
-    mov     r22,r18
 
     ; confirm to master we are ready
     rak_lo
@@ -590,15 +582,6 @@ proto_low_read_block:
     ; ddr idle
     wait_clk_lo
     ddr_idle
-
-    ; restore old status value
-    mov     r18,r22
-    data_out_prepare
-    data_out_set
-
-    ; end sync
-    wait_clk_hi
-    rak_hi
 
     irq_on
     ret

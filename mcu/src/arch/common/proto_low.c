@@ -202,9 +202,6 @@ write_end:
   wait_clk_lo();
   ddr_idle();
 
-  wait_clk_hi();
-  rak_hi();
-
   irq_on();
 
   *chn_ext = (eh << 8) | el;
@@ -219,8 +216,6 @@ u08  proto_low_read_block(u16 num_words, u08 *buffer, u16 chn_ext)
   u08 sl = (u08)(num_words & 0xff);
 
   irq_off();
-
-  u08 old_status = din();
 
   rak_lo();
   wait_clk_hi();
@@ -256,11 +251,6 @@ read_end:
 
   wait_clk_lo();
   ddr_idle();
-  // restore status
-  dout(old_status);
-
-  wait_clk_hi();
-  rak_hi();
 
   irq_on();
 

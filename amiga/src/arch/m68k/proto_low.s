@@ -726,7 +726,7 @@ plmw_msg_too_large:
 
         ; final sync
         clk_hi
-        check_rak_hi    plmw_end
+        wait_rak_hi    plmw_end
 
 plmw_end:
         set_cmd_idle
@@ -863,7 +863,7 @@ plmr_done:
 
         ; final sync
         clk_hi
-        check_rak_hi    plmr_end
+        wait_rak_hi    plmr_end
 plmr_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6
