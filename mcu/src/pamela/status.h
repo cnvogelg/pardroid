@@ -2,7 +2,7 @@
 #define STATUS_H
 
 extern void status_init(void);
-extern void status_handle(void);
+extern u08  status_handle(void);
 
 // events
 extern void status_clear_events(void);

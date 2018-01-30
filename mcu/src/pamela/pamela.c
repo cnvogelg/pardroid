@@ -17,6 +17,8 @@ void pamela_init(void)
 
 void pamela_handle(void)
 {
-  status_handle();
-  proto_handle();
+  u08 busy = status_handle();
+  if(!busy) {
+    proto_handle();
+  }
 }

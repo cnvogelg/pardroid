@@ -15,7 +15,6 @@
 
 #define FLAG_NONE           0
 #define FLAG_IRQ_REQUEST    1
-#define FLAG_IRQ_ACTIVE     2
 #define FLAG_DETACHED       4
 #define FLAG_PEND_IRQ       8
 #define FLAG_EVENT_IRQ      16
@@ -61,7 +60,7 @@ static u08 status_get_bits(void)
   return bits;
 }
 
-void status_handle(void)
+u08 status_handle(void)
 {
   // need to update state?
   if(flags & FLAG_UPDATE) {
@@ -89,16 +88,14 @@ void status_handle(void)
   if((flags & FLAG_IRQ_REQUEST) && ((flags & FLAG_UPDATE)==0))
   {
     flags &= ~FLAG_IRQ_REQUEST;
-    flags |=  FLAG_IRQ_ACTIVE;
+    DS("I"); DNL;
     proto_low_ack_lo();
-    DS("I+"); DNL;
-  }
-  // reset irq if it was set
-  else if(flags & FLAG_IRQ_ACTIVE) {
-    flags &= ~FLAG_IRQ_ACTIVE;
+    timer_delay_1us();
     proto_low_ack_hi();
-    DS("I-"); DNL;
   }
+
+  // is idle?
+  return flags & (FLAG_UPDATE | FLAG_IRQ_REQUEST);
 }
 
 // called after a command to update status bits
