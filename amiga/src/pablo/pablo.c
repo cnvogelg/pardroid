@@ -259,7 +259,7 @@ int dosmain(void)
   if(file_result == PBLFILE_OK) {
     /* setup pamela */
     int pb_res;
-    int flags = PAMELA_INIT_NO_WAIT | PAMELA_INIT_NO_RESET;
+    int flags = PAMELA_INIT_BOOT;
     pb = pamela_init((struct Library *)SysBase, &pb_res, flags);
     if(pb_res == PAMELA_OK) {
       bootinfo_t bi;

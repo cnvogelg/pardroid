@@ -19,11 +19,11 @@
 #define PAMELA_ERROR_TIMER_SIG  6
 #define PAMELA_ERROR_RESET      7
 #define PAMELA_ERROR_WAIT_INIT  8
+#define PAMELA_ERROR_ATTACH     9
 
 /* init flags */
 #define PAMELA_INIT_NORMAL      0
-#define PAMELA_INIT_NO_WAIT     1
-#define PAMELA_INIT_NO_RESET    2
+#define PAMELA_INIT_BOOT        1
 
 struct pamela_handle;
 typedef struct pamela_handle pamela_handle_t;

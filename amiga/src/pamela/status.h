@@ -1,7 +1,7 @@
 #ifndef STATUS_H
 #define STATUS_H
 
-#define STATUS_FLAGS_ATTACHED   1
+#define STATUS_FLAGS_DETACHED   1
 #define STATUS_FLAGS_BUSY       2
 #define STATUS_FLAGS_EVENTS     4
 #define STATUS_FLAGS_PENDING    8

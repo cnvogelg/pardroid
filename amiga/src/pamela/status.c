@@ -46,8 +46,8 @@ int status_update(proto_handle_t *ph, status_data_t *data)
     if(state & PROTO_STATUS_BUSY) {
       data->flags |= STATUS_FLAGS_BUSY;
     }
-    if(state & PROTO_STATUS_ATTACHED) {
-      data->flags |= STATUS_FLAGS_ATTACHED;
+    if(state & PROTO_STATUS_DETACHED) {
+      data->flags |= STATUS_FLAGS_DETACHED;
     }
     if(state & PROTO_STATUS_EVENTS) {
       data->flags |= STATUS_FLAGS_EVENTS;

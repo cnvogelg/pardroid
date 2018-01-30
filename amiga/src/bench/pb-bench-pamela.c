@@ -242,7 +242,7 @@ static ULONG run_msg_write_read_sig(bench_def_t *def, void *user_data)
 static ULONG bench_msg_write_read_sig(bench_def_t *def, void *user_data)
 {
   pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  run_in_test_mode(def, pb, run_msg_write_read_sig, TEST_MODE_ECHO);
+  return run_in_test_mode(def, pb, run_msg_write_read_sig, TEST_MODE_ECHO);
 }
 
 /* benchmark table */

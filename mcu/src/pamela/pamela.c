@@ -11,7 +11,7 @@ void pamela_init(void)
   // wait for knockin seq
   knok_main();
 
-  proto_init(PROTO_STATUS_INIT);
+  proto_init(PROTO_STATUS_DETACHED);
   status_init();
 }
 

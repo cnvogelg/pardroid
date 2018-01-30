@@ -15,14 +15,16 @@
 #define FLAG_NONE           0
 #define FLAG_IRQ_REQUEST    1
 #define FLAG_IRQ_ACTIVE     2
-#define FLAG_ATTACHED       4
+#define FLAG_DETACHED       4
 #define FLAG_PEND_IRQ       8
 #define FLAG_EVENT_IRQ      16
+#define FLAG_BUSY           32
+#define FLAG_UPDATE         64
 
 static u08 flags;
 static u08 event_mask;
 static u08 pending_mask;
-static u08 old_state;
+static u08 old_bits;
 static u08 pending_channel;
 
 void status_init(void)
@@ -31,15 +33,59 @@ void status_init(void)
   pending_mask = 0;
   // request an irq right after reset
   // (to report detached state)
-  flags = FLAG_IRQ_REQUEST;
-  old_state = 0;
+  flags = FLAG_DETACHED | FLAG_IRQ_REQUEST;
+  old_bits = PROTO_STATUS_DETACHED;
   pending_channel = 7;
+}
+
+static u08 status_get_bits(void)
+{
+  u08 bits = 0;
+  // highest prio: detached
+  if(flags & FLAG_DETACHED) {
+    bits = PROTO_STATUS_DETACHED;
+  }
+  // then: busy
+  else if(flags & FLAG_BUSY) {
+    bits = PROTO_STATUS_BUSY;
+  }
+  // then: event
+  else if(event_mask != 0) {
+    bits = PROTO_STATUS_EVENTS;
+  }
+  // finally: pending
+  else if(pending_mask != 0) {
+    bits = pending_channel << 4 | PROTO_STATUS_READ_PENDING;
+  }
+  return bits;
 }
 
 void status_handle(void)
 {
+  // need to update state?
+  if(flags & FLAG_UPDATE) {
+    u08 bits = status_get_bits();
+    if(bits != old_bits) {
+      DS("su:"); DB(bits); DC('<'); DB(old_bits);
+      // try to update
+      u08 done = proto_low_set_status(bits);
+      if(done) {
+        DC('.');
+        flags &= ~FLAG_UPDATE;
+        old_bits = bits;
+      } else {
+        DC('?');
+      }
+      DNL;
+    } else {
+      DS("su?"); DB(bits); DNL;
+      flags &= ~FLAG_UPDATE;
+    }
+  }
+
+  // only if update was successful then trigger irgs
   // enable ack irq
-  if(flags & FLAG_IRQ_REQUEST)
+  if((flags & FLAG_IRQ_REQUEST) && ((flags & FLAG_UPDATE)==0))
   {
     flags &= ~FLAG_IRQ_REQUEST;
     flags |=  FLAG_IRQ_ACTIVE;
@@ -54,42 +100,28 @@ void status_handle(void)
   }
 }
 
+// called after a command to update status bits
+u08 status_after_cmd(void)
+{
+  u08 bits = status_get_bits();
+  // no more update required
+  flags &= ~FLAG_UPDATE;
+  old_bits = bits;
+  DS("Sc:"); DB(bits); DNL;
+  return bits;
+}
+
 static void status_update(void)
 {
-  u08 bits = status_get_current();
+  u08 bits = status_get_bits();
 
-  // set bits
-  if(bits != old_state) {
-    DS("su:"); DB(bits); DC('<'); DB(old_state);
-
-    // no command running -> update state now
-    u08 cmd = proto_current_cmd();
-    if(cmd == 0xff) {
-      u08 done = proto_low_set_status(bits);
-      if(done) {
-        DC('.');
-      } else {
-        DC('?');
-      }
-    } else {
-      DC('!');
-    }
-
-    // if pending state changed and is active then trigger ack
-    u08 changed = (bits ^ old_state) & PROTO_STATUS_READ_PENDING;
-    u08 set = bits & PROTO_STATUS_READ_PENDING;
-    if(changed && set) {
-      DS("Ic");
-      flags |= FLAG_IRQ_REQUEST;
-    }
-
-    old_state = bits;
-    DNL;
-  } else {
-    DS("su="); DB(bits); DNL;
+  // if any event is active and changed
+  if((bits != 0) && (bits != old_bits)) {
+    DS("Ic:"); DB(bits); DC('<'); DB(old_bits);
+    flags |= FLAG_IRQ_REQUEST;
   }
 
-  // issue irq
+  // status event
   if(bits & PROTO_STATUS_EVENTS) {
     if(flags & FLAG_EVENT_IRQ) {
       flags &= ~FLAG_EVENT_IRQ;
@@ -97,6 +129,7 @@ static void status_update(void)
       flags |= FLAG_IRQ_REQUEST;
     }
   }
+  // pending event
   else if(bits & PROTO_STATUS_READ_PENDING) {
     if(flags & FLAG_PEND_IRQ) {
       flags &= ~FLAG_PEND_IRQ;
@@ -104,24 +137,10 @@ static void status_update(void)
       flags |= FLAG_IRQ_REQUEST;
     }
   }
-}
+  DNL;
 
-u08 status_get_current(void)
-{
-  // if an error is set then show it always (suppress pending if necessary)
-  u08 bits = 0;
-  if(flags & FLAG_ATTACHED) {
-    bits |= PROTO_STATUS_ATTACHED;
-  }
-  if(event_mask != 0) {
-    bits |= PROTO_STATUS_EVENTS;
-  }
-  // if a channel is pending
-  else if(pending_mask != 0) {
-    bits = pending_channel << 4 | PROTO_STATUS_READ_PENDING;
-  }
-  DS("sr:"); DB(bits); DNL;
-  return bits;
+  // request update in handler
+  flags |= FLAG_UPDATE;
 }
 
 // ----- events -----
@@ -153,9 +172,9 @@ void status_set_event(u08 chn)
 
 void status_attach(void)
 {
-  if((flags & FLAG_ATTACHED)==0) {
+  if(flags & FLAG_DETACHED) {
     DS("sa"); DNL;
-    flags |= FLAG_ATTACHED;
+    flags &= ~FLAG_DETACHED;
   } else {
     DS("sa?"); DNL;
   }
@@ -164,9 +183,9 @@ void status_attach(void)
 
 void status_detach(void)
 {
-  if(flags & FLAG_ATTACHED) {
+  if((flags & FLAG_DETACHED)==0) {
     DS("sd"); DNL;
-    flags &= ~FLAG_ATTACHED;
+    flags |= FLAG_DETACHED;
   } else {
     DS("sd?"); DNL;
   }
@@ -263,4 +282,4 @@ void status_clear_pending(u08 chn)
   status_update();
 }
 
-u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_get_current")));
+u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_after_cmd")));

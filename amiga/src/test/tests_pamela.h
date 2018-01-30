@@ -59,8 +59,8 @@ int test_echo_single(test_t *t, test_param_t *p);
   { test_status_read_pending_sig, "spi", "signal on read pending flag"}, \
   { test_status_read_pending_two, "spt", "read pending two channels"}, \
   { test_status_read_pending_refresh, "spr", "read pending refresh same channel"}, \
-  { test_status_read_pending_refresh_active, "spr", "read pending refresh on active channel"}, \
-  { test_status_read_pending_refresh_inactive, "spr", "read pending refresh on inactive channel"}, \
+  { test_status_read_pending_refresh_active, "spra", "read pending refresh on active channel"}, \
+  { test_status_read_pending_refresh_inactive, "spri", "read pending refresh on inactive channel"}, \
   { test_status_events, "se", "status event mask" }, \
   { test_status_events_sig, "sei", "signal on status event mask" }, \
   { test_status_events_in_pending, "seip", "event arrives while pending" }, \

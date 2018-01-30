@@ -4,8 +4,6 @@
 extern void status_init(void);
 extern void status_handle(void);
 
-extern u08  status_get_current(void);
-
 // events
 extern void status_clear_events(void);
 extern u08  status_get_event_mask(void);

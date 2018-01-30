@@ -38,14 +38,23 @@ int test_reset(test_t *t, test_param_t *p)
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
 
+  /* perform reset */
   int res = proto_reset(proto, 1);
-  if(res == 0) {
-    return 0;
-  } else {
+  if(res != 0) {
     p->error = proto_perror(res);
     p->section = "reset";
     return res;
   }
+
+  /* re-attach to device after reset */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach";
+    return res;
+  }
+
+  return 0;
 }
 
 int test_ping(test_t *t, test_param_t *p)
@@ -768,17 +777,41 @@ int run_status_reset_event_sig(test_t *t, test_param_t *p)
   /* wait for either timeout or ack */
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
-  /* assume no flags set */
-  if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not none";
-    p->section = "after";
-    return 1;
-  }
-
   /* expect status event after reset */
   res = assert_event_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
+  }
+
+  /* assume detached */
+  if(status->flags != STATUS_FLAGS_DETACHED) {
+    p->error = "status not detached";
+    p->section = "reset";
+    return 1;
+  }
+
+  /* attach again */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != PROTO_RET_OK) {
+    p->error = proto_perror(res);
+    p->section = "attach";
+    return res;
+  }
+
+  /* wait for timeout */
+  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* expect status event after reset */
+  res = assert_timer_mask(p, "attach", pb, got2);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume clear state */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not empt";
+    p->section = "after";
+    return 1;
   }
 
   return 0;
@@ -1426,31 +1459,13 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
+    p->error = "status not empty";
     p->section = "pre";
     return 1;
   }
 
-  /* attach device */
-  int res = proto_action(proto, PROTO_ACTION_ATTACH);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "attach failed";
-    return res;
-  }
-
-  /* update status */
-  pamela_update_status(pb);
-
-  /* assume attached flag set */
-  if(status->flags != STATUS_FLAGS_ATTACHED) {
-    p->error = "status not attached";
-    p->section = "main";
-    return 1;
-  }
-
   /* detach device */
-  res = proto_action(proto, PROTO_ACTION_DETACH);
+  int res = proto_action(proto, PROTO_ACTION_DETACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "detach failed";
@@ -1460,9 +1475,27 @@ int test_status_attach_detach(test_t *t, test_param_t *p)
   /* update status */
   pamela_update_status(pb);
 
+  /* assume attached flag set */
+  if(status->flags != STATUS_FLAGS_DETACHED) {
+    p->error = "status not detached";
+    p->section = "main";
+    return 1;
+  }
+
+  /* attach device */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach failed";
+    return res;
+  }
+
+  /* update status */
+  pamela_update_status(pb);
+
   /* assume error is not set */
   if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
+    p->error = "status not empty";
     p->section = "post";
     return 1;
   }
@@ -1478,58 +1511,60 @@ int run_status_attach_detach_sig(test_t *t, test_param_t *p)
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
+    p->error = "status not empty";
     p->section = "pre";
     return 1;
   }
 
-  /* attach device */
-  int res = proto_action(proto, PROTO_ACTION_ATTACH);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "attach failed";
-    return res;
-  }
-
-  /* wait for either timeout or ack */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* assume attached flag set */
-  if(status->flags != STATUS_FLAGS_ATTACHED) {
-    p->error = "status not attached";
-    p->section = "main";
-    return 1;
-  }
-
   /* detach device */
-  res = proto_action(proto, PROTO_ACTION_DETACH);
+  int res = proto_action(proto, PROTO_ACTION_DETACH);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "detach failed";
     return res;
   }
 
-  /* wait again and assume event: detach */
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume detached flag set */
+  if(status->flags != STATUS_FLAGS_DETACHED) {
+    p->error = "status not detached";
+    p->section = "main";
+    return 1;
+  }
+
+  /* attach device */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "detach failed";
+    return res;
+  }
+
+  /* wait again and timeout */
   ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   /* assume error is not set */
   if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
+    p->error = "status not empty";
     p->section = "post";
     return 1;
   }
 
-  res = assert_timer_mask(p, "main", pb, got);
+  /* detach triggers an event */
+  res = assert_event_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
   }
 
+  /* attach triggers no event */
   res = assert_timer_mask(p, "post", pb, got2);
   if(res != 0) {
     return res;
   }
 
-  return assert_num_events(p, "main", pb, 0, 0);
+  return assert_num_events(p, "main", pb, 1, 1);
 }
 
 int test_status_attach_detach_sig(test_t *t, test_param_t *p)
@@ -1545,53 +1580,48 @@ int run_status_attach_reset_sig(test_t *t, test_param_t *p)
 
   /* assume no flags set */
   if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
+    p->error = "status not empty";
     p->section = "pre";
     return 1;
   }
 
-  /* attach device */
-  int res = proto_action(proto, PROTO_ACTION_ATTACH);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "attach failed";
-    return res;
-  }
-
-  /* wait for either timeout or ack */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* assume attached flag set */
-  if(status->flags != STATUS_FLAGS_ATTACHED) {
-    p->error = "status not attached";
-    p->section = "main";
-    return 1;
-  }
-
   /* now reset device */
-  res = proto_reset(proto, 1);
+  int res = proto_reset(proto, 1);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "detach failed";
     return res;
   }
 
-  /* wait again and assume event: detach */
-  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+  /* wait for either timeout or ack */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
-  /* assume error is not set */
-  if(status->flags != STATUS_FLAGS_NONE) {
-    p->error = "status not init";
-    p->section = "post";
-    return 1;
-  }
-
-  res = assert_timer_mask(p, "main", pb, got);
+  /* assume event after reset */
+  res = assert_event_mask(p, "main", pb, got);
   if(res != 0) {
     return res;
   }
 
-  res = assert_event_mask(p, "post", pb, got2);
+  /* assume detached */
+  if(status->flags != STATUS_FLAGS_DETACHED) {
+    p->error = "status not detached";
+    p->section = "reset";
+    return 1;
+  }
+
+  /* attach device */
+  res = proto_action(proto, PROTO_ACTION_ATTACH);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "attach failed";
+    return res;
+  }
+
+  /* wait again: no more events */
+  ULONG got2 = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume no event after attach */
+  res = assert_timer_mask(p, "post", pb, got2);
   if(res != 0) {
     return res;
   }

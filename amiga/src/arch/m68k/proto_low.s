@@ -240,8 +240,9 @@ pwi_check_loop:
         btst           d2,(a5)
         beq.s          pwi_check_loop
 
-        ; data port should be 0
-        tst.b          (a3)
+        ; data port should be 0x10 -> detach flag is set
+        move.b         (a3),d0
+        cmp.b          #$10,d0
         bne.s          pwi_check_loop
 
         ; ok!

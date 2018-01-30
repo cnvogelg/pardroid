@@ -61,21 +61,28 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
     return NULL;
   }
 
-  /* wait for device init if we left knok with proto init */
-  if((flags & PAMELA_INIT_NO_WAIT) == 0) {
+  /* skip for bootloader */
+  if((flags & PAMELA_INIT_BOOT) == 0) {
+    /* wait for device init if we left knok with proto init */
     int pres = proto_wait_init(ph->proto);
     if(pres != PROTO_RET_OK) {
       *res = PAMELA_ERROR_WAIT_INIT;
       pamela_exit(ph);
       return NULL;
     }
-  }
 
-  /* perform a device reset first */
-  if((flags & PAMELA_INIT_NO_RESET) == 0) {
-    int pres = proto_reset(ph->proto, 1);
+    /* perform a device reset first */
+    pres = proto_reset(ph->proto, 1);
     if(pres != PROTO_RET_OK) {
       *res = PAMELA_ERROR_RESET;
+      pamela_exit(ph);
+      return NULL;
+    }
+
+    /* then attach driver */
+    pres = proto_action(ph->proto, PROTO_ACTION_ATTACH);
+    if(pres != PROTO_RET_OK) {
+      *res = PAMELA_ERROR_ATTACH;
       pamela_exit(ph);
       return NULL;
     }
@@ -251,6 +258,8 @@ const char *pamela_perror(int res)
       return "pamela: failed device reset";
     case PAMELA_ERROR_WAIT_INIT:
       return "pamela: failed wait for device init";
+    case PAMELA_ERROR_ATTACH:
+      return "pamela: failed attaching to device";
     default:
       return "pamela: unknown error!";
   }

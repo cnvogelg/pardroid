@@ -111,7 +111,7 @@ int dosmain(void)
 
     pamela_exit(ph);
   } else {
-    PutStr(pamela_perror(res));
+    PutStr(pamela_perror(init_res));
     PutStr(" -> ABORT\n");
   }
 
