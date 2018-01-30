@@ -184,7 +184,7 @@ int test_main(test_t all_tests[], test_param_t *param)
         }
 
         Printf("#%04ld\r", cnt);
-        int res = test_run_all(all_tests, param, 1);
+        int res = test_run_all(all_tests, param, !param->verbose);
         if(res != RETURN_OK) {
           final_res = res;
           num_failed++;

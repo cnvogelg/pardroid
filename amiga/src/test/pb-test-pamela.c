@@ -18,7 +18,7 @@
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
    "Bias/K/N,Size/K/N,"
    "AddSize/K/N,SubSize/K/N,"
-   "Channel/K/N";
+   "Channel/K/N,Verbose/S";
 typedef struct {
   ULONG loop;
   ULONG *num;
@@ -29,6 +29,7 @@ typedef struct {
   ULONG *add_size;
   ULONG *sub_size;
   ULONG *channel;
+  ULONG verbose;
 } params_t;
 static params_t params;
 
@@ -56,6 +57,7 @@ void setup_test_config(test_param_t *p)
   p->num_iter = num;
   p->delay = delay;
   p->test_name = params.test;
+  p->verbose = params.verbose;
 
   /* proto test setup */
   UWORD size = 0;

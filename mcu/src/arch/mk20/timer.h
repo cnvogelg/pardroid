@@ -68,4 +68,6 @@ static inline void timer_delay_us(uint32_t usec)
     );
 }
 
+#define timer_delay_1us() timer_delay_us(1)
+
 #endif

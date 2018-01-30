@@ -17,6 +17,6 @@ void pamela_init(void)
 
 void pamela_handle(void)
 {
-  proto_handle();
   status_handle();
+  proto_handle();
 }

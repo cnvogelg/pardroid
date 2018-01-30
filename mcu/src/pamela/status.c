@@ -6,6 +6,7 @@
 
 #include "debug.h"
 #include "system.h"
+#include "timer.h"
 
 #include "status.h"
 #include "proto_low.h"
@@ -280,6 +281,66 @@ void status_clear_pending(u08 chn)
   }
   DNL;
   status_update();
+}
+
+// ----- busy -----
+
+// after set_busy the caller won't return to status_handle() for a while
+// so we have to update the state and trigger the irq directly here in place
+void status_set_busy(void)
+{
+  // already set busy..
+  if(flags & FLAG_BUSY) {
+    return;
+  }
+
+  flags |= FLAG_BUSY;
+  u08 bits = status_get_bits();
+  old_bits = bits;
+
+  // wait until we could set the status (or reset on failure :)
+  while(1) {
+    u08 done = proto_low_set_status(bits);
+    if(done) {
+      break;
+    }
+    DC('#');
+  }
+
+  // trigger irq
+  proto_low_ack_lo();
+  timer_delay_1us();
+  proto_low_ack_hi();
+
+  DS("B+"); DNL;
+}
+
+void status_clear_busy(void)
+{
+  // busy not set...
+  if((flags & FLAG_BUSY) == 0) {
+    return;
+  }
+
+  flags &= ~FLAG_BUSY;
+  u08 bits = status_get_bits();
+  old_bits = bits;
+
+  // wait until we could set the status (or reset on failure :)
+  while(1) {
+    u08 done = proto_low_set_status(bits);
+    if(done) {
+      break;
+    }
+    DC('#');
+  }
+
+  // trigger irq
+  proto_low_ack_lo();
+  timer_delay_1us();
+  proto_low_ack_hi();
+
+  DS("B-"); DNL;
 }
 
 u08 proto_api_get_end_status(void) __attribute__ ((weak, alias("status_after_cmd")));

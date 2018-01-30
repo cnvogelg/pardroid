@@ -39,11 +39,11 @@ static void msg_read(u08 chan)
   u08 res = proto_low_read_block(size_words, buf, extra);
   DC('>'); DB(res);
   proto_api_read_msg_done(chan, res);
-  DC('.');
+  DC(':');
 
   u08 status = proto_api_get_end_status();
   proto_low_end(status);
-  DB(status); DNL;
+  DB(status); DC('.'); DNL;
 }
 
 static void msg_write(u08 chan)
@@ -58,11 +58,11 @@ static void msg_write(u08 chan)
   u16 size_bytes = size_words << 1;
   DC('+'); DW(size_bytes); DC('%'); DW(extra);
   proto_api_write_msg_done(chan, size_bytes, extra);
-  DC('.');
+  DC(':');
 
   u08 status = proto_api_get_end_status();
   proto_low_end(status);
-  DB(status); DNL;
+  DB(status); DC('.'); DNL;
 }
 
 u08 proto_current_cmd(void)

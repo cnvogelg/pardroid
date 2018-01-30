@@ -578,6 +578,14 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
     return res;
   }
 
+  /* read max size from firmware */
+  res = reg_get(proto, REG_MAX_BYTES, &size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read max_bytes again";
+    return res;
+  }
+
   FreeVec(mem_w);
   return 0;
 }
@@ -655,6 +663,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 #define REG_SIM_PENDING (PROTO_REGOFFSET_USER + 5)
 #define REG_SIM_EVENT   (PROTO_REGOFFSET_USER + 6)
 #define REG_TEST_MODE   (PROTO_REGOFFSET_USER + 7)
+#define REG_SIM_BUSY    (PROTO_REGOFFSET_USER + 9)
 
 #define SIM_PENDING_SET   0x80
 
@@ -1688,6 +1697,67 @@ int test_base_regs(test_t *t, test_param_t *p)
   }
 
   return 0;
+}
+
+int run_status_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  status_data_t *status = pamela_get_status(pb);
+
+  /* assume no flags set */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not empty";
+    p->section = "pre";
+    return 1;
+  }
+
+  /* trigger busy: 100ms */
+  int res = reg_set(proto, REG_SIM_BUSY, 100);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "sim_busy failed";
+    return res;
+  }
+
+  /* wait for busy event */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* assume event */
+  res = assert_event_mask(p, "main", pb, got);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume busy flag */
+  if(status->flags != STATUS_FLAGS_BUSY) {
+    p->error = "status not busy";
+    p->section = "sim_busy";
+    return 1;
+  }
+
+  /* wait again: busy gone event */
+  ULONG got2 = pamela_wait_event(pb, 1, 0, 0);
+
+  /* assume no event after attach */
+  res = assert_event_mask(p, "post", pb, got2);
+  if(res != 0) {
+    return res;
+  }
+
+  /* assume no flag */
+  if(status->flags != STATUS_FLAGS_NONE) {
+    p->error = "status not empty";
+    p->section = "post";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_status_busy(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_status_busy);
 }
 
 // ---------- test modes ------------------------------------------

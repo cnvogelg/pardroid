@@ -18,6 +18,7 @@ extern void timer_init(void);
 
 #define timer_delay(ms) _delay_ms(ms)
 #define timer_delay_us(us) _delay_us(us)
+#define timer_delay_1us()  _delay_loop_1(F_CPU / 1000000)
 
 inline timer_ms_t timer_millis(void)
 {

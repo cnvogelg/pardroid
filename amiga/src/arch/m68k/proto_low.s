@@ -720,15 +720,14 @@ plmw_done:
         ; ok
         moveq   #RET_OK,d0
 
-plmw_msg_too_large:
         ; set ddr to idle
         clk_lo
         ddr_idle        d7
 
+plmw_final_sync:
         ; final sync
         clk_hi
         wait_rak_hi    plmw_end
-
 plmw_end:
         set_cmd_idle
         movem.l (sp)+,d2-d7/a2-a6
@@ -737,6 +736,18 @@ plmw_abort:
         ; ensure CLK is hi
         clk_hi
         bra.s    plmw_end
+
+plmw_msg_too_large:
+        moveq   #RET_MSG_TOO_LARGE,d0
+
+        ; set ddr to idle
+        clk_lo
+        ddr_idle        d7
+
+        ; if msg was too large then rak got hi
+        ; now ensure it was set to low again
+        wait_rak_lo    plmw_final_sync
+        bra.s    plmw_final_sync
 
 
 ; --- proto_low_read_block ---

@@ -10,11 +10,9 @@
 #include "strobe.h"
 #include "pario_pins.h"
 #include "system.h"
+#include "timer.h"
 
 #include "uart.h"
-
-#define  ITER         (F_CPU / 1000000)
-#define  DELAY_1US()  _delay_loop_1(ITER)
 
 #define  ack_lo  PAR_ACK_PORT &= ~PAR_ACK_MASK
 #define  ack_hi  PAR_ACK_PORT |= PAR_ACK_MASK
@@ -64,7 +62,7 @@ static void strobe_read_func(void)
 
   // pulse ack
   ack_lo;
-  DELAY_1US();
+  timer_delay_1us();
   ack_hi;
 }
 
@@ -154,7 +152,7 @@ static void strobe_write_func(void)
 
   // pulse ack
   ack_lo;
-  DELAY_1US();
+  timer_delay_1us();
   ack_hi;
 }
 
@@ -191,7 +189,7 @@ void strobe_pulse_ack(void)
 {
   // pulse ack
   ack_lo;
-  DELAY_1US();
+  timer_delay_1us();
   ack_hi;
 }
 

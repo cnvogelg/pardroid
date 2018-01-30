@@ -13,6 +13,8 @@
 #include "proto.h"
 #include "reg.h"
 #include "system.h"
+#include "timer.h"
+
 #include "status.h"
 #include "base_reg.h"
 #include "pamela.h"
@@ -24,6 +26,7 @@ static u08 buffer[MAX_BUFFER_SIZE];
 static u16 extra_val;
 static u08 test_mode;
 static u16 test_count;
+static u16 busy_delay;
 
 #define TEST_MODE_NORMAL 0
 #define TEST_MODE_ECHO   1
@@ -70,6 +73,14 @@ static void set_test_count(u16 *valp, u08 mode)
   }
 }
 
+static void sim_delay(u16 *valp, u08 mode)
+{
+  if(mode == REG_MODE_WRITE) {
+    busy_delay = *valp;
+    DS("busy_delay:"); DW(busy_delay); DNL;
+  }
+}
+
 // ----- ro registers -----
 // read-only test values
 static const u16 ro_rom_word ROM_ATTR = 1;
@@ -107,7 +118,8 @@ REG_TABLE_BEGIN(test)
   REG_TABLE_RW_FUNC(sim_pending),       // user+5
   REG_TABLE_RW_FUNC(sim_event),         // user+6
   REG_TABLE_RW_FUNC(set_test_mode),     // user+7
-  REG_TABLE_RW_FUNC(set_test_count)     // user+8
+  REG_TABLE_RW_FUNC(set_test_count),    // user+8
+  REG_TABLE_RW_FUNC(sim_delay)          // user+9
 REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
 REG_TABLE_SETUP(test)
 
@@ -162,6 +174,29 @@ void proto_api_write_msg_done(u08 chn, u16 size, u16 extra)
   }
 }
 
+static void sim_busy(void)
+{
+  uart_send('{');
+  status_set_busy();
+  timer_ms_t t0 = timer_millis();
+  timer_ms_t t1 = timer_millis();
+  while(1) {
+    /* done? */
+    if(timer_millis_timed_out(t0, busy_delay)) {
+      break;
+    }
+    /* some output */
+    if(timer_millis_timed_out(t1, 100)) {
+      uart_send('.');
+      t1 = timer_millis();
+    }
+    /* keep watchdog happy */
+    system_wdt_reset();
+  }
+  status_clear_busy();
+  uart_send('}');
+  uart_send_crlf();
+}
 
 int main(void)
 {
@@ -178,6 +213,11 @@ int main(void)
   while(1) {
     system_wdt_reset();
     pamela_handle();
+
+    if(busy_delay != 0) {
+      sim_busy();
+      busy_delay = 0;
+    }
   }
 
   return 0;

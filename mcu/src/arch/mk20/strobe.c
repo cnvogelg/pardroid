@@ -9,8 +9,6 @@
 #include "pario_pins.h"
 #include "timer.h"
 
-#define DELAY_1US()  timer_delay_us(1)
-
 static volatile u08 state;
 static u08 strobe_count;
 static volatile u32 strobe_key;
@@ -48,7 +46,7 @@ static void strobe_read_func(void)
 
   // pulse ack
   pario_ack_lo();
-  DELAY_1US();
+  timer_delay_1us();
   pario_ack_hi();
 }
 
@@ -159,7 +157,7 @@ static void strobe_write_func(void)
 
   // pulse ack
   pario_ack_lo();
-  DELAY_1US();
+  timer_delay_1us();
   pario_ack_hi();
 }
 
@@ -203,7 +201,7 @@ void strobe_pulse_ack(void)
 {
   // pulse ack
   pario_ack_lo();
-  DELAY_1US();
+  timer_delay_1us();
   pario_ack_hi();
 }
 

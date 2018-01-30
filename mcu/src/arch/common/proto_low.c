@@ -188,6 +188,8 @@ u16  proto_low_write_block(u16 max_words, u08 *buffer, u16 *chn_ext)
   u16 size = (sh << 8) | sl;
   if(size > max_words) {
     rak_hi();
+    wait_clk_lo();
+    rak_lo();
     goto write_end;
   }
 

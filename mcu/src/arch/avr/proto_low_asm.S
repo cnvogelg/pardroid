@@ -438,6 +438,12 @@ proto_low_write_block:
     ; signal with rak hi
     rak_hi
 
+    ; wait for ddr transition
+    wait_clk_lo
+
+    ; clear rak again
+    rak_lo
+
     ; end transmision
     ; clear result
     rjmp    .wb_empty

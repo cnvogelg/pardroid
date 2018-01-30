@@ -3,7 +3,8 @@
 
 #include "test.h"
 
-void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size, UBYTE channel);
+void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
+                        UBYTE channel);
 
 int test_reset(test_t *t, test_param_t *p);
 int test_ping(test_t *t, test_param_t *p);
@@ -34,6 +35,7 @@ int test_status_events_in_pending(test_t *t, test_param_t *p);
 int test_status_attach_detach(test_t *t, test_param_t *p);
 int test_status_attach_detach_sig(test_t *t, test_param_t *p);
 int test_status_attach_reset_sig(test_t *t, test_param_t *p);
+int test_status_busy(test_t *t, test_param_t *p);
 int test_base_regs(test_t *t, test_param_t *p);
 int test_echo_single(test_t *t, test_param_t *p);
 
@@ -67,6 +69,7 @@ int test_echo_single(test_t *t, test_param_t *p);
   { test_status_attach_detach, "sad", "attach/detach" }, \
   { test_status_attach_detach_sig, "sadi", "signal on attach/detach" }, \
   { test_status_attach_reset_sig, "sari", "signal on attach/reset" }, \
+  { test_status_busy, "sb", "status busy" }, \
   { test_base_regs, "br", "base regs" }, \
   { test_echo_single, "es", "echo single message" }, \
 

@@ -17,4 +17,8 @@ extern void status_detach(void);
 extern void status_set_pending(u08 chn);
 extern void status_clear_pending(u08 chn);
 
+// busy
+extern void status_set_busy(void);
+extern void status_clear_busy(void);
+
 #endif
