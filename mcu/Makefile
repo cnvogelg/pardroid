@@ -7,10 +7,7 @@ ifeq "$(words $(wildcard $(CONFIG)))" "0"
 endif
 FLASH_CONFIG?=configs/flash.config
 EXTRA_CONFIG=$(FLASH_CONFIG) $(USER_CONFIG)
-ifeq "$(DEBUG)" "1"
-	dummy:=$(info debug enabled)
-	EXTRA_CONFIG+=configs/debug.config
-endif
+EXTRA_CONFIG+=$(wildcard configs/$(FLAVOR).config)
 
 # avr configs
 ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config configs/avrnetio.config
@@ -35,14 +32,13 @@ MACHTAG_ID=$(word 1,$(MT_VALS))
 MACHTAG_SYMBOL=$(word 2,$(MT_VALS))
 MACH_UPPER=$(shell echo "$(CONFIG_MACH)" | tr a-z A-Z)
 CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG_SYMBOL) -DMACH_$(MACH_UPPER)
-dummy := $(info arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH))
 
 # generate version tag
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
 CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 
 # generated bootstrap code
-BOOTSTRAP_CODE = ../amiga/BUILD/amiga68000/boot.bin
+BOOTSTRAP_CODE = ../amiga/BUILD/$(FLAVOR)/amiga68000/boot.bin
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
 BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
 BOOTSTRAP_KNOK = $(BUILD_DIR)/bootstrap.knok
@@ -187,7 +183,7 @@ $(eval $(call dist-hex,test-paloma-fw))
 $(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
 # ----- bootloader -----
-ifndef DEBUG
+ifeq "$(FLAVOR)" "release"
 ifdef CONFIG_BOOTLOADER
 # bootloader
 BOOTLOADER_SRCS = uart.c system.c pablo.c

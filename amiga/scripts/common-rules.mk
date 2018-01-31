@@ -4,10 +4,20 @@ clean:
 	$(H)rm -rf $(BUILD_DIR)
 
 clean-all:
-	$(H)rm -rf $(BUILD_BASE_DIR)
+	$(H)rm -rf $(BUILD_BASE_DIR) $(DIST_BASE_DIR)
 
 # distribution
 dist: $(DIST_FILES)
+
+dist-all:
+	@for a in $(ALL_FLAVORS) ; do \
+		echo "--- flavor=$$a ---" ; \
+		for b in $(ALL_CONFIGS) ; do \
+			echo "--- config=$$b ---" ; \
+			$(MAKE) FLAVOR=$$a CONFIG=$$b dist || exit 1 ; \
+		done \
+	done
+
 
 # install files
 INSTALL_DIR ?= /Volumes/AMIGA

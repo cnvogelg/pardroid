@@ -31,10 +31,10 @@ pack:
 	@rm -rf $(PACK_NAME) $(PACK_NAME).zip
 	# amiga
 	@mkdir -p $(PACK_NAME)/amiga
-	@$(MAKE) -C amiga dist DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/amiga
+	@$(MAKE) -C amiga dist-all DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/amiga
 	# mcu
 	@mkdir -p $(PACK_NAME)/mcu
-	@$(MAKE) -C mcu dist-configs DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/mcu
+	@$(MAKE) -C mcu dist-all DIST_BASE_DIR=$(PWD)/$(PACK_NAME)/mcu
 	# other files
 	@cp -a $(DISTFILES) $(PACK_NAME)
 	@zip -r $(PACK_NAME).zip $(PACK_NAME)

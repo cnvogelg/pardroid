@@ -9,6 +9,8 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 # version
 include ../version.mk
 
+ALL_CONFIGS=configs/amiga68000.config
+
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/pamela src/engine src/pablo src/paloma

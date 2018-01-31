@@ -1,5 +1,11 @@
 # all rule
-all: $(FIRMWARES)
+all: info $(FIRMWARES)
+
+info:
+	@echo "--- flavor=$(FLAVOR) arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH) ---"
+
+release:
+	@$(MAKE) FLAVOR=release
 
 sym: $(patsubst %,%-sym,$(FIRMWARES))
 
@@ -7,7 +13,7 @@ code: $(patsubst %,%-code,$(FIRMWARES))
 
 check: $(patsubst %,%-check,$(FIRMWARES))
 
-prog: $(DEFAULT_FIRMWARE)-prog
+prog: info $(DEFAULT_FIRMWARE)-prog
 
 prog-full: $(DEFAULT_FIRMWARE)-prog-full
 
@@ -17,7 +23,7 @@ clean:
 	$(H)rm -rf $(BUILD_DIR)
 
 clean-all:
-	$(H)rm -rf $(BUILD_BASE_DIR)
+	$(H)rm -rf $(BUILD_BASE_DIR) $(DIST_BASE_DIR)
 
 INSTALL_DIR ?= /Volumes/AMIGA
 install: $(PBL_FILES)
@@ -29,14 +35,23 @@ dist: $(DIST_FILES)
 # for all configs
 all-configs:
 	@for a in $(ALL_CONFIGS) ; do \
-		echo "--- $$a ---" ; \
+		echo "--- config=$$a ---" ; \
 		$(MAKE) CONFIG=$$a || exit 1 ; \
 	done
 
-dist-configs:
-	@for a in $(ALL_CONFIGS) ; do \
-		echo "--- $$a ---" ; \
-		$(MAKE) CONFIG=$$a dist || exit 1 ; \
+all-flavors:
+	@for a in $(ALL_FLAVORS) ; do \
+		echo "--- flavor=$$a ---" ; \
+		$(MAKE) FLAVOR=$$a all-configs || exit 1 ; \
+	done
+
+dist-all:
+	@for a in $(ALL_FLAVORS) ; do \
+		echo "--- flavor=$$a ---" ; \
+		for b in $(ALL_CONFIGS) ; do \
+			echo "--- config=$$b ---" ; \
+			$(MAKE) FLAVOR=$$a CONFIG=$$b dist || exit 1 ; \
+		done \
 	done
 
 # final hex (flash) file from elf
@@ -58,6 +73,8 @@ dist-configs:
 %.pbl: %.img
 	@echo "  PBL  $(@F)  id=$(call get-fw-id,$(@F))  ver=$(call get-fw-ver,$(@F))"
 	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(MACHTAG_ID) $(call get-fw-id,$(@F)) $(call get-fw-ver,$(@F)) $@
+
+.PRECIOUS: %.img %.bin
 
 # finale eeprom file from elf
 %.eep: %.elf
