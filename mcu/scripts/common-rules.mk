@@ -25,9 +25,16 @@ clean:
 clean-all:
 	$(H)rm -rf $(BUILD_BASE_DIR) $(DIST_BASE_DIR)
 
-INSTALL_DIR ?= /Volumes/AMIGA
+# install files
+INSTALL_DIR ?= ../install
+
 install: $(PBL_FILES)
-	cp $(PBL_FILES) $(INSTALL_DIR)/
+	@if [ ! -d "$(INSTALL_DIR)" ]; then \
+		echo "No INSTALL_DIR='$(INSTALL_DIR)' found!" ; \
+		exit 1 ; \
+	fi
+	@echo "  INSTALL  $(PBL_FILES)"
+	@cp $(PBL_FILES) $(INSTALL_DIR)/
 
 # distribution
 dist: $(DIST_FILES)

@@ -20,10 +20,15 @@ dist-all:
 
 
 # install files
-INSTALL_DIR ?= /Volumes/AMIGA
+INSTALL_DIR ?= ../install
 
 install: $(BIN_FILES)
-	cp $(BIN_FILES) $(INSTALL_DIR)
+	@if [ ! -d "$(INSTALL_DIR)" ]; then \
+		echo "No INSTALL_DIR='$(INSTALL_DIR)' found!" ; \
+		exit 1 ; \
+	fi
+	@echo "  INSTALL  $(BIN_FILES)"
+	@cp $(BIN_FILES) $(INSTALL_DIR)/
 
 # compile
 $(OBJ_DIR)/%.o : %.c

@@ -116,15 +116,16 @@ define get-fw-ver
 $(FW_VER_$(notdir $(basename $1)))
 endef
 
+create_dir = $(shell test -d $1 || mkdir -p $1)
+
 # create dirs
 ifeq "$(filter clean clean-all,$(MAKECMDGOALS))" ""
-create_dir = $(shell test -d $1 || mkdir -p $1)
 create_obj_dir := $(call create_dir,$(OBJ_DIR))
 create_bin_dir := $(call create_dir,$(BIN_DIR))
 endif
 
 # dist dir creation
-ifneq "$(filter dist dist-all,$(MAKECMDGOALS))" ""
+ifneq "$(filter install dist dist-all,$(MAKECMDGOALS))" ""
 dist_dir := $(call create_dir,$(DIST_DIR))
 endif
 

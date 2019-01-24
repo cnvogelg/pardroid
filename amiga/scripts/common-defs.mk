@@ -104,14 +104,15 @@ $(BIN_DIR)/$1: $(BIN_DIR)/$2
 	$(H)cat $(LHASFX_STUB) $$< > $$@
 endef
 
+create_dir = $(shell test -d $1 || mkdir -p $1)
+
 # create dirs
 ifneq "$(MAKECMDGOALS)" "clean"
-create_dir = $(shell test -d $1 || mkdir -p $1)
 create_obj_dir := $(call create_dir,$(OBJ_DIR))
 create_bin_dir := $(call create_dir,$(BIN_DIR))
 endif
 
 # dist dir creation
-ifneq "$(filter dist dist-all,$(MAKECMDGOALS))" ""
+ifneq "$(filter install dist dist-all,$(MAKECMDGOALS))" ""
 dist_dir := $(call create_dir,$(DIST_DIR))
 endif
