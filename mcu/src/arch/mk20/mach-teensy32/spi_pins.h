@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "kinetis.h"
+#include "arch.h"
 
 /* SPI Port Setup
 
@@ -17,11 +18,7 @@
 #define SPI_CS0_MASK    (1<<4)
 #define SPI_CS1_MASK    (1<<13)
 
-#ifndef force_inline
-#define force_inline     __attribute__((always_inline)) inline
-#endif
-
-static inline void spi_pins_init(void)
+INLINE void spi_pins_init(void)
 {
   // 11 MOSI
   PORTC_PCR6 = PORT_PCR_MUX(2) | PORT_PCR_DSE;
@@ -45,22 +42,22 @@ static inline void spi_pins_init(void)
   GPIOA_PSOR = SPI_CS1_MASK;
 }
 
-static force_inline void spi_pins_cs0_hi(void)
+FORCE_INLINE void spi_pins_cs0_hi(void)
 {
   GPIOC_PSOR = SPI_CS0_MASK;
 }
 
-static force_inline void spi_pins_cs0_lo(void)
+FORCE_INLINE void spi_pins_cs0_lo(void)
 {
   GPIOC_PCOR = SPI_CS0_MASK;
 }
 
-static force_inline void spi_pins_cs1_hi(void)
+FORCE_INLINE void spi_pins_cs1_hi(void)
 {
   GPIOA_PSOR = SPI_CS1_MASK;
 }
 
-static force_inline void spi_pins_cs1_lo(void)
+FORCE_INLINE void spi_pins_cs1_lo(void)
 {
   GPIOA_PCOR = SPI_CS1_MASK;
 }

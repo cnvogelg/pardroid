@@ -121,12 +121,12 @@ static void writePhy (uint8_t address, uint16_t data) {
 
 // Functions to enable/disable broadcast filter bits
 // With the bit set, broadcast packets are filtered.
-static inline void enc28j60_enable_broadcast ( void )
+INLINE void enc28j60_enable_broadcast ( void )
 {
   writeRegByte(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN/*|ERXFCON_PMEN*/|ERXFCON_BCEN);
 }
 
-static inline void enc28j60_disable_broadcast ( void )
+INLINE void enc28j60_disable_broadcast ( void )
 {
   writeRegByte(ERXFCON, ERXFCON_UCEN|ERXFCON_CRCEN/*|ERXFCON_PMEN*/);
 }
@@ -329,7 +329,7 @@ void enc28j60_send_end(u16 total_size)
 
 // ---------- recv ----------
 
-inline static void next_pkt(void)
+INLINE void next_pkt(void)
 {
   if (gNextPacketPtr - 1 > RXSTOP_INIT)
       writeReg(ERXRDPT, RXSTOP_INIT);

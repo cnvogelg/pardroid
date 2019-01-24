@@ -23,42 +23,42 @@
 
 // ----- helper functions -----
 
-static inline void set_src_port(u08 sock, u16 port)
+INLINE void set_src_port(u08 sock, u16 port)
 {
   wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_SRC_PORT, port);
 }
 
-static inline void set_dest_addr(u08 sock, const u08 addr[4])
+INLINE void set_dest_addr(u08 sock, const u08 addr[4])
 {
   wiz_io_socket_reg_write_buf(sock, WIZ_REG_SOCKET_DST_IP, addr, 4);
 }
 
-static inline void set_dest_port(u08 sock, u16 port)
+INLINE void set_dest_port(u08 sock, u16 port)
 {
   wiz_io_socket_reg_write_word(sock, WIZ_REG_SOCKET_DST_PORT, port);
 }
 
-static inline void write_ir(u08 sock, u08 val)
+INLINE void write_ir(u08 sock, u08 val)
 {
   wiz_io_socket_reg_write(sock, WIZ_REG_SOCKET_IR, val);
 }
 
-static inline u08 read_ir(u08 sock)
+INLINE u08 read_ir(u08 sock)
 {
   return wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_IR);
 }
 
-static inline void write_mode(u08 sock, u08 mode)
+INLINE void write_mode(u08 sock, u08 mode)
 {
   wiz_io_socket_reg_write(sock, WIZ_REG_SOCKET_MODE, mode);
 }
 
-static inline u08 read_mode(u08 sock)
+INLINE u08 read_mode(u08 sock)
 {
   return wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_MODE);
 }
 
-static inline u08 read_status(u08 sock)
+INLINE u08 read_status(u08 sock)
 {
   return wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_STATUS);
 }

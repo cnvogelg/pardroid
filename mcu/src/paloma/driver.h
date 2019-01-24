@@ -95,7 +95,7 @@ extern driver_data_t driver_data_table[];
 
 // function factories
 #define DRIVER_GET_CONST_BYTE(name)  \
-static inline u08 driver_get_ ## name (u08 did) { \
+INLINE u08 driver_get_ ## name (u08 did) { \
   driver_ptr_t drv = driver_get(did); \
   if(drv == 0) { \
     return 0; \
@@ -104,7 +104,7 @@ static inline u08 driver_get_ ## name (u08 did) { \
 }
 
 #define DRIVER_GET_CONST_WORD(name)  \
-static inline u16 driver_get_ ## name (u08 did) { \
+INLINE u16 driver_get_ ## name (u08 did) { \
   driver_ptr_t drv = driver_get(did); \
   if(drv == 0) { \
     return 0; \
@@ -113,7 +113,7 @@ static inline u16 driver_get_ ## name (u08 did) { \
 }
 
 #define DRIVER_CALL_BEGIN(name, args...) \
-static inline u08 driver_ ## name (u08 did, u08 slot, args) { \
+INLINE u08 driver_ ## name (u08 did, u08 slot, args) { \
   driver_ptr_t drv = driver_get(did); \
   if(drv == 0) { \
     return DRIVER_ERROR_NO_DRIVER; \
@@ -133,12 +133,12 @@ static inline u08 driver_ ## name (u08 did, u08 slot, args) { \
 }
 
 // helper
-static inline driver_ptr_t driver_get_quick(u08 did)
+INLINE driver_ptr_t driver_get_quick(u08 did)
 {
   return (driver_ptr_t)read_rom_rom_ptr(&driver_table[did]);
 }
 
-static inline driver_ptr_t driver_get(u08 did)
+INLINE driver_ptr_t driver_get(u08 did)
 {
   u08 max = read_rom_char(&driver_table_size);
   if(did < max) {

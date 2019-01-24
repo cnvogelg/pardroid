@@ -3,18 +3,19 @@
 
 #include <avr/io.h>
 
+#include "arch.h"
 #include "led_pins.h"
 
 extern void led_init(void);
 extern void led_exit(void);
 extern void led_set(u08 on);
 
-static inline void led_on(void)
+FORCE_INLINE void led_on(void)
 {
   LED_PORT |= LED_MASK;
 }
 
-static inline void led_off(void)
+FORCE_INLINE void led_off(void)
 {
   LED_PORT &= ~LED_MASK;
 }

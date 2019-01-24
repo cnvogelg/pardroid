@@ -31,6 +31,7 @@
 
 #include <avr/io.h>
 
+#include "arch.h"
 #include "types.h"
 #include "spi_pins.h"
 
@@ -40,23 +41,23 @@
 extern void spi_init(void);
 extern void spi_set_speed(u08 speed);
 
-inline void spi_out(u08 data)
+FORCE_INLINE void spi_out(u08 data)
 {
   SPDR = data;
   loop_until_bit_is_set(SPSR, SPIF);
 }
 
-inline u08 spi_in(void)
+FORCE_INLINE u08 spi_in(void)
 {
   SPDR = 0xff;
   loop_until_bit_is_set(SPSR, SPIF);
   return SPDR;
 }
 
-inline void spi_enable_cs0(void) { PORTB &= ~SPI_SS_MASK; }
-inline void spi_disable_cs0(void) { PORTB |= SPI_SS_MASK; }
+FORCE_INLINE void spi_enable_cs0(void) { PORTB &= ~SPI_SS_MASK; }
+FORCE_INLINE void spi_disable_cs0(void) { PORTB |= SPI_SS_MASK; }
 
-inline void spi_enable_cs1(void) { SPI_SS1_PORT &= ~SPI_SS1_MASK; }
-inline void spi_disable_cs1(void) { SPI_SS1_PORT |= SPI_SS1_MASK; }
+FORCE_INLINE void spi_enable_cs1(void) { SPI_SS1_PORT &= ~SPI_SS1_MASK; }
+FORCE_INLINE void spi_disable_cs1(void) { SPI_SS1_PORT |= SPI_SS1_MASK; }
 
 #endif // SPI_H

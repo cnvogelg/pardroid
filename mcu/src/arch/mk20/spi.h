@@ -39,8 +39,8 @@ extern void spi_init(void);
 extern void spi_set_speed(u08 speed);
 
 extern u08 spi_xfer(u08 data);
-static inline void spi_out(u08 data) { spi_xfer(data); }
-static inline u08 spi_in(void) { return spi_xfer(0xff); }
+INLINE void spi_out(u08 data) { spi_xfer(data); }
+INLINE u08 spi_in(void) { return spi_xfer(0xff); }
 
 #define spi_enable_cs0()  spi_pins_cs0_lo()
 #define spi_disable_cs0() spi_pins_cs0_hi()

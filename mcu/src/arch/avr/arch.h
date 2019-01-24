@@ -15,4 +15,7 @@ typedef char *ram_pchar;
 
 #define ROM_ATTR __ATTR_PROGMEM__
 
+#define INLINE          static inline
+#define FORCE_INLINE    __attribute__((always_inline)) static inline
+
 #endif

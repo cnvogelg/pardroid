@@ -3,6 +3,7 @@
 
 #include <stdint.h>
 #include "kinetis.h"
+#include "arch.h"
 
 #define irq_off()      __disable_irq()
 #define irq_on()       __enable_irq()
@@ -39,11 +40,7 @@
 #define POUT_MASK        (1<<0)
 #define SELECT_MASK      (1<<0)
 
-#ifndef force_inline
-#define force_inline     __attribute__((always_inline)) inline
-#endif
-
-static inline void pario_init(void)
+INLINE void pario_init(void)
 {
   // ----- port mux -----
   // -- Port B:
@@ -84,7 +81,7 @@ static inline void pario_init(void)
   GPIOD_PSOR = DATA_MASK;
 }
 
-static inline void pario_busy_out(void)
+INLINE void pario_busy_out(void)
 {
   PORTB_PCR1 = PORT_PCR_MUX(1) | OUT_PORT_FLAGS;
 
@@ -92,7 +89,7 @@ static inline void pario_busy_out(void)
   GPIOB_PDDR = old | BUSY_MASK;
 }
 
-static inline void pario_busy_in(void)
+INLINE void pario_busy_in(void)
 {
   PORTB_PCR1 = PORT_PCR_MUX(1) | IN_PORT_FLAGS;
 
@@ -100,62 +97,62 @@ static inline void pario_busy_in(void)
   GPIOB_PDDR = old;
 }
 
-static force_inline void pario_data_ddr(uint8_t ddr)
+FORCE_INLINE void pario_data_ddr(uint8_t ddr)
 {
   GPIOD_PDDR = (GPIOD_PDDR & ~(DATA_MASK)) | ddr;
 }
 
-static force_inline uint8_t pario_get_data(void)
+FORCE_INLINE uint8_t pario_get_data(void)
 {
   return (uint8_t)GPIOD_PDIR;
 }
 
-static force_inline void pario_set_data(uint8_t data)
+FORCE_INLINE void pario_set_data(uint8_t data)
 {
   GPIOD_PDOR = (GPIOD_PDOR & ~(DATA_MASK)) | data;
 }
 
 // input lines
 
-static force_inline int pario_get_pout(void)
+FORCE_INLINE int pario_get_pout(void)
 {
   return (GPIOB_PDIR & POUT_MASK) == POUT_MASK;
 }
 
-static force_inline int pario_get_select(void)
+FORCE_INLINE int pario_get_select(void)
 {
   return (GPIOC_PDIR & SELECT_MASK) == SELECT_MASK;
 }
 
-static force_inline int pario_get_strobe(void)
+FORCE_INLINE int pario_get_strobe(void)
 {
   return (GPIOC_PDIR & STROBE_MASK) == STROBE_MASK;
 }
 
 /* knok upload only */
-static force_inline int pario_get_busy(void)
+FORCE_INLINE int pario_get_busy(void)
 {
   return (GPIOB_PDIR & BUSY_MASK) == BUSY_MASK;
 }
 
 // output lines
 
-static force_inline void pario_busy_hi(void)
+FORCE_INLINE void pario_busy_hi(void)
 {
   GPIOB_PSOR = BUSY_MASK;
 }
 
-static force_inline void pario_busy_lo(void)
+FORCE_INLINE void pario_busy_lo(void)
 {
   GPIOB_PCOR = BUSY_MASK;
 }
 
-static force_inline void pario_ack_hi(void)
+FORCE_INLINE void pario_ack_hi(void)
 {
   GPIOC_PSOR = ACK_MASK;
 }
 
-static force_inline void pario_ack_lo(void)
+FORCE_INLINE void pario_ack_lo(void)
 {
   GPIOC_PCOR = ACK_MASK;
 }

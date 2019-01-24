@@ -88,5 +88,5 @@ void reg_set(u08 num, u16 val)
 }
 
 /* link to func API */
-u16 func_api_get_reg(u16 num) __attribute__ ((weak, alias("reg_get")));
-void func_api_set_reg(u16 num, u16 val) __attribute__ ((weak, alias("reg_set")));
+u16 func_api_get_reg(u08 num) __attribute__ ((weak, alias("reg_get")));
+void func_api_set_reg(u08 num, u16 val) __attribute__ ((weak, alias("reg_set")));

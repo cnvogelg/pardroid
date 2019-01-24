@@ -6,6 +6,7 @@
 #include <util/delay.h>
 #include <stdint.h>
 
+#include "arch.h"
 #include "types.h"
 
 // unit of my timers
@@ -20,7 +21,7 @@ extern void timer_init(void);
 #define timer_delay_us(us) _delay_us(us)
 #define timer_delay_1us()  _delay_loop_1(F_CPU / 1000000)
 
-inline timer_ms_t timer_millis(void)
+INLINE timer_ms_t timer_millis(void)
 {
   timer_ms_t val;
   ATOMIC_BLOCK(ATOMIC_FORCEON)
@@ -30,7 +31,7 @@ inline timer_ms_t timer_millis(void)
   return val;
 }
 
-inline u08 timer_millis_timed_out(timer_ms_t start, u16 timeout)
+INLINE u08 timer_millis_timed_out(timer_ms_t start, u16 timeout)
 {
   timer_ms_t cur = timer_millis();
   if(cur >= start) {
