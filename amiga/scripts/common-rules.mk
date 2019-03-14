@@ -38,4 +38,4 @@ $(OBJ_DIR)/%.o : %.c
 # assemble
 $(OBJ_DIR)/%.o : %.s
 	@echo "  ASM  $<"
-	$(H)$(CC) -c $(ASFLAGS) $< -o $@
+	$(H)$(AS) $(ASFLAGS) $< -o $@

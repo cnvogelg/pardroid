@@ -1,6 +1,6 @@
 #define __NOLIBBASE__
 #include <proto/exec.h>
-#include <proto/alib.h>
+#include <clib/alib_protos.h>
 
 #include <exec/types.h>
 #include <exec/ports.h>
