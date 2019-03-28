@@ -1,5 +1,7 @@
 include version.mk
 
+.PHONY: docs
+
 DISTFILES := README.md
 PROJECT := parbox
 
@@ -8,11 +10,26 @@ DATE := $(shell date '+%Y%m%d')
 DIST_NAME := $(PROJECT)-$(VERSION)
 SNAP_NAME := $(PROJECT)-pre$(VERSION)-$(REVSION)-$(DATE)
 PWD = $(shell pwd)
+SHOW_CMD = open
 
 help:
 	@echo "clean   clean release/snapshot"
 	@echo "dist    build release"
 	@echo "snap    build snapshot"
+	@echo "init    install python packages"
+	@echo "docs    create html docs"
+	@echo "show    show documents"
+
+init:
+	pip3 install --upgrade pip
+	pip3 install sphinx
+
+docs:
+	[ -d build/docs/html ] || mkdir -p build/docs/html
+	sphinx-build -b html docs build/docs/html
+
+show: docs
+	$(SHOW_CMD) build/docs/html/index.html
 
 clean:
 	@rm -rf $(DIST_NAME) $(DIST_NAME).zip
