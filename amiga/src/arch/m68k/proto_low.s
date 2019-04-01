@@ -6,8 +6,6 @@
         include         "pario.i"
         include         "proto.i"
 
-        xdef            _proto_low_wait_init
-        xdef            _proto_low_get_status
         xdef            _proto_low_action
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
@@ -30,8 +28,8 @@
 setup_port_regs  MACRO
         moveq   #0,d2
         moveq   #0,d3
-        move.b  PO_BUSY_BIT(a0),d2
-        move.b  PO_POUT_BIT(a0),d3
+        move.b  PO_POUT_BIT(a0),d2
+        move.b  PO_SEL_BIT(a0),d3
         move.l  PO_DATA_PORT(a0),a3
         move.l  PO_DATA_DDR(a0),a4
         move.l  PO_CTRL_PORT(a0),a5
@@ -135,15 +133,6 @@ ddr_out  MACRO
         ENDM
 
 
-; --- ddr_idle ---
-; \1 = temp reg
-; set special idle mode ddr: bit 0..3 out, bit 4..7 in
-ddr_idle  MACRO
-        moveq   #15,\1
-        move.b  \1,(a4)
-        ENDM
-
-
 ; --- set_cmd_idle ---
 ; set command to idle (0)
 set_cmd_idle  MACRO
@@ -186,24 +175,6 @@ call_cb MACRO
         ENDM
 
 
-; --- cflag_lo ---
-; \1 = reg for sel bit
-cflg_lo MACRO
-        move.b          PO_SEL_BIT(a0),\1
-        bclr            \1,d4
-        move.b          d4,(a5)
-        ENDM
-
-
-; --- cflag_hi ---
-; \1 = reg for sel bit
-cflg_hi MACRO
-        move.b          PO_SEL_BIT(a0),\1
-        bset            \1,d4
-        move.b          d4,(a5)
-        ENDM
-
-
 ; --- delay ---
 ; waste a few CIA cycles
 delay   MACRO
@@ -216,69 +187,6 @@ delay   MACRO
 
 
 ; ----- functions -----------------------------------------------------------
-
-; --- proto_low_wait_init ---
-; wait until device is initialized
-;
-;   in:
-;       a0      struct pario_port *port
-;   out:
-;       d0      RET_OK, RET_TIMEOUT
-_proto_low_wait_init:
-        movem.l d2-d7/a2-a6,-(sp)
-
-        ; setup regs with port values and read old ctrl value
-        setup_port_regs
-
-        ; now wait for busy to become high
-pwi_check_loop:
-        ; timeout?
-        tst.b          (a1)
-        bne.s          pwi_timeout
-
-        ; BUSY should be high
-        btst           d2,(a5)
-        beq.s          pwi_check_loop
-
-        ; data port should be 0x10 -> detach flag is set
-        move.b         (a3),d0
-        cmp.b          #$10,d0
-        bne.s          pwi_check_loop
-
-        ; ok!
-        moveq          #RET_OK,d0
-pwi_end:
-        movem.l (sp)+,d2-d7/a2-a6
-        rts
-pwi_timeout:
-        moveq          #RET_TIMEOUT,d0
-        bra.s          pwi_end
-
-
-; --- proto_low_get_status ---
-; read the status nybble of the device from the idle byte
-;
-;   in:
-;       a0      struct pario_port *port
-;   out:
-;       d0      return status bits in high nybble
-_proto_low_get_status:
-        move.l          PO_DATA_PORT(a0),a1
-        move.b          PO_SEL_BIT(a0),d1
-        move.l          PO_CTRL_PORT(a0),a0
-
-        ; clfg_lo to signal status access
-        bclr            d1,(a0)
-
-        ; read status
-        move.b          (a1),d0
-        andi.b          #$f0,d0
-
-        ; cflg_hi to signal end of status access
-        bset            d1,(a0)
-
-        rts
-
 
 ; --- proto_low_action ---
 ; a simple command that does not transfer any value
@@ -300,8 +208,6 @@ _proto_low_action:
         check_rak_hi    pla_end
         ; set cmd to data port
         set_cmd         d0
-        ; set cflag to signal command
-        cflg_lo         d1
         ; set CLK to low (active) to trigger command at slave
         clk_lo
         ; busy wait with timeout for RAK to go low
@@ -323,8 +229,6 @@ _proto_low_action:
 pla_end:
         ; restore cmd
         set_cmd_idle
-        ; restore cflg
-        cflg_hi         d1
 
         movem.l (sp)+,d2-d7/a2-a6
         rts
@@ -355,8 +259,6 @@ _proto_low_action_bench:
         check_rak_hi    plab_end
         ; set cmd to data port
         set_cmd         d0
-        ; set cflag to signal command
-        cflg_lo         d1
         ; set CLK to low (active) to trigger command at slave
         clk_lo
 
@@ -384,8 +286,6 @@ _proto_low_action_bench:
 plab_end:
         ; restore cmd
         set_cmd_idle
-        ; restore cflg
-        cflg_hi         d1
 
         movem.l (sp)+,d2-d7/a2-a6
         rts
@@ -408,27 +308,18 @@ _proto_low_write_word:
         ; sync with slave
         check_rak_hi    plrw_end
         set_cmd         d0
-        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrw_abort
-
-        ; ddr: out
-        clk_hi
-        ddr_out
 
         ; -- first byte
         ; setup test value on data lines
         set_data        (a2)+
         ; signal to slave to read the value
-        clk_lo
+        clk_hi
 
         ; -- second byte
         set_data        (a2)+
-        clk_hi
-
-        ; ddr: idle
         clk_lo
-        ddr_idle        d7
 
         ; final sync
         clk_hi
@@ -439,7 +330,6 @@ _proto_low_write_word:
         moveq   #RET_OK,d0
 plrw_end:
         set_cmd_idle
-        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrw_abort:
@@ -461,35 +351,26 @@ _proto_low_write_long:
         ; sync with slave
         check_rak_hi    plrwl_end
         set_cmd         d0
-        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrwl_abort
-
-        ; ddr: out
-        clk_hi
-        ddr_out
 
         ; -- first byte
         ; setup test value on data lines
         set_data        (a2)+
         ; signal to slave to read the value
-        clk_lo
+        clk_hi
 
         ; -- second byte
         set_data        (a2)+
-        clk_hi
+        clk_lo
 
         ; -- byte 3
         set_data        (a2)+
-        clk_lo
+        clk_hi
 
         ; -- byte 4
         set_data        (a2)+
-        clk_hi
-
-        ; ddr: idle
         clk_lo
-        ddr_idle        d7
 
         ; final sync
         clk_hi
@@ -500,7 +381,6 @@ _proto_low_write_long:
         moveq   #RET_OK,d0
 plrwl_end:
         set_cmd_idle
-        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrwl_abort:
@@ -522,7 +402,6 @@ _proto_low_read_word:
         ; sync with slave
         check_rak_hi    plrr_end
         set_cmd         d0
-        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrr_abort
 
@@ -540,9 +419,9 @@ _proto_low_read_word:
         clk_hi
         get_data        (a2)+
 
-        ; ddr: idle
+        ; ddr: out
         clk_lo
-        ddr_idle        d7
+        ddr_out
 
         ; final sync
         clk_hi
@@ -552,7 +431,6 @@ _proto_low_read_word:
         moveq   #RET_OK,d0
 plrr_end:
         set_cmd_idle
-        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrr_abort:
@@ -574,7 +452,6 @@ _proto_low_read_long:
         ; sync with slave
         check_rak_hi    plrrl_end
         set_cmd         d0
-        cflg_lo         d1
         clk_lo
         wait_rak_lo     plrrl_abort
 
@@ -600,9 +477,9 @@ _proto_low_read_long:
         clk_hi
         get_data        (a2)+
 
-        ; ddr: idle
+        ; ddr: out
         clk_lo
-        ddr_idle        d7
+        ddr_out
 
         ; final sync
         clk_hi
@@ -612,7 +489,6 @@ _proto_low_read_long:
         moveq   #RET_OK,d0
 plrrl_end:
         set_cmd_idle
-        cflg_hi         d1
         movem.l (sp)+,d2-d7/a2-a6
         rts
 plrrl_abort:
@@ -657,10 +533,6 @@ _proto_low_write_block:
 
         ; wait for slave sync
         wait_rak_lo     plmw_abort
-
-        ; switch port to write
-        clk_hi
-        ddr_out
 
         ; send extra/channel
         set_data        d0 ; hi extra
@@ -720,10 +592,6 @@ plmw_done:
         ; ok
         moveq   #RET_OK,d0
 
-        ; set ddr to idle
-        clk_lo
-        ddr_idle        d7
-
 plmw_final_sync:
         ; final sync
         clk_hi
@@ -739,10 +607,6 @@ plmw_abort:
 
 plmw_msg_too_large:
         moveq   #RET_MSG_TOO_LARGE,d0
-
-        ; set ddr to idle
-        clk_lo
-        ddr_idle        d7
 
         ; if msg was too large then rak got hi
         ; now ensure it was set to low again
@@ -810,12 +674,8 @@ _proto_low_read_block:
         bls.s           plmr_size_ok
 
         ; --- message too large ---
-        ; signal to slave by setting CFLG to lo
-        cflg_lo         d1
         ; size invalid return value
         moveq           #RET_MSG_TOO_LARGE,d0
-        ; restore signal
-        cflg_hi         d1
         ; end transfer
         bra.s           plmr_done
 
@@ -871,7 +731,7 @@ plmr_done_ok:
 plmr_done:
         ; switch: port write
         clk_lo
-        ddr_idle        d7
+        ddr_out
 
         ; final sync
         clk_hi

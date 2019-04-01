@@ -27,23 +27,54 @@ int dosmain(void)
             struct proto_handle *ph = proto_init(port, th, (struct Library *)SysBase);
             if(ph != NULL) {
 
-                error = proto_wait_init(ph);
-                Printf("wait -> %ld\n", (LONG)error);
+                // actions
+                PutStr("bootloader");
+                error = proto_bootloader(ph);
+                Printf("-> %ld\n", (LONG)error);
 
                 PutStr("reset");
-                error = proto_action(ph, PROTO_ACTION_RESET);
+                error = proto_reset(ph);
                 Printf("-> %ld\n", (LONG)error);
-                PutStr("done\n");
 
-                error = proto_wait_init(ph);
-                Printf("wait -> %ld\n", (LONG)error);
-
-                Delay(250); // 5s
-
-                PutStr("delayed reset\n");
-                error = proto_action(ph, PROTO_ACTION_DELAY_RESET);
+                PutStr("ping");
+                error = proto_ping(ph);
                 Printf("-> %ld\n", (LONG)error);
-                PutStr("done\n");
+
+                PutStr("action 15");
+                error = proto_action(ph, 15);
+                Printf("-> %ld\n", (LONG)error);
+
+                // functions
+                PutStr("wfunc_read");
+                UWORD wdata = 0;
+                error = proto_function_read_word(ph, 0, &wdata);
+                Printf("-> %ld : %lx\n", (LONG)error, (ULONG)wdata);
+
+                PutStr("wfunc_write");
+                error = proto_function_write_word(ph, 0, 0xdead);
+                Printf("-> %ld\n", (LONG)error);
+
+                PutStr("lfunc_read");
+                ULONG ldata = 0;
+                error = proto_function_read_long(ph, 0, &ldata);
+                Printf("-> %ld : %lx\n", (LONG)error, ldata);
+
+                PutStr("lfunc_write");
+                error = proto_function_write_long(ph, 0, 0xcafebabe);
+                Printf("-> %ld\n", (LONG)error);
+
+                // message
+
+                PutStr("msg read");
+                UBYTE buf[512];
+                UWORD words = 256;
+                UWORD crc = 0;
+                error = proto_msg_read_single(ph, 0, buf, &words, &crc);
+                Printf("-> %ld : #%ld  crc=%lx\n", (LONG)error, (ULONG)words, (ULONG)crc);
+
+                PutStr("msg write");
+                error = proto_msg_write_single(ph, 0, buf, 256, 0xfeed);
+                Printf("-> %ld\n", (LONG)error);
 
                 proto_exit(ph);
             } else {

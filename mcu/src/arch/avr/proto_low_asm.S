@@ -8,45 +8,19 @@
     ; RAK = BUSY
 
     .macro sbic_clk
-    sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
-    .endm
-
-    .macro sbis_clk
-    sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
-    .endm
-
-    .macro sbic_cflg
     sbic    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     .endm
 
-    .macro sbis_cflg
+    .macro sbis_clk
     sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     .endm
 
     .macro wait_clk_lo
-l\@: sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
-    rjmp     l\@
-    .endm
-
-    .macro wait_clk_lo_abort_cfg_lo exit
-l\@:
-    sbis_cflg
-    rjmp     \exit
-    sbic    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
-    rjmp     l\@
-    .endm
-
-    .macro wait_clk_hi
-l\@: sbis    _SFR_IO_ADDR(PAR_POUT_PIN), PAR_POUT_BIT
-    rjmp     l\@
-    .endm
-
-    .macro wait_cflg_lo
 l\@: sbic    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     rjmp     l\@
     .endm
 
-    .macro wait_cflg_hi
+    .macro wait_clk_hi
 l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     rjmp     l\@
     .endm
@@ -60,11 +34,11 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     .endm
 
     .macro rak_hi
-    sbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    sbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     .endm
 
     .macro rak_lo
-    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    cbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     .endm
 
 #ifdef NO_IRQ
@@ -83,65 +57,28 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
 #endif
 
     ; ----- proto_low_init -----
-    ; void proto_low_init(u08 status)
+    ; void proto_low_init(void)
     ; setup parallel port lines
-    ; in: r24 = status bits
     .section .text.proto_low_init
     .global  proto_low_init
 proto_low_init:
     ; setup data port: idle mode
-    ddr_idle
-    ; set status bits (4,5,6,7)
-    andi    r24,0xf0
-    ori     r24,0x0f
-    mov     r18,r24
+    ddr_in
+    ; set default value
+    ldi     r18,0xff
     data_out_prepare
     data_out_set
     ; setup control lines
-    ; DDR INPUT: strobe, pout, select
+    ; DDR INPUT: strobe, select
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
-    cbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
     cbi     _SFR_IO_ADDR(PAR_SELECT_DDR), PAR_SELECT_BIT
-    ; DDR OUTPUT: ack, busy
+    ; DDR OUTPUT: ack, busy, select
     sbi     _SFR_IO_ADDR(PAR_ACK_DDR), PAR_ACK_BIT
     sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
+    sbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
     ; set OUTPUT levels
     ack_hi
     rak_hi
-    ret
-
-
-    ; ----- device status bits -----
-    ; u08 proto_low_set_status(u08 status)
-    ; in: r24 = status bits
-    ; out: r24 = 0=abort, 1=done
-    .section .text.proto_low_set_status
-    .global  proto_low_set_status
-proto_low_set_status:
-    ; if cflg is high then perform change
-    ; (abort set if host currently reads status)
-    sbic_cflg
-    rjmp    plss_ok
-plss_abort:
-    clr     r24
-    ret
-plss_ok:
-    ; perform change
-    andi    r24,0xf0
-    ori     r24,0x0f
-    mov     r18,r24
-    data_out_prepare
-    data_out_set
-    ldi     r24,1
-    ret
-
-
-    ; ----- wait for end of invalid action/func -----
-    ; void proto_low_wait_cflg_hi(void)
-    .section .text.proto_low_wait_cflg_hi
-    .global  proto_low_wait_cflg_hi
-proto_low_wait_cflg_hi:
-    wait_cflg_hi
     ret
 
 
@@ -153,12 +90,14 @@ proto_low_ack_lo:
     ack_lo
     ret
 
+
     ; void proto_low_ack_hi(void)
     .section .text.proto_low_ack_hi
     .global  proto_low_ack_hi
 proto_low_ack_hi:
     ack_hi
     ret
+
 
     ; ----- proto_low_get_cmd -----
     ; u08 proto_low_get_cmd(void)
@@ -170,13 +109,8 @@ proto_low_get_cmd:
     ldi     r24, 0xff
     sbic_clk
     ret
-    ; read low idle byte nybble
+    ; read command from data port
     data_in
-    andi    r18, 0x0f
-    ; if cflg is low then set bit 4 of command
-    sbis_cflg
-    ori     r18, 0x10
-    ; return result
     mov     r24, r18
     ret
 
@@ -197,17 +131,11 @@ proto_low_action:
     ; ----- proto_low_end -----
     ; void proto_low_end(void)
     ; end an action or function call
-    ; in: r24 = status
+    ; in: -
     ; out: -
     .section .text.proto_low_end
     .global  proto_low_end
 proto_low_end:
-    ; update status nybble
-    andi    r24,0xf0
-    ori     r24,0x0f
-    mov     r18,r24
-    data_out_prepare
-    data_out_set
     ; command finishes with a last clk hi transition
     wait_clk_hi
     ; confirm it
@@ -227,26 +155,18 @@ proto_low_write_word:
     ; confirm to master we are ready
     rak_lo
 
-    ; ddr: input
-    wait_clk_hi
-    ddr_in
-
     ; byte 1
     ; wait clk
-    wait_clk_lo
+    wait_clk_hi
     ; get data and save as result
     data_in
     mov     r25, r18
 
     ; byte 2
     ; wait clk
-    wait_clk_hi
+    wait_clk_lo
     data_in
     mov     r24, r18
-
-    ; ddr: idle
-    wait_clk_lo
-    ddr_idle
 
     irq_on
     ret
@@ -264,38 +184,30 @@ proto_low_write_long:
     ; confirm to master we are ready
     rak_lo
 
-    ; ddr: input
-    wait_clk_hi
-    ddr_in
-
     ; byte 1
     ; wait clk
-    wait_clk_lo
+    wait_clk_hi
     ; get data and save as result
     data_in
     mov     r25, r18
 
     ; byte 2
     ; wait clk
-    wait_clk_hi
+    wait_clk_lo
     data_in
     mov     r24, r18
 
     ; byte 3
     ; wait clk
-    wait_clk_lo
+    wait_clk_hi
     data_in
     mov     r23, r18
 
     ; byte 4
     ; wait clk
-    wait_clk_hi
+    wait_clk_lo
     data_in
     mov     r22, r18
-
-    ; ddr: idle
-    wait_clk_lo
-    ddr_idle
 
     irq_on
     ret
@@ -330,7 +242,7 @@ proto_low_read_word:
 
     ; ddr: idle
     wait_clk_lo
-    ddr_idle
+    ddr_in
 
     irq_on
     ret
@@ -377,7 +289,7 @@ proto_low_read_long:
 
     ; ddr: idle
     wait_clk_lo
-    ddr_idle
+    ddr_in
 
     irq_on
     ret
@@ -490,7 +402,7 @@ proto_low_write_block:
 .wb_end:
     ; ddr idle
     wait_clk_lo
-    ddr_idle
+    ddr_in
 
     irq_on
     ret
@@ -498,11 +410,11 @@ proto_low_write_block:
 
     ; ----- proto_low_read_block -----
     ; master wants to read a message
-    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer, u16 chn_ext)
+    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer, u16 crc)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
-    ; in:  r21,r20 = extra << 8 | channel value
-    ; out: r24 = 0=ok, 1=abort
+    ; in:  r21,r20 = crc
+    ; out: -
     .section .text.proto_low_read_block
     .global  proto_low_read_block
 proto_low_read_block:
@@ -522,13 +434,13 @@ proto_low_read_block:
     wait_clk_hi
     ddr_out
 
-    ; send extra
+    ; send crc hi
     mov     r18,r21
     data_out_prepare
     wait_clk_lo
     data_out_set
 
-    ; send channel
+    ; send crc lo
     mov     r18,r0
     data_out_prepare
     wait_clk_hi
@@ -559,12 +471,12 @@ proto_low_read_block:
     ; check end
     cp      r30,r24
     cpc     r31,r25
-    breq    .rb_ok
+    breq    .rb_end
 
     ; odd byte
     ld      r18,Z+
     data_out_prepare
-    wait_clk_lo_abort_cfg_lo .rb_abort
+    wait_clk_lo
     data_out_set
 
     ; even byte
@@ -575,19 +487,10 @@ proto_low_read_block:
 
     rjmp    .rb_loop
 
-.rb_abort:
-    ; error result
-    ldi     r24,1
-    rjmp    .rb_end
-
-.rb_ok:
-    ; clear result=ok
-    ldi     r24,0
-
 .rb_end:
     ; ddr idle
     wait_clk_lo
-    ddr_idle
+    ddr_in
 
     irq_on
     ret

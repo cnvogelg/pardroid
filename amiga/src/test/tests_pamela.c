@@ -668,7 +668,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 #define SIM_PENDING_SET   0x80
 
 #define WAIT_S      0UL
-#define WAIT_US     10000UL
+#define WAIT_US     50000UL
 
 #define TEST_MODE_NORMAL  0
 #define TEST_MODE_ECHO    1

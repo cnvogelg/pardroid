@@ -109,6 +109,13 @@ FW_ID_test-base-fw = 0x8001
 FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
+# test-proto
+TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
+TEST_PROTO_SRCS += test-proto.c knok.c proto.c
+FW_ID_test-proto-fw = 0x8008
+FW_VER_test-proto-fw = $(VERSION_TAG)
+$(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
+
 # test-param
 TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
@@ -194,7 +201,7 @@ $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SI
 endif
 endif
 
-DEFAULT_FIRMWARE=test-proto-fw
+DEFAULT_FIRMWARE=test-pamela-fw
 
 # ---------- rules ----------
 include scripts/common-rules.mk

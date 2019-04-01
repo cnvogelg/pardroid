@@ -13,6 +13,7 @@
 #include "system.h"
 #include "timer.h"
 #include "led.h"
+#include "proto_shared.h"
 
 // get generated bootstrap code
 #ifdef CONFIG_BOOTSTRAP
@@ -192,6 +193,18 @@ void knok_main(void)
 {
   uart_send_pstring(PSTR("knok:"));
   strobe_init();
+
+  // --- early exit ---
+  // is a reset command active? then directly exit to proto
+  // we also accept bootloader to enter main loop if no bootloader is available
+  // otherwise we would constantly stay in a reset loop
+  u08 data = strobe_get_data();
+  if(data == PROTO_CMD_ACTION_RESET || data == PROTO_CMD_ACTION_BOOTLOADER) {
+    uart_send_pstring(PSTR("exyt"));
+    uart_send_crlf();
+    return;
+  }
+
   led_init();
   led_on();
 
@@ -199,6 +212,18 @@ void knok_main(void)
   u08 led = 1;
   u16 led_interval = 100;
   while(1) {
+
+    // if a reset or bootloader command is active then reset immediately
+    // bootloader command will be answered by bootloader 
+    // RESET_ACTION leaves knok mode in early exit next time (see above)
+    u08 data = strobe_get_data();
+    if(data == PROTO_CMD_ACTION_RESET || data == PROTO_CMD_ACTION_BOOTLOADER) {
+      uart_send_pstring(PSTR("bail"));
+      uart_send_crlf();
+      system_sys_reset();
+      break;
+    }
+
     // got a strobe key?
     u32 key;
     if(strobe_get_key(&key)) {
@@ -226,14 +251,6 @@ void knok_main(void)
           blink_hello();
           break;
       }
-    }
-
-    // quick exit by active driver
-    // RESET_ACTION or IDLE_CMD both have ....00xx bits
-    u08 data = strobe_get_data();
-    if((data & 0xfc) == 0xf0) {
-      uart_send_pstring(PSTR("quik"));
-      break;
     }
 
     // blink led per second

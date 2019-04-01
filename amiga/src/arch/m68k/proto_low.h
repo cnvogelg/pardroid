@@ -3,11 +3,6 @@
 
 #include "proto_iov.h"
 
-extern ASM UBYTE proto_low_get_status(REG(a0, struct pario_port *port));
-
-extern ASM int proto_low_wait_init(REG(a0, struct pario_port *port),
-                                   REG(a1, volatile UBYTE *timeout_flag));
-
 extern ASM int proto_low_action(REG(a0, struct pario_port *port),
                                 REG(a1, volatile UBYTE *timeout_flag),
                                 REG(d0, UBYTE cmd));

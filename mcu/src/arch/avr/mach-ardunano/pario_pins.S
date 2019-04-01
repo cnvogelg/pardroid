@@ -18,16 +18,6 @@
     out     _SFR_IO_ADDR(DDRD), r19         ; 1
     .endm                                   ; = 5
 
-    ; ddr_idle
-    ; bits 0..3 out, bits 4..7 in
-    .macro ddr_idle
-    ldi     r18, 0x30                       ; 1
-    in      r19, _SFR_IO_ADDR(DDRD)         ; 1
-    ori     r19, 0xc0                       ; 1
-    out     _SFR_IO_ADDR(DDRC), r18         ; 1
-    out     _SFR_IO_ADDR(DDRD), r19         ; 1
-    .endm                                   ; = 5
-
     ; ddr_in
     ; set data direction to input
     ; in: -

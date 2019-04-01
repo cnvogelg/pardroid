@@ -12,12 +12,6 @@
     out     _SFR_IO_ADDR(DDRC), r18         ; 1
     .endm                                   ; = 2
 
-    ; ddr_idle
-    .macro ddr_idle
-    ldi     r18, 0xf0                       ; 1
-    out     _SFR_IO_ADDR(DDRC), r18         ; 1
-    .endm                                   ; = 2
-
     ; ddr_in
     ; set data direction to input
     ; in: -
