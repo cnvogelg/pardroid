@@ -58,7 +58,6 @@ static void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void))
 void strobe_init(void)
 {
   pario_init();
-  pario_busy_lo();
 
   strobe_key = 0;
   strobe_count = 0;
@@ -91,8 +90,6 @@ void strobe_init(void)
 
 void strobe_exit(void)
 {
-  pario_busy_hi();
-
   // setup int irq
   __disable_irq();
 

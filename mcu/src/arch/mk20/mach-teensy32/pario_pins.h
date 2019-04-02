@@ -44,8 +44,8 @@ INLINE void pario_init(void)
 {
   // ----- port mux -----
   // -- Port B:
-  // POUT (IN)
-  PORTB_PCR0 = PORT_PCR_MUX(1) | IN_PORT_FLAGS;
+  // POUT (OUT)
+  PORTB_PCR0 = PORT_PCR_MUX(1) | OUT_PORT_FLAGS;
   // busy (OUT)
   PORTB_PCR1 = PORT_PCR_MUX(1) | OUT_PORT_FLAGS;
 
@@ -62,8 +62,8 @@ INLINE void pario_init(void)
 
   // ----- DDR -----
   // Port B: BUSY, POUT
-  uint32_t old = GPIOB_PDDR & ~(BUSY_MASK | POUT_MASK);
-  GPIOB_PDDR = old | BUSY_MASK;
+  uint32_t old = (GPIOB_PDDR & ~BUSY_MASK) | POUT_MASK;
+  GPIOB_PDDR = old | BUSY_MASK | POUT_MASK;
 
   // Port C: SELECT, ACK, STROBE
   old = GPIOC_PDDR & ~(SELECT_MASK | ACK_MASK | STROBE_MASK);
@@ -74,7 +74,8 @@ INLINE void pario_init(void)
 
   // ----- DATA -----
   // Port B:
-  GPIOB_PSOR = BUSY_MASK | POUT_MASK;
+  GPIOB_PSOR = POUT_MASK;
+  GPIOB_PCOR = BUSY_MASK;
   // Port C:
   GPIOC_PSOR = ACK_MASK | SELECT_MASK | STROBE_MASK;
   // Port D:
@@ -145,6 +146,16 @@ FORCE_INLINE void pario_busy_hi(void)
 FORCE_INLINE void pario_busy_lo(void)
 {
   GPIOB_PCOR = BUSY_MASK;
+}
+
+FORCE_INLINE void pario_pout_hi(void)
+{
+  GPIOB_PSOR = POUT_MASK;
+}
+
+FORCE_INLINE void pario_pout_lo(void)
+{
+  GPIOB_PCOR = POUT_MASK;
 }
 
 FORCE_INLINE void pario_ack_hi(void)

@@ -297,10 +297,10 @@ proto_low_read_long:
 
     ; ----- proto_low_write_block -----
     ; master wants to write a message
-    ; u16 proto_low_write_block(u16 max_words, u08 *buffer, u16 *chn_ext)
+    ; u16 proto_low_write_block(u16 max_words, u08 *buffer, u16 *crc)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
-    ; in:  r21,r20 = ptr to (extra << 8 | channel)
+    ; in:  r21,r20 = ptr to crc word
     ; out: r25,r24 = num_words received
     .section .text.proto_low_write_block
     .global  proto_low_write_block
@@ -315,29 +315,25 @@ proto_low_write_block:
     ; confirm to master we are ready
     rak_lo
 
-    ; ddr input
+    ; -- read crc hi/lo
+    ; crc hi
     wait_clk_hi
-    ddr_in
-
-    ; -- read extra, channel
-    ; extra
-    wait_clk_lo
     data_in
     mov     r0,r18
 
-    ; channel
-    wait_clk_hi
+    ; crc lo
+    wait_clk_lo
     data_in
     st      x+,r18
     st      x+,r0
 
     ; -- read size: hi/lo=r23:r22
-    ; hi
-    wait_clk_lo
+    ; size hi
+    wait_clk_hi
     data_in
     mov     r23,r18
-    ; lo
-    wait_clk_hi
+    ; size lo
+    wait_clk_lo
     data_in
     mov     r22,r18
 
@@ -349,12 +345,6 @@ proto_low_write_block:
     ; -> size invalid!
     ; signal with rak hi
     rak_hi
-
-    ; wait for ddr transition
-    wait_clk_lo
-
-    ; clear rak again
-    rak_lo
 
     ; end transmision
     ; clear result
@@ -384,11 +374,11 @@ proto_low_write_block:
     breq    .wb_end
 
     ; odd byte
-    wait_clk_lo
+    wait_clk_hi
     data_in
     st      Z+,r18
     ; even byte
-    wait_clk_hi
+    wait_clk_lo
     data_in
     st      Z+,r18
 
@@ -400,10 +390,6 @@ proto_low_write_block:
     clr     r24
 
 .wb_end:
-    ; ddr idle
-    wait_clk_lo
-    ddr_in
-
     irq_on
     ret
 

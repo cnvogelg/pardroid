@@ -7,6 +7,7 @@
 #include "proto.h"
 #include "debug.h"
 #include "system.h"
+#include "timer.h"
 
 void proto_init(void)
 {
@@ -27,6 +28,15 @@ void proto_first(void)
   proto_low_action();
   proto_low_end();
   DS("done"); DNL;
+}
+
+void proto_signal(void)
+{
+  // trigger ack irq at Amiga
+  DS("ack:irq"); DNL;
+  proto_low_ack_lo();
+  timer_delay_1us();
+  proto_low_ack_hi();
 }
 
 static void handle_action(u08 num)

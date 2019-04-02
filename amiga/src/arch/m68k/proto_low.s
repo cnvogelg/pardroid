@@ -536,15 +536,15 @@ _proto_low_write_block:
 
         ; send extra/channel
         set_data        d0 ; hi extra
-        clk_lo
-        set_data        d6 ; lo extra
         clk_hi
+        set_data        d6 ; lo extra
+        clk_lo
 
         ; send size
         set_data        d5 ; hi byte
-        clk_lo
-        set_data        d1 ; lo byte
         clk_hi
+        set_data        d1 ; lo byte
+        clk_lo
 
         ; empty message?
         tst.w           d1
@@ -574,10 +574,10 @@ plmw_chunks:
 plmw_loop:
         ; odd byte
         set_data        (a0)+
-        clk_set         d4
+        clk_set         d5
         ; even byte
         set_data        (a0)+
-        clk_set         d5
+        clk_set         d4
 
         dbra            d1,plmw_loop
 

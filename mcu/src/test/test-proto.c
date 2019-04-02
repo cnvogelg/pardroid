@@ -24,6 +24,13 @@ void proto_api_action(u08 num)
   uart_send_pstring(PSTR("action:"));
   uart_send_hex_byte(num);
   uart_send_crlf();
+
+  // triger signal
+  if(num == 15) {
+    uart_send_pstring(PSTR("signal!"));
+    uart_send_crlf();
+    proto_signal();
+  }
 }
 
 // function handler
