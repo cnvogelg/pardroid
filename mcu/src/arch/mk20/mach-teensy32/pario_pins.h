@@ -60,6 +60,15 @@ INLINE void pario_init(void)
   // -- Port D: data port
   PORTD_GPCLR = (DATA_MASK << 16) | PORT_PCR_MUX(1) | DATA_PORT_FLAGS;
 
+  // ----- DATA -----
+  // Port B:
+  GPIOB_PSOR = POUT_MASK;
+  GPIOB_PCOR = BUSY_MASK;
+  // Port C:
+  GPIOC_PSOR = ACK_MASK | SELECT_MASK | STROBE_MASK;
+  // Port D:
+  GPIOD_PSOR = DATA_MASK;
+
   // ----- DDR -----
   // Port B: BUSY, POUT
   uint32_t old = (GPIOB_PDDR & ~BUSY_MASK) | POUT_MASK;
@@ -71,15 +80,6 @@ INLINE void pario_init(void)
 
   // Port D: DATA
   GPIOD_PDDR &= ~0xff; // INPUT
-
-  // ----- DATA -----
-  // Port B:
-  GPIOB_PSOR = POUT_MASK;
-  GPIOB_PCOR = BUSY_MASK;
-  // Port C:
-  GPIOC_PSOR = ACK_MASK | SELECT_MASK | STROBE_MASK;
-  // Port D:
-  GPIOD_PSOR = DATA_MASK;
 }
 
 INLINE void pario_busy_out(void)
