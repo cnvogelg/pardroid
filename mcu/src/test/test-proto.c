@@ -16,6 +16,7 @@
 #include "knok.h"
 #include "proto.h"
 #include "proto_shared.h"
+#include "reg.h"
 
 // action handler
 
@@ -47,14 +48,23 @@ void proto_api_action(u08 num)
 
 u16  proto_api_wfunc_read(u08 num)
 {
+  u16 val = 0xbeef;
+  if(num < PROTO_WFUNC_USER) {
+    val = reg_wfunc_read_handle(num);
+  }
   uart_send_pstring(PSTR("wfunc_read:"));
   uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_word(val);
   uart_send_crlf();
-  return 0xbeef;
+  return val;
 }
 
 void proto_api_wfunc_write(u08 num, u16 val)
 {
+  if(num < PROTO_WFUNC_USER) {
+    reg_wfunc_write_handle(num, val);
+  }
   uart_send_pstring(PSTR("wfunc_write:"));
   uart_send_hex_byte(num);
   uart_send('=');
@@ -78,6 +88,34 @@ void proto_api_lfunc_write(u08 num, u32 val)
   uart_send_hex_long(val);
   uart_send_crlf();
 }
+
+// registers
+
+void reg_api_set_value(u08 range, u08 reg, u16 value)
+{
+  uart_send_pstring(PSTR("reg_set:"));
+  uart_send_hex_byte(range);
+  uart_send(':');
+  uart_send_hex_byte(reg);
+  uart_send('=');
+  uart_send_hex_word(value);
+  uart_send_crlf();
+}
+
+u16 reg_api_get_value(u08 range, u08 reg)
+{
+  u16 val = 0xdead;
+  uart_send_pstring(PSTR("reg_get:"));
+  uart_send_hex_byte(range);
+  uart_send(':');
+  uart_send_hex_byte(reg);
+  uart_send('=');
+  uart_send_hex_word(val);
+  uart_send_crlf();
+  return val;
+}
+
+// messages
 
 u08 buf[512];
 

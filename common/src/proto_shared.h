@@ -2,7 +2,7 @@
 // shared defines for parbox protocol
 
 // number of channels
-#define PROTO_MAX_CHANNEL         8
+#define PROTO_MAX_CHANNEL         16
 #define PROTO_MAX_FUNCTION        16
 #define PROTO_MAX_ACTION          16
 
@@ -36,3 +36,17 @@
 
 // long function numbers 0..15
 #define PROTO_LFUNC_USER          0x00
+
+// registers
+#define PROTO_REG_RANGE_MASK      0xff00
+#define PROTO_REG_REGISTER_MASK   0x00ff
+
+// register ranges
+#define PROTO_REG_RANGE_GLOBAL    0x10
+
+// global registers
+#define PROTO_MAGIC_VALUE         0x4711
+#define PROTO_REG_GLOBAL_MAGIC    0x00
+#define PROTO_REG_GLOBAL_MACHTAG  0x01
+#define PROTO_REG_GLOBAL_ID       0x02
+#define PROTO_REG_GLOBAL_VERSION  0x03

@@ -56,7 +56,7 @@ PARAM_SRCS = param.c param_def.c crc.c
 
 # pamela
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
-PROTO_SRCS += proto.c knok.c
+PROTO_SRCS += proto.c knok.c reg.c
 ifdef CONFIG_BOOTSTRAP
 PROTO_EXT_SRCS += bootstrap.c bootrexx.c
 endif
@@ -108,8 +108,8 @@ FW_VER_test-base-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto
-TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
-TEST_PROTO_SRCS += test-proto.c knok.c proto.c
+TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PROTO_SRCS)
+TEST_PROTO_SRCS += test-proto.c
 FW_ID_test-proto-fw = 0x8008
 FW_VER_test-proto-fw = $(VERSION_TAG)
 $(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
