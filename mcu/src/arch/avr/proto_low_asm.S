@@ -41,6 +41,14 @@ l\@: sbis    _SFR_IO_ADDR(PAR_SELECT_PIN), PAR_SELECT_BIT
     cbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     .endm
 
+    .macro busy_hi
+    sbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    .endm
+
+    .macro busy_lo
+    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    .endm
+
 #ifdef NO_IRQ
     .macro irq_off
     .endm
@@ -79,6 +87,7 @@ proto_low_init:
     ; set OUTPUT levels
     ack_hi
     rak_hi
+    busy_lo
     ret
 
 
@@ -96,6 +105,22 @@ proto_low_ack_lo:
     .global  proto_low_ack_hi
 proto_low_ack_hi:
     ack_hi
+    ret
+
+
+    ; void proto_low_busy_hi(void)
+    .section .text.proto_low_busy_hi
+    .global  proto_low_busy_hi
+proto_low_busy_hi:
+    busy_hi
+    ret
+
+
+    ; void proto_low_busy_lo(void)
+    .section .text.proto_low_busy_lo
+    .global  proto_low_busy_lo
+proto_low_busy_lo:
+    busy_lo
     ret
 
 

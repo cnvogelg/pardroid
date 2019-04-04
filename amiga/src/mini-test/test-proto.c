@@ -44,6 +44,14 @@ int dosmain(void)
                 error = proto_action(ph, 15);
                 Printf("-> %ld\n", (LONG)error);
 
+                PutStr("action 14");
+                error = proto_action(ph, 14);
+                Printf("-> %ld\n", (LONG)error);
+
+                PutStr("action 13");
+                error = proto_action(ph, 13);
+                Printf("-> %ld\n", (LONG)error);
+
                 // functions
                 PutStr("wfunc_read");
                 UWORD wdata = 0;

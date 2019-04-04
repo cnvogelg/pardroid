@@ -24,6 +24,8 @@
 #define rak_hi()  pario_pout_hi()
 #define ack_lo()  pario_ack_lo()
 #define ack_hi()  pario_ack_hi()
+#define busy_lo() pario_busy_lo()
+#define busy_hi() pario_busy_hi()
 
 #define wait_clk_hi()  while(!clk()) {}
 #define wait_clk_lo()  while(clk()) {}
@@ -33,9 +35,6 @@
 void proto_low_init(void)
 {
     pario_init();
-
-    dout(0xff);
-    ddr_in();
 }
 
 u08 proto_low_get_cmd(void)
@@ -226,4 +225,14 @@ void proto_low_ack_lo(void)
 void proto_low_ack_hi(void)
 {
   ack_hi();
+}
+
+void proto_low_busy_lo(void)
+{
+  busy_lo();
+}
+
+void proto_low_busy_hi(void)
+{
+  busy_hi();
 }

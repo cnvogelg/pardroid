@@ -30,13 +30,25 @@ void proto_first(void)
   DS("done"); DNL;
 }
 
-void proto_signal(void)
+void proto_trigger_signal(void)
 {
   // trigger ack irq at Amiga
   DS("ack:irq"); DNL;
   proto_low_ack_lo();
   timer_delay_1us();
   proto_low_ack_hi();
+}
+
+void proto_busy_begin(void)
+{
+  DS("busy:begin"); DNL;
+  proto_low_busy_hi();
+}
+
+void proto_busy_end(void)
+{
+  DS("busy:endl"); DNL;
+  proto_low_busy_lo();
 }
 
 static void handle_action(u08 num)
@@ -161,6 +173,8 @@ void proto_handle(void)
       break;
     default:
       DS("invalid!"); DNL;
+      // trigger a reset to re-enter knok
+      system_sys_reset();
       break;
   }
 

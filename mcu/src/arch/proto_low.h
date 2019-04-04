@@ -18,4 +18,7 @@ extern void proto_low_read_block(u16 num_words, u08 *buffer, u16 crc);
 extern void proto_low_ack_lo(void);
 extern void proto_low_ack_hi(void);
 
+extern void proto_low_busy_lo(void);
+extern void proto_low_busy_hi(void);
+
 #endif

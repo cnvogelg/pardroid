@@ -29,7 +29,17 @@ void proto_api_action(u08 num)
   if(num == 15) {
     uart_send_pstring(PSTR("signal!"));
     uart_send_crlf();
-    proto_signal();
+    proto_trigger_signal();
+  }
+  else if(num == 14) {
+    uart_send_pstring(PSTR("busy:begin!"));
+    uart_send_crlf();
+    proto_busy_begin();
+  }
+  else if(num == 13) {
+    uart_send_pstring(PSTR("busy:end!"));
+    uart_send_crlf();
+    proto_busy_end();
   }
 }
 

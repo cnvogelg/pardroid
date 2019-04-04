@@ -29,12 +29,10 @@
 #define PROTO_CMD_ACTION_BOOTLOADER 0x11
 #define PROTO_CMD_ACTION_RESET      0x12
 
-
 // word function numbers 0..15
 #define PROTO_WFUNC_REG_ADDR      0x00
 #define PROTO_WFUNC_REG_VALUE     0x01
-#define PROTO_WFUNC_CHAN_STATE    0x03
-#define PROTO_WFUNC_USER          0x04
+#define PROTO_WFUNC_USER          0x02
 
 // long function numbers 0..15
 #define PROTO_LFUNC_USER          0x00
