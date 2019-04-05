@@ -7,51 +7,62 @@
 
 #include "proto.h"
 #include "proto_shared.h"
-#include "base_reg_def.h"
 #include "reg.h"
 
 int reg_get(proto_handle_t *ph, UWORD num, UWORD *val)
 {
   // set reg addr
-  int res = proto_function_write(ph, PROTO_FUNC_REGADDR_SET, num);
+  int res = proto_function_write_word(ph, PROTO_WFUNC_REG_ADDR, num);
   if(res != PROTO_RET_OK) {
     return res;
   }
   // get value
-  res = proto_function_read(ph, PROTO_FUNC_REG_READ, val);
+  res = proto_function_read_word(ph, PROTO_WFUNC_REG_VALUE, val);
   return res;
 }
 
 int reg_set(proto_handle_t *ph, UWORD num, UWORD val)
 {
   // set reg addr
-  int res = proto_function_write(ph, PROTO_FUNC_REGADDR_SET, num);
+  int res = proto_function_write_word(ph, PROTO_WFUNC_REG_ADDR, num);
   if(res != PROTO_RET_OK) {
     return res;
   }
   // set value
-  res = proto_function_write(ph, PROTO_FUNC_REG_WRITE, val);
+  res = proto_function_write_word(ph, PROTO_WFUNC_REG_VALUE, val);
   return res;
 }
 
-// base register
-
-int reg_base_get_fw_version(proto_handle_t *ph, UWORD *version)
+int reg_global_get(proto_handle_t *ph, UBYTE reg, UWORD *val)
 {
-  return reg_get(ph, BASE_REG_FW_VERSION, version);
+  UWORD num = PROTO_REG_RANGE_GLOBAL << 8 | reg;
+  return reg_get(ph, num, val);
 }
 
-int reg_base_get_fw_machtag(proto_handle_t *ph, UWORD *machtag)
+int reg_global_set(proto_handle_t *ph, UBYTE reg, UWORD val)
 {
-  return reg_get(ph, BASE_REG_FW_MACHTAG, machtag);
+  UWORD num = PROTO_REG_RANGE_GLOBAL << 8 | reg;
+  return reg_set(ph, num, val);
 }
 
-int reg_base_get_fw_id(proto_handle_t *ph, UWORD *fw_id)
+// global registers
+
+int reg_global_get_magic(proto_handle_t *ph, UWORD *magic)
 {
-  return reg_get(ph, BASE_REG_FW_ID, fw_id);
+  return reg_global_get(ph, PROTO_REG_GLOBAL_MAGIC, magic);
 }
 
-int reg_base_get_event_mask(proto_handle_t *ph, UWORD *event_mask)
+int reg_global_get_machtag(proto_handle_t *ph, UWORD *machtag)
 {
-  return reg_get(ph, BASE_REG_ERROR, event_mask);
+  return reg_global_get(ph, PROTO_REG_GLOBAL_MACHTAG, machtag);
+}
+
+int reg_global_get_fw_id(proto_handle_t *ph, UWORD *fw_id)
+{
+  return reg_global_get(ph, PROTO_REG_GLOBAL_FW_ID, fw_id);
+}
+
+int reg_global_get_fw_version(proto_handle_t *ph, UWORD *fw_version)
+{
+  return reg_global_get(ph, PROTO_REG_GLOBAL_FW_VERSION, fw_version);
 }

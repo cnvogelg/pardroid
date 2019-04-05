@@ -161,18 +161,21 @@ u16  proto_low_write_block(u16 max_words, u08 *buffer, u16 *chn_ext)
 
   u16 size = (sh << 8) | sl;
   if(size > max_words) {
+    // trigger abort
     rak_hi();
-    goto write_end;
-  }
-
-  for(u16 i=0;i<size;i++) {
+    // resync with slave
     wait_clk_hi();
-    *buffer++ = din();
+    rak_lo();
     wait_clk_lo();
-    *buffer++ = din();
+  } else {
+    // regular data loop
+    for(u16 i=0;i<size;i++) {
+      wait_clk_hi();
+      *buffer++ = din();
+      wait_clk_lo();
+      *buffer++ = din();
+    }
   }
-
-write_end:
 
   irq_on();
 

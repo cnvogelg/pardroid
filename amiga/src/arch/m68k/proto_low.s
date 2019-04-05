@@ -606,11 +606,10 @@ plmw_abort:
         bra.s    plmw_end
 
 plmw_msg_too_large:
-        moveq   #RET_MSG_TOO_LARGE,d0
-
-        ; if msg was too large then rak got hi
-        ; now ensure it was set to low again
-        wait_rak_lo    plmw_final_sync
+        ; re-sync with slave
+        clk_hi
+        wait_rak_lo    plmw_end
+        clk_lo
         bra.s    plmw_final_sync
 
 

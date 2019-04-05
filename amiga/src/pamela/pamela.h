@@ -5,9 +5,7 @@
 #include "timer.h"
 #include "proto.h"
 #include "proto_shared.h"
-#include "status.h"
 #include "reg.h"
-#include "offset.h"
 
 /* pamela init error codes */
 #define PAMELA_OK               0
@@ -18,8 +16,7 @@
 #define PAMELA_ERROR_ACK_IRQ    5
 #define PAMELA_ERROR_TIMER_SIG  6
 #define PAMELA_ERROR_RESET      7
-#define PAMELA_ERROR_WAIT_INIT  8
-#define PAMELA_ERROR_ATTACH     9
+#define PAMELA_ERROR_BOOTLOADER 8
 
 /* init flags */
 #define PAMELA_INIT_NORMAL      0
@@ -42,9 +39,6 @@ ULONG pamela_get_event_sigmask(pamela_handle_t *ph);
 ULONG pamela_get_timer_sigmask(pamela_handle_t *ph);
 UWORD pamela_get_num_events(pamela_handle_t *ph);
 UWORD pamela_get_num_event_signals(pamela_handle_t *ph);
-
-status_data_t *pamela_update_status(pamela_handle_t *ph);
-status_data_t *pamela_get_status(pamela_handle_t *ph);
 
 const char *pamela_perror(int res);
 

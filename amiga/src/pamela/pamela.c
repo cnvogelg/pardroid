@@ -15,7 +15,6 @@ struct pamela_handle {
   struct Library *sys_base;
   ULONG  ack_irq_sigmask;
   ULONG  timer_sigmask;
-  status_data_t  status;
   BYTE   ack_irq_signal;
   BYTE   timer_signal;
 };
@@ -61,35 +60,24 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
     return NULL;
   }
 
-  /* skip for bootloader */
+  /* enter bootloader */
   if((flags & PAMELA_INIT_BOOT) == 0) {
-    /* wait for device init if we left knok with proto init */
-    int pres = proto_wait_init(ph->proto);
+    int pres = proto_bootloader(ph->proto);
     if(pres != PROTO_RET_OK) {
-      *res = PAMELA_ERROR_WAIT_INIT;
+      *res = PAMELA_ERROR_BOOTLOADER;
       pamela_exit(ph);
       return NULL;
     }
-
-    /* perform a device reset first */
-    pres = proto_reset(ph->proto, 1);
+  }
+  /* reset device (leave knok) */
+  else {
+    int pres = proto_reset(ph->proto);
     if(pres != PROTO_RET_OK) {
       *res = PAMELA_ERROR_RESET;
       pamela_exit(ph);
       return NULL;
     }
-
-    /* then attach driver */
-    pres = proto_action(ph->proto, PROTO_ACTION_ATTACH);
-    if(pres != PROTO_RET_OK) {
-      *res = PAMELA_ERROR_ATTACH;
-      pamela_exit(ph);
-      return NULL;
-    }
   }
-
-  /* init status */
-  status_init(&ph->status);
 
   *res = PAMELA_OK;
   return ph;
@@ -100,9 +88,6 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
 
 void pamela_exit(pamela_handle_t *ph)
 {
-  /* perform a device reset and stay in knok */
-  proto_reset(ph->proto, 0);
-
   if(ph->proto != NULL) {
     proto_exit(ph->proto);
     ph->proto = NULL;
@@ -162,9 +147,6 @@ int pamela_init_events(pamela_handle_t *ph)
   ph->ack_irq_sigmask = 1 << ph->ack_irq_signal;
   ph->timer_sigmask = 1 << ph->timer_signal;
 
-  /* initial status update */
-  status_update(ph->proto, &ph->status);
-
   return PAMELA_OK;
 }
 
@@ -201,8 +183,6 @@ ULONG pamela_wait_event(pamela_handle_t *ph,
     pario_confirm_ack_irq(ph->pario);
   }
 
-  // update status
-  status_update(ph->proto, &ph->status);
   return got;
 }
 
@@ -214,17 +194,6 @@ ULONG pamela_get_event_sigmask(pamela_handle_t *ph)
 ULONG pamela_get_timer_sigmask(pamela_handle_t *ph)
 {
   return ph->timer_sigmask;
-}
-
-status_data_t *pamela_update_status(pamela_handle_t *ph)
-{
-  status_update(ph->proto, &ph->status);
-  return &ph->status;
-}
-
-status_data_t *pamela_get_status(pamela_handle_t *ph)
-{
-  return &ph->status;
 }
 
 UWORD pamela_get_num_events(pamela_handle_t *ph)
@@ -256,10 +225,8 @@ const char *pamela_perror(int res)
       return "pamela: timer sig";
     case PAMELA_ERROR_RESET:
       return "pamela: failed device reset";
-    case PAMELA_ERROR_WAIT_INIT:
-      return "pamela: failed wait for device init";
-    case PAMELA_ERROR_ATTACH:
-      return "pamela: failed attaching to device";
+    case PAMELA_ERROR_BOOTLOADER:
+      return "pamela: failed entering device bootloader";
     default:
       return "pamela: unknown error!";
   }

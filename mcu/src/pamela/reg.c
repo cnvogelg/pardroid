@@ -31,11 +31,11 @@ u16 reg_get_value(void)
     switch(reg_num) {
       case PROTO_REG_GLOBAL_MAGIC:
         return PROTO_MAGIC_VALUE;
-      case PROTO_REG_GLOBAL_ID:
+      case PROTO_REG_GLOBAL_FW_ID:
         return pablo_get_rom_fw_id();
       case PROTO_REG_GLOBAL_MACHTAG:
         return pablo_get_mach_tag();
-      case PROTO_REG_GLOBAL_VERSION:
+      case PROTO_REG_GLOBAL_FW_VERSION:
         return pablo_get_rom_version();
     }
   }

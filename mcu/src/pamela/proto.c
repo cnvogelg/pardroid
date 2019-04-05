@@ -111,11 +111,12 @@ static void handle_msg_read(u08 chan)
   u16 crc = 0;
   u08 *buf = proto_api_read_msg_prepare(chan, &size_words, &crc);
 
-  DC('+'); DW(size_words); DC('%'); DW(crc); DNL;
+  DC('+'); DW(size_words); DC('%'); DW(crc);
   proto_low_read_block(size_words, buf, crc);
   proto_api_read_msg_done(chan);
 
   proto_low_end();
+  DC('.'); DNL;
 }
 
 static void handle_msg_write(u08 chan)
@@ -129,10 +130,11 @@ static void handle_msg_write(u08 chan)
   u16 crc = 0;
   u16 size_words = proto_low_write_block(max_words, buf, &crc);
   
-  DC('+'); DW(size_words); DC('%'); DW(crc); DNL;
+  DC('+'); DW(size_words); DC('%'); DW(crc);
   proto_api_write_msg_done(chan, size_words, crc);
 
   proto_low_end();
+  DC('.'); DNL;
 }
 
 void proto_handle(void)

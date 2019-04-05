@@ -15,187 +15,162 @@
 #include "system.h"
 #include "timer.h"
 
-#include "status.h"
-#include "base_reg.h"
 #include "pamela.h"
 
-// max size of message buffer
-#define MAX_BUFFER_SIZE 1024
+static u16 wfunc_val = 0;
+static u32 lfunc_val = 0;
 
-static u08 buffer[MAX_BUFFER_SIZE];
-static u16 extra_val;
-static u08 test_mode;
-static u16 test_count;
-static u16 busy_delay;
+#define MAX_WORDS 512
+static u08 buf[MAX_WORDS * 2];
+static u16 buf_words = MAX_WORDS;
+static u16 buf_crc = 0;
 
-#define TEST_MODE_NORMAL 0
-#define TEST_MODE_ECHO   1
+// action handler
 
-// sim functions
-static void sim_pending(u16 *valp, u08 mode)
+void proto_api_action(u08 num)
 {
-  if(mode == REG_MODE_WRITE) {
-    u08 v = (u08)(*valp & 0xff);
-    u08 cmd = v & 0x80;
-    u08 chn = v & 0x7f;
-    if(cmd == 0x00) {
-      DS("sim:p-"); DB(chn); DNL;
-      status_clear_pending(chn);
-    } else {
-      DS("sim:p+"); DB(chn); DNL;
-      status_set_pending(chn);
-    }
+  uart_send_pstring(PSTR("action:"));
+  uart_send_hex_byte(num);
+  uart_send_crlf();
+
+  // triger signal
+  if(num == 15) {
+    uart_send_pstring(PSTR("signal!"));
+    uart_send_crlf();
+    proto_trigger_signal();
+  }
+  else if(num == 14) {
+    uart_send_pstring(PSTR("busy:begin!"));
+    uart_send_crlf();
+    proto_busy_begin();
+  }
+  else if(num == 13) {
+    uart_send_pstring(PSTR("busy:end!"));
+    uart_send_crlf();
+    proto_busy_end();
   }
 }
 
-static void sim_event(u16 *valp, u08 mode)
-{
-  if(mode == REG_MODE_WRITE) {
-    u08 chn = *valp & 0xff;
-    DS("sim:e"); DB(chn); DNL;
-    status_set_event(chn);
-  }
-}
+// function handler
 
-static void set_test_mode(u16 *valp, u08 mode)
+u16  proto_api_wfunc_read(u08 num)
 {
-  if(mode == REG_MODE_WRITE) {
-    test_mode = *valp & 0xff;
-    DS("test_mode:"); DB(test_mode); DNL;
-  }
-}
-
-static void set_test_count(u16 *valp, u08 mode)
-{
-  if(mode == REG_MODE_WRITE) {
-    test_count = *valp;
-    DS("test_count:"); DW(test_count); DNL;
-  }
-}
-
-static void sim_delay(u16 *valp, u08 mode)
-{
-  if(mode == REG_MODE_WRITE) {
-    busy_delay = *valp;
-    DS("busy_delay:"); DW(busy_delay); DNL;
-  }
-}
-
-// ----- ro registers -----
-// read-only test values
-static const u16 ro_rom_word ROM_ATTR = 1;
-static u16 ro_ram_word = 3;
-static void func_max_size(u16 *val, u08 mode) {
-  *val = MAX_BUFFER_SIZE;
-}
-
-// read/write test values
-static u16 test_word = 0x4812;
-static u16 test_size = MAX_BUFFER_SIZE;
-static void func_test_size(u16 *val, u08 mode)
-{
-  if(mode == REG_MODE_WRITE) {
-    if(*val <= MAX_BUFFER_SIZE) {
-      test_size = *val;
-    }
+  u16 val;
+  if(num < PROTO_WFUNC_USER) {
+    val = reg_wfunc_read_handle(num);
+  } else if(num == (PROTO_WFUNC_USER+1)) {
+    val = MAX_WORDS * 2; 
   } else {
-    *val = test_size;
+    val = wfunc_val;
   }
+  uart_send_pstring(PSTR("wfunc_read:"));
+  uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_word(val);
+  uart_send_crlf();
+  return val;
 }
 
-// define my app id
-BASE_REG_APPID(FWID_TEST_PAMELA)
+void proto_api_wfunc_write(u08 num, u16 val)
+{
+  if(num < PROTO_WFUNC_USER) {
+    reg_wfunc_write_handle(num, val);
+  } else {
+    wfunc_val = val;
+  }
+  uart_send_pstring(PSTR("wfunc_write:"));
+  uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_word(val);
+  uart_send_crlf();
+}
+
+u32 proto_api_lfunc_read(u08 num)
+{
+  u32 val = lfunc_val;
+  uart_send_pstring(PSTR("lfunc_read:"));
+  uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_long(val);
+  uart_send_crlf();
+  return val;
+}
+
+void proto_api_lfunc_write(u08 num, u32 val)
+{
+  lfunc_val = val;
+  uart_send_pstring(PSTR("lfunc_write:"));
+  uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_long(val);
+  uart_send_crlf();
+}
 
 // registers
-REG_TABLE_BEGIN(test)
-  /* user read-only regs */
-  REG_TABLE_RO_ROM_W(ro_rom_word),      // user+0
-  REG_TABLE_RO_RAM_W(ro_ram_word),      // user+1
-  REG_TABLE_RO_FUNC(func_max_size),     // user+2
-  /* user read-write regs */
-  REG_TABLE_RW_FUNC(func_test_size),    // user+3
-  REG_TABLE_RW_RAM_W(test_word),        // user+4
-  REG_TABLE_RW_FUNC(sim_pending),       // user+5
-  REG_TABLE_RW_FUNC(sim_event),         // user+6
-  REG_TABLE_RW_FUNC(set_test_mode),     // user+7
-  REG_TABLE_RW_FUNC(set_test_count),    // user+8
-  REG_TABLE_RW_FUNC(sim_delay)          // user+9
-REG_TABLE_END(test, PROTO_REGOFFSET_USER, REG_TABLE_REF(base))
-REG_TABLE_SETUP(test)
 
-// long registers
-
-static u32 regl_val;
-
-void func_api_set_regl(u08 slot, u32 val)
+void reg_api_set_value(u08 range, u08 reg, u16 value)
 {
-  regl_val = val;
+  uart_send_pstring(PSTR("reg_set:"));
+  uart_send_hex_byte(range);
+  uart_send(':');
+  uart_send_hex_byte(reg);
+  uart_send('=');
+  uart_send_hex_word(value);
+  uart_send_crlf();
 }
 
-u32 func_api_get_regl(u08 slot)
+u16 reg_api_get_value(u08 range, u08 reg)
 {
-  return regl_val;
+  u16 val = 0xdead;
+  uart_send_pstring(PSTR("reg_get:"));
+  uart_send_hex_byte(range);
+  uart_send(':');
+  uart_send_hex_byte(reg);
+  uart_send('=');
+  uart_send_hex_word(val);
+  uart_send_crlf();
+  return val;
 }
 
-// message buffer handling
+// messages
 
-u08 *proto_api_read_msg_prepare(u08 chn, u16 *ret_size, u16 *extra)
+u08 *proto_api_read_msg_prepare(u08 chan,u16 *size, u16 *crc)
 {
-  DS("[R#"); DB(chn); DC('+'); DW(test_size); DC('%'); DW(extra_val); DC(']');
-  *ret_size = test_size;
-  *extra = extra_val;
-  return buffer;
+  *size = buf_words;
+  *crc = buf_crc;
+  uart_send_pstring(PSTR("msg_read:{"));
+  uart_send_hex_byte(chan);
+  uart_send(':');
+  uart_send_hex_word(buf_words);
+  uart_send(',');
+  uart_send_hex_word(buf_crc);
+  return buf;
 }
 
-void proto_api_read_msg_done(u08 chn, u08 status)
+void proto_api_read_msg_done(u08 chan)
 {
-  DS("[r#"); DB(chn); DC(':'); DB(status); DC(']'); DNL;
-
-  if(test_mode == TEST_MODE_ECHO) {
-    status_clear_pending(chn);
-  }
-}
-
-u08 *proto_api_write_msg_prepare(u08 chn, u16 *max_size)
-{
-  *max_size = MAX_BUFFER_SIZE;
-  DS("[W#"); DB(chn); DC(':'); DW(*max_size); DC(']');
-  return buffer;
-}
-
-void proto_api_write_msg_done(u08 chn, u16 size, u16 extra)
-{
-  DS("[w#"); DB(chn); DC(':'); DW(size);DC('%'); DW(extra); DC(']'); DNL;
-  test_size = size;
-  extra_val = extra;
-
-  if(test_mode == TEST_MODE_ECHO) {
-    status_set_pending(chn);
-  }
-}
-
-static void sim_busy(void)
-{
-  uart_send('{');
-  status_set_busy();
-  timer_ms_t t0 = timer_millis();
-  timer_ms_t t1 = timer_millis();
-  while(1) {
-    /* done? */
-    if(timer_millis_timed_out(t0, busy_delay)) {
-      break;
-    }
-    /* some output */
-    if(timer_millis_timed_out(t1, 100)) {
-      uart_send('.');
-      t1 = timer_millis();
-    }
-    /* keep watchdog happy */
-    system_wdt_reset();
-  }
-  status_clear_busy();
   uart_send('}');
   uart_send_crlf();
+}
+
+u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_size)
+{
+  *max_size = MAX_WORDS;
+  uart_send_pstring(PSTR("msg_write:{"));
+  uart_send_hex_byte(chan);
+  uart_send(':');
+  return buf;
+}
+
+void proto_api_write_msg_done(u08 chan,u16 size, u16 crc)
+{
+  uart_send_hex_word(size);
+  uart_send(',');
+  uart_send_hex_word(crc);
+  uart_send('}');
+  uart_send_crlf();
+  buf_words = size;
+  buf_crc = crc;
 }
 
 int main(void)
@@ -213,11 +188,6 @@ int main(void)
   while(1) {
     system_wdt_reset();
     pamela_handle();
-
-    if(busy_delay != 0) {
-      sim_busy();
-      busy_delay = 0;
-    }
   }
 
   return 0;

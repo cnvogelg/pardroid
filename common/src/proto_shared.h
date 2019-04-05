@@ -45,8 +45,8 @@
 #define PROTO_REG_RANGE_GLOBAL    0x10
 
 // global registers
-#define PROTO_MAGIC_VALUE         0x4711
-#define PROTO_REG_GLOBAL_MAGIC    0x00
-#define PROTO_REG_GLOBAL_MACHTAG  0x01
-#define PROTO_REG_GLOBAL_ID       0x02
-#define PROTO_REG_GLOBAL_VERSION  0x03
+#define PROTO_MAGIC_VALUE           0x4711
+#define PROTO_REG_GLOBAL_MAGIC        0x00
+#define PROTO_REG_GLOBAL_MACHTAG      0x01
+#define PROTO_REG_GLOBAL_FW_ID        0x02
+#define PROTO_REG_GLOBAL_FW_VERSION   0x03
