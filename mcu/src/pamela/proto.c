@@ -67,11 +67,10 @@ static void handle_action(u08 num)
   }
 
   proto_low_action();
-  proto_low_end();
-
   if(num != PROTO_ACTION_PING) {
     proto_api_action(num);
   }
+  proto_low_end();
 }
 
 static void handle_wfunc_read(u08 num)
@@ -86,8 +85,8 @@ static void handle_wfunc_write(u08 num)
 {
   DS("wfw:"); DB(num); DNL;
   u16 val = proto_low_write_word();
-  proto_low_end();
   proto_api_wfunc_write(num, val);
+  proto_low_end();
 }
 
 static void handle_lfunc_read(u08 num)
@@ -102,8 +101,8 @@ static void handle_lfunc_write(u08 num)
 {
   DS("lfw:"); DB(num); DNL;
   u32 val = proto_low_write_long();
-  proto_low_end();
   proto_api_lfunc_write(num, val);
+  proto_low_end();
 }
 
 static void handle_msg_read(u08 chan)

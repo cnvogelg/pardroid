@@ -186,7 +186,7 @@ ULONG pamela_wait_event(pamela_handle_t *ph,
   return got;
 }
 
-ULONG pamela_get_event_sigmask(pamela_handle_t *ph)
+ULONG pamela_get_trigger_sigmask(pamela_handle_t *ph)
 {
   return ph->ack_irq_sigmask;
 }
@@ -196,12 +196,12 @@ ULONG pamela_get_timer_sigmask(pamela_handle_t *ph)
   return ph->timer_sigmask;
 }
 
-UWORD pamela_get_num_events(pamela_handle_t *ph)
+UWORD pamela_get_num_triggers(pamela_handle_t *ph)
 {
   return pario_get_ack_irq_counter(ph->pario);
 }
 
-UWORD pamela_get_num_event_signals(pamela_handle_t *ph)
+UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph)
 {
   return pario_get_signal_counter(ph->pario);
 }

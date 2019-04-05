@@ -24,6 +24,11 @@ int test_msg_read_too_large(test_t *t, test_param_t *p);
 int test_msg_write_busy(test_t *t, test_param_t *p);
 int test_msg_read_busy(test_t *t, test_param_t *p);
 
+int test_timer_sig(test_t *t, test_param_t *p);
+int test_event_sig(test_t *t, test_param_t *p);
+int test_event_sig2(test_t *t, test_param_t *p);
+
+
 #define TESTS_PAMELA_ALL \
   { test_reset, "reset", "reset parbox device" }, \
   { test_ping, "ping", "ping parbox device" }, \
@@ -40,5 +45,8 @@ int test_msg_read_busy(test_t *t, test_param_t *p);
   { test_msg_read_too_large, "mrtl", "read too large message"}, \
   { test_msg_write_busy, "mwb", "write message while being busy"}, \
   { test_msg_read_busy, "mrb", "read message while being busy"}, \
+  { test_timer_sig, "tis", "timer signal"}, \
+  { test_event_sig, "trs", "trigger signal"}, \
+  { test_event_sig2, "trs2", "two trigger signals"}, \
 
 #endif
