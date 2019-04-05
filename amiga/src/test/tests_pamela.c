@@ -23,6 +23,10 @@ static UWORD test_add_size;
 static UWORD test_sub_size;
 static UBYTE test_channel;
 
+#define ACTION_TRIGGER_SIGNAL   15
+#define ACTION_BUSY_ENABLE      14
+#define ACTION_BUSY_DISABLE     13
+
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel)
 {
@@ -581,6 +585,52 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_msg_write_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  ULONG size = get_default_size();
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w);
+
+  UWORD words = size>>1;
+  UWORD crc = 0x4711;
+
+  /* enable busy mode */
+  int res = proto_action(proto, ACTION_BUSY_ENABLE);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return res;
+  }
+
+  /* send buffer */
+  res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  /* disable busy mode */
+  res = proto_action(proto, ACTION_BUSY_DISABLE);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "disable busy";
+    return res;
+  }
+
+  FreeVec(mem_w);
+  return 0;
+}
+
 int test_msg_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
@@ -644,6 +694,60 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
     p->section = "read";
+    return res;
+  }
+
+  /* read max size from firmware */
+  res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read max_bytes again";
+    return res;
+  }
+
+  FreeVec(mem_r);
+  return 0;
+}
+
+int test_msg_read_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  ULONG size = get_default_size();
+  ULONG size_r = get_size(size);
+
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if(mem_r == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  UWORD words = size>>1;
+
+  /* enable busy mode */
+  int res = proto_action(proto, ACTION_BUSY_ENABLE);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return res;
+  }
+
+  /* receive buffer */
+  UWORD got_words = size_r>>1;
+  UWORD got_crc = 0;
+  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words, &got_crc);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "read not busy";
+    return res;
+  }
+
+  /* disable busy mode */
+  res = proto_action(proto, ACTION_BUSY_DISABLE);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "disable busy";
     return res;
   }
 

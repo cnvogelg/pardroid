@@ -102,6 +102,30 @@ wait_rak_lo  MACRO
         ENDM
 
 
+; --- wait_rak_lo_busy ---
+; wait for RAK to become low or if timeout triggers or busy is set
+; \1 = jump label on timeout/busy
+; \2 = reg with busy bit
+wait_rak_lo_busy  MACRO
+        ; check RAK level
+\@1:    btst    d2,(a5)
+        beq.s   \@2
+        ; check for busy bit
+        btst    \2,(a5)
+        bne.s   \@3
+        ; check for timeout
+        tst.b   (a1)
+        beq.s   \@1
+        ; timeout error
+        moveq   #RET_TIMEOUT,d0
+        bra     \1
+\@3:    ; device busy
+        moveq   #RET_DEVICE_BUSY,d0
+        bra     \1
+\@2:
+        ENDM
+
+
 ; --- wait_rak_hi ---
 ; wait for RAK to become high or if timeout triggers
 ; \1 = jump label on timeout
@@ -531,8 +555,10 @@ _proto_low_write_block:
         move.w          d6,d0           ; d0=hi extra
         lsr.w           #8,d0
 
-        ; wait for slave sync
-        wait_rak_lo     plmw_abort
+        ; wait for slave sync - abort on timeout and busy
+        moveq           #0,d7
+        move.b          PO_BUSY_BIT(a0),d7
+        wait_rak_lo_busy  plmw_abort,d7
 
         ; send extra/channel
         set_data        d0 ; hi extra
@@ -635,8 +661,9 @@ _proto_low_read_block:
         ; get max size given in blkiov
         move.w          (a2),d1
 
-        ; final slave sync
-        wait_rak_lo     plmr_abort
+        ; final slave sync - abort on busy and timeout
+        move.b          PO_BUSY_BIT(a0),d7
+        wait_rak_lo_busy  plmr_abort,d7
 
         ; switch: port read
         ddr_in

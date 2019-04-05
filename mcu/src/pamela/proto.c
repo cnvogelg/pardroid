@@ -9,6 +9,8 @@
 #include "system.h"
 #include "timer.h"
 
+static u08 busy;
+
 void proto_init(void)
 {
   proto_low_init();
@@ -43,12 +45,14 @@ void proto_busy_begin(void)
 {
   DS("busy:begin"); DNL;
   proto_low_busy_hi();
+  busy = 1;
 }
 
 void proto_busy_end(void)
 {
   DS("busy:endl"); DNL;
   proto_low_busy_lo();
+  busy = 0;
 }
 
 static void handle_action(u08 num)
@@ -168,10 +172,18 @@ void proto_handle(void)
       handle_lfunc_write(chn);
       break;
     case PROTO_CMD_MSG_READ:
-      proto_api_read_msg(chn);
+      if(!busy) {
+        proto_api_read_msg(chn);
+      } else {
+        DS("ignore!");
+      }
       break;
     case PROTO_CMD_MSG_WRITE:
-      proto_api_write_msg(chn);
+      if(!busy) {
+        proto_api_write_msg(chn);
+      } else {
+        DS("ignore!");
+      }
       break;
     default:
       DS("invalid!"); DNL;
