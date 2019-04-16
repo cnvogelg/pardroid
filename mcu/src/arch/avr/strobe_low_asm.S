@@ -17,6 +17,14 @@ strobe_low_init:
     data_out_set
     ; setup control lines
 
+    ; set OUTPUT levels: ACK=hi, BUSY=lo, SEL=hi
+    sbi     _SFR_IO_ADDR(PAR_ACK_PORT), PAR_ACK_BIT
+    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
+    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
+    ; pull ups on input
+    sbi     _SFR_IO_ADDR(PAR_STROBE_PORT), PAR_STROBE_BIT
+    sbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
+
     ; DDR INPUT: strobe, pout(clk), select
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
     cbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
@@ -25,13 +33,6 @@ strobe_low_init:
     sbi     _SFR_IO_ADDR(PAR_ACK_DDR), PAR_ACK_BIT
     sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
 
-    ; set OUTPUT levels: ACK=hi, BUSY=lo, SEL=hi
-    sbi     _SFR_IO_ADDR(PAR_ACK_PORT), PAR_ACK_BIT
-    cbi     _SFR_IO_ADDR(PAR_BUSY_PORT), PAR_BUSY_BIT
-    sbi     _SFR_IO_ADDR(PAR_SELECT_PORT), PAR_SELECT_BIT
-    ; pull ups on input
-    sbi     _SFR_IO_ADDR(PAR_STROBE_PORT), PAR_STROBE_BIT
-    sbi     _SFR_IO_ADDR(PAR_POUT_PORT), PAR_POUT_BIT
     ret
 
     ; ----- strobe_low_exit -----

@@ -76,6 +76,10 @@ proto_low_init:
     ldi     r18,0xff
     data_out_prepare
     data_out_set
+    ; set OUTPUT levels
+    ack_hi
+    rak_hi
+    busy_lo
     ; setup control lines
     ; DDR INPUT: strobe, select
     cbi     _SFR_IO_ADDR(PAR_STROBE_DDR), PAR_STROBE_BIT
@@ -84,10 +88,6 @@ proto_low_init:
     sbi     _SFR_IO_ADDR(PAR_ACK_DDR), PAR_ACK_BIT
     sbi     _SFR_IO_ADDR(PAR_BUSY_DDR), PAR_BUSY_BIT
     sbi     _SFR_IO_ADDR(PAR_POUT_DDR), PAR_POUT_BIT
-    ; set OUTPUT levels
-    ack_hi
-    rak_hi
-    busy_lo
     ret
 
 
