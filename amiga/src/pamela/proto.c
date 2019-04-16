@@ -65,13 +65,13 @@ void proto_exit(proto_handle_t *ph)
 int proto_reset(proto_handle_t *ph)
 {
   // perform reset action
-  return proto_action(ph, PROTO_ACTION_RESET);
+  return proto_action_no_busy(ph, PROTO_ACTION_RESET);
 }
 
 int proto_bootloader(proto_handle_t *ph)
 {
   // perform bootloader action
-  return proto_action(ph, PROTO_ACTION_BOOTLOADER);
+  return proto_action_no_busy(ph, PROTO_ACTION_BOOTLOADER);
 }
 
 int proto_ping(proto_handle_t *ph)
@@ -83,7 +83,7 @@ int proto_ping(proto_handle_t *ph)
 int proto_knok(proto_handle_t *ph)
 {
   // perform knok action
-  return proto_action(ph, PROTO_ACTION_KNOK);
+  return proto_action_no_busy(ph, PROTO_ACTION_KNOK);
 }
 
 int proto_action(proto_handle_t *ph, UBYTE num)
@@ -97,6 +97,22 @@ int proto_action(proto_handle_t *ph, UBYTE num)
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_action(port, timeout_flag, cmd);
+  timer_stop(ph->timer);
+
+  return result;
+}
+
+int proto_action_no_busy(proto_handle_t *ph, UBYTE num)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
+  if(num > PROTO_MAX_ACTION) {
+    return PROTO_RET_INVALID_ACTION;
+  }
+  UBYTE cmd = PROTO_CMD_ACTION + num;
+
+  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
+  int result = proto_low_action_no_busy(port, timeout_flag, cmd);
   timer_stop(ph->timer);
 
   return result;

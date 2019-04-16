@@ -24,8 +24,7 @@ static UWORD test_sub_size;
 static UBYTE test_channel;
 
 #define ACTION_TRIGGER_SIGNAL   15
-#define ACTION_BUSY_ENABLE      14
-#define ACTION_BUSY_DISABLE     13
+#define ACTION_BUSY_LOOP        14
 
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel)
@@ -41,19 +40,22 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
 
 static int recover_from_busy(proto_handle_t *proto, test_param_t *p)
 {
+  int res = 0;
+
   for(int i=0;i<10;i++) {
-    int res = proto_ping(proto);
+    res = proto_ping(proto);
     if(res == PROTO_RET_OK) {
       return 0;
     }
-    else if(res != PROTO_RET_TIMEOUT) {
-      p->error = "ping while busy";
-      p->section = "recover";
+    else if(res != PROTO_RET_DEVICE_BUSY) {
+      p->error = proto_perror(res);
+      p->section = "recover loop";
       return 1;
     }
+    Delay(10);
   }
-  p->error = "ping while busy failed!";
-  p->section = "recover";
+  p->error = proto_perror(res);
+  p->section = "recover end";
   return 1;
 }
 
@@ -90,7 +92,7 @@ int test_knok(test_t *t, test_param_t *p)
 
   /* ping action must fail in knok mode */
   res = proto_ping(proto);
-  if(res != PROTO_RET_TIMEOUT) {
+  if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "ping must fail with timeout";
     return res;
@@ -120,6 +122,31 @@ int test_ping(test_t *t, test_param_t *p)
     p->section = "ping";
     return res;
   }
+}
+
+int test_ping_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  /* enable busy mode */
+  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return 1;
+  }
+
+  /* ping must be busy */
+  res = proto_ping(proto);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "ping not busy";
+    return res;
+  }
+
+  /* recover already does pings */
+  return recover_from_busy(proto, p);
 }
 
 // ----- functions -----
@@ -158,6 +185,40 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_wfunc_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
+
+  /* enable busy mode */
+  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return 1;
+  }
+
+  /* write */
+  res = proto_function_write_word(proto, PROTO_WFUNC_USER, v);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "write not busy";
+    return res;
+  }
+
+  /* read back */
+  UWORD r;
+  res = proto_function_read_word(proto, PROTO_WFUNC_USER, &r);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "read not busy";
+    return res;
+  }
+
+  return recover_from_busy(proto, p);
+}
+
 int test_lfunc_write_read(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
@@ -191,6 +252,41 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
   }
 
   return 0;
+}
+
+int test_lfunc_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  UWORD val = (UWORD)p->iter + test_bias;
+  ULONG v = 0xdeadbeef + val;
+
+  /* enable busy mode */
+  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return 1;
+  }
+
+  /* write */
+  res = proto_function_write_long(proto, PROTO_WFUNC_USER, v);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "write not busy";
+    return res;
+  }
+
+  /* read back */
+  ULONG r;
+  res = proto_function_read_long(proto, PROTO_WFUNC_USER, &r);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "read not busy";
+    return res;
+  }
+
+  return recover_from_busy(proto, p);
 }
 
 // ----- messages -----
@@ -656,7 +752,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   UWORD crc = 0x4711;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_ENABLE);
+  int res = proto_action(proto, ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -781,7 +877,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_ENABLE);
+  int res = proto_action(proto, ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";

@@ -7,6 +7,10 @@ extern ASM int proto_low_action(REG(a0, struct pario_port *port),
                                 REG(a1, volatile UBYTE *timeout_flag),
                                 REG(d0, UBYTE cmd));
 
+extern ASM int proto_low_action_no_busy(REG(a0, struct pario_port *port),
+                                        REG(a1, volatile UBYTE *timeout_flag),
+                                        REG(d0, UBYTE cmd));
+
 /* benchmark data  */
 struct cb_data;
 typedef ASM void (*bench_cb_t)(REG(d0, int id), REG(a2, struct cb_data *cb));

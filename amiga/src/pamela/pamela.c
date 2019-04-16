@@ -61,7 +61,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
   }
 
   /* enter bootloader */
-  if((flags & PAMELA_INIT_BOOT) == 0) {
+  if((flags & PAMELA_INIT_BOOT) != 0) {
     int pres = proto_bootloader(ph->proto);
     if(pres != PROTO_RET_OK) {
       *res = PAMELA_ERROR_BOOTLOADER;

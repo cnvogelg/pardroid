@@ -28,6 +28,7 @@ extern int proto_bootloader(proto_handle_t *ph);
 extern int proto_knok(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE num);
+extern int proto_action_no_busy(proto_handle_t *ph, UBYTE num);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2]);
 
 extern int proto_function_read_word(proto_handle_t *ph, UBYTE num, UWORD *data);

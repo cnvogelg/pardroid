@@ -7,6 +7,7 @@
         include         "proto.i"
 
         xdef            _proto_low_action
+        xdef            _proto_low_action_no_busy
         xdef            _proto_low_action_bench
         xdef            _proto_low_write_word
         xdef            _proto_low_read_word
@@ -60,6 +61,18 @@ check_rak_lo  MACRO
         btst    d2,(a5)
         beq.s   \@
         moveq   #RET_MSG_TOO_LARGE,d0
+        bra     \1
+\@:
+        ENDM
+
+
+; --- check_busy ---
+; check if busy is high and if yes abort with error
+; \1 end label
+check_busy  MACRO
+        btst    d7,(a5)
+        beq.s   \@
+        moveq   #RET_DEVICE_BUSY,d0
         bra     \1
 \@:
         ENDM
@@ -232,13 +245,14 @@ _proto_low_action:
         ; -- sync with slave
         ; check RAK to be high or abort
         check_rak_hi    pla_end
+        check_busy      pla_end
         ; set cmd to data port
         set_cmd         d0
         ; set CLK to low (active) to trigger command at slave
         clk_lo
         ; busy wait with timeout for RAK to go low
         ; (we wait for the slave to react/sync)
-        wait_rak_lo     pla_abort
+        wait_rak_lo_busy  pla_abort
 
         ; now we are in sync with slave
         ; we are now in work phase
@@ -264,6 +278,37 @@ pla_abort:
         bra.s   pla_end
 
 
+; --- proto_low_action_no_busy ---
+; a simple command that does not transfer any value
+;
+;   in:
+;       a0      struct pario_port *port
+;       a1      volatile UBYTE *timeout_flag
+;       d0      action constant
+;   out:
+;       d0      return code
+_proto_low_action_no_busy:
+        movem.l d2-d7/a2-a6,-(sp)
+        setup_port_regs
+        check_rak_hi    planb_end
+        set_cmd         d0
+        clk_lo
+        ; ignore busy here!
+        wait_rak_lo     planb_abort
+
+        clk_hi
+        wait_rak_hi     planb_end
+
+        moveq   #RET_OK,d0
+planb_end:
+        set_cmd_idle
+        movem.l (sp)+,d2-d7/a2-a6
+        rts
+planb_abort:
+        clk_hi
+        bra.s   planb_end
+
+
 ; --- proto_low_action_bench ---
 ; the proto_low_action routine instrumented with benchmark callbacks
 ;
@@ -283,6 +328,7 @@ _proto_low_action_bench:
         ; -- sync with slave
         ; check RAK to be high or abort
         check_rak_hi    plab_end
+        check_busy      plab_end
         ; set cmd to data port
         set_cmd         d0
         ; set CLK to low (active) to trigger command at slave
@@ -293,7 +339,7 @@ _proto_low_action_bench:
 
         ; busy wait with timeout for RAK to go low
         ; (we wait for the slave to react/sync)
-        wait_rak_lo     plab_abort
+        wait_rak_lo_busy  plab_abort
 
         ; callback 1: got rak lo
         call_cb         #1
@@ -333,9 +379,10 @@ _proto_low_write_word:
 
         ; sync with slave
         check_rak_hi    plrw_end
+        check_busy      plrw_end
         set_cmd         d0
         clk_lo
-        wait_rak_lo     plrw_abort
+        wait_rak_lo_busy  plrw_abort
 
         ; -- first byte
         ; setup test value on data lines
@@ -376,9 +423,10 @@ _proto_low_write_long:
 
         ; sync with slave
         check_rak_hi    plrwl_end
+        check_busy      plrwl_end
         set_cmd         d0
         clk_lo
-        wait_rak_lo     plrwl_abort
+        wait_rak_lo_busy  plrwl_abort
 
         ; -- first byte
         ; setup test value on data lines
@@ -427,9 +475,10 @@ _proto_low_read_word:
 
         ; sync with slave
         check_rak_hi    plrr_end
+        check_busy      plrr_end
         set_cmd         d0
         clk_lo
-        wait_rak_lo     plrr_abort
+        wait_rak_lo_busy  plrr_abort
 
         ; ddr: in
         ddr_in
@@ -477,9 +526,10 @@ _proto_low_read_long:
 
         ; sync with slave
         check_rak_hi    plrrl_end
+        check_busy      plrrl_end
         set_cmd         d0
         clk_lo
-        wait_rak_lo     plrrl_abort
+        wait_rak_lo_busy  plrrl_abort
 
         ; ddr: in
         ddr_in
@@ -544,6 +594,7 @@ _proto_low_write_block:
 
         ; sync with slave
         check_rak_hi    plrw_end
+        check_busy      plrw_end
         set_cmd         d0
         clk_lo
 
@@ -653,6 +704,7 @@ _proto_low_read_block:
 
         ; sync with slave
         check_rak_hi    plmr_end
+        check_busy      plmr_end
         set_cmd         d0
         clk_lo
 
