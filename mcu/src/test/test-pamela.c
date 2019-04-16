@@ -75,6 +75,8 @@ void proto_api_wfunc_write(u08 num, u16 val)
 {
   if(num < PROTO_WFUNC_USER) {
     reg_wfunc_write_handle(num, val);
+  } else if(num == (PROTO_WFUNC_USER+2)) {
+    buf_words = val; 
   } else {
     wfunc_val = val;
   }

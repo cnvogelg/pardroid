@@ -679,6 +679,14 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   /* too many now */
   size += 2;
 
+  /* write too large size */
+  res = proto_function_write_word(proto, PROTO_WFUNC_USER+2, size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write too large size";
+    return 1;
+  }
+
   BYTE *mem_r = AllocVec(size, MEMF_PUBLIC);
   if(mem_r == 0) {
     p->error = "out of mem";
@@ -697,11 +705,11 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* read max size from firmware */
-  res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &size);
+  /* we have to reset now */
+  res = proto_reset(proto);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "read max_bytes again";
+    p->section = "reset";
     return 1;
   }
 
