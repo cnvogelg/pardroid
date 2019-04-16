@@ -67,10 +67,16 @@ static void handle_action(u08 num)
   }
 
   proto_low_action();
-  if(num != PROTO_ACTION_PING) {
+  if(num >= PROTO_ACTION_USER) {
     proto_api_action(num);
   }
   proto_low_end();
+
+  // knok resets after action
+  if(num == PROTO_ACTION_KNOK) {
+    DS("a:KNOK!"); DNL;
+    system_sys_reset();
+  }
 }
 
 static void handle_wfunc_read(u08 num)

@@ -25,6 +25,7 @@ extern void proto_exit(proto_handle_t *ph);
 extern int proto_ping(proto_handle_t *ph);
 extern int proto_reset(proto_handle_t *ph);
 extern int proto_bootloader(proto_handle_t *ph);
+extern int proto_knok(proto_handle_t *ph);
 
 extern int proto_action(proto_handle_t *ph, UBYTE num);
 extern int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2]);

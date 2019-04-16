@@ -7,6 +7,7 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel);
 
 int test_reset(test_t *t, test_param_t *p);
+int test_knok(test_t *t, test_param_t *p);
 int test_ping(test_t *t, test_param_t *p);
 
 int test_wfunc_write_read(test_t *t, test_param_t *p);
@@ -31,6 +32,7 @@ int test_event_sig2(test_t *t, test_param_t *p);
 
 #define TESTS_PAMELA_ALL \
   { test_reset, "reset", "reset parbox device" }, \
+  { test_knok, "knok", "enter/leave knok mode of device" }, \
   { test_ping, "ping", "ping parbox device" }, \
   { test_wfunc_write_read, "wfunc", "write/read test function word" }, \
   { test_lfunc_write_read, "lfunc", "write/read test function long" }, \

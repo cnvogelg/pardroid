@@ -55,6 +55,38 @@ int test_reset(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_knok(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  /* enter knok */
+  int res = proto_knok(proto);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "knok";
+    return res;
+  }
+
+  /* ping action must fail in knok mode */
+  res = proto_ping(proto);
+  if(res != PROTO_RET_TIMEOUT) {
+    p->error = proto_perror(res);
+    p->section = "ping must fail with timeout";
+    return res;
+  }
+
+  /* perform reset */
+  res = proto_reset(proto);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "reset";
+    return res;
+  }
+
+  return 0;
+}
+
 int test_ping(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;

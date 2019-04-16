@@ -88,6 +88,9 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
 
 void pamela_exit(pamela_handle_t *ph)
 {
+  /* reset device (enter knok) */
+  proto_knok(ph->proto);
+
   if(ph->proto != NULL) {
     proto_exit(ph->proto);
     ph->proto = NULL;

@@ -22,12 +22,14 @@
 #define PROTO_ACTION_PING         0x00
 #define PROTO_ACTION_BOOTLOADER   0x01
 #define PROTO_ACTION_RESET        0x02
-#define PROTO_ACTION_USER         0x03
+#define PROTO_ACTION_KNOK         0x03
+#define PROTO_ACTION_USER         0x04
 
 // combined actions
 #define PROTO_CMD_ACTION_PING       0x10
 #define PROTO_CMD_ACTION_BOOTLOADER 0x11
 #define PROTO_CMD_ACTION_RESET      0x12
+#define PROTO_CMD_ACTION_KNOK       0x13
 
 // word function numbers 0..15
 #define PROTO_WFUNC_REG_ADDR      0x00

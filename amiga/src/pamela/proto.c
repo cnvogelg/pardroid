@@ -80,6 +80,12 @@ int proto_ping(proto_handle_t *ph)
   return proto_action(ph, PROTO_ACTION_PING);
 }
 
+int proto_knok(proto_handle_t *ph)
+{
+  // perform knok action
+  return proto_action(ph, PROTO_ACTION_KNOK);
+}
+
 int proto_action(proto_handle_t *ph, UBYTE num)
 {
   struct pario_port *port = ph->port;
