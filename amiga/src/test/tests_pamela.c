@@ -573,11 +573,11 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* read max size from firmware */
-  res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &size);
+  /* we have to reset now */
+  res = proto_reset(proto);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "read max_bytes again";
+    p->section = "reset";
     return 1;
   }
 
