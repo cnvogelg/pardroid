@@ -31,10 +31,27 @@
 #define PROTO_CMD_ACTION_RESET      0x12
 #define PROTO_CMD_ACTION_KNOK       0x13
 
-// word function numbers 0..15
-#define PROTO_WFUNC_REG_ADDR      0x00
-#define PROTO_WFUNC_REG_VALUE     0x01
-#define PROTO_WFUNC_USER          0x02
+// magic type
+#define PROTO_MAGIC_APPLICATION     0x4711
+#define PROTO_MAGIC_BOOTLOADER      0x2342
+
+// word function numbers 0..15: application
+#define PROTO_WFUNC_MAGIC         0x00
+#define PROTO_WFUNC_REG_ADDR      0x01
+#define PROTO_WFUNC_REG_VALUE     0x02
+#define PROTO_WFUNC_USER          0x03
+
+// word function numbers 0..15: bootloader
+#define PROTO_WFUNC_BOOT_MAGIC        0x00
+#define PROTO_WFUNC_BOOT_MACHTAG      0x01
+#define PROTO_WFUNC_BOOT_VERSION      0x02
+#define PROTO_WFUNC_BOOT_PAGE_SIZE    0x03
+#define PROTO_WFUNC_BOOT_ROM_SIZE     0x04
+#define PROTO_WFUNC_BOOT_ROM_CRC      0x05
+#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x06
+#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x07
+#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x08
+#define PROTO_WFUNC_BOOT_PAGE_ADDR    0x09
 
 // long function numbers 0..15
 #define PROTO_LFUNC_USER          0x00
@@ -47,8 +64,6 @@
 #define PROTO_REG_RANGE_GLOBAL    0x10
 
 // global registers
-#define PROTO_MAGIC_VALUE           0x4711
-#define PROTO_REG_GLOBAL_MAGIC        0x00
-#define PROTO_REG_GLOBAL_MACHTAG      0x01
-#define PROTO_REG_GLOBAL_FW_ID        0x02
-#define PROTO_REG_GLOBAL_FW_VERSION   0x03
+#define PROTO_REG_GLOBAL_MACHTAG      0x00
+#define PROTO_REG_GLOBAL_FW_ID        0x01
+#define PROTO_REG_GLOBAL_FW_VERSION   0x02

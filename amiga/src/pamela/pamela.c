@@ -61,6 +61,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
   }
 
   /* enter bootloader */
+  UWORD magic;
   if((flags & PAMELA_INIT_BOOT) != 0) {
     int pres = proto_bootloader(ph->proto);
     if(pres != PROTO_RET_OK) {
@@ -68,6 +69,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
       pamela_exit(ph);
       return NULL;
     }
+    magic = PROTO_MAGIC_BOOTLOADER;
   }
   /* reset device (leave knok) */
   else {
@@ -77,6 +79,21 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
       pamela_exit(ph);
       return NULL;
     }
+    magic = PROTO_MAGIC_APPLICATION;
+  }
+
+  /* check magic */
+  UWORD got_magic = 0;
+  int pres = proto_function_read_word(ph->proto, PROTO_WFUNC_MAGIC, &got_magic);
+  if(pres != PROTO_RET_OK) {
+    *res = PAMELA_ERROR_MAGIC_READ;
+    pamela_exit(ph);
+    return NULL;
+  }
+  if(got_magic != magic) {
+    *res = PAMELA_ERROR_MAGIC_WRONG;
+    pamela_exit(ph);
+    return NULL;
   }
 
   *res = PAMELA_OK;
@@ -230,6 +247,10 @@ const char *pamela_perror(int res)
       return "pamela: failed device reset";
     case PAMELA_ERROR_BOOTLOADER:
       return "pamela: failed entering device bootloader";
+    case PAMELA_ERROR_MAGIC_READ:
+      return "pamela: error reading magic";
+    case PAMELA_ERROR_MAGIC_WRONG:
+      return "pamela: wrong magic found";
     default:
       return "pamela: unknown error!";
   }

@@ -8,7 +8,6 @@
 
 #include "bootloader.h"
 #include "proto.h"
-#include "reg.h"
 
 int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 {
@@ -16,43 +15,47 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   proto_handle_t *ph = pamela_get_proto(pb);
 
   /* try to enter bootloader (ignored if already running */
-  res = proto_action(ph, PROTO_ACTION_BOOTLOADER);
+  res = proto_bootloader(ph);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_NO_BOOTLOADER | res;
   }
 
-  /* check bootloader status bit */
-  UBYTE status = proto_get_status(ph);
-  if(status != PROTO_STATUS_BOOTLOADER) {
-    return BOOTLOADER_RET_NO_BOOTLOADER_STATUS;
+  /* check bootloader magic */
+  UWORD magic;
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_MAGIC, &magic);
+  if(res != PROTO_RET_OK) {
+    return BOOTLOADER_RET_READ_ERROR | res;
+  }
+  if(magic != PROTO_MAGIC_BOOTLOADER) {
+    return BOOTLOADER_RET_NO_BOOTLOADER_MAGIC;
   }
 
   /* read version tag */
   UWORD bl_version;
-  res = reg_get(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_VERSION, &bl_version);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   bi->bl_version = bl_version;
 
   /* bootloader mach tag */
-  res = reg_get(ph, BOOTLOADER_REG_BL_MACHTAG, &bi->bl_mach_tag);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_MACHTAG, &bi->bl_mach_tag);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* page size */
-  res = reg_get(ph, BOOTLOADER_REG_PAGE_SIZE, &bi->page_size);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_PAGE_SIZE, &bi->page_size);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* rom size */
   UWORD size;
-  res = reg_get(ph, BOOTLOADER_REG_ROM_SIZE, &size);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_SIZE, &size);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
   bi->rom_size = size;
 
@@ -65,27 +68,27 @@ int bootloader_update_fw_info(pamela_handle_t *pb, bootinfo_t *bi)
   proto_handle_t *ph = pamela_get_proto(pb);
 
   /* firmware crc */
-  res = reg_get(ph, BOOTLOADER_REG_FW_CRC, &bi->fw_crc);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_CRC, &bi->fw_crc);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware mach tag */
-  res = reg_get(ph, BOOTLOADER_REG_FW_MACHTAG, &bi->fw_mach_tag);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_MACHTAG, &bi->fw_mach_tag);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware version */
-  res = reg_get(ph, BOOTLOADER_REG_FW_VERSION, &bi->fw_version);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_FW_VERSION, &bi->fw_version);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware id */
-  res = reg_get(ph, BOOTLOADER_REG_FW_ID, &bi->fw_id);
+  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_FW_ID, &bi->fw_id);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   return BOOTLOADER_RET_OK;
@@ -140,13 +143,13 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
 
     /* set addr in bootloader */
     UWORD addr = bu.addr;
-    res = reg_set(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
+    res = proto_function_write_word(ph, PROTO_WFUNC_BOOT_PAGE_ADDR, addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
 
     /* send flash page (and do flash) */
-    res = proto_msg_write_single(ph, BOOTLOADER_CHN_PAGES, data, page_words);
+    res = proto_msg_write_single(ph, BOOTLOADER_CHN_PAGES, data, page_words, 0);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_WRITE_PAGE_ERROR | res;
     }
@@ -191,14 +194,15 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
 
     /* set addr in bootloader */
     UWORD addr = bu.addr;
-    res = reg_set(ph, BOOTLOADER_REG_PAGE_ADDR, addr);
+    res = proto_function_write_word(ph, PROTO_WFUNC_BOOT_PAGE_ADDR, addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
 
     /* read flash page (and do flash) */
     UWORD size = page_words;
-    res = proto_msg_read_single(ph, BOOTLOADER_CHN_PAGES, data, &size);
+    UWORD crc = 0;
+    res = proto_msg_read_single(ph, BOOTLOADER_CHN_PAGES, data, &size, &crc);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_READ_PAGE_ERROR | res;
     }
@@ -229,20 +233,20 @@ int bootloader_leave(pamela_handle_t *pb)
   proto_handle_t *ph = pamela_get_proto(pb);
 
   /* reset device */
-  res = proto_action(ph, PROTO_ACTION_RESET);
+  res = proto_reset(ph);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_NO_PING | res;
+    return BOOTLOADER_RET_NO_RESET | res;
   }
 
-  /* read version tag from running firmware */
-  UWORD bl_version;
-  res = reg_get(ph, BOOTLOADER_REG_BL_VERSION, &bl_version);
+  /* make sure we are in the application */
+  UWORD magic;
+  res = proto_function_read_word(ph, PROTO_WFUNC_MAGIC, &magic);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_REG_RO_ERROR | res;
+    return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* check bootloader version magic is NOT set */
-  if((bl_version & BOOTLOADER_VER_TAG) != 0) {
+  if(magic != PROTO_MAGIC_APPLICATION) {
     return BOOTLOADER_RET_NO_FIRMWARE;
   }
 
@@ -254,11 +258,11 @@ const char *bootloader_perror(int res)
   switch(res & BOOTLOADER_RET_MASK) {
     case BOOTLOADER_RET_OK:
       return "OK";
-    case BOOTLOADER_RET_NO_PING:
-      return "no ping!";
+    case BOOTLOADER_RET_NO_RESET:
+      return "no application detected";
     case BOOTLOADER_RET_NO_BOOTLOADER:
       return "no bootloader detected";
-    case BOOTLOADER_RET_REG_RO_ERROR:
+    case BOOTLOADER_RET_READ_ERROR:
       return "error reading read-only register";
     case BOOTLOADER_RET_NO_FIRMWARE:
       return "no firmware detected";

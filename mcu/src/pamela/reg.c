@@ -29,8 +29,6 @@ u16 reg_get_value(void)
 {
   if(reg_range == PROTO_REG_RANGE_GLOBAL) {
     switch(reg_num) {
-      case PROTO_REG_GLOBAL_MAGIC:
-        return PROTO_MAGIC_VALUE;
       case PROTO_REG_GLOBAL_FW_ID:
         return pablo_get_rom_fw_id();
       case PROTO_REG_GLOBAL_MACHTAG:
@@ -44,7 +42,10 @@ u16 reg_get_value(void)
 
 u16  reg_wfunc_read_handle(u08 num)
 {
-  if(num == PROTO_WFUNC_REG_ADDR) {
+  if(num == PROTO_WFUNC_MAGIC) {
+    return PROTO_MAGIC_APPLICATION;
+  }
+  else if(num == PROTO_WFUNC_REG_ADDR) {
     return reg_get_addr();
   }
   else if(num == PROTO_WFUNC_REG_VALUE) {

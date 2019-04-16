@@ -47,11 +47,6 @@ int reg_global_set(proto_handle_t *ph, UBYTE reg, UWORD val)
 
 // global registers
 
-int reg_global_get_magic(proto_handle_t *ph, UWORD *magic)
-{
-  return reg_global_get(ph, PROTO_REG_GLOBAL_MAGIC, magic);
-}
-
 int reg_global_get_machtag(proto_handle_t *ph, UWORD *machtag)
 {
   return reg_global_get(ph, PROTO_REG_GLOBAL_MACHTAG, machtag);

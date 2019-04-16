@@ -18,17 +18,6 @@ struct bootinfo {
 };
 typedef struct bootinfo bootinfo_t;
 
-/* registers defined in bootloader */
-#define BOOTLOADER_REG_BL_VERSION       0
-#define BOOTLOADER_REG_BL_MACHTAG       1
-#define BOOTLOADER_REG_PAGE_SIZE        2
-#define BOOTLOADER_REG_ROM_SIZE         3
-#define BOOTLOADER_REG_FW_CRC           4
-#define BOOTLOADER_REG_FW_MACHTAG       5
-#define BOOTLOADER_REG_FW_VERSION       6
-#define BOOTLOADER_REG_FW_ID            7
-#define BOOTLOADER_REG_PAGE_ADDR        8  /* rw */
-
 /* channels */
 #define BOOTLOADER_CHN_PAGES            0
 
@@ -36,11 +25,13 @@ typedef struct bootinfo bootinfo_t;
 #define BOOTLOADER_VER_TAG              0x8000
 
 #define BOOTLOADER_RET_MASK                 0xf0
+#define BOOTLOADER_RET_PROTO_MASK           0x0f
+
 #define BOOTLOADER_RET_OK                   0x00
-#define BOOTLOADER_RET_NO_PING              0x10
+#define BOOTLOADER_RET_NO_RESET             0x10
 #define BOOTLOADER_RET_NO_BOOTLOADER        0x20
-#define BOOTLOADER_RET_NO_BOOTLOADER_STATUS 0x30
-#define BOOTLOADER_RET_REG_RO_ERROR         0x40
+#define BOOTLOADER_RET_NO_BOOTLOADER_MAGIC  0x30
+#define BOOTLOADER_RET_READ_ERROR           0x40
 #define BOOTLOADER_RET_NO_FIRMWARE          0x50
 #define BOOTLOADER_RET_INVALID_FILE         0x60
 #define BOOTLOADER_RET_WRONG_FILE_SIZE      0x70

@@ -97,7 +97,7 @@ static void show_error(int bl_res)
   PutStr("BL Error: ");
   PutStr(bootloader_perror(bl_res));
   PutStr(", (Proto=");
-  PutStr(proto_perror(bl_res));
+  PutStr(proto_perror(bl_res & BOOTLOADER_RET_PROTO_MASK));
   PutStr(")\n");
 }
 

@@ -13,51 +13,72 @@
 #include "flash.h"
 #include "pablo.h"
 #include "reg.h"
-#include "action.h"
-#include "func.h"
 #include "machtag.h"
 
 static u08 status;
 static u16 page_addr;
 static u08 page_buf[SPM_PAGESIZE];
 
-// action
-ACTION_TABLE_BEGIN
-  // 0: PING
-  ACTION_TABLE_FUNC(action_ping),
-  // 1: PING
-  ACTION_TABLE_FUNC(action_ping),
-  // 2: BOOTLOADER
-  ACTION_TABLE_FUNC_FLAGS(action_bootloader, ACTION_FLAG_NO_REPLY),
-  // 3: RESET
-  ACTION_TABLE_FUNC_FLAGS(action_reset, ACTION_FLAG_END_BEFORE),
-ACTION_TABLE_END
+// ----- actions -----
+
+void proto_api_acion(u08 num)
+{
+  /* no extra action */
+}
 
 // ----- functions -----
-FUNC_TABLE_BEGIN
-  FUNC_TABLE_GET_FUNC(func_regaddr_get),
-  FUNC_TABLE_SET_FUNC(func_regaddr_set),
-  FUNC_TABLE_GET_FUNC(func_reg_read),
-  FUNC_TABLE_SET_FUNC(func_reg_write),
-FUNC_TABLE_END
 
-// ro registers
-static const u16 ro_version ROM_ATTR = VERSION_TAG;
-static const u16 ro_mach_tag ROM_ATTR = MACHTAG;
-static const u16 ro_page_size ROM_ATTR = SPM_PAGESIZE;
-static const u16 ro_rom_size ROM_ATTR = CONFIG_MAX_ROM;
-REG_TABLE_BEGIN(def)
-  REG_TABLE_RO_ROM_W(ro_version),               /* 0: bl version */
-  REG_TABLE_RO_ROM_W(ro_mach_tag),              /* 1: bl mach tag */
-  REG_TABLE_RO_ROM_W(ro_page_size),             /* 2: page size */
-  REG_TABLE_RO_ROM_W(ro_rom_size),              /* 3: rom size */
-  REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-2),     /* 4: rom crc */
-  REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-4),     /* 5: rom mach tag */
-  REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-6),     /* 6: rom version */
-  REG_TABLE_RO_ROM_W_PTR(CONFIG_MAX_ROM-8),     /* 7: rom fw id */
-  REG_TABLE_RW_RAM_W(page_addr)                 /* 8: (rw) page addr */
-REG_TABLE_END(def, 0, 0)
-REG_TABLE_SETUP(def)
+u16  proto_api_wfunc_read(u08 num)
+{
+  switch(num) {
+    case PROTO_WFUNC_BOOT_MAGIC:
+      return PROTO_MAGIC_BOOTLOADER;
+    case PROTO_WFUNC_BOOT_MACHTAG:
+      return MACHTAG;
+    case PROTO_WFUNC_BOOT_VERSION:
+      return VERSION_TAG;
+    case PROTO_WFUNC_BOOT_PAGE_SIZE:
+      return SPM_PAGESIZE;
+    case PROTO_WFUNC_BOOT_ROM_SIZE:
+      return CONFIG_MAX_ROM;
+    case PROTO_WFUNC_BOOT_ROM_CRC:
+      return pablo_get_rom_crc();
+    case PROTO_WFUNC_BOOT_ROM_MACHTAG:
+      return pablo_get_mach_tag();
+    case PROTO_WFUNC_BOOT_ROM_FW_VERSION:
+      return pablo_get_rom_version();
+    case PROTO_WFUNC_BOOT_ROM_FW_ID:
+      return pablo_get_rom_fw_id();
+    case PROTO_WFUNC_BOOT_PAGE_ADDR:
+      return page_addr;
+    default:
+      return 0;
+  }
+}
+
+void proto_api_wfunc_write(u08 num, u16 val)
+{
+  switch(num) {
+    case PROTO_WFUNC_BOOT_PAGE_ADDR:
+      page_addr = val;
+      break;
+  }
+}
+
+/* non used API */
+
+u32 proto_api_lfunc_read(u08 num)
+{
+  return 0;
+}
+
+void proto_api_lfunc_write(u08 num, u32 val)
+{
+}
+
+void proto_api_action(u08 num)
+{
+}
 
 // from optiboot
 static void run_app(u08 rstFlags) __attribute__ ((naked));
@@ -108,7 +129,7 @@ int main(void)
   uart_send('P');
 
   // setup proto
-  proto_init(PROTO_STATUS_BOOTLOADER);
+  proto_init();
   uart_send('A');
 
   // check if bootloader command is set - if not enter app
@@ -132,7 +153,7 @@ int main(void)
     // reply to bootloader command
     uart_send('-');
     proto_low_action();
-    proto_low_end(PROTO_STATUS_BOOTLOADER);
+    proto_low_end();
   }
 
   // enter main loop
@@ -147,27 +168,27 @@ int main(void)
 
 u08 *proto_api_read_msg_prepare(u08 chan, u16 *size, u16 *extra)
 {
-  *size = SPM_PAGESIZE;
+  *size = SPM_PAGESIZE/2;
   uart_send('r');
   flash_read_page(page_addr, page_buf);
   return page_buf;
 }
 
-void proto_api_read_msg_done(u08 chan, u08 status)
+void proto_api_read_msg_done(u08 chan)
 {
   uart_send('.');
 }
 
 u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
 {
-  *max_size = SPM_PAGESIZE;
+  *max_size = SPM_PAGESIZE/2;
   uart_send('w');
   return page_buf;
 }
 
 void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
 {
-  if(size == SPM_PAGESIZE) {
+  if(size == SPM_PAGESIZE/2) {
     uart_send('(');
     flash_program_page(page_addr, page_buf);
     uart_send(')');
@@ -176,14 +197,4 @@ void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
     uart_send('?');
     status = BOOT_STATUS_INVALID_PAGE_SIZE;
   }
-}
-
-u08 proto_api_get_end_status(void)
-{
-  return PROTO_STATUS_BOOTLOADER;
-}
-
-void func_handle_long_weak(rom_pchar ptr, u08 flags)
-{
-  // no long procesing in func required
 }
