@@ -25,6 +25,25 @@ static u08 buf[MAX_WORDS * 2];
 static u16 buf_words = MAX_WORDS;
 static u16 buf_crc = 0;
 
+static u08 enter_busy_loop = 0;
+
+void busy_loop(void)
+{
+  uart_send_pstring(PSTR("busy:begin"));
+  proto_busy_begin();
+
+  // wait for a second
+  for(int i=0;i<5;i++) {
+    system_wdt_reset();
+    uart_send('.');
+    timer_delay(200);
+  }
+
+  proto_busy_end();
+  uart_send_pstring(PSTR("end"));
+  uart_send_crlf();
+}
+
 // action handler
 
 void proto_api_action(u08 num)
@@ -40,14 +59,9 @@ void proto_api_action(u08 num)
     proto_trigger_signal();
   }
   else if(num == 14) {
-    uart_send_pstring(PSTR("busy:begin!"));
+    uart_send_pstring(PSTR("busy!"));
     uart_send_crlf();
-    proto_busy_begin();
-  }
-  else if(num == 13) {
-    uart_send_pstring(PSTR("busy:end!"));
-    uart_send_crlf();
-    proto_busy_end();
+    enter_busy_loop = 1;
   }
 }
 
@@ -190,6 +204,12 @@ int main(void)
   while(1) {
     system_wdt_reset();
     pamela_handle();
+
+    // make a busy wait?
+    if(enter_busy_loop) {
+      busy_loop();
+      enter_busy_loop = 0;
+    }
   }
 
   return 0;

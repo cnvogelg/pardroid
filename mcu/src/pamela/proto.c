@@ -43,16 +43,20 @@ void proto_trigger_signal(void)
 
 void proto_busy_begin(void)
 {
-  DS("busy:begin"); DNL;
-  proto_low_busy_hi();
-  busy = 1;
+  DS("busi("); DB(busy); DC(')'); DNL;
+  if(busy == 0) {
+    proto_low_busy_hi();
+  }
+  busy++;
 }
 
 void proto_busy_end(void)
 {
-  DS("busy:endl"); DNL;
-  proto_low_busy_lo();
-  busy = 0;
+  DS("buse("); DB(busy); DC(')'); DNL;
+  busy--;
+  if(busy == 0) {
+    proto_low_busy_lo();
+  }
 }
 
 static void handle_action(u08 num)
@@ -177,18 +181,10 @@ void proto_handle(void)
       handle_lfunc_write(chn);
       break;
     case PROTO_CMD_MSG_READ:
-      if(!busy) {
-        proto_api_read_msg(chn);
-      } else {
-        DS("ignore!");
-      }
+      proto_api_read_msg(chn);
       break;
     case PROTO_CMD_MSG_WRITE:
-      if(!busy) {
-        proto_api_write_msg(chn);
-      } else {
-        DS("ignore!");
-      }
+      proto_api_write_msg(chn);
       break;
     default:
       DS("invalid!"); DNL;

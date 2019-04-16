@@ -37,6 +37,26 @@ void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
   test_channel = channel;
 }
 
+// ----- helper -----
+
+static int recover_from_busy(proto_handle_t *proto, test_param_t *p)
+{
+  for(int i=0;i<10;i++) {
+    int res = proto_ping(proto);
+    if(res == PROTO_RET_OK) {
+      return 0;
+    }
+    else if(res != PROTO_RET_TIMEOUT) {
+      p->error = "ping while busy";
+      p->section = "recover";
+      return 1;
+    }
+  }
+  p->error = "ping while busy failed!";
+  p->section = "recover";
+  return 1;
+}
+
 // ----- actions -----
 
 int test_reset(test_t *t, test_param_t *p)
@@ -651,16 +671,11 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* disable busy mode */
-  res = proto_action(proto, ACTION_BUSY_DISABLE);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "disable busy";
-    return 1;
-  }
+  /* recover from busy mode */
+  res = recover_from_busy(proto, p);
 
   FreeVec(mem_w);
-  return 0;
+  return res;
 }
 
 int test_msg_read(test_t *t, test_param_t *p)
@@ -783,16 +798,11 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* disable busy mode */
-  res = proto_action(proto, ACTION_BUSY_DISABLE);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "disable busy";
-    return 1;
-  }
+  /* recover from busy mode */
+  res = recover_from_busy(proto, p);
 
   FreeVec(mem_r);
-  return 0;
+  return res;
 }
 
 /* ---------- status tests ----------------------------------------------- */
