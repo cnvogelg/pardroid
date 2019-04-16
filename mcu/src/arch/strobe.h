@@ -11,7 +11,8 @@
 #define STROBE_FLAG_BUFFER_FILLED  4
 #define STROBE_FLAG_IS_BUSY        8
 
-extern void strobe_init(void);
+extern void strobe_init_port(void);
+extern void strobe_init_irq(void);
 extern void strobe_exit(void);
 extern u08  strobe_get_key(u32 *key);
 extern u08  strobe_get_data(void);

@@ -192,7 +192,9 @@ void blink_hello(void)
 void knok_main(void)
 {
   uart_send_pstring(PSTR("knok:"));
-  strobe_init();
+
+  // only setup port so we can read data
+  strobe_init_port();
 
   // --- early exit ---
   // is a reset command active? then directly exit to proto
@@ -205,6 +207,8 @@ void knok_main(void)
     return;
   }
 
+  // we will entry knok mode so enable irq for strobe
+  strobe_init_irq();
   led_init();
   led_on();
 

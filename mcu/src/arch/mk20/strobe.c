@@ -55,10 +55,13 @@ static void attachInterruptVector(enum IRQ_NUMBER_t irq, void (*function)(void))
   _VectorsRam[irq + 16] = function;
 }
 
-void strobe_init(void)
+void strobe_init_port(void)
 {
   pario_init();
+}
 
+void strobe_init_irq(void)
+{
   strobe_key = 0;
   strobe_count = 0;
   state = 0;

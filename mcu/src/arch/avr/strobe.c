@@ -66,10 +66,13 @@ static void strobe_read_func(void)
   ack_hi;
 }
 
-void strobe_init(void)
+void strobe_init_port(void)
 {
   strobe_low_init();
+}
 
+void strobe_init_irq(void)
+{
   strobe_key = 0;
   strobe_count = 0;
   state = 0;
