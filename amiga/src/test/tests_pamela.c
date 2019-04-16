@@ -544,7 +544,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
-    return res;
+    return 1;
   }
 
   /* too many now */
@@ -569,8 +569,8 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
-    p->section = "write";
-    return res;
+    p->section = "write must return MSG_TOO_LARGE";
+    return 1;
   }
 
   /* read max size from firmware */
@@ -578,7 +578,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes again";
-    return res;
+    return 1;
   }
 
   FreeVec(mem_w);
@@ -608,7 +608,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
-    return res;
+    return 1;
   }
 
   /* send buffer */
@@ -616,7 +616,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write";
-    return res;
+    return 1;
   }
 
   /* disable busy mode */
@@ -624,7 +624,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "disable busy";
-    return res;
+    return 1;
   }
 
   FreeVec(mem_w);
@@ -654,7 +654,7 @@ int test_msg_read(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
-    return res;
+    return 1;
   }
 
   FreeVec(mem_r);
@@ -673,7 +673,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
-    return res;
+    return 1;
   }
 
   /* too many now */
@@ -693,8 +693,8 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   res = proto_msg_read_single(proto, test_channel, mem_r, &words, &crc);
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
-    p->section = "read";
-    return res;
+    p->section = "read must return MSG_TOO_LARGE";
+    return 1;
   }
 
   /* read max size from firmware */
@@ -702,7 +702,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes again";
-    return res;
+    return 1;
   }
 
   FreeVec(mem_r);
@@ -730,7 +730,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
-    return res;
+    return 1;
   }
 
   /* receive buffer */
@@ -740,7 +740,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";
-    return res;
+    return 1;
   }
 
   /* disable busy mode */
@@ -748,7 +748,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "disable busy";
-    return res;
+    return 1;
   }
 
   FreeVec(mem_r);
@@ -824,7 +824,7 @@ static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
   if(res != PAMELA_OK) {
     p->error = pamela_perror(res);
     p->section = "pamela_init_events";
-    return res;
+    return 1;
   }
 
   /* call test func */
@@ -845,7 +845,7 @@ static int run_timer_sig(test_t *t, test_param_t *p)
 
   int res = assert_timer_mask(p, "main", pb, got);
   if(res != 0) {
-    return res;
+    return 1;
   }
 
   return assert_num_triggers(p, "main", pb, 0, 0);
@@ -866,7 +866,7 @@ static int run_event_sig(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
-    return res;
+    return 1;
   }
 
   /* wait for either timeout or trigger signal */
@@ -874,7 +874,7 @@ static int run_event_sig(test_t *t, test_param_t *p)
 
   res = assert_trigger_mask(p, "main", pb, got);
   if(res != 0) {
-    return res;
+    return 1;
   }
 
   return assert_num_triggers(p, "main", pb, 1, 1);
@@ -895,7 +895,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
-    return res;
+    return 1;
   }
 
   /* trigger signal 2 */
@@ -903,7 +903,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal 2";
-    return res;
+    return 1;
   }
 
   /* wait for either timeout or trigger signal */
@@ -911,7 +911,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
 
   res = assert_trigger_mask(p, "main", pb, got);
   if(res != 0) {
-    return res;
+    return 1;
   }
 
   return assert_num_triggers(p, "main", pb, 2, 1);

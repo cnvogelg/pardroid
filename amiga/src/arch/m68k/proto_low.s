@@ -579,6 +579,8 @@ _proto_low_write_block:
         ; check if slave aborted operation?
         ; slave signals by setting rak to hi
         check_rak_lo    plmw_msg_too_large
+        ; need to check twice as device may be slow
+        check_rak_lo    plmw_msg_too_large
 
         ; prepare clock signals
         move.w          d4,d5

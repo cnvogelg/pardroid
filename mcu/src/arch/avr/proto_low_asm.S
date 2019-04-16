@@ -370,10 +370,15 @@ proto_low_write_block:
     ; -> size invalid!
     ; signal with rak hi
     rak_hi
+    ; resync with slave
+    wait_clk_hi
+    rak_lo
+    wait_clk_lo
 
-    ; end transmision
-    ; clear result
-    rjmp    .wb_empty
+    ; return too large size
+    movw    r24,r22
+
+    rjmp    .wb_end
 
 .wb_size_ok:
     ; empty size?
