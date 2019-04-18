@@ -46,15 +46,17 @@
 #define PROTO_WFUNC_BOOT_MACHTAG      0x01
 #define PROTO_WFUNC_BOOT_VERSION      0x02
 #define PROTO_WFUNC_BOOT_PAGE_SIZE    0x03
-#define PROTO_WFUNC_BOOT_ROM_SIZE     0x04
-#define PROTO_WFUNC_BOOT_ROM_CRC      0x05
-#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x06
-#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x07
-#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x08
-#define PROTO_WFUNC_BOOT_PAGE_ADDR    0x09
+#define PROTO_WFUNC_BOOT_ROM_CRC      0x04
+#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x05
+#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x06
+#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x07
 
-// long function numbers 0..15
-#define PROTO_LFUNC_USER          0x00
+// long function numbers 0..15: application
+#define PROTO_LFUNC_USER              0x00
+
+// long function numbers 0..15: bootloader
+#define PROTO_LFUNC_BOOT_ROM_SIZE     0x00
+#define PROTO_LFUNC_BOOT_PAGE_ADDR    0x01
 
 // registers
 #define PROTO_REG_RANGE_MASK      0xff00

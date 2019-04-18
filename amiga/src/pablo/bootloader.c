@@ -52,12 +52,10 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   }
 
   /* rom size */
-  UWORD size;
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_SIZE, &size);
+  res = proto_function_read_long(ph, PROTO_LFUNC_BOOT_ROM_SIZE, &bi->rom_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
-  bi->rom_size = size;
 
   return bootloader_update_fw_info(pb, bi);
 }
@@ -142,8 +140,7 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    UWORD addr = bu.addr;
-    res = proto_function_write_word(ph, PROTO_WFUNC_BOOT_PAGE_ADDR, addr);
+    res = proto_function_write_long(ph, PROTO_LFUNC_BOOT_PAGE_ADDR, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
@@ -193,8 +190,7 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    UWORD addr = bu.addr;
-    res = proto_function_write_word(ph, PROTO_WFUNC_BOOT_PAGE_ADDR, addr);
+    res = proto_function_write_long(ph, PROTO_LFUNC_BOOT_PAGE_ADDR, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }

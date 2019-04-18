@@ -16,7 +16,7 @@
 #include "machtag.h"
 
 static u08 status;
-static u16 page_addr;
+static u32 page_addr;
 static u08 page_buf[SPM_PAGESIZE];
 
 // ----- actions -----
@@ -39,8 +39,6 @@ u16  proto_api_wfunc_read(u08 num)
       return VERSION_TAG;
     case PROTO_WFUNC_BOOT_PAGE_SIZE:
       return SPM_PAGESIZE;
-    case PROTO_WFUNC_BOOT_ROM_SIZE:
-      return CONFIG_MAX_ROM;
     case PROTO_WFUNC_BOOT_ROM_CRC:
       return pablo_get_rom_crc();
     case PROTO_WFUNC_BOOT_ROM_MACHTAG:
@@ -49,8 +47,6 @@ u16  proto_api_wfunc_read(u08 num)
       return pablo_get_rom_version();
     case PROTO_WFUNC_BOOT_ROM_FW_ID:
       return pablo_get_rom_fw_id();
-    case PROTO_WFUNC_BOOT_PAGE_ADDR:
-      return page_addr;
     default:
       return 0;
   }
@@ -58,22 +54,31 @@ u16  proto_api_wfunc_read(u08 num)
 
 void proto_api_wfunc_write(u08 num, u16 val)
 {
-  switch(num) {
-    case PROTO_WFUNC_BOOT_PAGE_ADDR:
-      page_addr = val;
-      break;
-  }
 }
 
 /* non used API */
 
 u32 proto_api_lfunc_read(u08 num)
 {
+  switch(num) {
+    case PROTO_LFUNC_BOOT_ROM_SIZE:
+      uart_send('#');
+      return CONFIG_MAX_ROM;
+    case PROTO_LFUNC_BOOT_PAGE_ADDR:
+      uart_send('+');
+      return page_addr;
+  }
   return 0;
 }
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
+  switch(num) {
+    case PROTO_LFUNC_BOOT_PAGE_ADDR:
+      uart_send('@');
+      page_addr = val;
+      break;
+  }
 }
 
 void proto_api_action(u08 num)
@@ -170,7 +175,7 @@ u08 *proto_api_read_msg_prepare(u08 chan, u16 *size, u16 *extra)
 {
   *size = SPM_PAGESIZE/2;
   uart_send('r');
-  flash_read_page(page_addr, page_buf);
+  flash_read_page((u16)page_addr, page_buf);
   return page_buf;
 }
 
@@ -190,7 +195,7 @@ void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
 {
   if(size == SPM_PAGESIZE/2) {
     uart_send('(');
-    flash_program_page(page_addr, page_buf);
+    flash_program_page((u16)page_addr, page_buf);
     uart_send(')');
     status = BOOT_STATUS_OK;
   } else {
