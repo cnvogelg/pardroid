@@ -1065,3 +1065,46 @@ int test_event_sig2(test_t *t, test_param_t *p)
 {
   return run_with_events(t, p, run_event_sig2);
 }
+
+int run_event_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  /* enable busy mode */
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return 1;
+  }
+
+  /* ping must be busy */
+  res = proto_ping(proto);
+  if(res != PROTO_RET_DEVICE_BUSY) {
+    p->error = proto_perror(res);
+    p->section = "ping not busy";
+    return res;
+  }
+
+  /* recover already does pings */
+  res = recover_from_busy(proto, p);
+  if(res != 0) {
+    return 1;
+  }
+
+  /* wait for either timeout or trigger signal */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  res = assert_trigger_mask(p, "busy", pb, got);
+  if(res != 0) {
+    return 1;
+  }
+
+  return assert_num_triggers(p, "busy", pb, 1, 1);
+}
+
+int test_event_busy(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_event_busy);
+}
