@@ -56,7 +56,7 @@ PARAM_SRCS = param.c param_def.c crc.c
 
 # pamela
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
-PROTO_SRCS += proto.c knok.c reg.c
+PROTO_SRCS += proto.c knok.c func.c reg.c chan.c
 ifdef CONFIG_BOOTSTRAP
 PROTO_EXT_SRCS += bootstrap.c bootrexx.c
 endif

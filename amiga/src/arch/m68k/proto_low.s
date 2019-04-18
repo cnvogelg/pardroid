@@ -752,9 +752,17 @@ _proto_low_read_block:
         bls.s           plmr_size_ok
 
         ; --- message too large ---
+        ; run a fake copy loop
+plmr_fake:
+        ; odd byte
+        clk_set         d4
+        get_data        d0
+        ; even byte
+        clk_set         d6
+        get_data        d0
+        dbra            d5,plmr_fake
         ; size invalid return value
         moveq           #RET_MSG_TOO_LARGE,d0
-        ; end transfer
         bra.s           plmr_done
 
 plmr_size_ok:

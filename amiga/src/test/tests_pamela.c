@@ -16,15 +16,13 @@
 
 #include "fwid.h"
 #include "test.h"
+#include "test-pamela.h"
 
 static UWORD test_size;
 static UWORD test_bias;
 static UWORD test_add_size;
 static UWORD test_sub_size;
 static UBYTE test_channel;
-
-#define ACTION_TRIGGER_SIGNAL   15
-#define ACTION_BUSY_LOOP        14
 
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel)
@@ -130,7 +128,7 @@ int test_ping_busy(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -158,7 +156,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
   UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
 
   /* write */
-  int res = proto_function_write_word(proto, PROTO_WFUNC_USER, v);
+  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -167,7 +165,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, PROTO_WFUNC_USER, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -192,7 +190,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -200,7 +198,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_word(proto, PROTO_WFUNC_USER, v);
+  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, v);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write not busy";
@@ -209,7 +207,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, PROTO_WFUNC_USER, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, &r);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";
@@ -227,7 +225,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
   ULONG v = 0xdeadbeef + val;
 
   /* write */
-  int res = proto_function_write_long(proto, PROTO_WFUNC_USER, v);
+  int res = proto_function_write_long(proto, PROTO_LFUNC_USER, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -236,7 +234,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, PROTO_WFUNC_USER, &r);
+  res = proto_function_read_long(proto, PROTO_LFUNC_USER, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -262,7 +260,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   ULONG v = 0xdeadbeef + val;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -270,7 +268,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_long(proto, PROTO_WFUNC_USER, v);
+  res = proto_function_write_long(proto, PROTO_LFUNC_USER, v);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write not busy";
@@ -279,7 +277,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, PROTO_WFUNC_USER, &r);
+  res = proto_function_read_long(proto, PROTO_LFUNC_USER, &r);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";
@@ -530,7 +528,7 @@ int test_msg_size_max(test_t *t, test_param_t *p)
   UWORD max_bytes;
 
   /* read max size from firmware */
-  int res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &max_bytes);
+  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &max_bytes);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -688,7 +686,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   UWORD size;
 
   /* read max size from firmware */
-  int res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &size);
+  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -752,7 +750,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   UWORD crc = 0x4711;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -812,7 +810,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   UWORD size;
 
   /* read max size from firmware */
-  int res = proto_function_read_word(proto, PROTO_WFUNC_USER+1, &size);
+  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
@@ -823,7 +821,7 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   size += 2;
 
   /* write too large size */
-  res = proto_function_write_word(proto, PROTO_WFUNC_USER+2, size);
+  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_BUF_WORDS, size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write too large size";
@@ -877,7 +875,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   UWORD words = size>>1;
 
   /* enable busy mode */
-  int res = proto_action(proto, ACTION_BUSY_LOOP);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "enable busy";
@@ -1008,7 +1006,7 @@ static int run_event_sig(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   /* trigger signal */
-  int res = proto_action(proto, ACTION_TRIGGER_SIGNAL);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
@@ -1037,7 +1035,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   /* trigger signal */
-  int res = proto_action(proto, ACTION_TRIGGER_SIGNAL);
+  int res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
@@ -1045,7 +1043,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   }
 
   /* trigger signal 2 */
-  res = proto_action(proto, ACTION_TRIGGER_SIGNAL);
+  res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
   if(res != 0) {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal 2";

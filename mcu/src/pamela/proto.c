@@ -56,6 +56,8 @@ void proto_busy_end(void)
   busy--;
   if(busy == 0) {
     proto_low_busy_lo();
+    // trigger a signal
+    proto_trigger_signal();
   }
 }
 

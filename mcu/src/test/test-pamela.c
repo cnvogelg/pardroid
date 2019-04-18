@@ -14,8 +14,11 @@
 #include "reg.h"
 #include "system.h"
 #include "timer.h"
+#include "func.h"
+#include "chan.h"
 
 #include "pamela.h"
+#include "test-pamela.h"
 
 static u16 wfunc_val = 0;
 static u32 lfunc_val = 0;
@@ -53,12 +56,12 @@ void proto_api_action(u08 num)
   uart_send_crlf();
 
   // triger signal
-  if(num == 15) {
+  if(num == TEST_PAMELA_ACTION_TRIGGER_SIGNAL) {
     uart_send_pstring(PSTR("signal!"));
     uart_send_crlf();
     proto_trigger_signal();
   }
-  else if(num == 14) {
+  else if(num == TEST_PAMELA_ACTION_BUSY_LOOP) {
     uart_send_pstring(PSTR("busy!"));
     uart_send_crlf();
     enter_busy_loop = 1;
@@ -71,11 +74,18 @@ u16  proto_api_wfunc_read(u08 num)
 {
   u16 val;
   if(num < PROTO_WFUNC_USER) {
-    val = reg_wfunc_read_handle(num);
-  } else if(num == (PROTO_WFUNC_USER+1)) {
-    val = MAX_WORDS * 2; 
+    val = func_read_word(num);
   } else {
-    val = wfunc_val;
+    switch(num) {
+      case TEST_PAMELA_WFUNC_MAX_BYTES:
+        val = MAX_WORDS * 2;
+        break;
+      case TEST_PAMELA_WFUNC_BUF_WORDS:
+        val = buf_words;
+        break;
+      default:
+        val = wfunc_val;
+    }
   }
   uart_send_pstring(PSTR("wfunc_read:"));
   uart_send_hex_byte(num);
@@ -88,11 +98,22 @@ u16  proto_api_wfunc_read(u08 num)
 void proto_api_wfunc_write(u08 num, u16 val)
 {
   if(num < PROTO_WFUNC_USER) {
-    reg_wfunc_write_handle(num, val);
-  } else if(num == (PROTO_WFUNC_USER+2)) {
-    buf_words = val; 
+    func_write_word(num, val);
   } else {
-    wfunc_val = val;
+    switch(num) {
+      case TEST_PAMELA_WFUNC_BUF_WORDS:
+        buf_words = val;
+        break;
+      case TEST_PAMELA_WFUNC_CHAN_ERROR:
+        chan_set_error(val);
+        break;
+      case TEST_PAMELA_WFUNC_CHAN_RX_PEND:
+        chan_set_rx_pending(val);
+        break;
+      default:
+        wfunc_val = val;
+        break;
+    }
   }
   uart_send_pstring(PSTR("wfunc_write:"));
   uart_send_hex_byte(num);

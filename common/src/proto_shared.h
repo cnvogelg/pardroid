@@ -37,9 +37,11 @@
 
 // word function numbers 0..15: application
 #define PROTO_WFUNC_MAGIC         0x00
-#define PROTO_WFUNC_REG_ADDR      0x01
-#define PROTO_WFUNC_REG_VALUE     0x02
-#define PROTO_WFUNC_USER          0x03
+#define PROTO_WFUNC_CHAN_RX_PEND  0x01
+#define PROTO_WFUNC_CHAN_ERROR    0x02
+#define PROTO_WFUNC_REG_ADDR      0x03
+#define PROTO_WFUNC_REG_VALUE     0x04
+#define PROTO_WFUNC_USER          0x05
 
 // word function numbers 0..15: bootloader
 #define PROTO_WFUNC_BOOT_MAGIC        0x00

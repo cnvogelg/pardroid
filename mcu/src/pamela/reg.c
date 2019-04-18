@@ -39,30 +39,3 @@ u16 reg_get_value(void)
   }
   return reg_api_get_value(reg_range, reg_num);
 }
-
-u16  reg_wfunc_read_handle(u08 num)
-{
-  if(num == PROTO_WFUNC_MAGIC) {
-    return PROTO_MAGIC_APPLICATION;
-  }
-  else if(num == PROTO_WFUNC_REG_ADDR) {
-    return reg_get_addr();
-  }
-  else if(num == PROTO_WFUNC_REG_VALUE) {
-    return reg_get_value();
-  }
-  return 0;
-}
-
-void reg_wfunc_write_handle(u08 num, u16 val)
-{
-  if(num == PROTO_WFUNC_REG_ADDR) {
-    reg_set_addr(val);
-  }
-  else if(num == PROTO_WFUNC_REG_VALUE) {
-    reg_set_value(val);
-  }
-}
-
-u16  proto_api_wfunc_read(u08 chn) __attribute__ ((weak, alias("reg_wfunc_read_handle")));
-void proto_api_wfunc_write(u08 chn, u16 val) __attribute__ ((weak, alias("reg_wfunc_write_handle")));
