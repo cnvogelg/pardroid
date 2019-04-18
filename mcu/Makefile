@@ -192,7 +192,7 @@ ifeq "$(FLAVOR)" "release"
 ifdef CONFIG_BOOTLOADER
 # bootloader
 BOOTLOADER_SRCS = uart.c system.c pablo.c
-BOOTLOADER_SRCS += proto.c bootloader.c flash.c
+BOOTLOADER_SRCS += proto.c bootbase.c bootloader.c flash.c
 BOOTLOADER_SRCS += $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
