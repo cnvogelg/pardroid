@@ -1108,3 +1108,107 @@ int test_event_busy(test_t *t, test_param_t *p)
 {
   return run_with_events(t, p, run_event_busy);
 }
+
+int run_event_rx_pending(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  UWORD mask = 0x4711;
+
+  /* set some rx pending mask */
+  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_CHAN_RX_PEND, mask);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "set rx pend mask";
+    return 1;
+  }
+
+  /* wait for either timeout or trigger signal */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  res = assert_trigger_mask(p, "rx pend", pb, got);
+  if(res != 0) {
+    return 1;
+  }
+
+  res = assert_num_triggers(p, "rx pend", pb, 1, 1);
+  if(res != 0) {
+    return 1;
+  }
+
+  /* read mask */
+  UWORD got_mask = 0;
+  res = proto_function_read_word(proto, PROTO_WFUNC_CHAN_RX_PEND, &got_mask);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read rx pend mask";
+    return 1;
+  }
+
+  /* check mask */
+  if(got_mask != mask) {
+    p->error = "mask mismatch";
+    p->section = "check rx pend";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_event_rx_pending(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_event_rx_pending);
+}
+
+int run_event_error(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  UWORD mask = 0x4711;
+
+  /* set some rx pending mask */
+  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_CHAN_ERROR, mask);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "set error mask";
+    return 1;
+  }
+
+  /* wait for either timeout or trigger signal */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  res = assert_trigger_mask(p, "error mask", pb, got);
+  if(res != 0) {
+    return 1;
+  }
+
+  res = assert_num_triggers(p, "error mask", pb, 1, 1);
+  if(res != 0) {
+    return 1;
+  }
+
+  /* read mask */
+  UWORD got_mask = 0;
+  res = proto_function_read_word(proto, PROTO_WFUNC_CHAN_ERROR, &got_mask);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read error mask";
+    return 1;
+  }
+
+  /* check mask */
+  if(got_mask != mask) {
+    p->error = "mask mismatch";
+    p->section = "check error mask";
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_event_error(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_event_error);
+}
