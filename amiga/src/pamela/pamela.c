@@ -226,6 +226,11 @@ UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph)
   return pario_get_signal_counter(ph->pario);
 }
 
+int pamela_read_status(pamela_handle_t *ph, ULONG *status)
+{
+  return proto_function_read_long(ph->proto, PROTO_LFUNC_STATUS, status);
+}
+
 const char *pamela_perror(int res)
 {
   switch(res) {

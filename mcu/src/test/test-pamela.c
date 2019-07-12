@@ -11,11 +11,10 @@
 #include "rominfo.h"
 #include "fwid.h"
 #include "proto.h"
-#include "reg.h"
 #include "system.h"
 #include "timer.h"
 #include "func.h"
-#include "chan.h"
+#include "status.h"
 
 #include "pamela.h"
 #include "test-pamela.h"
@@ -32,7 +31,7 @@ static u08 enter_busy_loop = 0;
 void busy_loop(void)
 {
   uart_send_pstring(PSTR("busy:begin"));
-  proto_busy_begin();
+  status_set_busy();
 
   // wait for a second
   for(int i=0;i<5;i++) {
@@ -41,7 +40,7 @@ void busy_loop(void)
     timer_delay(200);
   }
 
-  proto_busy_end();
+  status_clr_busy();
   uart_send_pstring(PSTR("end"));
   uart_send_crlf();
 }
@@ -82,8 +81,12 @@ u16  proto_api_wfunc_read(u08 num)
       case TEST_PAMELA_WFUNC_BUF_WORDS:
         val = buf_words;
         break;
-      default:
+      case TEST_PAMELA_WFUNC_TEST_VALUE:
         val = wfunc_val;
+        break;
+      default:
+        val = 0;
+        break;
     }
   }
   uart_send_pstring(PSTR("wfunc_read:"));
@@ -103,13 +106,7 @@ void proto_api_wfunc_write(u08 num, u16 val)
       case TEST_PAMELA_WFUNC_BUF_WORDS:
         buf_words = val;
         break;
-      case TEST_PAMELA_WFUNC_CHAN_ERROR:
-        chan_set_error(val);
-        break;
-      case TEST_PAMELA_WFUNC_CHAN_RX_PEND:
-        chan_set_rx_pending(val);
-        break;
-      default:
+      case TEST_PAMELA_WFUNC_TEST_VALUE:
         wfunc_val = val;
         break;
     }
@@ -123,7 +120,19 @@ void proto_api_wfunc_write(u08 num, u16 val)
 
 u32 proto_api_lfunc_read(u08 num)
 {
-  u32 val = lfunc_val;
+  u32 val;
+  if(num < PROTO_LFUNC_USER) {
+    val = func_read_long(num);
+  } else {
+    switch(num) {
+      case TEST_PAMELA_LFUNC_TEST_VALUE:
+        val = lfunc_val;
+        break;
+      default:
+        val = 0;
+        break;
+    }
+  }
   uart_send_pstring(PSTR("lfunc_read:"));
   uart_send_hex_byte(num);
   uart_send('=');
@@ -134,38 +143,23 @@ u32 proto_api_lfunc_read(u08 num)
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
-  lfunc_val = val;
+  if(num < PROTO_LFUNC_USER) {
+    func_write_long(num, val);
+  } else {
+    switch(num) {
+      case TEST_PAMELA_LFUNC_SET_STATUS:
+        status_set_mask(val);
+        break;
+      case TEST_PAMELA_LFUNC_TEST_VALUE:
+        lfunc_val = val;
+        break;
+    }
+  }
   uart_send_pstring(PSTR("lfunc_write:"));
   uart_send_hex_byte(num);
   uart_send('=');
   uart_send_hex_long(val);
   uart_send_crlf();
-}
-
-// registers
-
-void reg_api_set_value(u08 range, u08 reg, u16 value)
-{
-  uart_send_pstring(PSTR("reg_set:"));
-  uart_send_hex_byte(range);
-  uart_send(':');
-  uart_send_hex_byte(reg);
-  uart_send('=');
-  uart_send_hex_word(value);
-  uart_send_crlf();
-}
-
-u16 reg_api_get_value(u08 range, u08 reg)
-{
-  u16 val = 0xdead;
-  uart_send_pstring(PSTR("reg_get:"));
-  uart_send_hex_byte(range);
-  uart_send(':');
-  uart_send_hex_byte(reg);
-  uart_send('=');
-  uart_send_hex_word(val);
-  uart_send_crlf();
-  return val;
 }
 
 // messages

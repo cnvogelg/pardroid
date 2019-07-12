@@ -17,6 +17,7 @@
 #include "proto.h"
 #include "proto_shared.h"
 #include "func.h"
+#include "status.h"
 
 // action handler
 
@@ -35,12 +36,12 @@ void proto_api_action(u08 num)
   else if(num == 14) {
     uart_send_pstring(PSTR("busy:begin!"));
     uart_send_crlf();
-    proto_busy_begin();
+    status_set_busy();
   }
   else if(num == 13) {
     uart_send_pstring(PSTR("busy:end!"));
     uart_send_crlf();
-    proto_busy_end();
+    status_clr_busy();
   }
 }
 

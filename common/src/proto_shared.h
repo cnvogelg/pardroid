@@ -2,7 +2,7 @@
 // shared defines for parbox protocol
 
 // number of channels
-#define PROTO_MAX_CHANNEL         16
+#define PROTO_MAX_CHANNEL         15
 #define PROTO_MAX_FUNCTION        16
 #define PROTO_MAX_ACTION          16
 
@@ -39,11 +39,7 @@
 
 // word function numbers 0..15: application
 #define PROTO_WFUNC_MAGIC         0x00
-#define PROTO_WFUNC_CHAN_RX_PEND  0x01
-#define PROTO_WFUNC_CHAN_ERROR    0x02
-#define PROTO_WFUNC_REG_ADDR      0x03
-#define PROTO_WFUNC_REG_VALUE     0x04
-#define PROTO_WFUNC_USER          0x05
+#define PROTO_WFUNC_USER          0x01
 
 // word function numbers 0..15: bootloader
 #define PROTO_WFUNC_BOOT_MAGIC        0x00
@@ -56,20 +52,15 @@
 #define PROTO_WFUNC_BOOT_ROM_FW_ID    0x07
 
 // long function numbers 0..15: application
-#define PROTO_LFUNC_USER              0x00
+#define PROTO_LFUNC_STATUS            0x00
+#define PROTO_LFUNC_USER              0x01
 
 // long function numbers 0..15: bootloader
 #define PROTO_LFUNC_BOOT_ROM_SIZE     0x00
 #define PROTO_LFUNC_BOOT_PAGE_ADDR    0x01
 
-// registers
-#define PROTO_REG_RANGE_MASK      0xff00
-#define PROTO_REG_REGISTER_MASK   0x00ff
-
-// register ranges
-#define PROTO_REG_RANGE_GLOBAL    0x10
-
-// global registers
-#define PROTO_REG_GLOBAL_MACHTAG      0x00
-#define PROTO_REG_GLOBAL_FW_ID        0x01
-#define PROTO_REG_GLOBAL_FW_VERSION   0x02
+// status flag
+#define PROTO_STATUS_MASK_RX_PENDING  0x007f
+#define PROTO_STATUS_MASK_ERROR       0x7f00
+#define PROTO_STATUS_MASK_BUSY        0x0080
+//#define PROTO_STATUS_MASK_FREE        0x8000

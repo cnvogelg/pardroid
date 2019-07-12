@@ -8,8 +8,8 @@
 #include "debug.h"
 #include "system.h"
 #include "timer.h"
+#include "status.h"
 
-static u08 busy;
 static u16 msg_size;
 
 void proto_init(void)
@@ -40,26 +40,6 @@ void proto_trigger_signal(void)
   proto_low_ack_lo();
   timer_delay_1us();
   proto_low_ack_hi();
-}
-
-void proto_busy_begin(void)
-{
-  DS("busi("); DB(busy); DC(')'); DNL;
-  if(busy == 0) {
-    proto_low_busy_hi();
-  }
-  busy++;
-}
-
-void proto_busy_end(void)
-{
-  DS("buse("); DB(busy); DC(')'); DNL;
-  busy--;
-  if(busy == 0) {
-    proto_low_busy_lo();
-    // trigger a signal
-    proto_trigger_signal();
-  }
 }
 
 static void handle_action(u08 num)

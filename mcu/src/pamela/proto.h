@@ -9,10 +9,6 @@ extern void proto_handle(void);
 // send /ack irq signal to Amiga (1us pulse)
 extern void proto_trigger_signal(void);
 
-// mark a range where device is busy
-extern void proto_busy_begin(void);
-extern void proto_busy_end(void);
-
 // ----- proto_api callbacks are defined in your code -----
 
 // action handler

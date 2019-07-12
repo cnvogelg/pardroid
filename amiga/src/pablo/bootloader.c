@@ -146,7 +146,7 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* send flash page (and do flash) */
-    res = proto_msg_write_single(ph, BOOTLOADER_CHN_PAGES, data, page_words, 0);
+    res = proto_msg_write_single(ph, BOOTLOADER_CHN_PAGES, data, page_words);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_WRITE_PAGE_ERROR | res;
     }
@@ -197,8 +197,7 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
 
     /* read flash page (and do flash) */
     UWORD size = page_words;
-    UWORD crc = 0;
-    res = proto_msg_read_single(ph, BOOTLOADER_CHN_PAGES, data, &size, &crc);
+    res = proto_msg_read_single(ph, BOOTLOADER_CHN_PAGES, data, &size);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_READ_PAGE_ERROR | res;
     }

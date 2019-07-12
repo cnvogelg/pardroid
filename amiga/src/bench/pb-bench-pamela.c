@@ -169,7 +169,6 @@ static int func_msg_write_read_sig(pamela_handle_t *pb, ULONG iter,
                                    UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = pamela_get_proto(pb);
-  status_data_t *status = pamela_get_status(pb);
 
   /* write message */
   int res = proto_msg_write_single(ph, 0, buffer, num_words);
@@ -178,12 +177,19 @@ static int func_msg_write_read_sig(pamela_handle_t *pb, ULONG iter,
   }
 
   /* wait for read pending signal */
-  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+  ULONG got_mask = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   /* check status */
-  if(status->flags != STATUS_FLAGS_PENDING) {
-    Printf("\ngot=%08lx event=%08lx\n", got, pamela_get_event_sigmask(pb));
-    Printf("ERROR #%ld: No read pending?? flags=%lu\n", iter, (ULONG)status->flags);
+  ULONG status;
+  res = pamela_read_status(pb, &status);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  /* channel 0 read pending flag */
+  if(status != 0x0001) {
+    Printf("\nstatus=%08lx got_mask=%08lx\n", status, got_mask);
+    Printf("ERROR #%ld: No read pending??\n", iter);
   }
 
   /* read message back */

@@ -5,7 +5,6 @@
 #include "timer.h"
 #include "proto.h"
 #include "proto_shared.h"
-#include "reg.h"
 
 /* pamela init error codes */
 #define PAMELA_OK               0
@@ -41,6 +40,8 @@ ULONG pamela_get_trigger_sigmask(pamela_handle_t *ph);
 ULONG pamela_get_timer_sigmask(pamela_handle_t *ph);
 UWORD pamela_get_num_triggers(pamela_handle_t *ph);
 UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph);
+
+int pamela_read_status(pamela_handle_t *ph, ULONG *status);
 
 const char *pamela_perror(int res);
 

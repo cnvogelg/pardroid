@@ -156,7 +156,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
   UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
 
   /* write */
-  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, v);
+  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -165,7 +165,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -198,7 +198,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, v);
+  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write not busy";
@@ -207,7 +207,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_WRITE, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";
@@ -225,7 +225,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
   ULONG v = 0xdeadbeef + val;
 
   /* write */
-  int res = proto_function_write_long(proto, PROTO_LFUNC_USER, v);
+  int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -234,7 +234,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, PROTO_LFUNC_USER, &r);
+  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -268,7 +268,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_long(proto, PROTO_LFUNC_USER, v);
+  res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write not busy";
@@ -277,7 +277,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, PROTO_LFUNC_USER, &r);
+  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";
@@ -499,8 +499,6 @@ int test_msg_size(test_t *t, test_param_t *p)
   return msg_read_write(t, p, size);
 }
 
-#define REG_MAX_BYTES (PROTO_REGOFFSET_USER + 2)
-
 int test_msg_size_max(test_t *t, test_param_t *p)
 {
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
@@ -600,7 +598,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   if(got_words != words) {
     p->error = "size mismatch";
     p->section = "compare";
-    sprintf(p->extra, "w=%04lx r=%04x", words, msgiov_r.total_words);
+    sprintf(p->extra, "w=%04lx r=%04lx", words, msgiov_r.total_words);
     return 1;
   }
 
@@ -1065,7 +1063,7 @@ int run_event_busy(test_t *t, test_param_t *p)
     return 1;
   }
 
-  return assert_num_triggers(p, "busy", pb, 1, 1);
+  return assert_num_triggers(p, "busy", pb, 2, 1);
 }
 
 int test_event_busy(test_t *t, test_param_t *p)
@@ -1078,13 +1076,13 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
 
-  UWORD mask = 0x4711;
+  ULONG status = 0xbabe;
 
   /* set some rx pending mask */
-  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_CHAN_RX_PEND, mask);
+  int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, status);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "set rx pend mask";
+    p->section = "set status";
     return 1;
   }
 
@@ -1101,19 +1099,19 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* read mask */
-  UWORD got_mask = 0;
-  res = proto_function_read_word(proto, PROTO_WFUNC_CHAN_RX_PEND, &got_mask);
+  /* read status */
+  ULONG got_status = 0;
+  res = pamela_read_status(pb, &got_status);
   if(res != 0) {
     p->error = proto_perror(res);
-    p->section = "read rx pend mask";
+    p->section = "read status";
     return 1;
   }
 
   /* check mask */
-  if(got_mask != mask) {
-    p->error = "mask mismatch";
-    p->section = "check rx pend";
+  if(got_status != status) {
+    p->error = "status mismatch";
+    p->section = "check rx pend mask";
     return 1;
   }
 
@@ -1130,10 +1128,10 @@ int run_event_error(test_t *t, test_param_t *p)
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
 
-  UWORD mask = 0x4711;
+  ULONG status = 0x47110000;
 
-  /* set some rx pending mask */
-  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_CHAN_ERROR, mask);
+  /* set some status */
+  int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, status);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "set error mask";
@@ -1153,9 +1151,9 @@ int run_event_error(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* read mask */
-  UWORD got_mask = 0;
-  res = proto_function_read_word(proto, PROTO_WFUNC_CHAN_ERROR, &got_mask);
+  /* read status */
+  ULONG got_status = 0;
+  res = pamela_read_status(pb, &got_status);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read error mask";
@@ -1163,8 +1161,8 @@ int run_event_error(test_t *t, test_param_t *p)
   }
 
   /* check mask */
-  if(got_mask != mask) {
-    p->error = "mask mismatch";
+  if(got_status != status) {
+    p->error = "status mismatch";
     p->section = "check error mask";
     return 1;
   }

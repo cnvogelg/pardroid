@@ -3,23 +3,14 @@
 #include "autoconf.h"
 
 #include "proto_shared.h"
-#include "reg.h"
 #include "func.h"
-#include "chan.h"
+#include "status.h"
 
 u16 func_read_word(u08 num)
 {
   switch(num) {
     case PROTO_WFUNC_MAGIC:
       return PROTO_MAGIC_APPLICATION;
-    case PROTO_WFUNC_CHAN_RX_PEND:
-      return chan_getclr_rx_pending();
-    case PROTO_WFUNC_CHAN_ERROR:
-      return chan_getclr_error();
-    case PROTO_WFUNC_REG_ADDR:
-      return reg_get_addr();
-    case PROTO_WFUNC_REG_VALUE:
-      return reg_get_value();
     default:
       return 0;
   }
@@ -27,15 +18,26 @@ u16 func_read_word(u08 num)
 
 void func_write_word(u08 num, u16 val)
 {
+  /* nothing to write */
+}
+
+u32 func_read_long(u08 num)
+{
   switch(num) {
-    case PROTO_WFUNC_REG_ADDR:
-      reg_set_addr(val);
-      break;
-    case PROTO_WFUNC_REG_VALUE:
-      reg_set_value(val);
-      break;
+    case PROTO_LFUNC_STATUS:
+      return status_get_mask();
+    default:
+      return 0;
   }
+}
+
+void func_write_long(u08 num, u32 val)
+{
+  /* nothing to write */
 }
 
 u16  proto_api_wfunc_read(u08 chn) __attribute__ ((weak, alias("func_read_word")));
 void proto_api_wfunc_write(u08 chn, u16 val) __attribute__ ((weak, alias("func_write_word")));
+
+u32  proto_api_lfunc_read(u08 chn) __attribute__ ((weak, alias("func_read_long")));
+void proto_api_lfunc_write(u08 chn, u32 val) __attribute__ ((weak, alias("func_write_long")));
