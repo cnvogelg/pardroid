@@ -143,27 +143,34 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader
 
-u08 *proto_api_read_msg_prepare(u08 chan, u16 *size, u16 *extra)
+u16 proto_api_read_msg_size(u08 chan)
 {
-  *size = page_words;
+  return page_words;
+}
+
+u08 *proto_api_read_msg_begin(u08 chan, u16 size)
+{
   uart_send('r');
   flash_read_page(page_addr, page_buf);
   return page_buf;
 }
 
-void proto_api_read_msg_done(u08 chan)
+void proto_api_read_msg_done(u08 chan,u16 size)
 {
   uart_send('.');
 }
 
-u08 *proto_api_write_msg_prepare(u08 chan, u16 *max_size)
+void proto_api_write_msg_size(u08 chan, u16 size)
 {
-  *max_size = page_words;
+}
+
+u08 *proto_api_write_msg_begin(u08 chan, u16 size)
+{
   uart_send('w');
   return page_buf;
 }
 
-void proto_api_write_msg_done(u08 chan, u16 size, u16 extra)
+void proto_api_write_msg_done(u08 chan, u16 size)
 {
   if(size == page_words) {
     uart_send('(');

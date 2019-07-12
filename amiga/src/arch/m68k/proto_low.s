@@ -576,13 +576,10 @@ plrrl_abort:
 ; --- proto_low_write_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to proto_iov
+;      a2 = ptr to proto_node_iov
 ;      d0 = cmd
 ; out: d0 = result
 ;
-; proto_iov
-; +0:  UWORD  total_words
-; +2:  UWORD  extra
 ; node:
 ; +4:  ULONG  chunk_words
 ; +8:  UBYTE  *chunk_data
@@ -597,41 +594,7 @@ _proto_low_write_block:
         check_busy      plrw_end
         set_cmd         d0
         clk_lo
-
-        ; prepare size while waiting for slave
-        move.w          (a2)+,d1        ; total size in words
-        move.w          d1,d5           ; d5=hi size
-        lsr.w           #8,d5
-
-        ; prepare extra value
-        move.w          (a2)+,d6
-        move.w          d6,d0           ; d0=hi extra
-        lsr.w           #8,d0
-
-        ; wait for slave sync - abort on timeout and busy
         wait_rak_lo_busy  plmw_abort
-
-        ; send extra/channel
-        set_data        d0 ; hi extra
-        clk_hi
-        set_data        d6 ; lo extra
-        clk_lo
-
-        ; send size
-        set_data        d5 ; hi byte
-        clk_hi
-        set_data        d1 ; lo byte
-        clk_lo
-
-        ; empty message?
-        tst.w           d1
-        beq.s           plmw_done
-
-        ; check if slave aborted operation?
-        ; slave signals by setting rak to hi
-        check_rak_lo    plmw_msg_too_large
-        ; need to check twice as device may be slow
-        check_rak_lo    plmw_msg_too_large
 
         ; prepare clock signals
         move.w          d4,d5
@@ -639,15 +602,14 @@ _proto_low_write_block:
         bset            d3,d5 ; d5 = clk_hi
 
 plmw_chunks:
-        ; get chunk size
-        move.l          (a2)+,d1
+        ; get chunk size and buffer
+        move.l          (a2)+,d0
+        move.l          (a2)+,a0
         ; last chunk?
-        tst.w           d1
+        tst.w           d0
         beq.s           plmw_done
         ; enter chunk copy loop
-        subq.w          #1,d1 ; for dbra
-        ; get chunk buffer pointer
-        move.l          (a2)+,a0
+        subq.w          #1,d0 ; for dbra
 
         ; data block loop
 plmw_loop:
@@ -658,7 +620,7 @@ plmw_loop:
         set_data        (a0)+
         clk_set         d4
 
-        dbra            d1,plmw_loop
+        dbra            d0,plmw_loop
 
         ; read next node
         move.l          (a2),d0
@@ -670,8 +632,6 @@ plmw_loop:
 plmw_done:
         ; ok
         moveq   #RET_OK,d0
-
-plmw_final_sync:
         ; final sync
         clk_hi
         wait_rak_hi    plmw_end
@@ -684,18 +644,11 @@ plmw_abort:
         clk_hi
         bra.s    plmw_end
 
-plmw_msg_too_large:
-        ; re-sync with slave
-        clk_hi
-        wait_rak_lo    plmw_end
-        clk_lo
-        bra.s    plmw_final_sync
-
 
 ; --- proto_low_read_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to proto_iov (see above)
+;      a2 = ptr to proto_node_iov (see above)
 ;      d0 = cmd byte
 ; out: d0 = result
 _proto_low_read_block:
@@ -707,65 +660,12 @@ _proto_low_read_block:
         check_busy      plmr_end
         set_cmd         d0
         clk_lo
-
-        ; prepare size regs
-        moveq           #0,d5
-        moveq           #0,d6
-        ; get max size given in blkiov
-        move.w          (a2),d1
-
-        ; final slave sync - abort on busy and timeout
         wait_rak_lo_busy  plmr_abort
 
         ; switch: port read
         ddr_in
         clk_hi
 
-        ; read channel/extra
-        clk_lo
-        get_data        d7 ; hi extra
-        clk_hi
-        get_data        d6 ; lo extra
-
-        ; combine extra and move to high word of d7
-        lsl.w           #8,d7
-        or.w            d6,d7
-
-        ; read size
-        clk_lo
-        get_data        d5 ; hi size
-        clk_hi
-        get_data        d6 ; lo size
-
-        ; combine size lo/hi -> d5
-        lsl.w           #8,d5
-        or.w            d6,d5
-
-        ; store size+extra in iov
-        move.w          d5,(a2)+
-        move.w          d7,(a2)+
-
-        ; check size
-        tst.w           d5 ; empty message
-        beq.s           plmr_done_ok
-        cmp.w           d1,d5 ; max size
-        bls.s           plmr_size_ok
-
-        ; --- message too large ---
-        ; run a fake copy loop
-plmr_fake:
-        ; odd byte
-        clk_set         d4
-        get_data        d0
-        ; even byte
-        clk_set         d6
-        get_data        d0
-        dbra            d5,plmr_fake
-        ; size invalid return value
-        moveq           #RET_MSG_TOO_LARGE,d0
-        bra.s           plmr_done
-
-plmr_size_ok:
         ; prepare clock signals
         move.w          d4,d6
         bclr            d3,d4 ; d4 = clk_lo
@@ -775,40 +675,27 @@ plmr_chunk:
         ; get current chunk size and pointer
         move.l          (a2)+,d0
         move.l          (a2)+,a0
-        ; is remaining read size less than chunk?
-        cmp.w           d5,d0
-        bls.s           plmr_keep
-        ; don't fill whole chunk but only what is left
-        move.w          d5,d0
-plmr_keep:
-        ; sub current loop size from total size
-        sub.w           d0,d5
-        ; run a copy loop and store data
-        subq.w          #1,d0
-        ; data copy loop
-plmr_copy_loop:
+        ; last chunk?
+        tst.w           d0
+        beq.s           plmw_done
+        ; enter chunk copy loop
+        subq.w          #1,d0 ; for dbra
+
+plmr_loop:
         ; odd byte
         clk_set         d4
         get_data        (a0)+
         ; even byte
         clk_set         d6
         get_data        (a0)+
-        dbra            d0,plmr_copy_loop
+        dbra            d0,plmr_loop
 
-        ; done?
-        tst.w           d5
-        beq.s           plmr_done_ok
-
-        ; nope. next chunk
+        ; next chunk?
         move.l          (a2),d0
         tst.l           d0
-        beq.s           plmr_iov_invalid  ; still data but no chunk!
+        beq.s           plmr_done_ok
         move.l          d0,a2
         bra.s           plmr_chunk
-
-plmr_iov_invalid:
-        moveq           #RET_MSG_TOO_LARGE,d0
-        bra.s           plmr_done
 
 plmr_done_ok:
         ; ok

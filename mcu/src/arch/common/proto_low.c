@@ -143,71 +143,31 @@ u32  proto_low_write_long(void)
   return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
-u16  proto_low_write_block(u16 max_words, u08 *buffer, u16 *chn_ext)
+void proto_low_write_block(u16 max_words, u08 *buffer)
 {
   irq_off();
 
   rak_lo();
 
-  wait_clk_hi();
-  u08 eh = din();
-  wait_clk_lo();
-  u08 el = din();
-
-  wait_clk_hi();
-  u08 sh = din();
-  wait_clk_lo();
-  u08 sl = din();
-
-  u16 size = (sh << 8) | sl;
-  if(size > max_words) {
-    // trigger abort
-    rak_hi();
-    // resync with slave
+  for(u16 i=0;i<max_words;i++) {
     wait_clk_hi();
-    rak_lo();
+    *buffer++ = din();
     wait_clk_lo();
-  } else {
-    // regular data loop
-    for(u16 i=0;i<size;i++) {
-      wait_clk_hi();
-      *buffer++ = din();
-      wait_clk_lo();
-      *buffer++ = din();
-    }
+    *buffer++ = din();
   }
 
   irq_on();
-
-  *chn_ext = (eh << 8) | el;
-  return size;
 }
 
-void proto_low_read_block(u16 num_words, u08 *buffer, u16 chn_ext)
+void proto_low_read_block(u16 num_words, u08 *buffer)
 {
-  u08 eh = (u08)(chn_ext >> 8);
-  u08 el = (u08)(chn_ext & 0xff);
-  u08 sh = (u08)(num_words >> 8);
-  u08 sl = (u08)(num_words & 0xff);
-
   irq_off();
 
   rak_lo();
   wait_clk_hi();
   ddr_out();
 
-  wait_clk_lo();
-  dout(eh);
-  wait_clk_hi();
-  dout(el);
-
-  wait_clk_lo();
-  dout(sh);
-  wait_clk_hi();
-  dout(sl);
-
-  u16 i=0;
-  for(i=0;i<num_words;i++) {
+  for(u16 i=0;i<num_words;i++) {
     wait_clk_lo();
     dout(*buffer++);
     wait_clk_hi();

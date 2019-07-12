@@ -61,9 +61,9 @@ $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
 $(eval $(call dist-program,pb-test-pamela))
 
 # pb-test-paloma
-PB_TEST_PALOMA_SRCS = pb-test-paloma.c $(PAMELA_SRCS) $(PALOMA_SRCS) $(TEST_SRCS) tests_paloma.c
-$(eval $(call make-program,pb-test-paloma,$(PB_TEST_PALOMA_SRCS)))
-$(eval $(call dist-program,pb-test-paloma))
+#PB_TEST_PALOMA_SRCS = pb-test-paloma.c $(PAMELA_SRCS) $(PALOMA_SRCS) $(TEST_SRCS) tests_paloma.c
+#$(eval $(call make-program,pb-test-paloma,$(PB_TEST_PALOMA_SRCS)))
+#$(eval $(call dist-program,pb-test-paloma))
 
 # ----- bench
 # pb-bench-proto

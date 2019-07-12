@@ -294,7 +294,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
 
-  int res = proto_msg_write_single(proto, test_channel, 0, 0, 0);
+  int res = proto_msg_write_single(proto, test_channel, 0, 0);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -302,8 +302,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   }
 
   UWORD size = 0;
-  UWORD crc = 0;
-  res = proto_msg_read_single(proto, test_channel, 0, &size, &crc);
+  res = proto_msg_read_single(proto, test_channel, 0, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -326,9 +325,8 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   ULONG data = 0xdeadbeef;
-  UWORD crc = 0xcafe;
 
-  int res = proto_msg_write_single(proto, test_channel, (UBYTE *)&data, 2, crc);
+  int res = proto_msg_write_single(proto, test_channel, (UBYTE *)&data, 2);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -336,8 +334,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   }
 
   UWORD size = 2;
-  UWORD got_crc = 0;
-  res = proto_msg_read_single(proto, test_channel, (UBYTE *)&data, &size, &got_crc);
+  res = proto_msg_read_single(proto, test_channel, (UBYTE *)&data, &size);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -355,13 +352,6 @@ int test_msg_tiny(test_t *t, test_param_t *p)
     p->error = "invalid value";
     p->section = "compare";
     sprintf(p->extra, "%08lx", data);
-    return 1;
-  }
-
-  if(crc != got_crc) {
-    p->error = "invalid crc";
-    p->section = "compare";
-    sprintf(p->extra, "%04x != %04x", crc, got_crc);
     return 1;
   }
 
@@ -463,10 +453,9 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
   fill_buffer(size, mem_w);
 
   UWORD words = size>>1;
-  UWORD crc = 0xcafe;
 
   /* send buffer */
-  int res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
+  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -475,8 +464,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  UWORD got_crc = 0;
-  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words, &got_crc);
+  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -497,14 +485,6 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
-    return 1;
-  }
-
-  /* check crc */
-  if(crc != got_crc) {
-    p->error = "invalid crc";
-    p->section = "compare";
-    sprintf(p->extra, "%04x != %04x", crc, got_crc);
     return 1;
   }
 
@@ -580,10 +560,9 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   };
   proto_iov_t msgiov_w = {
     words,
-    0xdead, /* extra */
-    c1_words,
-    c1_buf,
-    &part2_w
+    { c1_words,
+      c1_buf,
+      &part2_w }
   };
   int res = proto_msg_write(proto, test_channel, &msgiov_w);
   if(res != 0) {
@@ -605,10 +584,9 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   };
   proto_iov_t msgiov_r = {
     words_r,
-    0,
-    c1_words,
-    c1_buf,
-    &part2_r
+    { c1_words,
+      c1_buf,
+      &part2_r }
   };
   res = proto_msg_read(proto, test_channel, &msgiov_r);
   if(res != 0) {
@@ -635,14 +613,6 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     return 1;
   }
 
-  /* check crc */
-  if(msgiov_w.crc != msgiov_r.crc) {
-    p->error = "crc mismatch";
-    p->section = "compare";
-    sprintf(p->extra, "w=%04x r=%04x", msgiov_w.crc, msgiov_r.crc);
-    return 1;
-  }
-
   FreeVec(mem_w);
   FreeVec(mem_r);
   return 0;
@@ -664,10 +634,9 @@ int test_msg_write(test_t *t, test_param_t *p)
   fill_buffer(size, mem_w);
 
   UWORD words = size>>1;
-  UWORD crc = 0x4711;
 
   /* send buffer */
-  int res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
+  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -709,13 +678,12 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   fill_buffer(size, mem_w);
 
   UWORD words = size>>1;
-  UWORD crc = 0x1234;
 
-  /* send buffer and expect msg to large */
-  res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
-  if(res != PROTO_RET_MSG_TOO_LARGE) {
+  /* send buffer and expect msg too large */
+  res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  if(res != PROTO_RET_OK) {
     p->error = proto_perror(res);
-    p->section = "write must return MSG_TOO_LARGE";
+    p->section = "write must return OK";
     return 1;
   }
 
@@ -747,7 +715,6 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   fill_buffer(size, mem_w);
 
   UWORD words = size>>1;
-  UWORD crc = 0x4711;
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
@@ -758,7 +725,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   }
 
   /* send buffer */
-  res = proto_msg_write_single(proto, test_channel, mem_w, words, crc);
+  res = proto_msg_write_single(proto, test_channel, mem_w, words);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "write";
@@ -790,8 +757,7 @@ int test_msg_read(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  UWORD got_crc = 0;
-  int res = proto_msg_read_single(proto, test_channel, mem_r, &got_words, &got_crc);
+  int res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
   if(res != 0) {
     p->error = proto_perror(res);
     p->section = "read";
@@ -836,10 +802,9 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   }
 
   UWORD words = size>>1;
-  UWORD crc = 0;
 
   /* receive buffer */
-  res = proto_msg_read_single(proto, test_channel, mem_r, &words, &crc);
+  res = proto_msg_read_single(proto, test_channel, mem_r, &words);
   if(res != PROTO_RET_MSG_TOO_LARGE) {
     p->error = proto_perror(res);
     p->section = "read must return MSG_TOO_LARGE";
@@ -884,8 +849,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r>>1;
-  UWORD got_crc = 0;
-  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words, &got_crc);
+  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
   if(res != PROTO_RET_DEVICE_BUSY) {
     p->error = proto_perror(res);
     p->section = "read not busy";

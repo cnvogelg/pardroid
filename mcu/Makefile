@@ -177,27 +177,27 @@ $(eval $(call dist-hex,test-pamela-fw))
 $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-paloma
-TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)
-TEST_PALOMA_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
-TEST_PALOMA_SRCS += test-paloma.c
-FW_ID_test-paloma-fw = 0x9001
-FW_VER_test-paloma-fw = $(VERSION_TAG)
-$(eval $(call dist-pbl,test-paloma-fw))
-$(eval $(call make-pbl,test-paloma-fw))
-$(eval $(call dist-hex,test-paloma-fw))
-$(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
+#TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)
+#TEST_PALOMA_SRCS += $(HANDLER_SRCS) $(DRIVER_SRCS)
+#TEST_PALOMA_SRCS += test-paloma.c
+#FW_ID_test-paloma-fw = 0x9001
+#FW_VER_test-paloma-fw = $(VERSION_TAG)
+#$(eval $(call dist-pbl,test-paloma-fw))
+#$(eval $(call make-pbl,test-paloma-fw))
+#$(eval $(call dist-hex,test-paloma-fw))
+#$(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
 # ----- bootloader -----
-ifeq "$(FLAVOR)" "release"
+#ifeq "$(FLAVOR)" "release"
 ifdef CONFIG_BOOTLOADER
 # bootloader
-BOOTLOADER_SRCS = uart.c system.c pablo.c
+BOOTLOADER_SRCS = uart.c system.c pablo.c uartutil.c
 BOOTLOADER_SRCS += proto.c bootbase.c bootloader.c flash.c
 BOOTLOADER_SRCS += $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
 endif
-endif
+#endif
 
 DEFAULT_FIRMWARE=test-pamela-fw
 

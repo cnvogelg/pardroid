@@ -40,8 +40,8 @@ extern int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data);
 extern int proto_msg_write(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
 extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
 
-extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words, UWORD crc);
-extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words, UWORD *crc);
+extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
+extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *num_words);
 
 extern const char *proto_perror(int res);
 

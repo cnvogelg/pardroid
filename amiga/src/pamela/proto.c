@@ -224,13 +224,21 @@ int proto_msg_write(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = chn + PROTO_CMD_MSG_WRITE;
   if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
+  UBYTE dcmd = chn + PROTO_CMD_MSG_WRITE_DATA;
+  UBYTE scmd = chn + PROTO_CMD_MSG_WRITE_SIZE;
+  UWORD size = (UWORD)msgiov->total_words;
+  if(size == 0) {
+    return PROTO_RET_OK;
+  }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_block(port, timeout_flag, cmd, msgiov);
+  int result = proto_low_write_word(port, timeout_flag, scmd, &size);
+  if(result == 0) {
+    result = proto_low_write_block(port, timeout_flag, dcmd, &msgiov->first);
+  }
   timer_stop(ph->timer);
 
   return result;
@@ -240,43 +248,56 @@ int proto_msg_read(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  UBYTE cmd = chn + PROTO_CMD_MSG_READ;
   if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
+  UBYTE dcmd = chn + PROTO_CMD_MSG_READ_DATA;
+  UBYTE scmd = chn + PROTO_CMD_MSG_READ_SIZE;
+  UWORD size = 0;
+  UWORD max_size = (UWORD)msgiov->total_words;
+  if(max_size == 0) {
+    return PROTO_RET_OK;
+  }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_block(port, timeout_flag, cmd, msgiov);
+  int result = proto_low_read_word(port, timeout_flag, scmd, &size);
+  if(result == 0) {
+    if(size > max_size) {
+      result = PROTO_RET_MSG_TOO_LARGE;
+    } else if(size == 0) {
+      result = PROTO_RET_OK;
+    } else {
+      result = proto_low_read_block(port, timeout_flag, dcmd, &msgiov->first);
+    }
+  }
   timer_stop(ph->timer);
 
+  msgiov->total_words = size;
   return result;
 }
 
-int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words, UWORD crc)
+int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   proto_iov_t msgiov = {
     num_words, /* total size */
-    crc,       /* extra */
-    num_words, /* chunk size */
-    buf,       /* chunk pointer */
-    0          /* next node */
+    { num_words, /* chunk size */
+      buf,       /* chunk pointer */
+      0 }          /* next node */
   };
   return proto_msg_write(ph, chn, &msgiov);
 }
 
-int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words, UWORD *crc)
+int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words)
 {
   proto_iov_t msgiov = {
     *max_words, /* total size */
-    0,          /* extra */
-    *max_words, /* chunk size */
-    buf,        /* chunk pointer */
-    0           /* next node */
+    { *max_words, /* chunk size */
+      buf,        /* chunk pointer */
+      0 }         /* next node */
   };
   int result = proto_msg_read(ph, chn, &msgiov);
   /* store returned result size */
   *max_words = msgiov.total_words;
-  *crc = msgiov.crc;
   return result;
 }
 

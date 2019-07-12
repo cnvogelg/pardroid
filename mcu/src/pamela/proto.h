@@ -25,13 +25,12 @@ extern u32  proto_api_lfunc_read(u08 num);
 extern void proto_api_lfunc_write(u08 num, u32 val);
 
 // high level message i/o api
-extern u08 *proto_api_read_msg_prepare(u08 chan,u16 *words, u16 *crc);
-extern void proto_api_read_msg_done(u08 chan);
-extern u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_words);
-extern void proto_api_write_msg_done(u08 chan,u16 words, u16 crc);
+extern u16  proto_api_read_msg_size(u08 chan);
+extern u08 *proto_api_read_msg_begin(u08 chan, u16 size);
+extern void proto_api_read_msg_done(u08 chan, u16 size);
 
-// low level message i/o api
-extern void proto_api_read_msg(u08 chan);
-extern void proto_api_write_msg(u08 chan);
+extern void proto_api_write_msg_size(u08 chan, u16 size);
+extern u08 *proto_api_write_msg_begin(u08 chan, u16 size);
+extern void proto_api_write_msg_done(u08 chan, u16 size);
 
 #endif

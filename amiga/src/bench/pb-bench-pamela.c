@@ -51,6 +51,7 @@ static ULONG run_with_events(bench_def_t *def, pamela_handle_t *pb, bench_func_t
 
 static int set_test_mode(pamela_handle_t *pb, UBYTE mode)
 {
+#if 0
   proto_handle_t *proto = pamela_get_proto(pb);
   /* set test mode */
   int res = reg_set(proto, REG_TEST_MODE, mode);
@@ -59,6 +60,9 @@ static int set_test_mode(pamela_handle_t *pb, UBYTE mode)
            (ULONG)mode, (LONG)res, proto_perror(res));
   }
   return res;
+#else
+  return 0;
+#endif
 }
 
 static ULONG run_in_test_mode(bench_def_t *def, pamela_handle_t *pb, bench_func_t func, UBYTE mode)

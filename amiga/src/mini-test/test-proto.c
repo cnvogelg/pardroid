@@ -76,12 +76,11 @@ int dosmain(void)
                 PutStr("msg read");
                 UBYTE buf[512];
                 UWORD words = 256;
-                UWORD crc = 0;
-                error = proto_msg_read_single(ph, 0, buf, &words, &crc);
-                Printf("-> %ld : #%ld  crc=%lx\n", (LONG)error, (ULONG)words, (ULONG)crc);
+                error = proto_msg_read_single(ph, 0, buf, &words);
+                Printf("-> %ld : #%ld\n", (LONG)error, (ULONG)words);
 
                 PutStr("msg write");
-                error = proto_msg_write_single(ph, 0, buf, 256, 0xfeed);
+                error = proto_msg_write_single(ph, 0, buf, 256);
                 Printf("-> %ld\n", (LONG)error);
 
                 proto_exit(ph);

@@ -15,8 +15,10 @@
 #define PROTO_CMD_WFUNC_WRITE     0x30
 #define PROTO_CMD_LFUNC_READ      0x40
 #define PROTO_CMD_LFUNC_WRITE     0x50
-#define PROTO_CMD_MSG_READ        0x60
-#define PROTO_CMD_MSG_WRITE       0x70
+#define PROTO_CMD_MSG_READ_DATA   0x60
+#define PROTO_CMD_MSG_WRITE_DATA  0x70
+#define PROTO_CMD_MSG_READ_SIZE   0x80
+#define PROTO_CMD_MSG_WRITE_SIZE  0x90
 
 // actions
 #define PROTO_ACTION_PING         0x00

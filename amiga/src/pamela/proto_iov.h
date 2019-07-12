@@ -10,8 +10,7 @@ typedef struct proto_iov_node proto_iov_node_t;
 
 /* io vector for vectorized message transfer */
 struct proto_iov {
-  UWORD       total_words;
-  UWORD       crc;
+  ULONG       total_words;
   struct proto_iov_node  first;
 };
 typedef struct proto_iov proto_iov_t;

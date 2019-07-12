@@ -10,6 +10,7 @@
 #include "timer.h"
 
 static u08 busy;
+static u16 msg_size;
 
 void proto_init(void)
 {
@@ -117,36 +118,57 @@ static void handle_lfunc_write(u08 num)
   proto_low_end();
 }
 
-static void handle_msg_read(u08 chan)
+static void handle_msg_read_size(u08 chan)
 {
-  DS("mr:#"); DB(chan); DC(':');
+  DS("mrs:#"); DB(chan); DC(':');
+  u16 size = proto_api_read_msg_size(chan);
+  
+  // send size
+  proto_low_read_word(size);
+  proto_low_end();
+  DW(size); DNL;
 
-  // get size and crc
-  u16 size_words = 0;
-  u16 crc = 0;
-  u08 *buf = proto_api_read_msg_prepare(chan, &size_words, &crc);
+  // store size for subsequent msg_read_data call
+  msg_size = size;
+}
 
-  DC('+'); DW(size_words); DC('%'); DW(crc);
-  proto_low_read_block(size_words, buf, crc);
-  proto_api_read_msg_done(chan);
+static void handle_msg_write_size(u08 chan)
+{
+  DS("mws:#"); DB(chan); DC(':');
+
+  // recv size
+  u16 size = proto_low_write_word();
+  proto_low_end();
+
+  // report size
+  proto_api_write_msg_size(chan, size);
+  DW(size); DNL;
+  
+  // store size for subsequent msg_read_data call
+  msg_size = size;
+}
+
+static void handle_msg_read_data(u08 chan)
+{
+  DS("mrd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
+
+  // get filled buffer and send it
+  u08 *buf = proto_api_read_msg_begin(chan, msg_size);
+  proto_low_read_block(msg_size, buf);
+  proto_api_read_msg_done(chan, msg_size);
 
   proto_low_end();
   DC('.'); DNL;
 }
 
-static void handle_msg_write(u08 chan)
+static void handle_msg_write_data(u08 chan)
 {
-  DS("mw:#"); DB(chan); DC(':');
+  DS("mwd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
   
-  u16 max_words = 0;
-  u08 *buf = proto_api_write_msg_prepare(chan, &max_words);
-  DW(max_words); DC(':');
-  
-  u16 crc = 0;
-  u16 size_words = proto_low_write_block(max_words, buf, &crc);
-  
-  DC('+'); DW(size_words); DC('%'); DW(crc);
-  proto_api_write_msg_done(chan, size_words, crc);
+  // get buffer and fill it
+  u08 *buf = proto_api_write_msg_begin(chan, msg_size);
+  proto_low_write_block(msg_size, buf);
+  proto_api_write_msg_done(chan, msg_size);
 
   proto_low_end();
   DC('.'); DNL;
@@ -182,11 +204,17 @@ void proto_handle(void)
     case PROTO_CMD_LFUNC_WRITE:
       handle_lfunc_write(chn);
       break;
-    case PROTO_CMD_MSG_READ:
-      proto_api_read_msg(chn);
+    case PROTO_CMD_MSG_READ_DATA:
+      handle_msg_read_data(chn);
       break;
-    case PROTO_CMD_MSG_WRITE:
-      proto_api_write_msg(chn);
+    case PROTO_CMD_MSG_WRITE_DATA:
+      handle_msg_write_data(chn);
+      break;
+    case PROTO_CMD_MSG_READ_SIZE:
+      handle_msg_read_size(chn);
+      break;
+    case PROTO_CMD_MSG_WRITE_SIZE:
+      handle_msg_write_size(chn);
       break;
     default:
       DS("invalid!"); DNL;
@@ -197,7 +225,3 @@ void proto_handle(void)
 
   DS("cmd_end:"); DB(cmd); DNL;
 }
-
-// default binding vor message read/write
-void proto_api_read_msg(u08 chn) __attribute__ ((weak, alias("handle_msg_read")));
-void proto_api_write_msg(u08 chn) __attribute__ ((weak, alias("handle_msg_write")));

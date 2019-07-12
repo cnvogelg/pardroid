@@ -322,85 +322,34 @@ proto_low_read_long:
 
     ; ----- proto_low_write_block -----
     ; master wants to write a message
-    ; u16 proto_low_write_block(u16 max_words, u08 *buffer, u16 *crc)
-    ; in:  r25,r24 = max_words we can receive
+    ; u16 proto_low_write_block(u16 num_words, u08 *buffer)
+    ; in:  r25,r24 = num_words
     ; in:  r23,r22 = buffer ptr
-    ; in:  r21,r20 = ptr to crc word
-    ; out: r25,r24 = num_words received
+    ; out: -
     .section .text.proto_low_write_block
     .global  proto_low_write_block
 proto_low_write_block:
-    irq_off
-
     ; Z is buffer pointer
     movw    r30,r22
-    ; X is ptr to extra/channel
-    movw    r26,r20
+
+    ; double size: convert to bytes
+    add     r24,r24
+    adc     r25,r25
+
+    ; add start address: end address: r23:r22
+    add     r24,r30
+    adc     r25,r31
+
+    irq_off
 
     ; confirm to master we are ready
     rak_lo
 
-    ; -- read crc hi/lo
-    ; crc hi
-    wait_clk_hi
-    data_in
-    mov     r0,r18
-
-    ; crc lo
-    wait_clk_lo
-    data_in
-    st      x+,r18
-    st      x+,r0
-
-    ; -- read size: hi/lo=r23:r22
-    ; size hi
-    wait_clk_hi
-    data_in
-    mov     r23,r18
-    ; size lo
-    wait_clk_lo
-    data_in
-    mov     r22,r18
-
-    ; check size: too large?
-    cp      r24,r22
-    cpc     r25,r23
-    brsh    .wb_size_ok
-
-    ; -> size invalid!
-    ; signal with rak hi
-    rak_hi
-    ; resync with slave
-    wait_clk_hi
-    rak_lo
-    wait_clk_lo
-
-    ; return too large size
-    movw    r24,r22
-
-    rjmp    .wb_end
-
-.wb_size_ok:
-    ; empty size?
-    or      r18,r23
-    breq    .wb_empty
-
-    ; save result size
-    movw    r24,r22
-
-    ; double size: convert to bytes
-    add     r22,r22
-    adc     r23,r23
-
-    ; add start address: end address: r23:r22
-    add     r22,r30
-    adc     r23,r31
-
     ; copy loop
 .wb_loop:
     ; check end
-    cp      r30,r22
-    cpc     r31,r23
+    cp      r30,r24
+    cpc     r31,r25
     breq    .wb_end
 
     ; odd byte
@@ -414,65 +363,23 @@ proto_low_write_block:
 
     rjmp    .wb_loop
 
-.wb_empty:
-    ; empty message
-    clr     r25
-    clr     r24
-
 .wb_end:
+    ; done
     irq_on
     ret
 
 
     ; ----- proto_low_read_block -----
     ; master wants to read a message
-    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer, u16 crc)
+    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer)
     ; in:  r25,r24 = max_words we can receive
     ; in:  r23,r22 = buffer ptr
-    ; in:  r21,r20 = crc
     ; out: -
     .section .text.proto_low_read_block
     .global  proto_low_read_block
 proto_low_read_block:
-    irq_off
-
     ; Z is buffer pointer
     movw    r30,r22
-
-    ; save r20 (channel) -> r0
-    ; warning: r20 gets globbered by first data_out* call!
-    mov     r0,r20
-
-    ; confirm to master we are ready
-    rak_lo
-
-    ; ddr out
-    wait_clk_hi
-    ddr_out
-
-    ; send crc hi
-    mov     r18,r21
-    data_out_prepare
-    wait_clk_lo
-    data_out_set
-
-    ; send crc lo
-    mov     r18,r0
-    data_out_prepare
-    wait_clk_hi
-    data_out_set
-
-    ; size: hi
-    mov     r18,r25
-    data_out_prepare
-    wait_clk_lo
-    data_out_set
-
-    ; size: lo
-    mov     r18, r24
-    data_out_prepare
-    wait_clk_hi
-    data_out_set
 
     ; convert size to bytes
     add     r24,r24
@@ -481,6 +388,15 @@ proto_low_read_block:
     ; set end address: r24:r25
     add     r24,r30
     adc     r25,r31
+
+    irq_off
+
+    ; confirm to master we are ready
+    rak_lo
+
+    ; ddr out
+    wait_clk_hi
+    ddr_out
 
     ; copy loop
 .rb_loop:

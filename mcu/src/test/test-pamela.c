@@ -26,7 +26,6 @@ static u32 lfunc_val = 0;
 #define MAX_WORDS 512
 static u08 buf[MAX_WORDS * 2];
 static u16 buf_words = MAX_WORDS;
-static u16 buf_crc = 0;
 
 static u08 enter_busy_loop = 0;
 
@@ -171,43 +170,44 @@ u16 reg_api_get_value(u08 range, u08 reg)
 
 // messages
 
-u08 *proto_api_read_msg_prepare(u08 chan,u16 *size, u16 *crc)
+u16 proto_api_read_msg_size(u08 chan)
 {
-  *size = buf_words;
-  *crc = buf_crc;
+  return buf_words;
+}
+
+u08 *proto_api_read_msg_begin(u08 chan,u16 num_words)
+{
   uart_send_pstring(PSTR("msg_read:{"));
   uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(buf_words);
-  uart_send(',');
-  uart_send_hex_word(buf_crc);
   return buf;
 }
 
-void proto_api_read_msg_done(u08 chan)
+void proto_api_read_msg_done(u08 chan,u16 num_words)
 {
   uart_send('}');
   uart_send_crlf();
 }
 
-u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_size)
+void proto_api_write_msg_size(u08 chan, u16 size)
 {
-  *max_size = MAX_WORDS;
+  buf_words = size;
+}
+
+u08 *proto_api_write_msg_begin(u08 chan,u16 num_words)
+{
   uart_send_pstring(PSTR("msg_write:{"));
   uart_send_hex_byte(chan);
   uart_send(':');
+  uart_send_hex_word(buf_words);
   return buf;
 }
 
-void proto_api_write_msg_done(u08 chan,u16 size, u16 crc)
+void proto_api_write_msg_done(u08 chan,u16 num_words)
 {
-  uart_send_hex_word(size);
-  uart_send(',');
-  uart_send_hex_word(crc);
   uart_send('}');
   uart_send_crlf();
-  buf_words = size;
-  buf_crc = crc;
 }
 
 int main(void)

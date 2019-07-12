@@ -16,7 +16,7 @@
 #include "knok.h"
 #include "proto.h"
 #include "proto_shared.h"
-#include "reg.h"
+#include "func.h"
 
 // action handler
 
@@ -50,7 +50,7 @@ u16  proto_api_wfunc_read(u08 num)
 {
   u16 val = 0xbeef;
   if(num < PROTO_WFUNC_USER) {
-    val = reg_wfunc_read_handle(num);
+    val = func_read_word(num);
   }
   uart_send_pstring(PSTR("wfunc_read:"));
   uart_send_hex_byte(num);
@@ -63,7 +63,7 @@ u16  proto_api_wfunc_read(u08 num)
 void proto_api_wfunc_write(u08 num, u16 val)
 {
   if(num < PROTO_WFUNC_USER) {
-    reg_wfunc_write_handle(num, val);
+    func_write_word(num, val);
   }
   uart_send_pstring(PSTR("wfunc_write:"));
   uart_send_hex_byte(num);
@@ -119,34 +119,37 @@ u16 reg_api_get_value(u08 range, u08 reg)
 
 u08 buf[512];
 
-u08 *proto_api_read_msg_prepare(u08 chan,u16 *size, u16 *crc)
+u16 proto_api_read_msg_size(u08 chan)
 {
-  *size = 256;
-  *crc = 0xdead;
+  return 256;
+}
+
+u08 *proto_api_read_msg_begin(u08 chan,u16 size)
+{
   uart_send_pstring(PSTR("msg_read:{"));
   uart_send_hex_byte(chan);
   return buf;
 }
 
-void proto_api_read_msg_done(u08 chan)
+void proto_api_read_msg_done(u08 chan, u16 size)
 {
   uart_send('}');
   uart_send_crlf();
 }
 
-u08 *proto_api_write_msg_prepare(u08 chan,u16 *max_size)
+void proto_api_write_msg_size(u08 chan, u16 size)
 {
-  *max_size = 256;
+}
+
+u08 *proto_api_write_msg_begin(u08 chan,u16 size)
+{
   uart_send_pstring(PSTR("msg_write:{"));
   uart_send_hex_byte(chan);
   return buf;
 }
 
-void proto_api_write_msg_done(u08 chan,u16 size, u16 crc)
+void proto_api_write_msg_done(u08 chan, u16 size)
 {
-  uart_send_hex_word(size);
-  uart_send(',');
-  uart_send_hex_word(crc);
   uart_send('}');
   uart_send_crlf();
 }
