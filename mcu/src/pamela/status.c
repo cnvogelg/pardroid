@@ -39,7 +39,31 @@ u08 status_is_busy(void)
   return busy > 0;
 }
 
-void status_set_rx_pending(u16 mask)
+void status_set_rx_pending(u08 chan)
+{
+  u16 mask = rx_pend | (1 << chan);
+  status_set_rx_pending_mask(mask);
+}
+
+void status_clr_rx_pending(u08 chan)
+{
+  u16 mask = rx_pend & ~(1 << chan);
+  status_set_rx_pending_mask(mask);
+}
+
+void status_set_error(u08 chan)
+{
+  u16 mask = error | (1 << chan);
+  status_set_error_mask(mask);
+}
+
+void status_clr_error(u08 chan)
+{
+  u16 mask = error & ~(1 << chan);
+  status_set_error_mask(mask);
+}
+
+void status_set_rx_pending_mask(u16 mask)
 {
   if(mask != 0) {
     proto_trigger_signal();
@@ -47,7 +71,7 @@ void status_set_rx_pending(u16 mask)
   rx_pend = mask;
 }
 
-void status_set_error(u16 mask)
+void status_set_error_mask(u16 mask)
 {
   if(mask != 0) {
     proto_trigger_signal();

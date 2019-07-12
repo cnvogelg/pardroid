@@ -34,6 +34,7 @@ int test_event_sig2(test_t *t, test_param_t *p);
 int test_event_busy(test_t *t, test_param_t *p);
 int test_event_rx_pending(test_t *t, test_param_t *p);
 int test_event_error(test_t *t, test_param_t *p);
+int test_event_msg(test_t *t, test_param_t *p);
 
 
 #define TESTS_PAMELA_ALL \
@@ -62,5 +63,6 @@ int test_event_error(test_t *t, test_param_t *p);
   { test_event_busy, "tbs", "trigger after busy signal"}, \
   { test_event_rx_pending, "trp", "trigger after rx pending"}, \
   { test_event_error, "ter", "trigger after errror"}, \
+  { test_event_msg, "tm", "trigger after message send"}, \
 
 #endif

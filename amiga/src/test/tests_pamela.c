@@ -1115,6 +1115,14 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
     return 1;
   }
 
+  /* reset status */
+  res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, 0);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "set error mask";
+    return 1;
+  }
+
   return 0;
 }
 
@@ -1167,10 +1175,123 @@ int run_event_error(test_t *t, test_param_t *p)
     return 1;
   }
 
+  /* reset status */
+  res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, 0);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "set error mask";
+    return 1;
+  }
+
   return 0;
 }
 
 int test_event_error(test_t *t, test_param_t *p)
 {
   return run_with_events(t, p, run_event_error);
+}
+
+/* check for rx_pending event after msg write */
+
+int run_event_msg(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+
+  ULONG size = get_default_size();
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if(mem_w == 0) {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w);
+
+  UWORD words = size>>1;
+
+  /* send buffer */
+  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "write msg";
+    return res;
+  }
+
+  /* wait for either timeout or trigger signal */
+  ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  res = assert_trigger_mask(p, "error mask", pb, got);
+  if(res != 0) {
+    return 1;
+  }
+
+  res = assert_num_triggers(p, "error mask", pb, 1, 1);
+  if(res != 0) {
+    return 1;
+  }
+
+  /* read status */
+  ULONG got_status = 0;
+  res = pamela_read_status(pb, &got_status);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read error mask";
+    return 1;
+  }
+
+  /* check mask */
+  ULONG status = 1 << test_channel;
+  if(got_status != status) {
+    p->error = "status mismatch";
+    p->section = "check error mask";
+    sprintf(p->extra, "status got=%08lx want=%08lx", got_status, status);
+    return 1;
+  }
+
+  /* read message */
+  UWORD rx_size = words;
+  res = proto_msg_read_single(proto, test_channel, mem_w, &rx_size);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read msg";
+    return res;
+  }
+
+  /* wait for either timeout or trigger signal */
+  got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
+
+  /* now timer has to trigger */
+  res = assert_timer_mask(p, "error mask", pb, got);
+  if(res != 0) {
+    return 1;
+  }
+
+  /* read status */
+  got_status = 0;
+  res = pamela_read_status(pb, &got_status);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "read error mask";
+    return 1;
+  }
+
+  /* check mask */
+  status = 0;
+  if(got_status != status) {
+    p->error = "status mismatch";
+    p->section = "check error mask";
+    sprintf(p->extra, "status got=%08lx want=%08lx", got_status, status);
+    return 1;
+  }
+
+  FreeVec(mem_w);
+
+  return 0;
+}
+
+int test_event_msg(test_t *t, test_param_t *p)
+{
+  return run_with_events(t, p, run_event_msg);
 }

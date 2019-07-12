@@ -182,6 +182,8 @@ void proto_api_read_msg_done(u08 chan,u16 num_words)
 {
   uart_send('}');
   uart_send_crlf();
+  /* clear rx pending */
+  status_clr_rx_pending(chan);
 }
 
 void proto_api_write_msg_size(u08 chan, u16 size)
@@ -202,6 +204,8 @@ void proto_api_write_msg_done(u08 chan,u16 num_words)
 {
   uart_send('}');
   uart_send_crlf();
+  /* set rx pending for echo */
+  status_set_rx_pending(chan);
 }
 
 int main(void)
