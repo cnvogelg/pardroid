@@ -15,6 +15,7 @@
 #include "timer.h"
 #include "func.h"
 #include "status.h"
+#include "spi.h"
 
 #include "pamela.h"
 #include "test-pamela.h"
@@ -175,11 +176,21 @@ u08 *proto_api_read_msg_begin(u08 chan,u16 num_words)
   uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(buf_words);
-  return buf;
+  if(chan == TEST_PAMELA_SPI_CHANNEL) {
+    uart_send('S');
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_read_msg_done(u08 chan,u16 num_words)
 {
+  if(chan == TEST_PAMELA_SPI_CHANNEL) {
+    uart_send('S');
+    spi_disable_cs0();
+  }
   uart_send('}');
   uart_send_crlf();
   /* clear rx pending */
@@ -202,11 +213,21 @@ u08 *proto_api_write_msg_begin(u08 chan,u16 num_words)
   uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(buf_words);
-  return buf;
+  if(chan == TEST_PAMELA_SPI_CHANNEL) {
+    uart_send('S');
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_write_msg_done(u08 chan,u16 num_words)
 {
+  if(chan == TEST_PAMELA_SPI_CHANNEL) {
+    uart_send('S');
+    spi_disable_cs0();
+  }
   uart_send('}');
   uart_send_crlf();
   /* set rx pending for echo */
@@ -216,6 +237,15 @@ void proto_api_write_msg_done(u08 chan,u16 num_words)
 int main(void)
 {
   system_init();
+  
+  spi_init();
+  
+  // test SPI
+  spi_enable_cs0();
+  spi_out('H');
+  spi_out('E');
+  spi_out('L');
+  spi_disable_cs0();
 
   uart_init();
   uart_send_pstring(PSTR("parbox: test-pamela!"));

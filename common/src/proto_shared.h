@@ -3,6 +3,7 @@
 
 // number of channels
 #define PROTO_MAX_CHANNEL         15
+
 #define PROTO_MAX_FUNCTION        16
 #define PROTO_MAX_ACTION          16
 

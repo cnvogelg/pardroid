@@ -427,4 +427,114 @@ proto_low_read_block:
     irq_on
     ret
 
+#ifndef BOOTLOADER
+    ; ========== direct SPI message I/O ==========
+
+    ; ----- proto_low_write_block -----
+    ; master wants to write a message
+    ; u16 proto_low_write_block(u16 num_words, u08 *buffer)
+    ; in:  r25,r24 = num_words
+    ; out: -
+    .section .text.proto_low_write_block_spi
+    .global  proto_low_write_block_spi
+proto_low_write_block_spi:
+    ; clear Z counter
+    clr     r30
+    clr     r31
+
+    irq_off
+
+    ; confirm to master we are ready
+    rak_lo
+
+    ; copy loop
+.wb_loop_spi:
+    ; check end
+    cp      r30,r24
+    cpc     r31,r25
+    breq    .wb_end_spi
+
+    ; odd byte in r18
+    wait_clk_hi
+    data_in
+    out     _SFR_IO_ADDR(SPDR), r18
+
+    ; even byte in r18
+    wait_clk_lo
+    data_in
+    out     _SFR_IO_ADDR(SPDR), r18
+
+    adiw    r30,1
+    rjmp    .wb_loop_spi
+
+.wb_end_spi:
+    ; done
+    irq_on
+    ret
+
+    ; ----- proto_low_read_block_spi -----
+    ; master wants to read a message
+    ; u08 proto_low_read_block(u16 num_words, const u08 *buffer)
+    ; in:  r25,r24 = num words
+    ; out: -
+    .section .text.proto_low_read_block_spi
+    .global  proto_low_read_block_spi
+proto_low_read_block_spi:
+    ; clear Z counter
+    clr     r30
+    clr     r31
+
+    irq_off
+
+    ; confirm to master we are ready
+    rak_lo
+
+    ; setup write value for SPI and push first byte
+    ldi     r21,0xff
+    out     _SFR_IO_ADDR(SPDR), r21   
+ 
+    ; ddr out
+    wait_clk_hi
+    ddr_out
+
+    ; copy loop
+.rb_loop_spi:
+    ; odd byte
+    in      r18, _SFR_IO_ADDR(SPDR)
+    data_out_prepare
+    out     _SFR_IO_ADDR(SPDR), r21   
+    wait_clk_lo
+    data_out_set
+
+    adiw    r30,1
+
+    ; check end
+    cp      r30,r24
+    cpc     r31,r25
+    breq    .rb_end_spi
+
+    ; even byte
+    in      r18, _SFR_IO_ADDR(SPDR)
+    data_out_prepare
+    out     _SFR_IO_ADDR(SPDR), r21   
+    wait_clk_hi
+    data_out_set
+
+    rjmp    .rb_loop_spi
+
+.rb_end_spi:
+    ; last even byte without pushing an SPI byte
+    in      r18, _SFR_IO_ADDR(SPDR)
+    data_out_prepare
+    wait_clk_hi
+    data_out_set
+
+    ; ddr idle
+    wait_clk_lo
+    ddr_in
+
+    irq_on
+    ret
+#endif
+
     .end

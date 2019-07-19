@@ -188,3 +188,11 @@ void proto_api_write_msg_done(u08 chan, u16 size)
     status = BOOT_STATUS_INVALID_PAGE_SIZE;
   }
 }
+
+void proto_api_write_block_spi(u16 num_words)
+{
+}
+
+void proto_api_read_block_spi(u16 num_words)
+{
+}

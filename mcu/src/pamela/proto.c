@@ -15,7 +15,7 @@ static u16 msg_size;
 void proto_init(void)
 {
   proto_low_init();
-  DS("pinit"); DNL;
+  DC('I'); DNL;
 }
 
 void proto_first(void)
@@ -23,20 +23,20 @@ void proto_first(void)
   // expect reset command
   u08 cmd = proto_low_get_cmd();
   if(cmd != PROTO_CMD_ACTION_RESET && cmd != PROTO_CMD_ACTION_BOOTLOADER) {
-    DS("wrong first:"); DB(cmd); DNL;
+    DC('!'); DB(cmd); DNL;
     system_sys_reset();
   }
   // ack action
-  DS("first:"); DB(cmd); DNL;
+  DC('{'); DB(cmd); DNL;
   proto_low_action();
   proto_low_end();
-  DS("done"); DNL;
+  DC('}'); DNL;
 }
 
 void proto_trigger_signal(void)
 {
   // trigger ack irq at Amiga
-  DS("ack:irq"); DNL;
+  DC('#'); DNL;
   proto_low_ack_lo();
   timer_delay_1us();
   proto_low_ack_hi();
@@ -49,7 +49,7 @@ static void handle_action(u08 num)
   // some actions need special handling:
   // immediate reset
   if(num == PROTO_ACTION_RESET || num == PROTO_ACTION_BOOTLOADER) {
-    DS("a:RESET!"); DNL;
+    DC('R'); DNL;
     system_sys_reset();
   }
 
@@ -61,7 +61,7 @@ static void handle_action(u08 num)
 
   // knok resets after action
   if(num == PROTO_ACTION_KNOK) {
-    DS("a:KNOK!"); DNL;
+    DC('K'); DNL;
     system_sys_reset();
   }
 }
@@ -136,7 +136,13 @@ static void handle_msg_read_data(u08 chan)
 
   // get filled buffer and send it
   u08 *buf = proto_api_read_msg_begin(chan, msg_size);
-  proto_low_read_block(msg_size, buf);
+  if(buf == NULL) {
+    DC('S');
+    proto_api_read_block_spi(msg_size);
+    DC('P');
+  } else {
+    proto_low_read_block(msg_size, buf);
+  }
   proto_api_read_msg_done(chan, msg_size);
 
   proto_low_end();
@@ -154,7 +160,13 @@ static void handle_msg_write_data(u08 chan)
 
   // get buffer and fill it
   u08 *buf = proto_api_write_msg_begin(chan, msg_size);
-  proto_low_write_block(msg_size, buf);
+  if(buf == NULL) {
+    DC('S');
+    proto_api_write_block_spi(msg_size);
+    DC('P');
+  } else {
+    proto_low_write_block(msg_size, buf);
+  }
   proto_api_write_msg_done(chan, msg_size);
 
   proto_low_end();
@@ -170,7 +182,7 @@ void proto_handle(void)
     return;
   }
 
-  DS("cmd:"); DB(cmd); DNL;
+  DC('['); DB(cmd); DNL;
 
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;
@@ -204,11 +216,11 @@ void proto_handle(void)
       handle_msg_write_size(chn);
       break;
     default:
-      DS("invalid!"); DNL;
+      DC('!'); DNL;
       // trigger a reset to re-enter knok
       system_sys_reset();
       break;
   }
 
-  DS("cmd_end:"); DB(cmd); DNL;
+  DC(']'); DB(cmd); DNL;
 }

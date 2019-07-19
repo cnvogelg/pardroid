@@ -40,12 +40,15 @@ static int recover_from_busy(proto_handle_t *proto, test_param_t *p)
 {
   int res = 0;
 
-  for(int i=0;i<10;i++) {
+  for (int i = 0; i < 10; i++)
+  {
     res = proto_ping(proto);
-    if(res == PROTO_RET_OK) {
+    if (res == PROTO_RET_OK)
+    {
       return 0;
     }
-    else if(res != PROTO_RET_DEVICE_BUSY) {
+    else if (res != PROTO_RET_DEVICE_BUSY)
+    {
       p->error = proto_perror(res);
       p->section = "recover loop";
       return 1;
@@ -66,7 +69,8 @@ int test_reset(test_t *t, test_param_t *p)
 
   /* perform reset */
   int res = proto_reset(proto);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "reset";
     return res;
@@ -82,7 +86,8 @@ int test_knok(test_t *t, test_param_t *p)
 
   /* enter knok */
   int res = proto_knok(proto);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "knok";
     return res;
@@ -90,7 +95,8 @@ int test_knok(test_t *t, test_param_t *p)
 
   /* ping action must fail in knok mode */
   res = proto_ping(proto);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "ping must fail with timeout";
     return res;
@@ -98,7 +104,8 @@ int test_knok(test_t *t, test_param_t *p)
 
   /* perform reset */
   res = proto_reset(proto);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "reset";
     return res;
@@ -113,9 +120,12 @@ int test_ping(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   int res = proto_ping(proto);
-  if(res == 0) {
+  if (res == 0)
+  {
     return 0;
-  } else {
+  }
+  else
+  {
     p->error = proto_perror(res);
     p->section = "ping";
     return res;
@@ -129,7 +139,8 @@ int test_ping_busy(test_t *t, test_param_t *p)
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
@@ -137,7 +148,8 @@ int test_ping_busy(test_t *t, test_param_t *p)
 
   /* ping must be busy */
   res = proto_ping(proto);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "ping not busy";
     return res;
@@ -157,7 +169,8 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
 
   /* write */
   int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
@@ -166,14 +179,16 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
   /* read back */
   UWORD r;
   res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
 
   /* check */
-  if(v != r) {
+  if (v != r)
+  {
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04x r=%04x", v, r);
@@ -191,7 +206,8 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
@@ -199,7 +215,8 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 
   /* write */
   res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "write not busy";
     return res;
@@ -208,7 +225,8 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   /* read back */
   UWORD r;
   res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "read not busy";
     return res;
@@ -226,7 +244,8 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
 
   /* write */
   int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
@@ -235,14 +254,16 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
   /* read back */
   ULONG r;
   res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
 
   /* check */
-  if(v != r) {
+  if (v != r)
+  {
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04lx r=%04lx", v, r);
@@ -261,7 +282,8 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
@@ -269,7 +291,8 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 
   /* write */
   res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "write not busy";
     return res;
@@ -278,7 +301,8 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   /* read back */
   ULONG r;
   res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "read not busy";
     return res;
@@ -295,7 +319,8 @@ int test_msg_empty(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   int res = proto_msg_write_single(proto, test_channel, 0, 0);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
@@ -303,13 +328,15 @@ int test_msg_empty(test_t *t, test_param_t *p)
 
   UWORD size = 0;
   res = proto_msg_read_single(proto, test_channel, 0, &size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
 
-  if(size != 0) {
+  if (size != 0)
+  {
     p->error = "not empty";
     p->section = "compare";
     sprintf(p->extra, "%04x", size);
@@ -327,7 +354,8 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   ULONG data = 0xdeadbeef;
 
   int res = proto_msg_write_single(proto, test_channel, (UBYTE *)&data, 2);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
@@ -335,20 +363,23 @@ int test_msg_tiny(test_t *t, test_param_t *p)
 
   UWORD size = 2;
   res = proto_msg_read_single(proto, test_channel, (UBYTE *)&data, &size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
 
-  if(size != 2) {
+  if (size != 2)
+  {
     p->error = "not two words";
     p->section = "compare";
     sprintf(p->extra, "%04x", size);
     return 1;
   }
 
-  if(data != 0xdeadbeef) {
+  if (data != 0xdeadbeef)
+  {
     p->error = "invalid value";
     p->section = "compare";
     sprintf(p->extra, "%08lx", data);
@@ -361,13 +392,16 @@ int test_msg_tiny(test_t *t, test_param_t *p)
 static ULONG get_default_size(void)
 {
   /* get buffer size */
-  ULONG size = 256;
-  if(test_size != 0) {
+  ULONG size = 1024;
+  if (test_size != 0)
+  {
     size = test_size;
-    if(size < 2) {
+    if (size < 2)
+    {
       size = 2;
     }
-    if(size & 1 == 1) {
+    if (size & 1 == 1)
+    {
       size++;
     }
   }
@@ -378,7 +412,8 @@ static UBYTE get_start_byte(void)
 {
   /* set start byte value */
   UBYTE start = 0;
-  if(test_bias != 0) {
+  if (test_bias != 0)
+  {
     start = (UBYTE)test_bias;
   }
   return start;
@@ -386,10 +421,12 @@ static UBYTE get_start_byte(void)
 
 static ULONG get_size(ULONG size)
 {
-  if(test_add_size != 0) {
+  if (test_add_size != 0)
+  {
     size += test_add_size;
   }
-  if(test_sub_size != 0) {
+  if (test_sub_size != 0)
+  {
     size -= test_sub_size;
   }
   return size;
@@ -399,7 +436,8 @@ static void fill_buffer(ULONG size, UBYTE *mem)
 {
   /* fill buffer */
   UBYTE data = get_start_byte();
-  for(ULONG i=0;i<size;i++) {
+  for (ULONG i = 0; i < size; i++)
+  {
     mem[i] = data++;
   }
 }
@@ -407,8 +445,10 @@ static void fill_buffer(ULONG size, UBYTE *mem)
 static int validate_buffer(ULONG size, UBYTE *mem)
 {
   UBYTE data = get_start_byte();
-  for(ULONG i=0;i<size;i++) {
-    if(mem[i] != data) {
+  for (ULONG i = 0; i < size; i++)
+  {
+    if (mem[i] != data)
+    {
       return 1;
     }
     data++;
@@ -420,8 +460,10 @@ static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
 {
   /* check buf */
   ULONG result = size;
-  for(ULONG i=0;i<size;i++) {
-    if(mem1[i] != mem2[i]) {
+  for (ULONG i = 0; i < size; i++)
+  {
+    if (mem1[i] != mem2[i])
+    {
       result = i;
       break;
     }
@@ -435,7 +477,8 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -443,7 +486,8 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   ULONG size_r = get_size(size);
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
-  if(mem_r == 0) {
+  if (mem_r == 0)
+  {
     FreeVec(mem_w);
     p->error = "out of mem";
     p->section = "init";
@@ -452,27 +496,30 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   fill_buffer(size, mem_w);
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* send buffer */
   int res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
   }
 
   /* receive buffer */
-  UWORD got_words = size_r>>1;
+  UWORD got_words = size_r >> 1;
   res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
   }
 
   /* check buf size */
-  if(got_words != words) {
+  if (got_words != words)
+  {
     p->error = "size mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04x r=%04x", words, got_words);
@@ -481,7 +528,8 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   /* check buf */
   ULONG pos = check_buffer(size, mem_w, mem_r);
-  if(pos < size) {
+  if (pos < size)
+  {
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
@@ -507,7 +555,8 @@ int test_msg_size_max(test_t *t, test_param_t *p)
 
   /* read max size from firmware */
   int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &max_bytes);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
     return res;
@@ -522,12 +571,14 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
 
   ULONG size = get_default_size();
-  if(size < 4) {
+  if (size < 4)
+  {
     size = 4;
   }
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -535,7 +586,8 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
 
   ULONG size_r = get_size(size);
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
-  if(mem_r == 0) {
+  if (mem_r == 0)
+  {
     FreeVec(mem_w);
     p->error = "out of mem";
     p->section = "init";
@@ -544,50 +596,48 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  ULONG words = size>>1;
-  ULONG c1_words = words>>1;
+  ULONG words = size >> 1;
+  ULONG c1_words = words >> 1;
   ULONG c2_words = words - c1_words;
   UBYTE *c1_buf = mem_w;
   UBYTE *c2_buf = mem_w + (c1_words << 1);
 
   /* send buffer */
   proto_iov_node_t part2_w = {
-    c2_words,
-    c2_buf,
-    0
-  };
+      c2_words,
+      c2_buf,
+      0};
   proto_iov_t msgiov_w = {
-    words,
-    { c1_words,
-      c1_buf,
-      &part2_w }
-  };
+      words,
+      {c1_words,
+       c1_buf,
+       &part2_w}};
   int res = proto_msg_write(proto, test_channel, &msgiov_w);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
   }
 
-  ULONG words_r = size_r>>1;
+  ULONG words_r = size_r >> 1;
   c1_buf = mem_r;
   c2_buf = mem_r + (c1_words << 1);
   c2_words = words_r - c1_words;
 
   /* receive buffer */
   proto_iov_node_t part2_r = {
-    c2_words,
-    c2_buf,
-    0
-  };
+      c2_words,
+      c2_buf,
+      0};
   proto_iov_t msgiov_r = {
-    words_r,
-    { c1_words,
-      c1_buf,
-      &part2_r }
-  };
+      words_r,
+      {c1_words,
+       c1_buf,
+       &part2_r}};
   res = proto_msg_read(proto, test_channel, &msgiov_r);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return res;
@@ -595,7 +645,8 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   UWORD got_words = (UWORD)(msgiov_r.total_words & 0xffff);
 
   /* check buf size */
-  if(got_words != words) {
+  if (got_words != words)
+  {
     p->error = "size mismatch";
     p->section = "compare";
     sprintf(p->extra, "w=%04lx r=%04lx", words, msgiov_r.total_words);
@@ -604,7 +655,8 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
 
   /* check buf */
   ULONG pos = check_buffer(size, mem_w, mem_r);
-  if(pos < size) {
+  if (pos < size)
+  {
     p->error = "value mismatch";
     p->section = "compare";
     sprintf(p->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
@@ -623,7 +675,8 @@ int test_msg_write(test_t *t, test_param_t *p)
   ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -631,11 +684,12 @@ int test_msg_write(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* send buffer */
   int res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return res;
@@ -654,7 +708,8 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
 
   /* read max size from firmware */
   int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
     return 1;
@@ -664,7 +719,8 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   size += 2;
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -675,11 +731,12 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* send buffer and expect msg too large */
   res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != PROTO_RET_TIMEOUT) {
+  if (res != PROTO_RET_TIMEOUT)
+  {
     p->error = proto_perror(res);
     p->section = "write must time out";
     return 1;
@@ -696,7 +753,8 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -704,11 +762,12 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
@@ -716,7 +775,8 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
 
   /* send buffer */
   res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "write";
     return 1;
@@ -737,18 +797,20 @@ int test_msg_read(test_t *t, test_param_t *p)
   ULONG size_r = get_size(size);
 
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
-  if(mem_r == 0) {
+  if (mem_r == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
   }
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* receive buffer */
-  UWORD got_words = size_r>>1;
+  UWORD got_words = size_r >> 1;
   int res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read";
     return 1;
@@ -767,7 +829,8 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 
   /* read max size from firmware */
   int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read max_bytes";
     return 1;
@@ -778,24 +841,27 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 
   /* write too large size */
   res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_BUF_WORDS, size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write too large size";
     return 1;
   }
 
   BYTE *mem_r = AllocVec(size, MEMF_PUBLIC);
-  if(mem_r == 0) {
+  if (mem_r == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
   }
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* receive buffer */
   res = proto_msg_read_single(proto, test_channel, mem_r, &words);
-  if(res != PROTO_RET_MSG_TOO_LARGE) {
+  if (res != PROTO_RET_MSG_TOO_LARGE)
+  {
     p->error = proto_perror(res);
     p->section = "read must return MSG_TOO_LARGE";
     return 1;
@@ -803,7 +869,8 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
 
   /* we have to reset now */
   res = proto_reset(proto);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "reset";
     return 1;
@@ -821,26 +888,29 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   ULONG size_r = get_size(size);
 
   BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
-  if(mem_r == 0) {
+  if (mem_r == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
   }
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
   }
 
   /* receive buffer */
-  UWORD got_words = size_r>>1;
+  UWORD got_words = size_r >> 1;
   res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "read not busy";
     return 1;
@@ -855,14 +925,15 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
 
 /* ---------- status tests ----------------------------------------------- */
 
-#define WAIT_S      0UL
-#define WAIT_US     50000UL
+#define WAIT_S 0UL
+#define WAIT_US 50000UL
 
 static int assert_timer_mask(test_param_t *p, const char *section, pamela_handle_t *pb, ULONG got)
 {
   ULONG timer_mask = pamela_get_timer_sigmask(pb);
 
-  if(got != timer_mask) {
+  if (got != timer_mask)
+  {
     p->error = "no timer triggered";
     p->section = section;
     sprintf(p->extra, "got=%08lx want=%08lx", got, timer_mask);
@@ -877,7 +948,8 @@ static int assert_trigger_mask(test_param_t *p, const char *section,
 {
   ULONG trigger_mask = pamela_get_trigger_sigmask(pb);
 
-  if(got != trigger_mask) {
+  if (got != trigger_mask)
+  {
     p->error = "no trigger found";
     p->section = section;
     sprintf(p->extra, "got=%08lx want=%08lx", got, trigger_mask);
@@ -895,7 +967,8 @@ static int assert_num_triggers(test_param_t *p, const char *section,
   UWORD got_signals = pamela_get_num_trigger_signals(pb);
 
   /* check number of trigger aka irqs */
-  if(num_triggers != got_triggers) {
+  if (num_triggers != got_triggers)
+  {
     p->error = "num triggers (ack irqs) mismatch";
     p->section = section;
     sprintf(p->extra, "got=%u want=%u", got_triggers, num_triggers);
@@ -903,7 +976,8 @@ static int assert_num_triggers(test_param_t *p, const char *section,
   }
 
   /* check number of signals */
-  if(num_signals != got_signals) {
+  if (num_signals != got_signals)
+  {
     p->error = "num signals mismatch";
     p->section = section;
     sprintf(p->extra, "got=%u want=%u", got_signals, num_signals);
@@ -919,7 +993,8 @@ static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
 
   /* init events */
   int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
+  if (res != PAMELA_OK)
+  {
     p->error = pamela_perror(res);
     p->section = "pamela_init_events";
     return 1;
@@ -942,7 +1017,8 @@ static int run_timer_sig(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   int res = assert_timer_mask(p, "main", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
@@ -961,7 +1037,8 @@ static int run_event_sig(test_t *t, test_param_t *p)
 
   /* trigger signal */
   int res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
     return 1;
@@ -971,7 +1048,8 @@ static int run_event_sig(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "main", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
@@ -990,7 +1068,8 @@ static int run_event_sig2(test_t *t, test_param_t *p)
 
   /* trigger signal */
   int res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal";
     return 1;
@@ -998,7 +1077,8 @@ static int run_event_sig2(test_t *t, test_param_t *p)
 
   /* trigger signal 2 */
   res = proto_action(proto, TEST_PAMELA_ACTION_TRIGGER_SIGNAL);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = pamela_perror(res);
     p->section = "action to trigger signal 2";
     return 1;
@@ -1008,7 +1088,8 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "main", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
@@ -1027,7 +1108,8 @@ int run_event_busy(test_t *t, test_param_t *p)
 
   /* enable busy mode */
   int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "enable busy";
     return 1;
@@ -1035,7 +1117,8 @@ int run_event_busy(test_t *t, test_param_t *p)
 
   /* ping must be busy */
   res = proto_ping(proto);
-  if(res != PROTO_RET_DEVICE_BUSY) {
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
     p->error = proto_perror(res);
     p->section = "ping not busy";
     return res;
@@ -1043,7 +1126,8 @@ int run_event_busy(test_t *t, test_param_t *p)
 
   /* recover already does pings */
   res = recover_from_busy(proto, p);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
@@ -1051,7 +1135,8 @@ int run_event_busy(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "busy", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
@@ -1072,7 +1157,8 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
 
   /* set some rx pending mask */
   int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "set status";
     return 1;
@@ -1082,26 +1168,30 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "rx pend", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   res = assert_num_triggers(p, "rx pend", pb, 1, 1);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   /* read status */
   ULONG got_status = 0;
   res = pamela_read_status(pb, &got_status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read status";
     return 1;
   }
 
   /* check mask */
-  if(got_status != status) {
+  if (got_status != status)
+  {
     p->error = "status mismatch";
     p->section = "check rx pend mask";
     return 1;
@@ -1109,7 +1199,8 @@ int run_event_rx_pending(test_t *t, test_param_t *p)
 
   /* reset status */
   res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, 0);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "set error mask";
     return 1;
@@ -1132,7 +1223,8 @@ int run_event_error(test_t *t, test_param_t *p)
 
   /* set some status */
   int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "set error mask";
     return 1;
@@ -1142,26 +1234,30 @@ int run_event_error(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "error mask", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   res = assert_num_triggers(p, "error mask", pb, 1, 1);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   /* read status */
   ULONG got_status = 0;
   res = pamela_read_status(pb, &got_status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read error mask";
     return 1;
   }
 
   /* check mask */
-  if(got_status != status) {
+  if (got_status != status)
+  {
     p->error = "status mismatch";
     p->section = "check error mask";
     return 1;
@@ -1169,7 +1265,8 @@ int run_event_error(test_t *t, test_param_t *p)
 
   /* reset status */
   res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_SET_STATUS, 0);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "set error mask";
     return 1;
@@ -1193,7 +1290,8 @@ int run_event_msg(test_t *t, test_param_t *p)
   ULONG size = get_default_size();
 
   UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if(mem_w == 0) {
+  if (mem_w == 0)
+  {
     p->error = "out of mem";
     p->section = "init";
     return 1;
@@ -1201,11 +1299,12 @@ int run_event_msg(test_t *t, test_param_t *p)
 
   fill_buffer(size, mem_w);
 
-  UWORD words = size>>1;
+  UWORD words = size >> 1;
 
   /* send buffer */
   int res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "write msg";
     return res;
@@ -1215,19 +1314,22 @@ int run_event_msg(test_t *t, test_param_t *p)
   ULONG got = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
 
   res = assert_trigger_mask(p, "error mask", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   res = assert_num_triggers(p, "error mask", pb, 1, 1);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   /* read status */
   ULONG got_status = 0;
   res = pamela_read_status(pb, &got_status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read error mask";
     return 1;
@@ -1235,7 +1337,8 @@ int run_event_msg(test_t *t, test_param_t *p)
 
   /* check mask */
   ULONG status = 1 << test_channel;
-  if(got_status != status) {
+  if (got_status != status)
+  {
     p->error = "status mismatch";
     p->section = "check error mask";
     sprintf(p->extra, "status got=%08lx want=%08lx", got_status, status);
@@ -1245,7 +1348,8 @@ int run_event_msg(test_t *t, test_param_t *p)
   /* read message */
   UWORD rx_size = words;
   res = proto_msg_read_single(proto, test_channel, mem_w, &rx_size);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read msg";
     return res;
@@ -1256,14 +1360,16 @@ int run_event_msg(test_t *t, test_param_t *p)
 
   /* now timer has to trigger */
   res = assert_timer_mask(p, "error mask", pb, got);
-  if(res != 0) {
+  if (res != 0)
+  {
     return 1;
   }
 
   /* read status */
   got_status = 0;
   res = pamela_read_status(pb, &got_status);
-  if(res != 0) {
+  if (res != 0)
+  {
     p->error = proto_perror(res);
     p->section = "read error mask";
     return 1;
@@ -1271,7 +1377,8 @@ int run_event_msg(test_t *t, test_param_t *p)
 
   /* check mask */
   status = 0;
-  if(got_status != status) {
+  if (got_status != status)
+  {
     p->error = "status mismatch";
     p->section = "check error mask";
     sprintf(p->extra, "status got=%08lx want=%08lx", got_status, status);

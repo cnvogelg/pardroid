@@ -29,4 +29,7 @@ extern u16  proto_api_write_msg_size(u08 chan, u16 size);
 extern u08 *proto_api_write_msg_begin(u08 chan, u16 size);
 extern void proto_api_write_msg_done(u08 chan, u16 size);
 
+extern void proto_api_write_block_spi(u16 num_words);
+extern void proto_api_read_block_spi(u16 num_words);
+
 #endif
