@@ -138,8 +138,13 @@ void proto_api_read_msg_done(u08 chan, u16 size)
   uart_send_crlf();
 }
 
-void proto_api_write_msg_size(u08 chan, u16 size)
+u16 proto_api_write_msg_size(u08 chan, u16 size)
 {
+  if(size <= 256) {
+    return size;
+  } else {
+    return 0;
+  }
 }
 
 u08 *proto_api_write_msg_begin(u08 chan,u16 size)

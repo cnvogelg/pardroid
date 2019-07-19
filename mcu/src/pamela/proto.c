@@ -120,17 +120,19 @@ static void handle_msg_write_size(u08 chan)
   u16 size = proto_low_write_word();
   proto_low_end();
 
-  // report size
-  proto_api_write_msg_size(chan, size);
+  // report size and receive msg size
+  msg_size = proto_api_write_msg_size(chan, size);
   DW(size); DNL;
-  
-  // store size for subsequent msg_read_data call
-  msg_size = size;
 }
 
 static void handle_msg_read_data(u08 chan)
 {
   DS("mrd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
+
+  // ignore request if size is empty
+  if(msg_size == 0) {
+    return;
+  }
 
   // get filled buffer and send it
   u08 *buf = proto_api_read_msg_begin(chan, msg_size);
@@ -145,6 +147,11 @@ static void handle_msg_write_data(u08 chan)
 {
   DS("mwd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
   
+  // ignore request if size is empty
+  if(msg_size == 0) {
+    return;
+  }
+
   // get buffer and fill it
   u08 *buf = proto_api_write_msg_begin(chan, msg_size);
   proto_low_write_block(msg_size, buf);

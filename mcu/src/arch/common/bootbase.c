@@ -160,8 +160,14 @@ void proto_api_read_msg_done(u08 chan,u16 size)
   uart_send('.');
 }
 
-void proto_api_write_msg_size(u08 chan, u16 size)
+u16 proto_api_write_msg_size(u08 chan, u16 size)
 {
+  // only allow writes of page size
+  if(size == page_words) {
+    return page_words;
+  } else {
+    return 0;
+  }
 }
 
 u08 *proto_api_write_msg_begin(u08 chan, u16 size)

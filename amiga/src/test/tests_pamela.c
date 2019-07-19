@@ -679,17 +679,9 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
 
   /* send buffer and expect msg too large */
   res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if(res != PROTO_RET_OK) {
+  if(res != PROTO_RET_TIMEOUT) {
     p->error = proto_perror(res);
-    p->section = "write must return OK";
-    return 1;
-  }
-
-  /* we have to reset now */
-  res = proto_reset(proto);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "reset";
+    p->section = "write must time out";
     return 1;
   }
 

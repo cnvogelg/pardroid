@@ -186,9 +186,14 @@ void proto_api_read_msg_done(u08 chan,u16 num_words)
   status_clr_rx_pending(chan);
 }
 
-void proto_api_write_msg_size(u08 chan, u16 size)
+u16 proto_api_write_msg_size(u08 chan, u16 size)
 {
-  buf_words = size;
+  if(size <= MAX_WORDS) {
+    buf_words = size;
+    return size;
+  } else {
+    return 0;
+  }
 }
 
 u08 *proto_api_write_msg_begin(u08 chan,u16 num_words)
