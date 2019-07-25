@@ -3,6 +3,7 @@
 
 #include "pario_pins.h"
 #include "proto_low.h"
+#include "spi.h"
 
 /* signal names:
    IN
@@ -172,6 +173,49 @@ void proto_low_read_block(u16 num_words, u08 *buffer)
     dout(*buffer++);
     wait_clk_hi();
     dout(*buffer++);
+  }
+
+  wait_clk_lo();
+  ddr_in();
+
+  irq_on();
+}
+
+void proto_low_write_block_spi(u16 max_words)
+{
+  irq_off();
+
+  rak_lo();
+
+  for(u16 i=0;i<max_words;i++) {
+    wait_clk_hi();
+    u08 d = din();
+    spi_out(d);
+
+    wait_clk_lo();
+    d = din();
+    spi_out(d);
+  }
+
+  irq_on();
+}
+
+void proto_low_read_block_spi(u16 num_words)
+{
+  irq_off();
+
+  rak_lo();
+  wait_clk_hi();
+  ddr_out();
+
+  for(u16 i=0;i<num_words;i++) {
+    u08 d = spi_in();
+    wait_clk_lo();
+    dout(d);
+
+    d = spi_in();
+    wait_clk_hi();
+    dout(d);
   }
 
   wait_clk_lo();
