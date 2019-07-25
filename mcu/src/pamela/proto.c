@@ -15,7 +15,7 @@ static u16 msg_size;
 void proto_init(void)
 {
   proto_low_init();
-  DC('I'); DNL;
+  DC('I');
 }
 
 void proto_first(void)
@@ -27,16 +27,16 @@ void proto_first(void)
     system_sys_reset();
   }
   // ack action
-  DC('{'); DB(cmd); DNL;
+  DC('{'); DB(cmd);
   proto_low_action();
   proto_low_end();
-  DC('}'); DNL;
+  DC('}');
 }
 
 void proto_trigger_signal(void)
 {
   // trigger ack irq at Amiga
-  DC('#'); DNL;
+  DC('#');
   proto_low_ack_lo();
   timer_delay_1us();
   proto_low_ack_hi();
@@ -44,12 +44,10 @@ void proto_trigger_signal(void)
 
 static void handle_action(u08 num)
 {
-  DS("a:"); DB(num); DNL;
-
   // some actions need special handling:
   // immediate reset
   if(num == PROTO_ACTION_RESET || num == PROTO_ACTION_BOOTLOADER) {
-    DC('R'); DNL;
+    DC('r');
     system_sys_reset();
   }
 
@@ -61,14 +59,13 @@ static void handle_action(u08 num)
 
   // knok resets after action
   if(num == PROTO_ACTION_KNOK) {
-    DC('K'); DNL;
+    DC('k');
     system_sys_reset();
   }
 }
 
 static void handle_wfunc_read(u08 num)
 {
-  DS("wfr:"); DB(num); DNL;
   u16 val = proto_api_wfunc_read(num);
   proto_low_read_word(val);
   proto_low_end();
@@ -76,7 +73,6 @@ static void handle_wfunc_read(u08 num)
 
 static void handle_wfunc_write(u08 num)
 {
-  DS("wfw:"); DB(num); DNL;
   u16 val = proto_low_write_word();
   proto_api_wfunc_write(num, val);
   proto_low_end();
@@ -84,7 +80,6 @@ static void handle_wfunc_write(u08 num)
 
 static void handle_lfunc_read(u08 num)
 {
-  DS("lfr:"); DB(num); DNL;
   u32 val = proto_api_lfunc_read(num);
   proto_low_read_long(val);
   proto_low_end();
@@ -92,7 +87,6 @@ static void handle_lfunc_read(u08 num)
 
 static void handle_lfunc_write(u08 num)
 {
-  DS("lfw:"); DB(num); DNL;
   u32 val = proto_low_write_long();
   proto_api_lfunc_write(num, val);
   proto_low_end();
@@ -100,13 +94,12 @@ static void handle_lfunc_write(u08 num)
 
 static void handle_msg_read_size(u08 chan)
 {
-  DS("mrs:#"); DB(chan); DC(':');
   u16 size = proto_api_read_msg_size(chan);
-  
+  DW(size); DNL;
+
   // send size
   proto_low_read_word(size);
   proto_low_end();
-  DW(size); DNL;
 
   // store size for subsequent msg_read_data call
   msg_size = size;
@@ -114,8 +107,6 @@ static void handle_msg_read_size(u08 chan)
 
 static void handle_msg_write_size(u08 chan)
 {
-  DS("mws:#"); DB(chan); DC(':');
-
   // recv size
   u16 size = proto_low_write_word();
   proto_low_end();
@@ -127,8 +118,6 @@ static void handle_msg_write_size(u08 chan)
 
 static void handle_msg_read_data(u08 chan)
 {
-  DS("mrd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
-
   // ignore request if size is empty
   if(msg_size == 0) {
     return;
@@ -137,22 +126,18 @@ static void handle_msg_read_data(u08 chan)
   // get filled buffer and send it
   u08 *buf = proto_api_read_msg_begin(chan, msg_size);
   if(buf == NULL) {
-    DC('S');
+    DC('#');
     proto_api_read_block_spi(msg_size);
-    DC('P');
   } else {
     proto_low_read_block(msg_size, buf);
   }
   proto_api_read_msg_done(chan, msg_size);
 
   proto_low_end();
-  DC('.'); DNL;
 }
 
 static void handle_msg_write_data(u08 chan)
 {
-  DS("mwd:#"); DB(chan); DC('+'); DW(msg_size); DC(':');
-  
   // ignore request if size is empty
   if(msg_size == 0) {
     return;
@@ -161,16 +146,14 @@ static void handle_msg_write_data(u08 chan)
   // get buffer and fill it
   u08 *buf = proto_api_write_msg_begin(chan, msg_size);
   if(buf == NULL) {
-    DC('S');
+    DC('#');
     proto_api_write_block_spi(msg_size);
-    DC('P');
   } else {
     proto_low_write_block(msg_size, buf);
   }
   proto_api_write_msg_done(chan, msg_size);
 
   proto_low_end();
-  DC('.'); DNL;
 }
 
 void proto_handle(void)
@@ -182,37 +165,46 @@ void proto_handle(void)
     return;
   }
 
-  DC('['); DB(cmd); DNL;
+  DC('['); DB(cmd);
 
   // extract command group
   u08 grp = cmd & PROTO_CMD_MASK;
   u08 chn = cmd & PROTO_CMD_ARG;
   switch(grp) {
     case PROTO_CMD_ACTION:
+      DC('A');
       handle_action(chn);
       break;
     case PROTO_CMD_WFUNC_READ:
+      DC('w');
       handle_wfunc_read(chn);
       break;
     case PROTO_CMD_WFUNC_WRITE:
+      DC('W');
       handle_wfunc_write(chn);
       break;
     case PROTO_CMD_LFUNC_READ:
+      DC('l');
       handle_lfunc_read(chn);
       break;
     case PROTO_CMD_LFUNC_WRITE:
+      DC('L');
       handle_lfunc_write(chn);
       break;
     case PROTO_CMD_MSG_READ_DATA:
+      DC('m');
       handle_msg_read_data(chn);
       break;
     case PROTO_CMD_MSG_WRITE_DATA:
+      DC('M');
       handle_msg_write_data(chn);
       break;
     case PROTO_CMD_MSG_READ_SIZE:
+      DC('s');
       handle_msg_read_size(chn);
       break;
     case PROTO_CMD_MSG_WRITE_SIZE:
+      DC('S');
       handle_msg_write_size(chn);
       break;
     default:

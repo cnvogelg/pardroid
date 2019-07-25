@@ -101,12 +101,12 @@ dist-all:
 # symbol size
 %.sym_size: %.elf
 	@echo "  SYM  $(@F)"
-	$(H)$(NM) --size-sort --print-size $< | egrep ' [bBdD] ' > $@
+	$(H)$(NM) --radix=d --size-sort --print-size $< | egrep ' [bBdD] ' > $@
 
 # code size
 %.code_size: %.elf
 	@echo "  CSI  $(@F)"
-	$(H)$(NM) --size-sort --print-size $< | egrep ' [tT] ' > $@
+	$(H)$(NM) --radix=d --size-sort --print-size $< | egrep ' [tT] ' > $@
 
 # compile
 $(OBJ_DIR)/%.o : %.c

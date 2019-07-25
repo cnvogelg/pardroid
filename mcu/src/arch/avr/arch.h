@@ -18,4 +18,6 @@ typedef char *ram_pchar;
 #define INLINE          static inline
 #define FORCE_INLINE    __attribute__((always_inline)) static inline
 
+typedef uint16_t flash_size_t;
+
 #endif
