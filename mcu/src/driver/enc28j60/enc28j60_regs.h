@@ -224,6 +224,8 @@
 #define TXSTART_INIT        0x1A00  // start of TX buffer, room for 1 packet
 #define TXSTOP_INIT         0x1FFF  // end of TX buffer
 
+#define RAM_END             0x1FFF
+
 // max frame length which the conroller will accept:
 // (note: maximum ethernet frame length would be 1518)
 #define MAX_FRAMELEN      1518

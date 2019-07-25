@@ -419,6 +419,46 @@ u08 enc28j60_get_pending_packets(void)
   return readRegByte(EPKTCNT);
 }
 
+// ---------- testing ----------
+
+void enc28j60_test_setup(void)
+{
+  // setup full RAM for r/w testing
+  writeReg(ERXST, 0);
+  writeReg(ETXST, 0);
+
+  writeReg(ERXND, RAM_END);
+  writeReg(ETXND, RAM_END);
+}
+
+void enc28j60_test_begin_tx(void)
+{
+  // reset write pointer
+  writeReg(EWRPT, 0);
+
+  spi_enable_eth();
+  spi_out(ENC28J60_WRITE_BUF_MEM);
+}
+
+void enc28j60_test_end_tx(void)
+{
+  spi_disable_eth();  
+}
+
+void enc28j60_test_begin_rx(void)
+{
+  // reset read pointer
+  writeReg(ERDPT, 0);
+
+  spi_enable_eth();
+  spi_out(ENC28J60_READ_BUF_MEM);
+}
+
+void enc28j60_test_end_rx(void)
+{
+  spi_disable_eth();
+}
+
 #if 0
 // Contributed by Alex M. Based on code from: http://blog.derouineau.fr
 //                  /2011/07/putting-enc28j60-ethernet-controler-in-sleep-mode/

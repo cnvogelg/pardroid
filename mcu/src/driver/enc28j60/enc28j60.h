@@ -58,4 +58,10 @@ extern void enc28j60_recv_data(u08 *data, u16 size);
 extern void enc28j60_recv_seek(u16 abs_pos);
 extern void enc28j60_recv_end(void);
 
+extern void enc28j60_test_setup(void);
+extern void enc28j60_test_begin_tx(void);
+extern void enc28j60_test_end_tx(void);
+extern void enc28j60_test_begin_rx(void);
+extern void enc28j60_test_end_rx(void);
+
 #endif

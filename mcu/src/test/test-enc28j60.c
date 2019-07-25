@@ -20,6 +20,54 @@
 
 u08 buf[PACKET_SIZE];
 
+static void eth_ram_test(void)
+{
+  uart_send_pstring(PSTR("ram test\n"));
+  enc28j60_test_setup();
+
+  // fill buffer
+  u16 i;
+  for(i=0;i<PACKET_SIZE;i++) {
+    buf[i] = (u08)i;
+  }
+
+  // write buffer
+  enc28j60_test_begin_tx();
+  for(i=0;i<PACKET_SIZE;i++) {
+    spi_out(buf[i]);
+  }
+  enc28j60_test_end_tx();
+
+  // read buffer
+  enc28j60_test_begin_rx();
+  for(i=0;i<PACKET_SIZE;i++) {
+    buf[i] = spi_in();
+  }
+  enc28j60_test_end_rx();
+
+  // check buffer
+  u16 errors = 0;
+  for(i=0;i<PACKET_SIZE;i++) {
+    u08 val = (u08)i;
+    if(buf[i] != val) {
+      uart_send_pstring(PSTR("MISMATCH @"));
+      uart_send_hex_word(i);
+      uart_send_pstring(PSTR(": "));
+      uart_send_hex_word(buf[i]);
+      uart_send_pstring(PSTR(" != "));
+      uart_send_hex_byte(val);
+      uart_send_crlf();
+      errors++;
+    }
+  }
+  if(errors == 0) {
+    uart_send_pstring(PSTR("ok\n"));
+  } else {
+    uart_send_hex_word(errors);
+    uart_send_pstring(PSTR(" ERRORS\n"));
+  }
+}
+
 static void eth_test(u08 partial)
 {
   u08 mac[6] = { 0x1a,0x11,0xaf,0xa0,0x47,0x11 };
@@ -126,6 +174,8 @@ int main(void)
   uart_send_pstring(PSTR(" ok="));
   uart_send_hex_byte(ok);
   uart_send_crlf();
+
+  eth_ram_test();
 
   uart_send_pstring(PSTR("wait for link"));
   while(1) {
