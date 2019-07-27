@@ -19,6 +19,7 @@
 
 #include "pamela.h"
 #include "test-pamela.h"
+#include "enc28j60.h"
 
 static u16 wfunc_val = 0;
 static u32 lfunc_val = 0;
@@ -180,7 +181,13 @@ u08 *proto_api_read_msg_begin(u08 chan,u16 num_words)
     uart_send('S');
     spi_enable_cs0();
     return NULL;
-  } else {
+  } 
+  else if(chan == TEST_PAMELA_NET_CHANNEL) {
+    uart_send('N');
+    enc28j60_test_begin_rx();
+    return NULL;
+  }
+  else {
     return buf;
   }
 }
@@ -190,6 +197,10 @@ void proto_api_read_msg_done(u08 chan,u16 num_words)
   if(chan == TEST_PAMELA_SPI_CHANNEL) {
     uart_send('S');
     spi_disable_cs0();
+  }
+  else if(chan == TEST_PAMELA_NET_CHANNEL) {
+    uart_send('N');
+    enc28j60_test_end_rx();
   }
   uart_send('}');
   uart_send_crlf();
@@ -217,7 +228,13 @@ u08 *proto_api_write_msg_begin(u08 chan,u16 num_words)
     uart_send('S');
     spi_enable_cs0();
     return NULL;
-  } else {
+  } 
+  else if(chan == TEST_PAMELA_NET_CHANNEL) {
+    uart_send('N');
+    enc28j60_test_begin_tx();
+    return NULL;
+  }
+  else {
     return buf;
   }
 }
@@ -228,8 +245,12 @@ void proto_api_write_msg_done(u08 chan,u16 num_words)
     uart_send('S');
     spi_disable_cs0();
   }
+  else if(chan == TEST_PAMELA_NET_CHANNEL) {
+    uart_send('N');
+    enc28j60_test_end_tx();
+  }
   uart_send('}');
-  uart_send_crlf();
+
   /* set rx pending for echo */
   status_set_rx_pending(chan);
 }
@@ -240,16 +261,19 @@ int main(void)
   
   spi_init();
   
-  // test SPI
-  spi_enable_cs0();
-  spi_out('H');
-  spi_out('E');
-  spi_out('L');
-  spi_disable_cs0();
-
   uart_init();
   uart_send_pstring(PSTR("parbox: test-pamela!"));
   uart_send_crlf();
+
+  // setup enc28j60
+  uart_send_pstring(PSTR("enc28j60: init rev="));
+  u08 rev;
+  u08 ok = enc28j60_init(&rev);
+  uart_send_hex_byte(rev);
+  uart_send_pstring(PSTR(" ok="));
+  uart_send_hex_byte(ok);
+  uart_send_crlf();
+  enc28j60_test_setup();
 
   rom_info();
 

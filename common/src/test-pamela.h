@@ -11,3 +11,4 @@
 #define TEST_PAMELA_LFUNC_SET_STATUS            (PROTO_LFUNC_USER+1)
 
 #define TEST_PAMELA_SPI_CHANNEL                 8
+#define TEST_PAMELA_NET_CHANNEL                 9

@@ -408,7 +408,7 @@ static ULONG get_default_size(void)
   return size;
 }
 
-static UBYTE get_start_byte(void)
+static UBYTE get_start_byte(test_param_t *p)
 {
   /* set start byte value */
   UBYTE start = 0;
@@ -416,6 +416,7 @@ static UBYTE get_start_byte(void)
   {
     start = (UBYTE)test_bias;
   }
+  start += p->iter;
   return start;
 }
 
@@ -432,19 +433,19 @@ static ULONG get_size(ULONG size)
   return size;
 }
 
-static void fill_buffer(ULONG size, UBYTE *mem)
+static void fill_buffer(ULONG size, UBYTE *mem, test_param_t *p)
 {
   /* fill buffer */
-  UBYTE data = get_start_byte();
+  UBYTE data = get_start_byte(p);
   for (ULONG i = 0; i < size; i++)
   {
     mem[i] = data++;
   }
 }
 
-static int validate_buffer(ULONG size, UBYTE *mem)
+static int validate_buffer(ULONG size, UBYTE *mem, test_param_t *p)
 {
-  UBYTE data = get_start_byte();
+  UBYTE data = get_start_byte(p);
   for (ULONG i = 0; i < size; i++)
   {
     if (mem[i] != data)
@@ -494,7 +495,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
     return 1;
   }
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   UWORD words = size >> 1;
 
@@ -594,7 +595,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     return 1;
   }
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   ULONG words = size >> 1;
   ULONG c1_words = words >> 1;
@@ -682,7 +683,7 @@ int test_msg_write(test_t *t, test_param_t *p)
     return 1;
   }
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   UWORD words = size >> 1;
 
@@ -729,7 +730,7 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   mem_w[0] = 0xaa;
   mem_w[1] = 0x55;
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   UWORD words = size >> 1;
 
@@ -760,7 +761,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
     return 1;
   }
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   UWORD words = size >> 1;
 
@@ -1297,7 +1298,7 @@ int run_event_msg(test_t *t, test_param_t *p)
     return 1;
   }
 
-  fill_buffer(size, mem_w);
+  fill_buffer(size, mem_w, p);
 
   UWORD words = size >> 1;
 

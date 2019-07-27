@@ -22,7 +22,7 @@ u08 buf[PACKET_SIZE];
 
 static void eth_ram_test(void)
 {
-  uart_send_pstring(PSTR("ram test\n"));
+  uart_send_pstring(PSTR("ram test:"));
   enc28j60_test_setup();
 
   // fill buffer
@@ -61,11 +61,12 @@ static void eth_ram_test(void)
     }
   }
   if(errors == 0) {
-    uart_send_pstring(PSTR("ok\n"));
+    uart_send_pstring(PSTR("ok"));
   } else {
     uart_send_hex_word(errors);
-    uart_send_pstring(PSTR(" ERRORS\n"));
+    uart_send_pstring(PSTR(" ERRORS"));
   }
+  uart_send_crlf();
 }
 
 static void eth_test(u08 partial)
@@ -175,7 +176,9 @@ int main(void)
   uart_send_hex_byte(ok);
   uart_send_crlf();
 
-  eth_ram_test();
+  for(u08 i=0;i<5;i++) {
+    eth_ram_test();
+  }
 
   uart_send_pstring(PSTR("wait for link"));
   while(1) {

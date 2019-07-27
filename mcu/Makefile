@@ -167,7 +167,7 @@ $(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
 
 # ----- main test suites -----
 # test-pamela
-TEST_PAMELA_SRCS = $(PAMELA_SRCS)
+TEST_PAMELA_SRCS = $(PAMELA_SRCS) enc28j60.c
 TEST_PAMELA_SRCS += test-pamela.c
 FW_ID_test-pamela-fw = 0x9000
 FW_VER_test-pamela-fw = $(VERSION_TAG)
