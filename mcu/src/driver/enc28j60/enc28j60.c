@@ -443,10 +443,6 @@ void enc28j60_test_begin_tx(void)
 void enc28j60_test_end_tx(void)
 {
   spi_disable_eth();
-
-  // FIXME: need to write an unselected byte 
-  // otherwise next rx looses a spi write in write register?!
-  spi_out(0xff);
 }
 
 void enc28j60_test_begin_rx(void)
@@ -461,10 +457,6 @@ void enc28j60_test_begin_rx(void)
 void enc28j60_test_end_rx(void)
 {
   spi_disable_eth();
-
-  // FIXME: need to write an unselected byte 
-  // otherwise next rx looses a spi write in write register?!
-  spi_out(0xff);
 }
 
 #if 0

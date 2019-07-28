@@ -467,7 +467,12 @@ proto_low_write_block_spi:
     adiw    r30,1
     rjmp    .wb_loop_spi
 
+    ; read spi status to clear flag for next operation
 .wb_end_spi:
+    in r18, _SFR_IO_ADDR(SPSR)
+    sbrs r18, SPIF
+    rjmp .wb_end_spi
+
     ; done
     irq_on
     ret
@@ -532,6 +537,12 @@ proto_low_read_block_spi:
     ; ddr idle
     wait_clk_lo
     ddr_in
+
+   ; read spi status to clear flag for next operation
+.rb_done_spi:
+    in r18, _SFR_IO_ADDR(SPSR)
+    sbrs r18, SPIF
+    rjmp .rb_done_spi
 
     irq_on
     ret
