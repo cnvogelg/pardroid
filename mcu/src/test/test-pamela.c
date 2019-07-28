@@ -23,6 +23,7 @@
 
 static u16 wfunc_val = 0;
 static u32 lfunc_val = 0;
+static u32 offset = 0;
 
 #define MAX_WORDS 512
 static u08 buf[MAX_WORDS * 2];
@@ -253,6 +254,16 @@ void proto_api_write_msg_done(u08 chan,u16 num_words)
 
   /* set rx pending for echo */
   status_set_rx_pending(chan);
+}
+
+u32 proto_api_read_offset(u08 chan)
+{
+  return offset;
+}
+
+void proto_api_write_offset(u08 chan, u32 off)
+{
+  offset = off;
 }
 
 int main(void)

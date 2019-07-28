@@ -43,6 +43,9 @@ extern int proto_msg_read(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
 extern int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
 extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *num_words);
 
+extern int proto_offset_read(proto_handle_t *ph, UBYTE chn, ULONG *offset);
+extern int proto_offset_write(proto_handle_t *ph, UBYTE chn, ULONG offset);
+
 extern const char *proto_perror(int res);
 
 #endif

@@ -20,6 +20,8 @@
 #define PROTO_CMD_MSG_WRITE_DATA  0x70
 #define PROTO_CMD_MSG_READ_SIZE   0x80
 #define PROTO_CMD_MSG_WRITE_SIZE  0x90
+#define PROTO_CMD_READ_OFFSET     0xa0
+#define PROTO_CMD_WRITE_OFFSET    0xb0
 
 // actions
 #define PROTO_ACTION_PING         0x00
@@ -58,7 +60,7 @@
 
 // long function numbers 0..15: bootloader
 #define PROTO_LFUNC_BOOT_ROM_SIZE     0x00
-#define PROTO_LFUNC_BOOT_PAGE_ADDR    0x01
+
 
 // status flag
 #define PROTO_STATUS_MASK_RX_PENDING  0x007f

@@ -160,6 +160,15 @@ void proto_api_write_msg_done(u08 chan, u16 size)
   uart_send_crlf();
 }
 
+u32 proto_api_read_offset(u08 chan)
+{
+  return 0;
+}
+
+void proto_api_write_offset(u08 chan, u32 off)
+{
+}
+
 int main(void)
 {
   system_init();

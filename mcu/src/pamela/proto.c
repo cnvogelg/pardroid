@@ -92,6 +92,22 @@ static void handle_lfunc_write(u08 num)
   proto_low_end();
 }
 
+static void handle_read_offset(u08 chan)
+{
+  u32 off = proto_api_read_offset(chan);
+  DL(off); DNL;
+  proto_low_read_long(off);
+  proto_low_end();
+}
+
+static void handle_write_offset(u08 chan)
+{
+  u32 off = proto_low_write_long();
+  proto_api_write_offset(chan, off);
+  proto_low_end();
+  DL(off); DNL;
+}
+
 static void handle_msg_read_size(u08 chan)
 {
   u16 size = proto_api_read_msg_size(chan);
@@ -206,6 +222,14 @@ void proto_handle(void)
     case PROTO_CMD_MSG_WRITE_SIZE:
       DC('S');
       handle_msg_write_size(chn);
+      break;
+    case PROTO_CMD_READ_OFFSET:
+      DC('o');
+      handle_read_offset(chn);
+      break;
+    case PROTO_CMD_WRITE_OFFSET:
+      DC('O');
+      handle_write_offset(chn);
       break;
     default:
       DC('!'); DNL;

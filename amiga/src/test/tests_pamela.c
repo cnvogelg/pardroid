@@ -924,6 +924,84 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   return res;
 }
 
+/* ---------- offset ----------------------------------------------------- */
+
+int test_offset_write_read(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  UWORD val = (UWORD)p->iter + test_bias;
+  ULONG v = 0xdeadbeef + val;
+
+  /* write */
+  int res = proto_offset_write(proto, test_channel, v);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  /* read back */
+  ULONG r;
+  res = proto_offset_read(proto, test_channel, &r);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return res;
+  }
+
+  /* check */
+  if (v != r)
+  {
+    p->error = "value mismatch";
+    p->section = "compare";
+    sprintf(p->extra, "w=%04lx r=%04lx", v, r);
+    return 1;
+  }
+
+  return 0;
+}
+
+int test_offset_busy(test_t *t, test_param_t *p)
+{
+  pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
+  proto_handle_t *proto = pamela_get_proto(pb);
+  UWORD val = (UWORD)p->iter + test_bias;
+  ULONG v = 0xdeadbeef + val;
+
+  /* enable busy mode */
+  int res = proto_action(proto, TEST_PAMELA_ACTION_BUSY_LOOP);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "enable busy";
+    return 1;
+  }
+
+  /* write */
+  res = proto_offset_write(proto, test_channel, v);
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
+    p->error = proto_perror(res);
+    p->section = "write not busy";
+    return res;
+  }
+
+  /* read back */
+  ULONG r;
+  res = proto_offset_read(proto, test_channel, &r);
+  if (res != PROTO_RET_DEVICE_BUSY)
+  {
+    p->error = proto_perror(res);
+    p->section = "read not busy";
+    return res;
+  }
+
+  return recover_from_busy(proto, p);
+}
+
 /* ---------- status tests ----------------------------------------------- */
 
 #define WAIT_S 0UL

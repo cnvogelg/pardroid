@@ -140,7 +140,7 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_function_write_long(ph, PROTO_LFUNC_BOOT_PAGE_ADDR, bu.addr);
+    res = proto_offset_write(ph, BOOTLOADER_CHN_PAGES, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
@@ -190,7 +190,7 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_function_write_long(ph, PROTO_LFUNC_BOOT_PAGE_ADDR, bu.addr);
+    res = proto_offset_write(ph, BOOTLOADER_CHN_PAGES, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }

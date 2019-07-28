@@ -64,25 +64,28 @@ u32 proto_api_lfunc_read(u08 num)
     case PROTO_LFUNC_BOOT_ROM_SIZE:
       uart_send('r');
       return CONFIG_MAX_ROM;
-    case PROTO_LFUNC_BOOT_PAGE_ADDR:
-      uart_send('a');
-      return page_addr;
   }
   return 0;
 }
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
-  switch(num) {
-    case PROTO_LFUNC_BOOT_PAGE_ADDR:
-      uart_send('A');
-      page_addr = val;
-      break;
-  }
 }
 
 void proto_api_action(u08 num)
 {
+}
+
+u32 proto_api_read_offset(u08 chan)
+{
+  uart_send('a');
+  return page_addr;
+}
+
+void proto_api_write_offset(u08 chan, u32 off)
+{
+  uart_send('A');
+  page_addr = off;
 }
 
 // ----- main -----
