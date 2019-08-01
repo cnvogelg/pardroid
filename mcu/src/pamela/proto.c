@@ -108,6 +108,22 @@ static void handle_write_offset(u08 chan)
   DL(off); DNL;
 }
 
+static void handle_read_mtu(u08 chan)
+{
+  u16 mtu = proto_api_read_mtu(chan);
+  DW(mtu); DNL;
+  proto_low_read_word(mtu);
+  proto_low_end();
+}
+
+static void handle_write_mtu(u08 chan)
+{
+  u16 mtu = proto_low_write_word();
+  proto_api_write_mtu(chan, mtu);
+  proto_low_end();
+  DW(mtu); DNL;
+}
+
 static void handle_msg_read_size(u08 chan)
 {
   u16 size = proto_api_read_msg_size(chan);
@@ -230,6 +246,14 @@ void proto_handle(void)
     case PROTO_CMD_WRITE_OFFSET:
       DC('O');
       handle_write_offset(chn);
+      break;
+    case PROTO_CMD_READ_MTU:
+      DC('u');
+      handle_read_mtu(chn);
+      break;
+    case PROTO_CMD_WRITE_MTU:
+      DC('U');
+      handle_write_mtu(chn);
       break;
     default:
       DC('!'); DNL;

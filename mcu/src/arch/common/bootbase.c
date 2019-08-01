@@ -37,8 +37,6 @@ u16  proto_api_wfunc_read(u08 num)
       return MACHTAG;
     case PROTO_WFUNC_BOOT_VERSION:
       return VERSION_TAG;
-    case PROTO_WFUNC_BOOT_PAGE_SIZE:
-      return page_words * 2;
     case PROTO_WFUNC_BOOT_ROM_CRC:
       return pablo_get_rom_crc();
     case PROTO_WFUNC_BOOT_ROM_MACHTAG:
@@ -86,6 +84,15 @@ void proto_api_write_offset(u08 chan, u32 off)
 {
   uart_send('A');
   page_addr = off;
+}
+
+u16 proto_api_read_mtu(u08 chan)
+{
+  return page_words;
+}
+
+void proto_api_write_mtu(u08 chan, u16 mtu)
+{
 }
 
 // ----- main -----

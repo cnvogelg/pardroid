@@ -15,6 +15,7 @@
 #define PROTO_RET_INVALID_CHANNEL   15
 #define PROTO_RET_INVALID_FUNCTION  14
 #define PROTO_RET_INVALID_ACTION    13
+#define PROTO_RET_INVALID_MTU       12
 
 struct proto_handle;
 typedef struct proto_handle proto_handle_t;
@@ -45,6 +46,9 @@ extern int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWOR
 
 extern int proto_offset_read(proto_handle_t *ph, UBYTE chn, ULONG *offset);
 extern int proto_offset_write(proto_handle_t *ph, UBYTE chn, ULONG offset);
+
+extern int proto_mtu_read(proto_handle_t *ph, UBYTE chn, UWORD *mtu);
+extern int proto_mtu_write(proto_handle_t *ph, UBYTE chn, WORD mtu);
 
 extern const char *proto_perror(int res);
 

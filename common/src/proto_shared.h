@@ -7,6 +7,8 @@
 #define PROTO_MAX_FUNCTION        16
 #define PROTO_MAX_ACTION          16
 
+#define PROTO_MTU_INVALID         0xffff
+
 // command codes: upper 4 Bits of command word
 #define PROTO_CMD_MASK            0xf0
 #define PROTO_CMD_ARG             0x0f
@@ -22,6 +24,8 @@
 #define PROTO_CMD_MSG_WRITE_SIZE  0x90
 #define PROTO_CMD_READ_OFFSET     0xa0
 #define PROTO_CMD_WRITE_OFFSET    0xb0
+#define PROTO_CMD_READ_MTU        0xc0
+#define PROTO_CMD_WRITE_MTU       0xd0
 
 // actions
 #define PROTO_ACTION_PING         0x00
@@ -48,11 +52,10 @@
 #define PROTO_WFUNC_BOOT_MAGIC        0x00
 #define PROTO_WFUNC_BOOT_MACHTAG      0x01
 #define PROTO_WFUNC_BOOT_VERSION      0x02
-#define PROTO_WFUNC_BOOT_PAGE_SIZE    0x03
-#define PROTO_WFUNC_BOOT_ROM_CRC      0x04
-#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x05
-#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x06
-#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x07
+#define PROTO_WFUNC_BOOT_ROM_CRC      0x03
+#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x04
+#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x05
+#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x06
 
 // long function numbers 0..15: application
 #define PROTO_LFUNC_STATUS            0x00

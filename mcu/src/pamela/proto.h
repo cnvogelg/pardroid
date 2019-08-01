@@ -35,4 +35,7 @@ extern void proto_api_read_block_spi(u16 num_words);
 extern u32  proto_api_read_offset(u08 chan);
 extern void proto_api_write_offset(u08 chan, u32 offset);
 
+extern u16  proto_api_read_mtu(u08 chan);
+extern void proto_api_write_mtu(u08 chan, u16 mtu);
+
 #endif

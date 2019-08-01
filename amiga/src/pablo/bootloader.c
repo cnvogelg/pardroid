@@ -46,7 +46,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   }
 
   /* page size */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_PAGE_SIZE, &bi->page_size);
+  res = proto_mtu_read(ph, BOOTLOADER_CHN_PAGES, &bi->page_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }

@@ -156,30 +156,22 @@ int proto_action_bench(proto_handle_t *ph, UBYTE num, ULONG deltas[2])
   return result;
 }
 
-int proto_function_read_word(proto_handle_t *ph, UBYTE num, UWORD *data)
+static int read_word(proto_handle_t *ph, UBYTE cmd, UWORD *data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  if(num > PROTO_MAX_FUNCTION) {
-    return PROTO_RET_INVALID_FUNCTION;
-  }
-  UBYTE cmd = PROTO_CMD_WFUNC_READ + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_read_word(port, timeout_flag, cmd, data);
   timer_stop(ph->timer);
 
-  return result;
+  return result;  
 }
 
-int proto_function_write_word(proto_handle_t *ph, UBYTE num, UWORD data)
+static int write_word(proto_handle_t *ph, UBYTE cmd, UWORD data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  if(num > PROTO_MAX_FUNCTION) {
-    return PROTO_RET_INVALID_FUNCTION;
-  }
-  UBYTE cmd = PROTO_CMD_WFUNC_WRITE + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_write_word(port, timeout_flag, cmd, &data);
@@ -188,14 +180,28 @@ int proto_function_write_word(proto_handle_t *ph, UBYTE num, UWORD data)
   return result;
 }
 
-int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
+int proto_function_read_word(proto_handle_t *ph, UBYTE num, UWORD *data)
 {
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   if(num > PROTO_MAX_FUNCTION) {
     return PROTO_RET_INVALID_FUNCTION;
   }
-  UBYTE cmd = PROTO_CMD_LFUNC_READ + num;
+  UBYTE cmd = PROTO_CMD_WFUNC_READ + num;
+  return read_word(ph, cmd, data);
+}
+
+int proto_function_write_word(proto_handle_t *ph, UBYTE num, UWORD data)
+{
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_WFUNC_WRITE + num;
+  return write_word(ph, cmd, data);
+}
+
+static int read_long(proto_handle_t *ph, UBYTE cmd, ULONG *data)
+{
+  struct pario_port *port = ph->port;
+  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_read_long(port, timeout_flag, cmd, data);
@@ -204,14 +210,10 @@ int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
   return result;
 }
 
-int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
+static int write_long(proto_handle_t *ph, UBYTE cmd, ULONG data)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  if(num > PROTO_MAX_FUNCTION) {
-    return PROTO_RET_INVALID_FUNCTION;
-  }
-  UBYTE cmd = PROTO_CMD_LFUNC_WRITE + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_write_long(port, timeout_flag, cmd, &data);
@@ -220,38 +222,59 @@ int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
   return result;
 }
 
+int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
+{
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_LFUNC_READ + num;
+  return read_long(ph, cmd, data);
+}
+
+int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
+{
+  if(num > PROTO_MAX_FUNCTION) {
+    return PROTO_RET_INVALID_FUNCTION;
+  }
+  UBYTE cmd = PROTO_CMD_LFUNC_WRITE + num;
+  return write_long(ph, cmd, data);
+}
+
 int proto_offset_read(proto_handle_t *ph, UBYTE chn, ULONG *offset)
 {
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   if(chn > PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
   UBYTE cmd = PROTO_CMD_READ_OFFSET + chn;
-
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_long(port, timeout_flag, cmd, offset);
-  timer_stop(ph->timer);
-
-  return result;
+  return read_long(ph, cmd, offset);
 }
 
 int proto_offset_write(proto_handle_t *ph, UBYTE chn, ULONG offset)
 {
-  struct pario_port *port = ph->port;
-  volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   if(chn > PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
   UBYTE cmd = PROTO_CMD_WRITE_OFFSET + chn;
-
-  timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_long(port, timeout_flag, cmd, &offset);
-  timer_stop(ph->timer);
-
-  return result;
+  return write_long(ph, cmd, offset);
 }
 
+int proto_mtu_read(proto_handle_t *ph, UBYTE chn, UWORD *mtu)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_READ_MTU + chn;
+  return read_word(ph, cmd, mtu);
+}
+
+int proto_mtu_write(proto_handle_t *ph, UBYTE chn, WORD mtu)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_WRITE_MTU + chn;
+  return write_word(ph, cmd, mtu);  
+}
 
 int proto_msg_write(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
 {
@@ -355,6 +378,8 @@ const char *proto_perror(int res)
       return "message too large";
     case PROTO_RET_DEVICE_BUSY:
       return "device is busy";
+    case PROTO_RET_INVALID_MTU:
+      return "invalid MTU size";
     default:
       return "?";
   }

@@ -169,6 +169,15 @@ void proto_api_write_offset(u08 chan, u32 off)
 {
 }
 
+u16 proto_api_read_mtu(u08 chan)
+{
+  return 256;
+}
+
+void proto_api_write_mtu(u08 chan, u16 mtu)
+{
+}
+
 int main(void)
 {
   system_init();

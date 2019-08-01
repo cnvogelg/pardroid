@@ -318,7 +318,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   pamela_handle_t *pb = (pamela_handle_t *)p->user_data;
   proto_handle_t *proto = pamela_get_proto(pb);
 
-  int res = proto_msg_write_single(proto, test_channel, 0, 0);
+  int res = pamela_msg_write_single(pb, test_channel, 0, 0);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -327,7 +327,7 @@ int test_msg_empty(test_t *t, test_param_t *p)
   }
 
   UWORD size = 0;
-  res = proto_msg_read_single(proto, test_channel, 0, &size);
+  res = pamela_msg_read_single(pb, test_channel, 0, &size);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -353,7 +353,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
 
   ULONG data = 0xdeadbeef;
 
-  int res = proto_msg_write_single(proto, test_channel, (UBYTE *)&data, 2);
+  int res = pamela_msg_write_single(pb, test_channel, (UBYTE *)&data, 2);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -362,7 +362,7 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   }
 
   UWORD size = 2;
-  res = proto_msg_read_single(proto, test_channel, (UBYTE *)&data, &size);
+  res = pamela_msg_read_single(pb, test_channel, (UBYTE *)&data, &size);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -500,7 +500,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
   UWORD words = size >> 1;
 
   /* send buffer */
-  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  int res = pamela_msg_write_single(pb, test_channel, mem_w, words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -510,7 +510,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 
   /* receive buffer */
   UWORD got_words = size_r >> 1;
-  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
+  res = pamela_msg_read_single(pb, test_channel, mem_r, &got_words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -554,14 +554,14 @@ int test_msg_size_max(test_t *t, test_param_t *p)
   proto_handle_t *proto = pamela_get_proto(pb);
   UWORD max_bytes;
 
-  /* read max size from firmware */
-  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &max_bytes);
-  if (res != 0)
-  {
-    p->error = proto_perror(res);
-    p->section = "read max_bytes";
+  /* get MTU */
+  int res = pamela_get_mtu(pb, test_channel, &max_bytes);
+  if(res != PROTO_RET_OK) {
     return res;
   }
+
+  /* MTU is words */
+  max_bytes *= 2;
 
   return msg_read_write(t, p, max_bytes);
 }
@@ -613,7 +613,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
       {c1_words,
        c1_buf,
        &part2_w}};
-  int res = proto_msg_write(proto, test_channel, &msgiov_w);
+  int res = pamela_msg_write(pb, test_channel, &msgiov_w);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -636,7 +636,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
       {c1_words,
        c1_buf,
        &part2_r}};
-  res = proto_msg_read(proto, test_channel, &msgiov_r);
+  res = pamela_msg_read(pb, test_channel, &msgiov_r);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -688,7 +688,7 @@ int test_msg_write(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* send buffer */
-  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  int res = pamela_msg_write_single(pb, test_channel, mem_w, words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -708,13 +708,16 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   UWORD size;
 
   /* read max size from firmware */
-  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
+  int res = pamela_get_mtu(pb, test_channel, &size);
   if (res != 0)
   {
     p->error = proto_perror(res);
-    p->section = "read max_bytes";
+    p->section = "read MTU";
     return 1;
   }
+
+  /* convert to bytes */
+  size *= 2;
 
   /* too many now */
   size += 2;
@@ -735,11 +738,11 @@ int test_msg_write_too_large(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* send buffer and expect msg too large */
-  res = proto_msg_write_single(proto, test_channel, mem_w, words);
-  if (res != PROTO_RET_TIMEOUT)
+  res = pamela_msg_write_single(pb, test_channel, mem_w, words);
+  if (res != PROTO_RET_MSG_TOO_LARGE)
   {
     p->error = proto_perror(res);
-    p->section = "write must time out";
+    p->section = "write must return too large msg";
     return 1;
   }
 
@@ -775,7 +778,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   }
 
   /* send buffer */
-  res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  res = pamela_msg_write_single(pb, test_channel, mem_w, words);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);
@@ -809,7 +812,7 @@ int test_msg_read(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r >> 1;
-  int res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
+  int res = pamela_msg_read_single(pb, test_channel, mem_r, &got_words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -829,25 +832,19 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   UWORD size;
 
   /* read max size from firmware */
-  int res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_MAX_BYTES, &size);
+  int res = pamela_get_mtu(pb, test_channel, &size);
   if (res != 0)
   {
     p->error = proto_perror(res);
-    p->section = "read max_bytes";
+    p->section = "read MTU";
     return 1;
   }
+
+  /* convert to bytes */
+  size *= 2;
 
   /* too many now */
   size += 2;
-
-  /* write too large size */
-  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_BUF_WORDS, size);
-  if (res != 0)
-  {
-    p->error = proto_perror(res);
-    p->section = "write too large size";
-    return 1;
-  }
 
   BYTE *mem_r = AllocVec(size, MEMF_PUBLIC);
   if (mem_r == 0)
@@ -860,20 +857,11 @@ int test_msg_read_too_large(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* receive buffer */
-  res = proto_msg_read_single(proto, test_channel, mem_r, &words);
+  res = pamela_msg_read_single(pb, test_channel, mem_r, &words);
   if (res != PROTO_RET_MSG_TOO_LARGE)
   {
     p->error = proto_perror(res);
     p->section = "read must return MSG_TOO_LARGE";
-    return 1;
-  }
-
-  /* we have to reset now */
-  res = proto_reset(proto);
-  if (res != 0)
-  {
-    p->error = proto_perror(res);
-    p->section = "reset";
     return 1;
   }
 
@@ -909,7 +897,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
 
   /* receive buffer */
   UWORD got_words = size_r >> 1;
-  res = proto_msg_read_single(proto, test_channel, mem_r, &got_words);
+  res = pamela_msg_read_single(pb, test_channel, mem_r, &got_words);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);
@@ -1381,7 +1369,7 @@ int run_event_msg(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* send buffer */
-  int res = proto_msg_write_single(proto, test_channel, mem_w, words);
+  int res = pamela_msg_write_single(pb, test_channel, mem_w, words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -1426,7 +1414,7 @@ int run_event_msg(test_t *t, test_param_t *p)
 
   /* read message */
   UWORD rx_size = words;
-  res = proto_msg_read_single(proto, test_channel, mem_w, &rx_size);
+  res = pamela_msg_read_single(pb, test_channel, mem_w, &rx_size);
   if (res != 0)
   {
     p->error = proto_perror(res);

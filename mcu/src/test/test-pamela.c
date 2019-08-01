@@ -78,12 +78,6 @@ u16  proto_api_wfunc_read(u08 num)
     val = func_read_word(num);
   } else {
     switch(num) {
-      case TEST_PAMELA_WFUNC_MAX_BYTES:
-        val = MAX_WORDS * 2;
-        break;
-      case TEST_PAMELA_WFUNC_BUF_WORDS:
-        val = buf_words;
-        break;
       case TEST_PAMELA_WFUNC_TEST_VALUE:
         val = wfunc_val;
         break;
@@ -106,9 +100,6 @@ void proto_api_wfunc_write(u08 num, u16 val)
     func_write_word(num, val);
   } else {
     switch(num) {
-      case TEST_PAMELA_WFUNC_BUF_WORDS:
-        buf_words = val;
-        break;
       case TEST_PAMELA_WFUNC_TEST_VALUE:
         wfunc_val = val;
         break;
@@ -264,6 +255,18 @@ u32 proto_api_read_offset(u08 chan)
 void proto_api_write_offset(u08 chan, u32 off)
 {
   offset = off;
+}
+
+u16 proto_api_read_mtu(u08 chan)
+{
+  return buf_words;
+}
+
+void proto_api_write_mtu(u08 chan, u16 mtu)
+{
+  if(mtu <= MAX_WORDS) {
+    buf_words = mtu;
+  }
 }
 
 int main(void)

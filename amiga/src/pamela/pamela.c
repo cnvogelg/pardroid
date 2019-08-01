@@ -6,6 +6,7 @@
 #include "debug.h"
 
 #include "pamela.h"
+#include "proto_shared.h"
 
 struct pamela_handle {
   struct pario_handle *pario;
@@ -17,6 +18,7 @@ struct pamela_handle {
   ULONG  timer_sigmask;
   BYTE   ack_irq_signal;
   BYTE   timer_signal;
+  UWORD  chan_mtu[PROTO_MAX_CHANNEL];
 };
 
 pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
@@ -31,6 +33,11 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
   ph->proto = NULL;
   ph->port = NULL;
   ph->sys_base = SysBase;
+
+  /* init mtu cache */
+  for(int i=0;i<PROTO_MAX_CHANNEL;i++) {
+    ph->chan_mtu[i] = PROTO_MTU_INVALID;
+  }
 
   ph->pario = pario_init(SysBase);
   if(ph->pario == NULL) {
@@ -229,6 +236,116 @@ UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph)
 int pamela_read_status(pamela_handle_t *ph, ULONG *status)
 {
   return proto_function_read_long(ph->proto, PROTO_LFUNC_STATUS, status);
+}
+
+int pamela_get_mtu(pamela_handle_t *ph, UBYTE chan, UWORD *ret_mtu)
+{
+  if(chan >= PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UWORD mtu = ph->chan_mtu[chan];
+
+  /* need to query device */
+  if(mtu == PROTO_MTU_INVALID) {
+    int res = proto_mtu_read(ph->proto, chan, &mtu);
+    if(res != PROTO_RET_OK) {
+      return res;
+    }
+    ph->chan_mtu[chan] = mtu;
+  }
+
+  *ret_mtu = mtu;
+  return PROTO_RET_OK;
+}
+
+int pamela_set_mtu(pamela_handle_t *ph, UBYTE chan, WORD mtu)
+{
+  if(chan >= PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  /* try to set MTU */
+  int res = proto_mtu_write(ph->proto, chan, mtu);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  /* read back MTU */
+  UWORD dev_mtu;
+  res = proto_mtu_read(ph->proto, chan, &dev_mtu);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  /* device hasn't changed MTU */
+  if(dev_mtu != mtu) {
+    return PROTO_RET_INVALID_MTU;
+  } else {
+    /* update cache */
+    ph->chan_mtu[chan] = mtu;
+    return PROTO_RET_OK;
+  }
+}
+
+static int check_size(pamela_handle_t *ph, UBYTE chn, UWORD max_size)
+{
+  UWORD mtu;
+  
+  int res = pamela_get_mtu(ph, chn, &mtu);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+
+  if(max_size > mtu) {
+    return PROTO_RET_MSG_TOO_LARGE;
+  } else {
+    return PROTO_RET_OK;
+  }
+}
+
+int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+{
+  UWORD max_size = (UWORD)msgiov->total_words;
+  int res;
+
+  res = check_size(ph, chn, max_size);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+  return proto_msg_write(ph->proto, chn, msgiov);
+}
+
+int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+{
+  UWORD max_size = (UWORD)msgiov->total_words;
+  int res;
+
+  res = check_size(ph, chn, max_size);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+  return proto_msg_read(ph->proto, chn, msgiov);
+}
+
+int pamela_msg_write_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
+{
+  int res;
+
+  res = check_size(ph, chn, num_words);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+  return proto_msg_write_single(ph->proto, chn, buf, num_words);
+}
+
+int pamela_msg_read_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *num_words)
+{
+  int res;
+
+  res = check_size(ph, chn, *num_words);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+  return proto_msg_read_single(ph->proto, chn, buf, num_words);
 }
 
 const char *pamela_perror(int res)
