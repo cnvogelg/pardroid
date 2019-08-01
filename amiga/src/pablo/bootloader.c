@@ -50,6 +50,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
+  bi->page_size *= 2;
 
   /* rom size */
   res = proto_function_read_long(ph, PROTO_LFUNC_BOOT_ROM_SIZE, &bi->rom_size);
