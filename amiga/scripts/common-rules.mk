@@ -1,4 +1,7 @@
-all: $(PROGRAMS)
+info:
+	@echo "--- $(CONFIG) $(FLAVOR) $(COMPILER) ---"
+
+all: info $(PROGRAMS)
 
 clean:
 	$(H)rm -rf $(BUILD_DIR)
@@ -7,14 +10,14 @@ clean-all:
 	$(H)rm -rf $(BUILD_BASE_DIR) $(DIST_BASE_DIR)
 
 # distribution
-dist: $(DIST_FILES)
+dist: info $(DIST_FILES)
 
 dist-all:
 	@for a in $(ALL_FLAVORS) ; do \
-		echo "--- flavor=$$a ---" ; \
 		for b in $(ALL_CONFIGS) ; do \
-			echo "--- config=$$b ---" ; \
-			$(MAKE) FLAVOR=$$a CONFIG=$$b dist || exit 1 ; \
+			for c in $(ALL_COMPILERS); do \
+				$(MAKE) FLAVOR=$$a CONFIG=$$b COMPILER=$$c dist || exit 1 ; \
+			done \
 		done \
 	done
 

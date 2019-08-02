@@ -1,15 +1,18 @@
 BASE_DIR=..
 # config
 CONFIG?=configs/amiga68000.config
+COMPILER?=vbcc
 include $(BASE_DIR)/scripts/gencfg.mk
 # common defs
 include scripts/common-defs.mk
 # toolchain
 include scripts/toolchain-$(CONFIG_ARCH).mk
+include scripts/toolchain-$(CONFIG_ARCH)-$(COMPILER).mk
 # version
 include ../version.mk
 
 ALL_CONFIGS=configs/amiga68000.config
+ALL_COMPILERS=vbcc gcc
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base

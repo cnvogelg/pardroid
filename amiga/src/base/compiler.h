@@ -7,7 +7,13 @@
 #define SAVEDS __saveds
 #define ASM
 #else
+#ifdef __GNUC__
+#define REG(r,t) t __asm(#r)
+#define SAVEDS __attribute__((saveds))
+#define ASM
+#else
 #error unsupported compiler
+#endif /* GNUC */
 #endif /* VBCC */
 
 #endif /* COMPILER_H */

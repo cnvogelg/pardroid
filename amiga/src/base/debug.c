@@ -4,6 +4,8 @@
 #include "compiler.h"
 #include "debug.h"
 
+#ifdef __VBCC__
+
 #define SIZE 80
 
 struct buffer {
@@ -37,3 +39,5 @@ void KPrintF(char *fmt, ...)
     KPutCh(buf.buf[i]);
   }
 }
+
+#endif /* VBCC */
