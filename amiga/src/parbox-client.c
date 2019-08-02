@@ -63,7 +63,7 @@ int run_write(options_t *opts, data_t *data)
   if(r_get == r) {
     Printf("returned write: error=%ld\n", r->error);
   } else {
-    Printf("invalid request returned=%ld\n", r_get);
+    Printf("invalid request returned=%ld\n", (LONG)r_get);
   }
 
   return RETURN_OK;
@@ -82,7 +82,8 @@ int run_operation(options_t *opts, data_t *data)
 int run_client(options_t *opts)
 {
   Printf("num_blks=%ld, blk_size=%ld, channel=%ld, operation=%lc, port='%s'\n",
-    opts->num_blks, opts->blk_size, opts->channel, opts->operation, opts->port_name);
+    opts->num_blks, opts->blk_size, opts->channel, opts->operation, 
+    (LONG)opts->port_name);
 
   /* first try to find engine's public port */
   Forbid();
@@ -163,7 +164,7 @@ int parse_options(options_t *opts)
         opts->operation = OPER_PING;
         break;
       default:
-        Printf("Invalid operation: %s\n", params.operation);
+        Printf("Invalid operation: %s\n", (LONG)params.operation);
         return RETURN_ERROR;
     }
   }

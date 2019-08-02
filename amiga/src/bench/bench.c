@@ -15,7 +15,7 @@ bench_def_t *find_bench(bench_def_t *first, const char *name)
     }
     def++;
   }
-  Printf("Benchmark not found: %s\n", name);
+  Printf("Benchmark not found: %s\n", (LONG)name);
   return NULL;
 }
 
@@ -24,14 +24,14 @@ void list_benches(bench_def_t *first)
   PutStr("--- Benchmarks ---\n");
   bench_def_t *def = first;
   while(def->func != NULL) {
-    Printf("%-6s  %s\n", def->name, def->description);
+    Printf("%-6s  %s\n", (LONG)def->name, (LONG)def->description);
     def++;
   }
 }
 
 static void write_header(bench_def_t *def)
 {
-  Printf("[.....]  (%-5s)  %s\r", def->name, def->description);
+  Printf("[.....]  (%-5s)  %s\r", (LONG)def->name, (LONG)def->description);
 }
 
 static void write_result(ULONG val)

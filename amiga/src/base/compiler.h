@@ -9,7 +9,8 @@
 #else
 #ifdef __GNUC__
 #define REG(r,t) t __asm(#r)
-#define SAVEDS __attribute__((saveds))
+/* only for baserel. #define SAVEDS __attribute__((saveds)) */
+#define SAVEDS
 #define ASM
 #else
 #error unsupported compiler

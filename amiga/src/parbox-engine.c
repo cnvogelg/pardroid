@@ -20,7 +20,7 @@ static params_t params;
 
 int run_engine(const char *port_name)
 {
-  Printf("Running parbox engine on port '%s'\n", port_name);
+  Printf("Running parbox engine on port '%s'\n", (LONG)port_name);
 
   int result = 0;
   engine_handle_t *eh = engine_start(&result, (struct Library *)SysBase, port_name);
@@ -32,7 +32,7 @@ int run_engine(const char *port_name)
     engine_stop(eh);
     PutStr("done\n");
   } else {
-    Printf("Staring engine failed! result=%ld -> %s\n", result, engine_perror(result));
+    Printf("Staring engine failed! result=%ld -> %s\n", result, (LONG)engine_perror(result));
     return RETURN_ERROR;
   }
 }

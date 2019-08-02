@@ -42,22 +42,22 @@ static int check_args(void)
 
 static void show_machtag(UWORD mach_tag)
 {
-  char *arch,*mcu,*mach;
+  const char *arch,*mcu,*mach;
   UBYTE extra;
   machtag_decode(mach_tag, &arch, &mcu, &mach, &extra);
   Printf("            machtag=%s-%s-%s-%ld (%04lx)\n",
-     arch, mcu, mach, (ULONG)extra, (ULONG)mach_tag);
+     (ULONG)arch, (ULONG)mcu, (ULONG)mach, (ULONG)extra, (ULONG)mach_tag);
 }
 
 static void show_file_info(const char *file_name, pblfile_t *pf)
 {
-  Printf("PBL File:   size=%08lx, name='%s'\n", pf->rom_size, file_name);
+  Printf("PBL File:   size=%08lx, name='%s'\n", pf->rom_size, (ULONG)file_name);
   UBYTE bl_hi = (UBYTE)(pf->version >> 8);
   UBYTE bl_lo = (UBYTE)(pf->version & 0xff);
-  char *id_str;
+  const char *id_str;
   fwid_decode(pf->fw_id, &id_str);
   Printf("            fw=%04lx (%s), ver=%ld.%ld\n",
-    (ULONG)pf->fw_id, id_str, (ULONG)bl_hi, (ULONG)bl_lo);
+    (ULONG)pf->fw_id, (ULONG)id_str, (ULONG)bl_hi, (ULONG)bl_lo);
   show_machtag(pf->mach_tag);
 }
 
@@ -80,13 +80,13 @@ static void show_fw_info(bootinfo_t *bi)
   } else {
     UBYTE fw_hi = (UBYTE)(bi->fw_version >> 8) & 0x7f;
     UBYTE fw_lo = (UBYTE)(bi->fw_version & 0xff);
-    char *arch,*mcu,*mach;
+    const char *arch,*mcu,*mach;
     UBYTE extra;
     machtag_decode(bi->fw_mach_tag, &arch, &mcu, &mach, &extra);
-    char *id_str;
+    const char *id_str;
     fwid_decode(bi->fw_id, &id_str);
     Printf("Firmware:   fw=%04lx (%s), ver=%ld.%ld, crc=%04lx\n",
-      (ULONG)bi->fw_id, id_str, (ULONG)fw_hi, (ULONG)fw_lo,
+      (ULONG)bi->fw_id, (ULONG)id_str, (ULONG)fw_hi, (ULONG)fw_lo,
       (ULONG)bi->fw_crc);
     show_machtag(bi->fw_mach_tag);
   }
@@ -243,14 +243,14 @@ int dosmain(void)
       if(file_result == PBLFILE_OK) {
         PutStr("ok.\n");
       } else {
-        Printf("INVALID: %s\n", pblfile_perror(file_result));
+        Printf("INVALID: %s\n", (ULONG)pblfile_perror(file_result));
         pblfile_free(&pf);
         res = RETURN_ERROR;
       }
     } else {
       /* error */
       Printf("FAILED loading '%s': %s\n",
-        file_name, pblfile_perror(file_result));
+        (ULONG)file_name, (ULONG)pblfile_perror(file_result));
       res = RETURN_ERROR;
     }
   }
@@ -314,7 +314,7 @@ int dosmain(void)
 
       pamela_exit(pb);
     } else {
-      Printf("FAILED pamela: %s\n", pamela_perror(pb_res));
+      Printf("FAILED pamela: %s\n", (LONG)pamela_perror(pb_res));
       res = RETURN_ERROR;
     }
 

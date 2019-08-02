@@ -27,7 +27,7 @@ static void test_write(engine_handle_t *eh, struct MsgPort *mp)
     if(r_get == r) {
       Printf("returned write: error=%ld\n", r->error);
     } else {
-      Printf("invalid request returned=%ld\n", r_get);
+      Printf("invalid request returned=%ld\n", (LONG)r_get);
     }
     request_delete(r);
   } else {
@@ -70,7 +70,7 @@ int dosmain(void)
     PutStr("done\n");
   } else {
     PutStr("start: failed!\n");
-    Printf("result=%ld -> %s\n", result, engine_perror(result));
+    Printf("result=%ld -> %s\n", result, (LONG)engine_perror(result));
   }
   return 0;
 }

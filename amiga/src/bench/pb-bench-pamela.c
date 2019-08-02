@@ -15,7 +15,7 @@
 
 static void proto_err(int res)
 {
-  Printf("\nPROTO ERROR: %ld  %s\n", res, proto_perror(res));
+  Printf("\nPROTO ERROR: %ld  %s\n", res, (LONG)proto_perror(res));
 }
 
 /* ----- events helper ----- */
@@ -29,7 +29,7 @@ static ULONG run_with_events(bench_def_t *def, pamela_handle_t *pb, bench_func_t
   int res = pamela_init_events(pb);
   if(res != PAMELA_OK) {
     Printf("ERROR: pamela_init_events: %ld %s!!\n",
-           (LONG)res, proto_perror(res));
+           (LONG)res, (LONG)proto_perror(res));
     return 0;
   }
 

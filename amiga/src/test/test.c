@@ -8,16 +8,16 @@
 
 static void print_header(test_t *test, test_param_t *param)
 {
-  Printf("[....]  (%-5s)  %s\r", test->name, test->description);
+  Printf("[....]  (%-5s)  %s\r", (LONG)test->name, (LONG)test->description);
 }
 
 static void print_error(int res, test_param_t *param)
 {
   Printf("[FAIL]\n"
          "        error=%ld  %s  section=%s\n",
-    (LONG)res, param->error, param->section);
+    (LONG)res, (LONG)param->error, (LONG)param->section);
   if(param->extra != NULL) {
-    Printf("        %s\n", param->extra);
+    Printf("        %s\n", (LONG)param->extra);
   }
 }
 
@@ -147,7 +147,7 @@ static void show_tests(test_t all_tests[])
 {
   test_t *t = all_tests;
   while(t->name != NULL) {
-    Printf("%-16s  %s\n", t->name, t->description);
+    Printf("%-16s  %s\n", (LONG)t->name, (LONG)t->description);
     t++;
   }
 }
