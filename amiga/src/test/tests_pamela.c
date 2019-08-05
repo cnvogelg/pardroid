@@ -168,7 +168,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
   UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
 
   /* write */
-  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
+  int res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_WRITE_TEST_VALUE, v);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -178,7 +178,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_TEST_VALUE, &r);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -214,7 +214,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, v);
+  res = proto_function_write_word(proto, TEST_PAMELA_WFUNC_WRITE_TEST_VALUE, v);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);
@@ -224,7 +224,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   UWORD r;
-  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_TEST_VALUE, &r);
+  res = proto_function_read_word(proto, TEST_PAMELA_WFUNC_READ_TEST_VALUE, &r);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);
@@ -243,7 +243,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
   ULONG v = 0xdeadbeef + val;
 
   /* write */
-  int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
+  int res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_WRITE_TEST_VALUE, v);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -253,7 +253,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
+  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_READ_TEST_VALUE, &r);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -290,7 +290,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   }
 
   /* write */
-  res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, v);
+  res = proto_function_write_long(proto, TEST_PAMELA_LFUNC_WRITE_TEST_VALUE, v);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);
@@ -300,7 +300,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 
   /* read back */
   ULONG r;
-  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_TEST_VALUE, &r);
+  res = proto_function_read_long(proto, TEST_PAMELA_LFUNC_READ_TEST_VALUE, &r);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
     p->error = proto_perror(res);

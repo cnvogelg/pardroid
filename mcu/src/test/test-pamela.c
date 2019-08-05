@@ -20,6 +20,10 @@
 #include "pamela.h"
 #include "test-pamela.h"
 #include "enc28j60.h"
+#include "fw.h"
+#include "fwid.h"
+
+FW_INFO(FWID_TEST_PAMELA, VERSION_TAG)
 
 static u16 wfunc_val = 0;
 static u32 lfunc_val = 0;
@@ -74,11 +78,11 @@ void proto_api_action(u08 num)
 u16  proto_api_wfunc_read(u08 num)
 {
   u16 val;
-  if(num < PROTO_WFUNC_USER) {
+  if(num < PROTO_WFUNC_READ_USER) {
     val = func_read_word(num);
   } else {
     switch(num) {
-      case TEST_PAMELA_WFUNC_TEST_VALUE:
+      case TEST_PAMELA_WFUNC_READ_TEST_VALUE:
         val = wfunc_val;
         break;
       default:
@@ -96,11 +100,11 @@ u16  proto_api_wfunc_read(u08 num)
 
 void proto_api_wfunc_write(u08 num, u16 val)
 {
-  if(num < PROTO_WFUNC_USER) {
+  if(num < PROTO_WFUNC_WRITE_USER) {
     func_write_word(num, val);
   } else {
     switch(num) {
-      case TEST_PAMELA_WFUNC_TEST_VALUE:
+      case TEST_PAMELA_WFUNC_WRITE_TEST_VALUE:
         wfunc_val = val;
         break;
     }
@@ -115,11 +119,11 @@ void proto_api_wfunc_write(u08 num, u16 val)
 u32 proto_api_lfunc_read(u08 num)
 {
   u32 val;
-  if(num < PROTO_LFUNC_USER) {
+  if(num < PROTO_LFUNC_READ_USER) {
     val = func_read_long(num);
   } else {
     switch(num) {
-      case TEST_PAMELA_LFUNC_TEST_VALUE:
+      case TEST_PAMELA_LFUNC_READ_TEST_VALUE:
         val = lfunc_val;
         break;
       default:
@@ -137,14 +141,14 @@ u32 proto_api_lfunc_read(u08 num)
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
-  if(num < PROTO_LFUNC_USER) {
+  if(num < PROTO_LFUNC_WRITE_USER) {
     func_write_long(num, val);
   } else {
     switch(num) {
       case TEST_PAMELA_LFUNC_SET_STATUS:
         status_set_mask(val);
         break;
-      case TEST_PAMELA_LFUNC_TEST_VALUE:
+      case TEST_PAMELA_LFUNC_WRITE_TEST_VALUE:
         lfunc_val = val;
         break;
     }

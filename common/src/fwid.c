@@ -9,8 +9,8 @@ void fwid_decode(u16 fw_id, rom_pchar *res)
     case FWID_TEST_PAMELA:
       *res = PSTR("test-pamela");
       break;
-    case FWID_TEST_PALOMA:
-      *res = PSTR("test-paloma");
+    case FWID_TEST_PROTO:
+      *res = PSTR("test-proto");
       break;
   }
 }

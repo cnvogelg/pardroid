@@ -27,7 +27,7 @@
 #define PROTO_CMD_READ_MTU        0xc0
 #define PROTO_CMD_WRITE_MTU       0xd0
 
-// actions
+// -- actions --
 #define PROTO_ACTION_PING         0x00
 #define PROTO_ACTION_BOOTLOADER   0x01
 #define PROTO_ACTION_RESET        0x02
@@ -40,32 +40,34 @@
 #define PROTO_CMD_ACTION_RESET      0x12
 #define PROTO_CMD_ACTION_KNOK       0x13
 
-// magic type
-#define PROTO_MAGIC_APPLICATION     0x4711
-#define PROTO_MAGIC_BOOTLOADER      0x2342
+// -- word function -- 
+// read
+#define PROTO_WFUNC_READ_FW_ID            0x00
+#define PROTO_WFUNC_READ_FW_VERSION       0x01
+#define PROTO_WFUNC_READ_MACHTAG          0x02
+#define PROTO_WFUNC_READ_USER             0x03
 
-// word function numbers 0..15: application
-#define PROTO_WFUNC_MAGIC         0x00
-#define PROTO_WFUNC_USER          0x01
+// write
+#define PROTO_WFUNC_WRITE_USER            0x00
 
-// word function numbers 0..15: bootloader
-#define PROTO_WFUNC_BOOT_MAGIC        0x00
-#define PROTO_WFUNC_BOOT_MACHTAG      0x01
-#define PROTO_WFUNC_BOOT_VERSION      0x02
-#define PROTO_WFUNC_BOOT_ROM_CRC      0x03
-#define PROTO_WFUNC_BOOT_ROM_MACHTAG  0x04
-#define PROTO_WFUNC_BOOT_ROM_FW_VERSION  0x05
-#define PROTO_WFUNC_BOOT_ROM_FW_ID    0x06
+// bootloader: read add ons
+#define PROTO_WFUNC_READ_BOOT_ROM_FW_ID       (PROTO_WFUNC_READ_USER + 0)
+#define PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION  (PROTO_WFUNC_READ_USER + 1)
+#define PROTO_WFUNC_READ_BOOT_ROM_MACHTAG     (PROTO_WFUNC_READ_USER + 2)
+#define PROTO_WFUNC_READ_BOOT_ROM_CRC         (PROTO_WFUNC_READ_USER + 3)
 
-// long function numbers 0..15: application
-#define PROTO_LFUNC_STATUS            0x00
-#define PROTO_LFUNC_USER              0x01
+// -- long function --
+// read
+#define PROTO_LFUNC_READ_STATUS           0x00
+#define PROTO_LFUNC_READ_USER             0x01
 
-// long function numbers 0..15: bootloader
-#define PROTO_LFUNC_BOOT_ROM_SIZE     0x00
+// write
+#define PROTO_LFUNC_WRITE_USER            0x00
 
+// bootloader: read add ons
+#define PROTO_LFUNC_READ_BOOT_ROM_SIZE        (PROTO_LFUNC_READ_USER + 0)
 
-// status flag
+// -- status flag --
 #define PROTO_STATUS_MASK_RX_PENDING  0x007f
 #define PROTO_STATUS_MASK_ERROR       0x7f00
 #define PROTO_STATUS_MASK_BUSY        0x0080
