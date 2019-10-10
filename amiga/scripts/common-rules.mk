@@ -1,7 +1,7 @@
 info:
 	@echo "--- $(CONFIG) $(FLAVOR) $(COMPILER) ---"
 
-all: info $(PROGRAMS)
+all: info $(PROGRAMS) $(DEVICES)
 
 clean:
 	$(H)rm -rf $(BUILD_DIR)

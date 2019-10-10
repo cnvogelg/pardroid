@@ -3,19 +3,26 @@ include $(CONFIG_MAKE_FILE)
 # dir config
 OBJ_DIR=$(BUILD_DIR)/obj
 BIN_DIR=$(BUILD_DIR)
+DEV_DIR=$(BUILD_DIR)
 
 # ----- toool config -----
 # setup CFLAGS
 CFLAGS_INCLUDES = -I$(BUILD_DIR) $(patsubst %,-I%,$(INCLUDES))
 CFLAGS_DEBUG = -g
 
-CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_INCLUDES) $(CFLAGS_ARCH) $(CFLAGS_DEBUG)
+CFLAGS = $(CFLAGS_COMMON) $(CFLAGS_INCLUDES) $(CFLAGS_ARCH)
+ifeq "$(FLAVOR)" "debug"
+	CFLAGS += $(CFLAGS_DEBUG)
+endif
 
 # setup ASFLAGS
 ASFLAGS = $(ASFLAGS_COMMON) $(ASFLAGS_INCLUDES) $(ASFLAGS_ARCH)
 
 LDFLAGS_DEBUG = -g
-LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_ARCH) $(LDFLAGS_DEBUG)
+LDFLAGS = $(LDFLAGS_COMMON) $(LDFLAGS_ARCH)
+ifeq "$(FLAVOR)" "debug"
+	LDFLAGS += $(LDFLAGS_DEBUG)
+endif
 
 LHASFX_STUB = contrib/lhasfx/lhasfx.stub
 
@@ -44,7 +51,8 @@ $1: $(BIN_DIR)/$1
 
 $(BIN_DIR)/$1: $(call map-src-to-tgt,$2 $(PRG_SRCS))
 	@echo "  LD   $$(@F)"
-	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+
+	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+ $(LIBS)
+	$(H)$(SIZE) $$@
 endef
 
 # dist-program
@@ -53,6 +61,32 @@ define dist-program
 DIST_FILES += $(call map-dist,$1$(DIST_TAG))
 
 $(DIST_DIR)/$1$(DIST_TAG): $(BIN_DIR)/$1
+	@echo "  DIST $$(@F)"
+	$(H)cp $$< $$@
+endef
+
+# make-device rules
+# $1 = device name
+# $2 = srcs for device
+define make-device
+DEVICES += $1
+BIN_FILES += $(DEV_DIR)/$1
+
+.PHONY: $1
+$1: $(DEV_DIR)/$1
+
+$(DEV_DIR)/$1: $(call map-src-to-tgt,$2 $(DEV_SRCS))
+	@echo "  LD   $$(@F)"
+	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_DEV) -o $$@ $$+ $(LIBS)
+	$(H)$(SIZE) $$@
+endef
+
+# dist-device
+# $1 = device name
+define dist-device
+DIST_FILES += $(call map-dist,$1$(DIST_TAG))
+
+$(DIST_DIR)/$1$(DIST_TAG): $(DEV_DIR)/$1
 	@echo "  DIST $$(@F)"
 	$(H)cp $$< $$@
 endef

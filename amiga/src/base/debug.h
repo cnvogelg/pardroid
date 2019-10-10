@@ -25,6 +25,6 @@ extern void KPrintF(char *, ...);
 
 #define D(x)
 
-#endif /* CONFIG_DEBUG */
+#endif /* KDEBUG */
 
 #endif /* DEBUG_H */
