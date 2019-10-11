@@ -1,6 +1,8 @@
 #ifndef PAMELA_H
 #define PAMELA_H
 
+#include <exec/exec.h>
+
 #include "pario.h"
 #include "timer.h"
 #include "proto.h"

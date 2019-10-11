@@ -15,9 +15,6 @@
 #include "pam_engine.h"
 #include "devices/pamela.h"
 
-DECLARE_DEVICE_VECTORS()
-DECLARE_DEVICE("pamela.device", 42, 37, "07.07.2019", struct PamelaDev)
-
 struct DevBase *UserDevInit(struct DevBase *devBase)
 {
     UnitsInit((struct DevUnitsBase *)devBase);

@@ -3,36 +3,15 @@
 #include <exec/exec.h>
 
 #include "autoconf.h"
+
+#ifdef CONFIG_DEBUG_PAM_ENGINE
+#define KDEBUG
+#endif
+
 #include "compiler.h"
 #include "debug.h"
 
 #include "pam_engine.h"
-#include "pamela.h"
-
-struct PrivPamEngine {
-    struct PamEngine  ppe_Engine;
-    pamela_handle_t  *ppe_Handle;
-};
-
-static BOOL engine_init(struct PamEngine *pe, ULONG flags);
-static void engine_exit(struct PamEngine *pe);
-
-struct PamEngine *pam_engine_create(struct Library *SysBase)
-{
-    struct PrivPamEngine *ppe = (struct PrivPamEngine *)
-        AllocVec(sizeof(struct PrivPamEngine),
-                 MEMF_CLEAR | MEMF_PUBLIC);
-    if(ppe == NULL) {
-        return NULL;
-    }
-
-    struct PamEngine *pe = &ppe->ppe_Engine;
-    pe->pe_SysBase = SysBase;
-    pe->pe_InitFunc = engine_init;
-    pe->pe_ExitFunc = engine_exit; 
-
-    return (struct PamEngine *)ppe;
-}
 
 #undef SysBase
 #define SysBase pe->pe_SysBase
@@ -40,8 +19,12 @@ struct PamEngine *pam_engine_create(struct Library *SysBase)
 BOOL pam_engine_init(struct PamEngine *pe, ULONG flags)
 {
     if(pe->pe_InitFunc != NULL) {
-        return pe->pe_InitFunc(pe, flags);
+        D(("+Engine: init\n"));
+        BOOL result = pe->pe_InitFunc(pe, flags);
+        D(("-Engine: init %ld\n", result));
+        return result;
     } else {
+        D(("Engine: no init!\n"));
         return FALSE;
     }
 }
@@ -49,42 +32,69 @@ BOOL pam_engine_init(struct PamEngine *pe, ULONG flags)
 void pam_engine_exit(struct PamEngine *pe)
 {
     if(pe->pe_ExitFunc != NULL) {
+        D(("+Engine: exit\n"));
         pe->pe_ExitFunc(pe);
+        D(("-Engine: exit\n"));
     }
-}
-
-void pam_engine_delete(struct PamEngine *pe)
-{
-    struct PrivPamEngine *ppe = (struct PrivPamEngine *)pe;
-
-    FreeVec(ppe);
 }
 
 BOOL pam_engine_open(struct PamEngine *pe, struct IOPamReq *req)
 {
-    return TRUE;
+    if(pe->pe_OpenFunc != NULL) {
+        D(("+Engine: init\n"));
+        BOOL result = pe->pe_OpenFunc(pe, req);
+        D(("+Engine: init\n"));
+        return result;
+    } else {
+        D(("Engine: no open!\n"));
+        return FALSE;
+    }
 }
 
 void pam_engine_close(struct PamEngine *pe, struct IOPamReq *req)
 {
-
+    if(pe->pe_CloseFunc != NULL) {
+        D(("+Engine: close\n");)
+        pe->pe_CloseFunc(pe, req);
+        D(("-Engine: close\n");)
+    } else {
+        D(("Engine: no close!\n"));
+    }
 }
 
 void pam_engine_handle_signals(struct PamEngine *pe, ULONG signals)
 {
-
+    if(pe->pe_HandleSignalsFunc != NULL) {
+        D(("+Engine: handle signals: %08lx\n", signals);)
+        pe->pe_HandleSignalsFunc(pe, signals);
+        D(("-Engine: handle signals\n"));
+    } else {
+        D(("Engine: no handle signals!\n"));
+    }
 }
 
-void pam_engine_begin_io(struct PamEngine *pe, struct IOPamReq *req)
+BOOL pam_engine_begin_io(struct PamEngine *pe, struct IOPamReq *req)
 {
-
+    if(pe->pe_BeginIOFunc != NULL) {
+        D(("+Engine: begin io\n"));
+        BOOL result = pe->pe_BeginIOFunc(pe, req);
+        D(("-Engine: begin io %ld\n", result));
+        return result;
+    } else {
+        D(("Engine: no begin io!\n"));
+        return FALSE;
+    }
 }
 
-static BOOL engine_init(struct PamEngine *pe, ULONG flags)
+BOOL pam_engine_abort_io(struct PamEngine *pe, struct IOPamReq *req)
 {
-    return TRUE;
-}
-
-static void engine_exit(struct PamEngine *pe)
-{
+    if(pe->pe_AbortIOFunc != NULL) {
+        D(("+Engine: abort io\n"));
+        BOOL result = pe->pe_AbortIOFunc(pe, req);
+        D(("-Engine: begin io %ld\n", result));
+        return result;
+    } else {
+        D(("Engine: no abort io!\n"));
+        return FALSE;
+    }
 }

@@ -77,10 +77,16 @@ $(eval $(call sfx-lha,boot.run,boot.lha))
 $(eval $(call dist-program,boot.run))
 
 # ----- devices
-# pamela.device
+# common sources
 PAMELA_DEV_SRCS = pamela_dev.c pamela_worker.c pam_engine.c
-$(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
-$(eval $(call dist-device,pamela.device))
+# pambox.device
+PAMBOX_DEV_SRCS = pamela_boxdev.c pambox.c $(PAMELA_DEV_SRCS)
+$(eval $(call make-device,pambox.device,$(PAMBOX_DEV_SRCS)))
+$(eval $(call dist-device,pambox.device))
+# pammet.device
+PAMNET_DEV_SRCS = pamela_netdev.c pamnet.c $(PAMELA_DEV_SRCS)
+$(eval $(call make-device,pamnet.device,$(PAMNET_DEV_SRCS)))
+$(eval $(call dist-device,pamnet.device))
 
 # pamela device test
 PAMDEV_TEST_SRCS = pamdev_test.c
