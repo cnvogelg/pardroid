@@ -17,8 +17,8 @@ int dosmain(void)
     if(port != NULL) {
         struct IOStdReq *req = CreateStdIO(port);
         if(req != NULL) {
-            if (OpenDevice("pambox.device", 0, (IOR *)req, 0)) {
-                Printf("Unable to open pambox.device, error %ld %ld\n",
+            if (OpenDevice("pamela.device", 0, (IOR *)req, 0)) {
+                Printf("Unable to open pamela.device, error %ld %ld\n",
                        req->io_Error, req->io_Actual);
                 result = 3;
             } else {

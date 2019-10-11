@@ -16,7 +16,7 @@ ALL_COMPILERS=vbcc gcc
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
-INCLUDES+=src/pamela src/engine src/pablo src/paloma
+INCLUDES+=src/pamela src/engine src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src
 INCLUDES+=src/device/shared src/device/pamela src/device/test

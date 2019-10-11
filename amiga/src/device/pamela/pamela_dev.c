@@ -1,7 +1,7 @@
 
 #include "autoconf.h"
 
-#ifdef CONFIG_DEBUG_PAMBOX_DEV
+#ifdef CONFIG_DEBUG_PAMELA_DEV
 #define KDEBUG
 #endif
 
@@ -12,7 +12,7 @@
 #include "pamela_dev.h"
 
 DECLARE_DEVICE_VECTORS()
-DECLARE_DEVICE("pambox.device", 42, 37, "07.07.2019", struct PamBoxDev)
+DECLARE_DEVICE("pamela.device", 42, 37, "07.07.2019", struct PamelaDev)
 
 struct DevBase *UserDevInit(struct DevBase *devBase)
 {
@@ -33,8 +33,8 @@ struct DevBase *UserDevOpen(struct IOStdReq *ior, ULONG unitNum, ULONG flags,
     }
 
     /* open unit */
-    struct PamBoxUnit *unit = (struct PamBoxUnit *)UnitOpen(ior,
-        (struct DevUnitsBase *)devBase, unitNum, sizeof(struct PamBoxUnit));
+    struct PamelaUnit *unit = (struct PamelaUnit *)UnitOpen(ior,
+        (struct DevUnitsBase *)devBase, unitNum, sizeof(struct PamelaUnit));
     if(unit != NULL) {
         return devBase;
     } else {
@@ -50,20 +50,20 @@ void UserDevClose(struct IOStdReq *ior, struct DevBase *devBase)
 LIBFUNC void DevBeginIO(REG(a1, struct IOStdReq *ior),
                         REG(a6, struct DevBase *base))
 {
-    struct PamBoxUnit *unit = (struct PamBoxUnit *)ior->io_Unit;
+    struct PamelaUnit *unit = (struct PamelaUnit *)ior->io_Unit;
     DevWorkerBeginIO(ior, &unit->worker);
 }
 
 LIBFUNC LONG DevAbortIO(REG(a1, struct IOStdReq *ior),
                         REG(a6, struct DevBase *base))
 {
-    struct PamBoxUnit *unit = (struct PamBoxUnit *)ior->io_Unit;
+    struct PamelaUnit *unit = (struct PamelaUnit *)ior->io_Unit;
     return DevWorkerAbortIO(ior, &unit->worker);
 }
 
 static BOOL workerInit(struct DevWorker *worker)
 {
-    D(("PamBox: worker init\n"));
+    D(("Pamela: worker init\n"));
     worker->extraSigMask = 0;
 
     return TRUE;
@@ -71,18 +71,18 @@ static BOOL workerInit(struct DevWorker *worker)
 
 static void workerExit(struct DevWorker *worker)
 {
-    D(("PamBox: worker exit\n"));
+    D(("Pamela: worker exit\n"));
 }
 
 static BOOL workerHandle(struct DevWorker *worker, struct IOStdReq *ior)
 {
-    D(("PamBox: handle: cmd=%08lx\n", ior->io_Command));
+    D(("Pamela: handle: cmd=%08lx\n", ior->io_Command));
     return TRUE;
 }
 
 BOOL UserUnitInit(struct DevUnit *unit)
 {
-    struct PamBoxUnit *pbUnit = (struct PamBoxUnit *)unit;
+    struct PamelaUnit *pbUnit = (struct PamelaUnit *)unit;
     struct DevWorker *worker = &pbUnit->worker;
 
     worker->userData = unit;
@@ -90,7 +90,7 @@ BOOL UserUnitInit(struct DevUnit *unit)
     worker->exitFunc = workerExit;
     worker->handlerFunc = workerHandle;
 
-    if(!DevWorkerStart(worker, "pambox_dev.task")) {
+    if(!DevWorkerStart(worker, "Pamela_dev.task")) {
         return FALSE;
     }
     return TRUE;
@@ -98,7 +98,7 @@ BOOL UserUnitInit(struct DevUnit *unit)
 
 void UserUnitExit(struct DevUnit *unit)
 {
-    struct PamBoxUnit *pbUnit = (struct PamBoxUnit *)unit;
+    struct PamelaUnit *pbUnit = (struct PamelaUnit *)unit;
     struct DevWorker *worker = &pbUnit->worker;
 
     DevWorkerStop(worker);

@@ -1,11 +1,11 @@
-#ifndef PAMBOX_DEV_H
-#define PAMBOX_DEV_H
+#ifndef Pamela_DEV_H
+#define Pamela_DEV_H
 
-struct PamBoxDev {
+struct PamelaDev {
     struct DevUnitsBase devBase;
 };
 
-struct PamBoxUnit {
+struct PamelaUnit {
     struct Unit       unit;
     struct DevWorker  worker;
 };
