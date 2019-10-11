@@ -18,7 +18,7 @@ ALL_COMPILERS=vbcc gcc
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/pamela src/engine src/pablo
 INCLUDES+=src/test src/mini-test src/bench
-INCLUDES+=../common/src
+INCLUDES+=../common/src include
 INCLUDES+=src/device/shared src/device/pamela src/device/test
 VPATH=$(INCLUDES)
 
@@ -30,7 +30,7 @@ TEST_SRCS = test.c
 BENCH_SRCS = bench.c bench_main.c
 
 PAMELA_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
-PAMELA_SRCS += pamela.c
+PAMELA_SRCS += pamela.c pam_engine.c
 
 # ---- mini tests
 # test-pario
@@ -78,7 +78,7 @@ $(eval $(call dist-program,boot.run))
 
 # ----- devices
 # pamela.device
-PAMELA_DEV_SRCS = pamela_dev.c
+PAMELA_DEV_SRCS = pamela_dev.c pamela_worker.c pam_engine.c
 $(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
 $(eval $(call dist-device,pamela.device))
 

@@ -1,3 +1,4 @@
+#include <proto/exec.h>
 
 #include "autoconf.h"
 
@@ -10,6 +11,9 @@
 #include "devworker.h"
 #include "debug.h"
 #include "pamela_dev.h"
+#include "pamela_worker.h"
+#include "pam_engine.h"
+#include "devices/pamela.h"
 
 DECLARE_DEVICE_VECTORS()
 DECLARE_DEVICE("pamela.device", 42, 37, "07.07.2019", struct PamelaDev)
@@ -27,14 +31,28 @@ void UserDevExit(struct DevBase *devBase)
 struct DevBase *UserDevOpen(struct IOStdReq *ior, ULONG unitNum, ULONG flags,
                             struct DevBase *devBase)
 {
+    struct PamelaDev *dev = (struct PamelaDev *)devBase;
+
     /* check unit */
     if(unitNum>0) {
+        D(("Pamela: invalid unit!\n"));
         return NULL;
+    }
+
+    /* bootloader mode? only allowed for the first user! */
+    ULONG engineFlags = 0;
+    if((flags & PAMOF_BOOTLOADER) == PAMOF_BOOTLOADER) {
+        if(devBase->libBase.lib_OpenCnt > 0) {
+            D(("Pamela: bootloader only for single user!\n"));
+            return NULL;
+        }
+        engineFlags = PAMENG_FLAG_BOOTLOADER;
     }
 
     /* open unit */
     struct PamelaUnit *unit = (struct PamelaUnit *)UnitOpen(ior,
-        (struct DevUnitsBase *)devBase, unitNum, sizeof(struct PamelaUnit));
+        (struct DevUnitsBase *)devBase, unitNum, sizeof(struct PamelaUnit),
+        engineFlags);
     if(unit != NULL) {
         return devBase;
     } else {
@@ -61,36 +79,23 @@ LIBFUNC LONG DevAbortIO(REG(a1, struct IOStdReq *ior),
     return DevWorkerAbortIO(ior, &unit->worker);
 }
 
-static BOOL workerInit(struct DevWorker *worker)
-{
-    D(("Pamela: worker init\n"));
-    worker->extraSigMask = 0;
+/* ----- worker functions ----- */
 
-    return TRUE;
-}
 
-static void workerExit(struct DevWorker *worker)
-{
-    D(("Pamela: worker exit\n"));
-}
-
-static BOOL workerHandle(struct DevWorker *worker, struct IOStdReq *ior)
-{
-    D(("Pamela: handle: cmd=%08lx\n", ior->io_Command));
-    return TRUE;
-}
-
-BOOL UserUnitInit(struct DevUnit *unit)
+BOOL UserUnitInit(struct DevUnit *unit, ULONG flags)
 {
     struct PamelaUnit *pbUnit = (struct PamelaUnit *)unit;
     struct DevWorker *worker = &pbUnit->worker;
 
     worker->userData = unit;
-    worker->initFunc = workerInit;
-    worker->exitFunc = workerExit;
-    worker->handlerFunc = workerHandle;
+    worker->initFunc = pamela_worker_init;
+    worker->exitFunc = pamela_worker_exit;
+    worker->beginIOFunc = pamela_worker_begin_io;
+    worker->sigFunc = pamela_worker_sig_func;
 
-    if(!DevWorkerStart(worker, "Pamela_dev.task")) {
+    pbUnit->engineFlags = flags;
+
+    if(!DevWorkerStart(worker, "Pamela_dev.task", unit)) {
         return FALSE;
     }
     return TRUE;
@@ -105,7 +110,8 @@ void UserUnitExit(struct DevUnit *unit)
 }
 
 BOOL UserUnitOpen(struct IOStdReq *ior,
-                 struct DevUnit *unit)
+                  struct DevUnit *unit,
+                  ULONG flags)
 {
     return TRUE;
 }

@@ -7,8 +7,9 @@ struct DevWorker;
 
 typedef BOOL (*InitFunc)(struct DevWorker *worker);
 typedef void (*ExitFunc)(struct DevWorker *worker);
-typedef BOOL (*HandlerFunc)(struct DevWorker *worker, struct IOStdReq *ior);
-typedef BOOL (*SigFunc)(struct DevWorker *worker, ULONG mask);
+typedef BOOL (*BeginIOFunc)(struct DevWorker *worker, struct IOStdReq *ior);
+typedef BOOL (*AbortIOFunc)(struct DevWorker *worker, struct IOStdReq *ior);
+typedef void (*SigFunc)(struct DevWorker *worker, ULONG mask);
 
 struct DevWorker
 {
@@ -17,14 +18,15 @@ struct DevWorker
     /* prefill: */
     APTR                   userData;
     InitFunc               initFunc;
-    HandlerFunc            handlerFunc;
+    BeginIOFunc            beginIOFunc;
+    AbortIOFunc            abortIOFunc;
     ExitFunc               exitFunc;
     /* set in InitFunc(): */
     ULONG                  extraSigMask;
     SigFunc                sigFunc;
 };
 
-extern BOOL DevWorkerStart(struct DevWorker *worker, STRPTR name);
+extern BOOL DevWorkerStart(struct DevWorker *worker, STRPTR name, APTR userData);
 extern void DevWorkerStop(struct DevWorker *worker);
 extern void DevWorkerBeginIO(struct IOStdReq *ior,
                              struct DevWorker *worker);

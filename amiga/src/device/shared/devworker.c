@@ -105,7 +105,7 @@ static SAVEDS ASM void worker_main(void)
                     else
                     {
                         ObtainSemaphore(&worker->sem);
-                        BOOL done = worker->handlerFunc(worker, ior);
+                        BOOL done = worker->beginIOFunc(worker, ior);
                         ReleaseSemaphore(&worker->sem);
                         if (done)
                         {
@@ -134,10 +134,11 @@ static SAVEDS ASM void worker_main(void)
     D(("Task: NEVER!\n"));
 }
 
-BOOL DevWorkerStart(struct DevWorker *worker, STRPTR taskName)
+BOOL DevWorkerStart(struct DevWorker *worker, STRPTR taskName, APTR userData)
 {
     D(("Worker: start\n"));
     worker->port = NULL;
+    worker->userData = userData;
 
     /* alloc a signal */
     BYTE signal = AllocSignal(-1);
@@ -213,7 +214,7 @@ void DevWorkerBeginIO(struct IOStdReq *ior,
     /* can we handle the request directly? */
     if (AttemptSemaphore(&worker->sem))
     {
-        BOOL done = worker->handlerFunc(worker, ior);
+        BOOL done = worker->beginIOFunc(worker, ior);
         ReleaseSemaphore(&worker->sem);
         if (done)
         {
@@ -246,11 +247,15 @@ LONG DevWorkerAbortIO(struct IOStdReq *ior,
     if((ior->io_Message.mn_Node.ln_Type==NT_MESSAGE) &&
         ((ior->io_Flags&IOF_QUICK)==0))
     {
-      Remove((struct Node *)ior);
-      ReplyMsg((struct Message *)ior);
-      ior->io_Error=IOERR_ABORTED;
-      result = 0;
-    } 
+        D(("Worker: AbortIO removed msg!\n"));
+        if(worker->abortIOFunc != NULL) {
+            worker->abortIOFunc(worker, ior);
+        }
+        Remove((struct Node *)ior);
+        ReplyMsg((struct Message *)ior);
+        ior->io_Error=IOERR_ABORTED;
+        result = 0;
+    }
     ReleaseSemaphore(&worker->sem);
     return result;
 }

@@ -35,7 +35,8 @@ struct DevUnit *UnitFind(struct DevUnitsBase *devBase,
 struct DevUnit *UnitOpen(struct IOStdReq *ior,
                          struct DevUnitsBase *devBase,
                          ULONG unitNum,
-                         ULONG unitSize)
+                         ULONG unitSize,
+                         ULONG flags)
 {
     struct DevUnit *unit;
 
@@ -57,7 +58,7 @@ struct DevUnit *UnitOpen(struct IOStdReq *ior,
         unit->openCnt = 0;
         unit->devBase = devBase;
         /* setup unit */
-        if(!UserUnitInit(unit)) {
+        if(!UserUnitInit(unit, flags)) {
             FreeVec(unit);
             D(("-UnitOpen: UserUnitInit failed!\n"));
             return NULL;
@@ -67,7 +68,7 @@ struct DevUnit *UnitOpen(struct IOStdReq *ior,
     }
 
     /* check if open is ok */
-    if(!UserUnitOpen(ior, unit)) {
+    if(!UserUnitOpen(ior, unit, flags)) {
         /* if no users left -> remove it now */
         if(unit->openCnt==0) {
             UserUnitExit(unit);
