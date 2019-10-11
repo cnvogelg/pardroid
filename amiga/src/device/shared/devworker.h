@@ -7,8 +7,9 @@ struct DevWorker;
 
 typedef BOOL (*InitFunc)(struct DevWorker *worker);
 typedef void (*ExitFunc)(struct DevWorker *worker);
-typedef BOOL (*BeginIOFunc)(struct DevWorker *worker, struct IOStdReq *ior);
-typedef BOOL (*AbortIOFunc)(struct DevWorker *worker, struct IOStdReq *ior);
+typedef BOOL (*ReqFunc)(struct DevWorker *worker, struct IOStdReq *ior);
+typedef BOOL (*OpenFunc)(struct DevWorker *worker, struct IOStdReq *ior, ULONG flags);
+typedef void (*CloseFunc)(struct DevWorker *worker, struct IOStdReq *ior);
 typedef void (*SigFunc)(struct DevWorker *worker, ULONG mask);
 
 struct DevWorker
@@ -18,8 +19,10 @@ struct DevWorker
     /* prefill: */
     APTR                   userData;
     InitFunc               initFunc;
-    BeginIOFunc            beginIOFunc;
-    AbortIOFunc            abortIOFunc;
+    OpenFunc               openFunc;
+    CloseFunc              closeFunc;
+    ReqFunc                beginIOFunc;
+    ReqFunc                abortIOFunc;
     ExitFunc               exitFunc;
     /* set in InitFunc(): */
     ULONG                  extraSigMask;
@@ -28,9 +31,14 @@ struct DevWorker
 
 extern BOOL DevWorkerStart(struct DevWorker *worker, STRPTR name, APTR userData);
 extern void DevWorkerStop(struct DevWorker *worker);
-extern void DevWorkerBeginIO(struct IOStdReq *ior,
-                             struct DevWorker *worker);
-extern LONG DevWorkerAbortIO(struct IOStdReq *ior,
-                             struct DevWorker *worker);
+extern BOOL DevWorkerOpen(struct DevWorker *worker,
+                          struct IOStdReq *ior,
+                          ULONG flags);
+extern void DevWorkerClose(struct DevWorker *worker,
+                           struct IOStdReq *ior);
+extern void DevWorkerBeginIO(struct DevWorker *worker,
+                             struct IOStdReq *ior);
+extern LONG DevWorkerAbortIO(struct DevWorker *worker,
+                             struct IOStdReq *ior);
 
 #endif

@@ -32,7 +32,7 @@ BOOL pamela_worker_init(struct DevWorker *worker)
     unit->engine = engine;
 
     /* setup worker */
-    worker->extraSigMask = 0;
+    worker->extraSigMask = engine->pe_SigMask;
 
     D(("Pamela: init OK!\n"));
     return TRUE;
@@ -55,6 +55,17 @@ void pamela_worker_exit(struct DevWorker *worker)
 void pamela_worker_sig_func(struct DevWorker *worker, ULONG mask)
 {
     D(("Pamela: worker sig mask=%08lx\n", mask));
+}
+
+BOOL pamela_worker_open(struct DevWorker *worker, struct IOStdReq *ior, ULONG flags)
+{
+    D(("Pamela: open\n"));
+    return TRUE;
+}
+
+void pamela_worker_close(struct DevWorker *worker, struct IOStdReq *ior)
+{
+    D(("Pamela: close\n"));
 }
 
 BOOL pamela_worker_begin_io(struct DevWorker *worker, struct IOStdReq *ior)

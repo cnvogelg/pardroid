@@ -82,7 +82,9 @@ static SAVEDS ASM void worker_main(void)
 
             /* handle extra signals */
             if((signals & extraMask) != 0) {
+                ObtainSemaphore(&worker->sem);
                 worker->sigFunc(worker, signals & extraMask);
+                ReleaseSemaphore(&worker->sem);
             }
 
             /* got messages */
@@ -140,6 +142,8 @@ BOOL DevWorkerStart(struct DevWorker *worker, STRPTR taskName, APTR userData)
     worker->port = NULL;
     worker->userData = userData;
 
+    InitSemaphore(&worker->sem);
+
     /* alloc a signal */
     BYTE signal = AllocSignal(-1);
     if (signal == -1)
@@ -156,8 +160,7 @@ BOOL DevWorkerStart(struct DevWorker *worker, STRPTR taskName, APTR userData)
     D(("Worker: init data %08lx\n", &id));
 
     /* now launch worker task and inject dev base
-     make sure worker_main() does not run before base is set.
-  */
+       make sure worker_main() does not run before base is set. */
     Forbid();
     struct Task *myTask = CreateTask(taskName, 0, (CONST APTR)worker_main, 4096);
     if (myTask != NULL)
@@ -205,8 +208,40 @@ void DevWorkerStop(struct DevWorker *worker)
     D(("Worker: stopped\n"));
 }
 
-void DevWorkerBeginIO(struct IOStdReq *ior,
-                      struct DevWorker *worker)
+BOOL DevWorkerOpen(struct DevWorker *worker,
+                   struct IOStdReq *ior,
+                   ULONG flags)
+{
+    D(("Worker: open\n"));
+
+    BOOL result = FALSE;
+    if(worker->openFunc != NULL) {
+        ObtainSemaphore(&worker->sem);
+        result = worker->openFunc(worker, ior, flags);
+        ReleaseSemaphore(&worker->sem);
+    }
+
+    D(("Worker: opened\n"));
+    return result;
+}
+
+
+void DevWorkerClose(struct DevWorker *worker,
+                    struct IOStdReq *ior)
+{
+    D(("Worker: close\n"));
+
+    if(worker->closeFunc != NULL) {
+        ObtainSemaphore(&worker->sem);
+        worker->closeFunc(worker, ior);
+        ReleaseSemaphore(&worker->sem);
+    }
+
+    D(("Worker: closed\n"));
+}
+
+void DevWorkerBeginIO(struct DevWorker *worker,
+                      struct IOStdReq *ior)
 {
     /* clear error */
     ior->io_Error = 0;
@@ -238,24 +273,24 @@ void DevWorkerBeginIO(struct IOStdReq *ior,
     }
 }
 
-LONG DevWorkerAbortIO(struct IOStdReq *ior,
-                      struct DevWorker *worker)
+LONG DevWorkerAbortIO(struct DevWorker *worker,
+                      struct IOStdReq *ior)
 {
     LONG result = 1;
 
-    ObtainSemaphore(&worker->sem);
     if((ior->io_Message.mn_Node.ln_Type==NT_MESSAGE) &&
         ((ior->io_Flags&IOF_QUICK)==0))
     {
         D(("Worker: AbortIO removed msg!\n"));
+        ObtainSemaphore(&worker->sem);
         if(worker->abortIOFunc != NULL) {
             worker->abortIOFunc(worker, ior);
         }
         Remove((struct Node *)ior);
         ReplyMsg((struct Message *)ior);
+        ReleaseSemaphore(&worker->sem);
         ior->io_Error=IOERR_ABORTED;
         result = 0;
     }
-    ReleaseSemaphore(&worker->sem);
     return result;
 }

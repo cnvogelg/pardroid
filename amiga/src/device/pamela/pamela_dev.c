@@ -69,18 +69,17 @@ LIBFUNC void DevBeginIO(REG(a1, struct IOStdReq *ior),
                         REG(a6, struct DevBase *base))
 {
     struct PamelaUnit *unit = (struct PamelaUnit *)ior->io_Unit;
-    DevWorkerBeginIO(ior, &unit->worker);
+    DevWorkerBeginIO(&unit->worker, ior);
 }
 
 LIBFUNC LONG DevAbortIO(REG(a1, struct IOStdReq *ior),
                         REG(a6, struct DevBase *base))
 {
     struct PamelaUnit *unit = (struct PamelaUnit *)ior->io_Unit;
-    return DevWorkerAbortIO(ior, &unit->worker);
+    return DevWorkerAbortIO(&unit->worker, ior);
 }
 
-/* ----- worker functions ----- */
-
+/* ----- unif functions ----- */
 
 BOOL UserUnitInit(struct DevUnit *unit, ULONG flags)
 {
@@ -90,7 +89,10 @@ BOOL UserUnitInit(struct DevUnit *unit, ULONG flags)
     worker->userData = unit;
     worker->initFunc = pamela_worker_init;
     worker->exitFunc = pamela_worker_exit;
+    worker->openFunc = pamela_worker_open;
+    worker->closeFunc = pamela_worker_close;
     worker->beginIOFunc = pamela_worker_begin_io;
+    worker->abortIOFunc = pamela_worker_abort_io;
     worker->sigFunc = pamela_worker_sig_func;
 
     pbUnit->engineFlags = flags;
@@ -113,12 +115,19 @@ BOOL UserUnitOpen(struct IOStdReq *ior,
                   struct DevUnit *unit,
                   ULONG flags)
 {
-    return TRUE;
+    struct PamelaUnit *pbUnit = (struct PamelaUnit *)unit;
+    struct DevWorker *worker = &pbUnit->worker;
+
+    return DevWorkerOpen(worker, ior, flags);
 }
 
 void UserUnitClose(struct IOStdReq *ior,
                    struct DevUnit *unit)
 {
+    struct PamelaUnit *pbUnit = (struct PamelaUnit *)unit;
+    struct DevWorker *worker = &pbUnit->worker;
+
+    DevWorkerClose(worker, ior);
 }
 
 
