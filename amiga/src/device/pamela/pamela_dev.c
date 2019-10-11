@@ -9,7 +9,7 @@
 #include "unit.h"
 #include "devworker.h"
 #include "debug.h"
-#include "pambox_dev.h"
+#include "pamela_dev.h"
 
 DECLARE_DEVICE_VECTORS()
 DECLARE_DEVICE("pambox.device", 42, 37, "07.07.2019", struct PamBoxDev)

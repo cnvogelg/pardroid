@@ -19,7 +19,7 @@ INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/pamela src/engine src/pablo src/paloma
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src
-INCLUDES+=src/device/shared src/device/pambox src/device/test
+INCLUDES+=src/device/shared src/device/pamela src/device/test
 VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
@@ -103,15 +103,15 @@ $(eval $(call sfx-lha,boot.run,boot.lha))
 $(eval $(call dist-program,boot.run))
 
 # ----- devices
-# pambox.device
-PAMBOX_DEV_SRCS = pambox_dev.c
-$(eval $(call make-device,pambox.device,$(PAMBOX_DEV_SRCS)))
-$(eval $(call dist-device,pambox.device))
+# pamela.device
+PAMELA_DEV_SRCS = pamela_dev.c
+$(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
+$(eval $(call dist-device,pamela.device))
 
-# pambox device test
-PAM_DEV_TEST_SRCS = pam_dev_test.c
-$(eval $(call make-program,pam_dev_test,$(PAM_DEV_TEST_SRCS)))
-$(eval $(call dist-program,pam_dev_test))
+# pamela device test
+PAMDEV_TEST_SRCS = pamdev_test.c
+$(eval $(call make-program,pamdev_test,$(PAMDEV_TEST_SRCS)))
+$(eval $(call dist-program,pamdev_test))
 
 # rules
 include scripts/common-rules.mk

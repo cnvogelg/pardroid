@@ -3,7 +3,7 @@
 AS=vasmm68k_mot
 CRUNCHER=shrinkler >/dev/null -h -9
 LHA=lha a -0
-SIZE=m68k-amigaos-size
+SIZE_CALL=m68k-amigaos-size $1 | tail -n 1
 
 NDK_DIR ?= $(HOME)/projects/amidev/ndk_3.9
 NDK_INC = $(NDK_DIR)/include/include_h

@@ -9,8 +9,10 @@ clean:
 clean-all:
 	$(H)rm -rf $(BUILD_BASE_DIR) $(DIST_BASE_DIR)
 
+size: $(SIZE_RULES)
+
 # distribution
-dist: info $(DIST_FILES)
+dist: info $(DIST_FILES) size
 
 dist-all:
 	@for a in $(ALL_FLAVORS) ; do \

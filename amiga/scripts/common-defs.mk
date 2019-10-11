@@ -31,6 +31,7 @@ LHASFX_STUB = contrib/lhasfx/lhasfx.stub
 PROGRAMS :=
 BIN_FILES :=
 DIST_FILES :=
+SIZE_RULES :=
 
 # map-src-to-tgt
 # $1 = src files
@@ -45,14 +46,17 @@ map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 define make-program
 PROGRAMS += $1
 BIN_FILES += $(BIN_DIR)/$1
+SIZE_RULES += $1-size
 
-.PHONY: $1
+.PHONY: $1 $1-size
 $1: $(BIN_DIR)/$1
+
+$1-size: $(BIN_DIR)/$1
+	$(H)$(call SIZE_CALL,$$<)
 
 $(BIN_DIR)/$1: $(call map-src-to-tgt,$2 $(PRG_SRCS))
 	@echo "  LD   $$(@F)"
 	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_PRG) -o $$@ $$+ $(LIBS)
-	$(H)$(SIZE) $$@
 endef
 
 # dist-program
@@ -71,14 +75,17 @@ endef
 define make-device
 DEVICES += $1
 BIN_FILES += $(DEV_DIR)/$1
+SIZE_RULES += $1-size
 
-.PHONY: $1
+.PHONY: $1 $1-size
 $1: $(DEV_DIR)/$1
+
+$1-size: $(BIN_DIR)/$1
+	$(H)$(call SIZE_CALL,$$<)
 
 $(DEV_DIR)/$1: $(call map-src-to-tgt,$2 $(DEV_SRCS))
 	@echo "  LD   $$(@F)"
 	$(H)$(CC) $(LDFLAGS) $(LDFLAGS_DEV) -o $$@ $$+ $(LIBS)
-	$(H)$(SIZE) $$@
 endef
 
 # dist-device
