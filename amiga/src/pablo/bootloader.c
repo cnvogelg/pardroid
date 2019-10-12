@@ -8,6 +8,9 @@
 
 #include "bootloader.h"
 #include "proto.h"
+#include "types.h"
+#include "arch.h"
+#include "fwid.h"
 
 int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 {
@@ -21,18 +24,18 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   }
 
   /* check bootloader magic */
-  UWORD magic;
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_MAGIC, &magic);
+  UWORD fw_id;
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_FW_ID, &fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
-  if(magic != PROTO_MAGIC_BOOTLOADER) {
+  if(fw_id != FWID_BOOTLOADER_PABLO) {
     return BOOTLOADER_RET_NO_BOOTLOADER_MAGIC;
   }
 
   /* read version tag */
   UWORD bl_version;
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_VERSION, &bl_version);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_FW_VERSION, &bl_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -40,7 +43,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   bi->bl_version = bl_version;
 
   /* bootloader mach tag */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_MACHTAG, &bi->bl_mach_tag);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_MACHTAG, &bi->bl_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -53,7 +56,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   bi->page_size *= 2;
 
   /* rom size */
-  res = proto_function_read_long(ph, PROTO_LFUNC_BOOT_ROM_SIZE, &bi->rom_size);
+  res = proto_function_read_long(ph, PROTO_LFUNC_READ_BOOT_ROM_SIZE, &bi->rom_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -67,25 +70,25 @@ int bootloader_update_fw_info(pamela_handle_t *pb, bootinfo_t *bi)
   proto_handle_t *ph = pamela_get_proto(pb);
 
   /* firmware crc */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_CRC, &bi->fw_crc);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_ROM_CRC, &bi->fw_crc);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware mach tag */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_MACHTAG, &bi->fw_mach_tag);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_ROM_MACHTAG, &bi->fw_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware version */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_FW_VERSION, &bi->fw_version);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION, &bi->fw_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware id */
-  res = proto_function_read_word(ph, PROTO_WFUNC_BOOT_ROM_FW_ID, &bi->fw_id);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_ROM_FW_ID, &bi->fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -235,14 +238,14 @@ int bootloader_leave(pamela_handle_t *pb)
   }
 
   /* make sure we are in the application */
-  UWORD magic;
-  res = proto_function_read_word(ph, PROTO_WFUNC_MAGIC, &magic);
+  UWORD fw_id;
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_FW_ID, &fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* check bootloader version magic is NOT set */
-  if(magic != PROTO_MAGIC_APPLICATION) {
+  if(fw_id == FWID_BOOTLOADER_PABLO) {
     return BOOTLOADER_RET_NO_FIRMWARE;
   }
 

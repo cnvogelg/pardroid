@@ -7,6 +7,9 @@
 
 #include "pamela.h"
 #include "proto_shared.h"
+#include "types.h"
+#include "arch.h"
+#include "fwid.h"
 
 struct pamela_handle {
   struct pario_handle *pario;
@@ -68,7 +71,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
   }
 
   /* enter bootloader */
-  UWORD magic;
+  int want_bootloader;
   if((flags & PAMELA_INIT_BOOT) != 0) {
     int pres = proto_bootloader(ph->proto);
     if(pres != PROTO_RET_OK) {
@@ -76,7 +79,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
       pamela_exit(ph);
       return NULL;
     }
-    magic = PROTO_MAGIC_BOOTLOADER;
+    want_bootloader = 1;
   }
   /* reset device (leave knok) */
   else {
@@ -86,18 +89,20 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
       pamela_exit(ph);
       return NULL;
     }
-    magic = PROTO_MAGIC_APPLICATION;
+    want_bootloader = 0;
   }
 
-  /* check magic */
-  UWORD got_magic = 0;
-  int pres = proto_function_read_word(ph->proto, PROTO_WFUNC_MAGIC, &got_magic);
+  /* check fw */
+  UWORD fw_id = 0;
+  int pres = proto_function_read_word(ph->proto, PROTO_WFUNC_READ_FW_ID, &fw_id);
   if(pres != PROTO_RET_OK) {
     *res = PAMELA_ERROR_MAGIC_READ;
     pamela_exit(ph);
     return NULL;
   }
-  if(got_magic != magic) {
+
+  int is_bootloader = (fw_id == FWID_BOOTLOADER_PABLO);
+  if(is_bootloader != want_bootloader) {
     *res = PAMELA_ERROR_MAGIC_WRONG;
     pamela_exit(ph);
     return NULL;
@@ -235,7 +240,7 @@ UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph)
 
 int pamela_read_status(pamela_handle_t *ph, ULONG *status)
 {
-  return proto_function_read_long(ph->proto, PROTO_LFUNC_STATUS, status);
+  return proto_function_read_long(ph->proto, PROTO_LFUNC_READ_STATUS, status);
 }
 
 int pamela_get_mtu(pamela_handle_t *ph, UBYTE chan, UWORD *ret_mtu)

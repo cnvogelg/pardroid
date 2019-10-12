@@ -5,12 +5,18 @@
 #include "proto_shared.h"
 #include "func.h"
 #include "status.h"
+#include "fw.h"
+#include "machtag.h"
 
 u16 func_read_word(u08 num)
 {
   switch(num) {
-    case PROTO_WFUNC_MAGIC:
-      return PROTO_MAGIC_APPLICATION;
+    case PROTO_WFUNC_READ_FW_ID:
+      return FW_GET_ID();
+    case PROTO_WFUNC_READ_FW_VERSION:
+      return FW_GET_VERSION();
+    case PROTO_WFUNC_READ_MACHTAG:
+      return FW_GET_MACHTAG();
     default:
       return 0;
   }
@@ -24,7 +30,7 @@ void func_write_word(u08 num, u16 val)
 u32 func_read_long(u08 num)
 {
   switch(num) {
-    case PROTO_LFUNC_STATUS:
+    case PROTO_LFUNC_READ_STATUS:
       return status_get_mask();
     default:
       return 0;

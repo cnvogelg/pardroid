@@ -18,6 +18,10 @@
 #include "proto_shared.h"
 #include "func.h"
 #include "status.h"
+#include "fw.h"
+#include "fwid.h"
+
+FW_INFO(FWID_TEST_PROTO, VERSION_TAG)
 
 // action handler
 
@@ -50,7 +54,7 @@ void proto_api_action(u08 num)
 u16  proto_api_wfunc_read(u08 num)
 {
   u16 val = 0xbeef;
-  if(num < PROTO_WFUNC_USER) {
+  if(num < PROTO_WFUNC_READ_USER) {
     val = func_read_word(num);
   }
   uart_send_pstring(PSTR("wfunc_read:"));
@@ -63,7 +67,7 @@ u16  proto_api_wfunc_read(u08 num)
 
 void proto_api_wfunc_write(u08 num, u16 val)
 {
-  if(num < PROTO_WFUNC_USER) {
+  if(num < PROTO_WFUNC_WRITE_USER) {
     func_write_word(num, val);
   }
   uart_send_pstring(PSTR("wfunc_write:"));

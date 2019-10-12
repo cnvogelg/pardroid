@@ -10,6 +10,7 @@
 #include "proto.h"
 #include "flash.h"
 #include "machtag.h"
+#include "fwid.h"
 
 #include "uartutil.h"
 
@@ -31,19 +32,19 @@ void proto_api_acion(u08 num)
 u16  proto_api_wfunc_read(u08 num)
 {
   switch(num) {
-    case PROTO_WFUNC_BOOT_MAGIC:
-      return PROTO_MAGIC_BOOTLOADER;
-    case PROTO_WFUNC_BOOT_MACHTAG:
+    case PROTO_WFUNC_READ_FW_ID:
+      return FWID_BOOTLOADER_PABLO;
+    case PROTO_WFUNC_READ_MACHTAG:
       return MACHTAG;
-    case PROTO_WFUNC_BOOT_VERSION:
+    case PROTO_WFUNC_READ_FW_VERSION:
       return VERSION_TAG;
-    case PROTO_WFUNC_BOOT_ROM_CRC:
+    case PROTO_WFUNC_READ_BOOT_ROM_CRC:
       return pablo_get_rom_crc();
-    case PROTO_WFUNC_BOOT_ROM_MACHTAG:
+    case PROTO_WFUNC_READ_BOOT_ROM_MACHTAG:
       return pablo_get_mach_tag();
-    case PROTO_WFUNC_BOOT_ROM_FW_VERSION:
+    case PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION:
       return pablo_get_rom_version();
-    case PROTO_WFUNC_BOOT_ROM_FW_ID:
+    case PROTO_WFUNC_READ_BOOT_ROM_FW_ID:
       return pablo_get_rom_fw_id();
     default:
       return 0;
@@ -59,7 +60,7 @@ void proto_api_wfunc_write(u08 num, u16 val)
 u32 proto_api_lfunc_read(u08 num)
 {
   switch(num) {
-    case PROTO_LFUNC_BOOT_ROM_SIZE:
+    case PROTO_LFUNC_READ_BOOT_ROM_SIZE:
       uart_send('r');
       return CONFIG_MAX_ROM;
   }
