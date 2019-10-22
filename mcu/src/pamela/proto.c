@@ -264,3 +264,63 @@ void proto_handle(void)
 
   DC(']'); DB(cmd); DNL;
 }
+
+/* boot handler - reduced function set to save space */
+void proto_handle_boot(void)
+{
+  // read command from bits 0..4 in idle byte
+  u08 cmd = proto_low_get_cmd();
+  if(cmd == 0xff) {
+    // no clock lined pulled -> idle
+    return;
+  }
+
+  DC('['); DB(cmd);
+
+  // extract command group
+  u08 grp = cmd & PROTO_CMD_MASK;
+  u08 chn = cmd & PROTO_CMD_ARG;
+  switch(grp) {
+    case PROTO_CMD_ACTION:
+      DC('A');
+      handle_action(chn);
+      break;
+    case PROTO_CMD_WFUNC_READ:
+      DC('w');
+      handle_wfunc_read(chn);
+      break;
+    case PROTO_CMD_LFUNC_READ:
+      DC('l');
+      handle_lfunc_read(chn);
+      break;
+    case PROTO_CMD_LFUNC_WRITE:
+      DC('L');
+      handle_lfunc_write(chn);
+      break;
+    case PROTO_CMD_MSG_READ_DATA:
+      DC('m');
+      handle_msg_read_data(chn);
+      break;
+    case PROTO_CMD_MSG_WRITE_DATA:
+      DC('M');
+      handle_msg_write_data(chn);
+      break;
+    case PROTO_CMD_MSG_READ_SIZE:
+      DC('s');
+      handle_msg_read_size(chn);
+      break;
+    case PROTO_CMD_MSG_WRITE_SIZE:
+      DC('S');
+      handle_msg_write_size(chn);
+      break;
+    default:
+      DC('!'); DNL;
+      // trigger a reset to re-enter knok
+      system_sys_reset();
+      break;
+  }
+
+  DC(']'); DB(cmd); DNL;
+}
+
+

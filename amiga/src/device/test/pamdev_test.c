@@ -43,7 +43,7 @@ int dosmain(void)
         if(req != NULL) {
             if (OpenDevice(device, unit, (IOR *)req, 0)) {
                 Printf("Unable to open '%s':%ld, error %ld %ld\n",
-                       device, unit, req->io_Error, req->io_Actual);
+                       (ULONG)device, unit, req->io_Error, req->io_Actual);
                 result = 3;
             } else {
                 PutStr("OK!\n");

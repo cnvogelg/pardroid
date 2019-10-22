@@ -5,6 +5,7 @@
 extern void proto_init(void);
 extern void proto_first(void);
 extern void proto_handle(void);
+extern void proto_handle_boot(void);
 
 // send /ack irq signal to Amiga (1us pulse)
 extern void proto_trigger_signal(void);

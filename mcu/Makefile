@@ -38,7 +38,7 @@ VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
 CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 
 # generated bootstrap code
-BOOTSTRAP_CODE = ../amiga/BUILD/$(FLAVOR)/amiga68000/boot.bin
+BOOTSTRAP_CODE = ../amiga/BUILD/$(FLAVOR)-vbcc/amiga68000/boot.bin
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
 BOOTSTRAP_C = $(BUILD_DIR)/bootstrap.c
 BOOTSTRAP_KNOK = $(BUILD_DIR)/bootstrap.knok

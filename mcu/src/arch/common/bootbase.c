@@ -32,11 +32,11 @@ void proto_api_acion(u08 num)
 u16  proto_api_wfunc_read(u08 num)
 {
   switch(num) {
-    case PROTO_WFUNC_READ_FW_ID:
+    case PROTO_WFUNC_READ_BOOT_FW_ID:
       return FWID_BOOTLOADER_PABLO;
-    case PROTO_WFUNC_READ_MACHTAG:
+    case PROTO_WFUNC_READ_BOOT_MACHTAG:
       return MACHTAG;
-    case PROTO_WFUNC_READ_FW_VERSION:
+    case PROTO_WFUNC_READ_BOOT_FW_VERSION:
       return VERSION_TAG;
     case PROTO_WFUNC_READ_BOOT_ROM_CRC:
       return pablo_get_rom_crc();
@@ -46,53 +46,28 @@ u16  proto_api_wfunc_read(u08 num)
       return pablo_get_rom_version();
     case PROTO_WFUNC_READ_BOOT_ROM_FW_ID:
       return pablo_get_rom_fw_id();
+    case PROTO_WFUNC_READ_BOOT_PAGE_WORDS:
+      return page_words;
     default:
       return 0;
   }
 }
 
-void proto_api_wfunc_write(u08 num, u16 val)
-{
-}
-
-/* non used API */
-
 u32 proto_api_lfunc_read(u08 num)
 {
-  switch(num) {
-    case PROTO_LFUNC_READ_BOOT_ROM_SIZE:
-      uart_send('r');
-      return CONFIG_MAX_ROM;
-  }
-  return 0;
+  /* only ROM size for now */
+  uart_send('r');
+  return CONFIG_MAX_ROM;
 }
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
+  /* only page addr for now */
+  uart_send('A');
+  page_addr = val;
 }
 
 void proto_api_action(u08 num)
-{
-}
-
-u32 proto_api_read_offset(u08 chan)
-{
-  uart_send('a');
-  return page_addr;
-}
-
-void proto_api_write_offset(u08 chan, u32 off)
-{
-  uart_send('A');
-  page_addr = off;
-}
-
-u16 proto_api_read_mtu(u08 chan)
-{
-  return page_words;
-}
-
-void proto_api_write_mtu(u08 chan, u16 mtu)
 {
 }
 
@@ -146,7 +121,7 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
   // enter main loop
   uart_send(':');
   while(1) {
-    proto_handle();
+    proto_handle_boot();
     boot_wdt_reset();
   }
   return BOOTBASE_RET_CMD_LOOP;

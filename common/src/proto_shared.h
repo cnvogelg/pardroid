@@ -42,33 +42,39 @@
 
 // -- word function -- 
 // read
-#define PROTO_WFUNC_READ_FW_ID            0x00
-#define PROTO_WFUNC_READ_FW_VERSION       0x01
-#define PROTO_WFUNC_READ_MACHTAG          0x02
-#define PROTO_WFUNC_READ_USER             0x03
+#define PROTO_WFUNC_READ_FW_ID                  0x00
+#define PROTO_WFUNC_READ_FW_VERSION             0x01
+#define PROTO_WFUNC_READ_MACHTAG                0x02
+#define PROTO_WFUNC_READ_USER                   0x03
 
 // write
-#define PROTO_WFUNC_WRITE_USER            0x00
+#define PROTO_WFUNC_WRITE_USER                  0x00
 
-// bootloader: read add ons
-#define PROTO_WFUNC_READ_BOOT_ROM_FW_ID       (PROTO_WFUNC_READ_USER + 0)
-#define PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION  (PROTO_WFUNC_READ_USER + 1)
-#define PROTO_WFUNC_READ_BOOT_ROM_MACHTAG     (PROTO_WFUNC_READ_USER + 2)
-#define PROTO_WFUNC_READ_BOOT_ROM_CRC         (PROTO_WFUNC_READ_USER + 3)
+// bootloader: read word
+#define PROTO_WFUNC_READ_BOOT_FW_ID             0x00
+#define PROTO_WFUNC_READ_BOOT_FW_VERSION        0x01
+#define PROTO_WFUNC_READ_BOOT_MACHTAG           0x02
+#define PROTO_WFUNC_READ_BOOT_ROM_FW_ID         0x03
+#define PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION    0x04
+#define PROTO_WFUNC_READ_BOOT_ROM_MACHTAG       0x05
+#define PROTO_WFUNC_READ_BOOT_ROM_CRC           0x06
+#define PROTO_WFUNC_READ_BOOT_PAGE_WORDS        0x07
 
 // -- long function --
 // read
-#define PROTO_LFUNC_READ_STATUS           0x00
-#define PROTO_LFUNC_READ_USER             0x01
+#define PROTO_LFUNC_READ_STATUS                 0x00
+#define PROTO_LFUNC_READ_USER                   0x01
 
 // write
-#define PROTO_LFUNC_WRITE_USER            0x00
+#define PROTO_LFUNC_WRITE_USER                  0x00
 
-// bootloader: read add ons
-#define PROTO_LFUNC_READ_BOOT_ROM_SIZE        (PROTO_LFUNC_READ_USER + 0)
+// bootloader: read long
+#define PROTO_LFUNC_READ_BOOT_ROM_SIZE          0x00
+// bootloader: write long
+#define PROTO_LFUNC_WRITE_BOOT_PAGE_ADDR        0x00
 
 // -- status flag --
-#define PROTO_STATUS_MASK_RX_PENDING  0x007f
-#define PROTO_STATUS_MASK_ERROR       0x7f00
-#define PROTO_STATUS_MASK_BUSY        0x0080
-//#define PROTO_STATUS_MASK_FREE        0x8000
+#define PROTO_STATUS_MASK_RX_PENDING            0x007f
+#define PROTO_STATUS_MASK_ERROR                 0x7f00
+#define PROTO_STATUS_MASK_BUSY                  0x0080
+//#define PROTO_STATUS_MASK_FREE                0x8000

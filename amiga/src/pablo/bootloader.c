@@ -25,7 +25,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 
   /* check bootloader magic */
   UWORD fw_id;
-  res = proto_function_read_word(ph, PROTO_WFUNC_READ_FW_ID, &fw_id);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_FW_ID, &fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -35,7 +35,7 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
 
   /* read version tag */
   UWORD bl_version;
-  res = proto_function_read_word(ph, PROTO_WFUNC_READ_FW_VERSION, &bl_version);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_FW_VERSION, &bl_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -43,13 +43,13 @@ int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi)
   bi->bl_version = bl_version;
 
   /* bootloader mach tag */
-  res = proto_function_read_word(ph, PROTO_WFUNC_READ_MACHTAG, &bi->bl_mach_tag);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_MACHTAG, &bi->bl_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* page size */
-  res = proto_mtu_read(ph, BOOTLOADER_CHN_PAGES, &bi->page_size);
+  res = proto_function_read_word(ph, PROTO_WFUNC_READ_BOOT_PAGE_WORDS, &bi->page_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -144,7 +144,7 @@ int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_offset_write(ph, BOOTLOADER_CHN_PAGES, bu.addr);
+    res = proto_function_write_long(ph, PROTO_LFUNC_WRITE_BOOT_PAGE_ADDR, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
@@ -194,7 +194,7 @@ int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_offset_write(ph, BOOTLOADER_CHN_PAGES, bu.addr);
+    res = proto_function_write_long(ph, BOOTLOADER_CHN_PAGES, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
