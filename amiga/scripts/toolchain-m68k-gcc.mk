@@ -4,4 +4,4 @@ CFLAGS_ARCH = -noixemul -m$(CONFIG_MCU) -Werror \
 LDFLAGS_ARCH = -noixemul -m$(CONFIG_MCU) -s
 LDFLAGS_DEV = -nostdlib -nostartfiles
 LIBS_ARCH = -lamiga
-LIBS_debug = -ldebug 
+LIBS_debug = -ldebug -lc
