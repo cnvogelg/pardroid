@@ -1,6 +1,19 @@
 # all rule
 all: info $(FIRMWARES)
 
+help:
+	@echo "  all         make all firmwares"
+	@echo "  info        show current setup"
+	@echo "  release     release build"
+	@echo
+	@echo "  clean       clean current firmware"
+	@echo "  clean-all   clean build and dist dirs"
+	@echo
+	@echo "  install     install all files"
+	@echo
+	@echo "  dist        dist build of current firmware"
+	@echo "  dist-all    dist build of all firmwares"
+
 info:
 	@echo "--- flavor=$(FLAVOR) arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH) ---"
 

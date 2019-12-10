@@ -4,13 +4,14 @@
 #define DEBUG CONFIG_DEBUG_PROTO
 
 #include "proto_low.h"
+#include "proto_api.h"
 #include "proto.h"
 #include "debug.h"
 #include "system.h"
 #include "timer.h"
 #include "status.h"
 
-static u16 msg_size;
+static u08 busy;
 
 void proto_init(void)
 {
@@ -18,7 +19,7 @@ void proto_init(void)
   DC('I');
 }
 
-void proto_first(void)
+void proto_first_cmd(void)
 {
   // expect reset command
   u08 cmd = proto_low_get_cmd();
@@ -42,6 +43,29 @@ void proto_trigger_signal(void)
   proto_low_ack_hi();
 }
 
+void proto_set_busy(void)
+{
+  DC('B');
+  if(busy == 0) {
+    proto_low_busy_hi();
+  }
+  busy++;
+}
+
+void proto_clr_busy(void)
+{
+  DC('b');
+  busy--;
+  if(busy == 0) {
+    proto_low_busy_lo();
+  }
+}
+
+u08 proto_is_busy(void)
+{
+  return busy > 0;
+}
+
 static void handle_action(u08 num)
 {
   // some actions need special handling:
@@ -52,7 +76,7 @@ static void handle_action(u08 num)
   }
 
   proto_low_action();
-  if(num >= PROTO_ACTION_USER) {
+  if(num > PROTO_ACTION_KNOK) {
     proto_api_action(num);
   }
   proto_low_end();
@@ -92,99 +116,105 @@ static void handle_lfunc_write(u08 num)
   proto_low_end();
 }
 
-static void handle_read_offset(u08 chan)
-{
-  u32 off = proto_api_read_offset(chan);
-  DL(off); DNL;
-  proto_low_read_long(off);
-  proto_low_end();
-}
+// channel operations
 
-static void handle_write_offset(u08 chan)
+static void handle_chn_set_rx_offset(u08 chan)
 {
   u32 off = proto_low_write_long();
-  proto_api_write_offset(chan, off);
+  proto_api_chn_set_rx_offset(chan, off);
   proto_low_end();
   DL(off); DNL;
 }
 
-static void handle_read_mtu(u08 chan)
+static void handle_chn_set_tx_offset(u08 chan)
 {
-  u16 mtu = proto_api_read_mtu(chan);
-  DW(mtu); DNL;
-  proto_low_read_word(mtu);
+  u32 off = proto_low_write_long();
+  proto_api_chn_set_tx_offset(chan, off);
   proto_low_end();
+  DL(off); DNL;
 }
 
-static void handle_write_mtu(u08 chan)
+static void handle_chn_get_rx_size(u08 chan)
 {
-  u16 mtu = proto_low_write_word();
-  proto_api_write_mtu(chan, mtu);
-  proto_low_end();
-  DW(mtu); DNL;
-}
-
-static void handle_msg_read_size(u08 chan)
-{
-  u16 size = proto_api_read_msg_size(chan);
-  DW(size); DNL;
-
-  // send size
+  u16 size = proto_api_chn_get_rx_size(chan);
   proto_low_read_word(size);
   proto_low_end();
-
-  // store size for subsequent msg_read_data call
-  msg_size = size;
-}
-
-static void handle_msg_write_size(u08 chan)
-{
-  // recv size
-  u16 size = proto_low_write_word();
-  proto_low_end();
-
-  // report size and receive msg size
-  msg_size = proto_api_write_msg_size(chan, size);
   DW(size); DNL;
 }
 
-static void handle_msg_read_data(u08 chan)
+static void handle_chn_set_rx_size(u08 chan)
 {
-  // ignore request if size is empty
-  if(msg_size == 0) {
+  u16 size = proto_low_write_word();
+  proto_api_chn_set_rx_size(chan, size);
+  proto_low_end();
+  DW(size); DNL;
+}
+
+static void handle_chn_set_tx_size(u08 chan)
+{
+  u16 size = proto_low_write_word();
+  proto_api_chn_set_tx_size(chan, size);
+  proto_low_end();
+  DW(size); DNL;
+}
+
+static void handle_chn_read_data(u08 chan)
+{
+  // get filled buffer and send it
+  u16 msg_size = 0;
+  u08 *buf = proto_api_read_msg_begin(chan, &msg_size);
+  if(msg_size == 0)
+  {
     return;
   }
-
-  // get filled buffer and send it
-  u08 *buf = proto_api_read_msg_begin(chan, msg_size);
   if(buf == NULL) {
     DC('#');
-    proto_api_read_block_spi(msg_size);
+    proto_low_read_block_spi(msg_size);
   } else {
     proto_low_read_block(msg_size, buf);
   }
-  proto_api_read_msg_done(chan, msg_size);
+  proto_api_read_msg_done(chan);
 
   proto_low_end();
 }
 
-static void handle_msg_write_data(u08 chan)
+static void handle_chn_write_data(u08 chan)
 {
-  // ignore request if size is empty
+  // get buffer and fill it
+  u16 msg_size = 0;
+  u08 *buf = proto_api_write_msg_begin(chan, &msg_size);
   if(msg_size == 0) {
     return;
   }
-
-  // get buffer and fill it
-  u08 *buf = proto_api_write_msg_begin(chan, msg_size);
   if(buf == NULL) {
     DC('#');
-    proto_api_write_block_spi(msg_size);
+    proto_low_write_block_spi(msg_size);
   } else {
     proto_low_write_block(msg_size, buf);
   }
-  proto_api_write_msg_done(chan, msg_size);
+  proto_api_write_msg_done(chan);
 
+  proto_low_end();
+}
+
+static void handle_chn_request_rx(u08 chan)
+{
+  proto_low_action();
+  proto_api_chn_request_rx(chan);
+  proto_low_end();
+}
+
+static void handle_chn_cancel_rx(u08 chan)
+{
+  proto_low_action();
+  proto_api_chn_cancel_rx(chan);
+  proto_low_end();
+}
+
+static void handle_chn_cancel_tx(u08 chan)
+{
+  proto_low_action();
+  proto_api_chn_cancel_tx(chan);
   proto_low_end();
 }
 
@@ -223,38 +253,50 @@ void proto_handle(void)
       DC('L');
       handle_lfunc_write(chn);
       break;
-    case PROTO_CMD_MSG_READ_DATA:
+
+    // channel commands
+    case PROTO_CMD_CHN_READ_DATA:
       DC('m');
-      handle_msg_read_data(chn);
+      handle_chn_read_data(chn);
       break;
-    case PROTO_CMD_MSG_WRITE_DATA:
+    case PROTO_CMD_CHN_WRITE_DATA:
       DC('M');
-      handle_msg_write_data(chn);
+      handle_chn_write_data(chn);
       break;
-    case PROTO_CMD_MSG_READ_SIZE:
-      DC('s');
-      handle_msg_read_size(chn);
+
+    case PROTO_CMD_CHN_GET_RX_SIZE:
+      DC('R');
+      handle_chn_get_rx_size(chn);
       break;
-    case PROTO_CMD_MSG_WRITE_SIZE:
-      DC('S');
-      handle_msg_write_size(chn);
+    case PROTO_CMD_CHN_SET_RX_SIZE:
+      DC('r');
+      handle_chn_set_rx_size(chn);
       break;
-    case PROTO_CMD_READ_OFFSET:
+    case PROTO_CMD_CHN_SET_TX_SIZE:
+      DC('r');
+      handle_chn_set_tx_size(chn);
+      break;
+    case PROTO_CMD_CHN_SET_RX_OFFSET:
       DC('o');
-      handle_read_offset(chn);
+      handle_chn_set_rx_offset(chn);
       break;
-    case PROTO_CMD_WRITE_OFFSET:
+    case PROTO_CMD_CHN_SET_TX_OFFSET:
       DC('O');
-      handle_write_offset(chn);
+      handle_chn_set_tx_offset(chn);
       break;
-    case PROTO_CMD_READ_MTU:
-      DC('u');
-      handle_read_mtu(chn);
+    case PROTO_CMD_CHN_REQUEST_RX:
+      DC('x');
+      handle_chn_request_rx(chn);
       break;
-    case PROTO_CMD_WRITE_MTU:
-      DC('U');
-      handle_write_mtu(chn);
+    case PROTO_CMD_CHN_CANCEL_RX:
+      DC('c');
+      handle_chn_cancel_rx(chn);
       break;
+    case PROTO_CMD_CHN_CANCEL_TX:
+      DC('C');
+      handle_chn_cancel_tx(chn);
+      break;
+
     default:
       DC('!'); DNL;
       // trigger a reset to re-enter knok
@@ -265,8 +307,8 @@ void proto_handle(void)
   DC(']'); DB(cmd); DNL;
 }
 
-/* boot handler - reduced function set to save space */
-void proto_handle_boot(void)
+/* mini handler - reduced function set to save space */
+void proto_handle_mini(void)
 {
   // read command from bits 0..4 in idle byte
   u08 cmd = proto_low_get_cmd();
@@ -297,21 +339,14 @@ void proto_handle_boot(void)
       DC('L');
       handle_lfunc_write(chn);
       break;
-    case PROTO_CMD_MSG_READ_DATA:
+      // only read/write supported in bootloader
+    case PROTO_CMD_CHN_READ_DATA:
       DC('m');
-      handle_msg_read_data(chn);
+      handle_chn_read_data(chn);
       break;
-    case PROTO_CMD_MSG_WRITE_DATA:
+    case PROTO_CMD_CHN_WRITE_DATA:
       DC('M');
-      handle_msg_write_data(chn);
-      break;
-    case PROTO_CMD_MSG_READ_SIZE:
-      DC('s');
-      handle_msg_read_size(chn);
-      break;
-    case PROTO_CMD_MSG_WRITE_SIZE:
-      DC('S');
-      handle_msg_write_size(chn);
+      handle_chn_write_data(chn);
       break;
     default:
       DC('!'); DNL;
@@ -322,5 +357,3 @@ void proto_handle_boot(void)
 
   DC(']'); DB(cmd); DNL;
 }
-
-

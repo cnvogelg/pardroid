@@ -121,18 +121,13 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
   // enter main loop
   uart_send(':');
   while(1) {
-    proto_handle_boot();
+    proto_handle_mini();
     boot_wdt_reset();
   }
   return BOOTBASE_RET_CMD_LOOP;
 }
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader
-
-u16 proto_api_read_msg_size(u08 chan)
-{
-  return page_words;
-}
 
 u08 *proto_api_read_msg_begin(u08 chan, u16 size)
 {
@@ -144,16 +139,6 @@ u08 *proto_api_read_msg_begin(u08 chan, u16 size)
 void proto_api_read_msg_done(u08 chan,u16 size)
 {
   uart_send('.');
-}
-
-u16 proto_api_write_msg_size(u08 chan, u16 size)
-{
-  // only allow writes of page size
-  if(size == page_words) {
-    return page_words;
-  } else {
-    return 0;
-  }
 }
 
 u08 *proto_api_write_msg_begin(u08 chan, u16 size)
@@ -175,10 +160,10 @@ void proto_api_write_msg_done(u08 chan, u16 size)
   }
 }
 
-void proto_api_write_block_spi(u16 num_words)
+void proto_low_write_block_spi(u16 num_words)
 {
 }
 
-void proto_api_read_block_spi(u16 num_words)
+void proto_low_read_block_spi(u16 num_words)
 {
 }

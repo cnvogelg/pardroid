@@ -54,14 +54,16 @@ BASE_SRCS = timer.c strobe.c spi.c crc.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PARAM_SRCS = param.c param_def.c crc.c
 
-# pamela
+# proto
 PROTO_SRCS = $(PROTO_ARCH_SRCS)
 ifdef CONFIG_BOOTSTRAP
 PROTO_SRCS += bootstrap.c bootrexx.c
 endif
-PROTO_SRCS += proto.c knok.c func.c status.c proto_spi.c
+PROTO_SRCS += proto.c knok.c
+
+# pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
-PAMELA_SRCS += pamela.c
+PAMELA_SRCS += pamela.c proto_api.c channel.c
 
 # paloma
 PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c channel.c
@@ -158,23 +160,23 @@ $(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-net
-TEST_NET_SRCS = $(PAMELA_SRCS) $(PARAM_SRCS)
-TEST_NET_SRCS += test-net.c driver.c
-TEST_NET_SRCS += $(DRIVER_SRCS)
-FW_ID_test-net-fw = 0x8007
-FW_VER_test-net-fw = $(VERSION_TAG)
-$(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
+#TEST_NET_SRCS = $(PAMELA_SRCS) $(PARAM_SRCS)
+#TEST_NET_SRCS += test-net.c driver.c
+#TEST_NET_SRCS += $(DRIVER_SRCS)
+#FW_ID_test-net-fw = 0x8007
+#FW_VER_test-net-fw = $(VERSION_TAG)
+#$(eval $(call make-firmware,test-net-fw,$(TEST_NET_SRCS),$(CONFIG_MAX_ROM)))
 
 # ----- main test suites -----
 # test-pamela
-TEST_PAMELA_SRCS = $(PAMELA_SRCS) enc28j60.c
-TEST_PAMELA_SRCS += test-pamela.c
-FW_ID_test-pamela-fw = 0x9000
-FW_VER_test-pamela-fw = $(VERSION_TAG)
-$(eval $(call dist-pbl,test-pamela-fw))
-$(eval $(call make-pbl,test-pamela-fw))
-$(eval $(call dist-hex,test-pamela-fw))
-$(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
+#TEST_PAMELA_SRCS = $(PAMELA_SRCS) enc28j60.c
+#TEST_PAMELA_SRCS += test-pamela.c
+#FW_ID_test-pamela-fw = 0x9000
+#FW_VER_test-pamela-fw = $(VERSION_TAG)
+#$(eval $(call dist-pbl,test-pamela-fw))
+#$(eval $(call make-pbl,test-pamela-fw))
+#$(eval $(call dist-hex,test-pamela-fw))
+#$(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-paloma
 #TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)
@@ -199,7 +201,7 @@ $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SI
 endif
 #endif
 
-DEFAULT_FIRMWARE=test-pamela-fw
+DEFAULT_FIRMWARE=test-proto-fw
 
 # ---------- rules ----------
 include scripts/common-rules.mk

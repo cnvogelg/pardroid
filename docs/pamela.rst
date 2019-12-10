@@ -904,3 +904,167 @@ The AmigaOS device driver
 
 ``pamela.device``
 =================
+
+channel parameter
+*****************
+
+status: open|attached|error
+mtu: current mtu
+offset: position in stream (both read/write)
+
+channel properties
+******************
+
+CHANNEL_PROP_OFFSET
+CHANNEL_PROP_VAR_SIZE
+
+* use offset otherwise stream
+* use RX_PENDING otherwise direct read
+* use custom size otherwise fixed MTU size
+
+stream I/O
+**********
+
+* no position/offset information
+* continous data flow
+* typically messages of arbitrary size (2..mtu)
+* example: network packets, spi data, i2c data
+
+random access I/O
+*****************
+
+* position (offset) required
+* random access
+* typically messages of fixed MTU size (block I/O)
+* example: disk i/o
+
+open channel
+************
+
+* adjust mtu (only allowed before)
+* select channel
+WRITE_CHN_INDEX
+* get properties and mtu
+READ_CHN_MTU
+READ_CHN_PROPERTIES
+* (optional) adjust MTU and read back
+WRITE_CHN_MTU
+READ_CHN_MTU
+* open
+ACTION_CHN_OPEN
+   error_code = handler->open(chn)
+* check status
+READ_CHN_ERROR_CODE
+
+close channel
+*************
+
+* select channel
+WRITE_CHN_INDEX
+* close
+ACTION_CHN_CLOSE
+   handler->close()
+* check status
+READ_CHN_ERROR_CODE
+
+write operation
+***************
+
+if(CHANNEL_PROP_OFFSET && offset_changed)
+     PROTO_CMD_CHN_SET_TX_OFFSET
+if(CHANNEL_PROP_VAR_SIZE && size_changed)
+     PROTO_CMD_CHN_SET_TX_SIZE
+PROTO_CMD_CHN_WRITE_DATA
+     handler->write_begin(chn, size, offset);
++ extra WRITE_DATA if size > MTU
+     handler->write_next(chn, size)
+(may be interrupted by other channels)
+     handler->write_end(chn, size)
+
+* sequence is not interrupted!
+
+read operation
+**************
+
+if(CHANNEL_PROP_OFFSET && offset_changed)
+     PROTO_CMD_CHN_SET_RX_OFFSET
+if(CHANNEL_FLAG_RX_SIZE)
+     PROTO_CMD_CHN_SET_RX_SIZE
+PROTO_CMD_CHN_REQUEST_RX
+     handler->read_request(chn, size, offset);
+
+... wait for RX_PENDING event
+... other commands allowed even write on channel!
+... but no other RX
+
+if(CHANNEL_FLAG_RX_SIZE && size_changed)
+     PROTO_CMD_CHN_GET_SIZE
+PROTO_CMD_CHN_READ_DATA
+     handler->read_begin(chn, size, total_size, offset)
++ extra READ_DATA is size > MTU
+     handler->read_next(chn, size)
+(may be interrupted by other channels)
+     handler->read_end(chn)
+
+
+
+--------------------------------
+
+?? READ_REQUEST ()     -> status=RX_REQUEST
+                    -> handle->read_request(id, offset)
+.
+. (might be busy)
+. waiting
+. in work:
+. handler calls channel_send(id, size, buf)   -> status=RX_PENDING
+    buf locked
+( write may interleave here )
+( or other reads )
+.
+. waiting for master to start reading
+
++ READ_SIZE         -> read_begin(id, size, buf)
++ READ_DATA
+. read multiple data if size > MTU
++ READ_DATA
+. done              -> read_done(id, size, buf)
+    buf free
+
++ = atomic block
+
+* via offset (disk i/o)
+
+READ_OFFSET (offset) -> status=RX_REQUEST
+                        rx_offset=
+                        read_request(id, offset)
+.
+. (might be busy) 
+. waiting
+. handler->send()    -> 
+
+
++ READ_SIZE          -> read_begin(id, size) -> buf
++ READ_DATA
+...
++ READ_DATA           -> read_done(id, size, buf)
+
+
+writing
+*******
+
+* direct (without offset) (network)
+
++WRITE_SIZE        -> write_begin(size,0) -> buf
++WRITE_DATA
+... if size > MTU
++WRITE_DATA        -> write_done()
+
+* with offset (disk i/o)
+
++WRITE_OFFSET
++WRITE_SIZE        -> write_begin(size,offset)
++WRITE_DATA
+... if size > MTU
++WRITE_DATA        -> write_done()
+<perform write operation>
+(may be busy)

@@ -16,12 +16,17 @@
 #include "knok.h"
 #include "proto.h"
 #include "proto_shared.h"
-#include "func.h"
-#include "status.h"
-#include "fw.h"
 #include "fwid.h"
+#include "fw_info.h"
 
 FW_INFO(FWID_TEST_PROTO, VERSION_TAG)
+
+#define MAX_WORDS  512
+u08 buf[MAX_WORDS * 2];
+u08 use_spi = 0;
+u16 num_words = MAX_WORDS;
+u16 word_val = 0x4711;
+u32 long_val = 0xdeadbeef;
 
 // action handler
 
@@ -32,20 +37,22 @@ void proto_api_action(u08 num)
   uart_send_crlf();
 
   // triger signal
-  if(num == 15) {
-    uart_send_pstring(PSTR("signal!"));
-    uart_send_crlf();
-    proto_trigger_signal();
-  }
-  else if(num == 14) {
-    uart_send_pstring(PSTR("busy:begin!"));
-    uart_send_crlf();
-    status_set_busy();
-  }
-  else if(num == 13) {
-    uart_send_pstring(PSTR("busy:end!"));
-    uart_send_crlf();
-    status_clr_busy();
+  switch(num) {
+    case PROTO_ACTION_TEST_SIGNAL:
+      uart_send_pstring(PSTR("signal!"));
+      uart_send_crlf();
+      proto_trigger_signal();
+      break;
+    case PROTO_ACTION_TEST_BUSY_BEGIN:
+      uart_send_pstring(PSTR("busy:begin!"));
+      uart_send_crlf();
+      proto_set_busy();
+      break;
+    case PROTO_ACTION_TEST_BUSY_END:
+      uart_send_pstring(PSTR("busy:end!"));
+      uart_send_crlf();
+      proto_clr_busy();
+      break;
   }
 }
 
@@ -54,8 +61,25 @@ void proto_api_action(u08 num)
 u16  proto_api_wfunc_read(u08 num)
 {
   u16 val = 0xbeef;
-  if(num < PROTO_WFUNC_READ_USER) {
-    val = func_read_word(num);
+  switch(num) {
+    case PROTO_WFUNC_READ_TEST_FW_ID:
+      val = FW_GET_ID();
+      break;
+    case PROTO_WFUNC_READ_TEST_FW_VERSION:
+      val = FW_GET_VERSION();
+      break;
+    case PROTO_WFUNC_READ_TEST_MACHTAG:
+      val = FW_GET_MACHTAG();
+      break;
+    case PROTO_WFUNC_READ_TEST_NUM_WORDS:
+      val = num_words;
+      break;
+    case PROTO_WFUNC_READ_TEST_USE_SPI:
+      val = use_spi;
+      break;
+    case PROTO_WFUNC_READ_TEST_VALUE:
+      val = word_val;
+      break;
   }
   uart_send_pstring(PSTR("wfunc_read:"));
   uart_send_hex_byte(num);
@@ -67,8 +91,18 @@ u16  proto_api_wfunc_read(u08 num)
 
 void proto_api_wfunc_write(u08 num, u16 val)
 {
-  if(num < PROTO_WFUNC_WRITE_USER) {
-    func_write_word(num, val);
+  switch(num) {
+    case PROTO_WFUNC_WRITE_TEST_NUM_WORDS:
+      if(val <= MAX_WORDS) {
+        num_words = val;
+      }
+      break;
+    case PROTO_WFUNC_WRITE_TEST_USE_SPI:
+      use_spi = (val > 0) ? 1 : 0;
+      break;
+    case PROTO_WFUNC_WRITE_TEST_VALUE:
+      word_val = val;
+      break;
   }
   uart_send_pstring(PSTR("wfunc_write:"));
   uart_send_hex_byte(num);
@@ -79,14 +113,27 @@ void proto_api_wfunc_write(u08 num, u16 val)
 
 u32 proto_api_lfunc_read(u08 num)
 {
+  u32 val = 0xcafebabe;
+  switch(num) {
+    case PROTO_LFUNC_READ_TEST_VALUE:
+      val = long_val;
+      break;
+  }
   uart_send_pstring(PSTR("lfunc_read:"));
   uart_send_hex_byte(num);
+  uart_send('=');
+  uart_send_hex_long(val);
   uart_send_crlf();
-  return 0xcafebabe;
+  return val;
 }
 
 void proto_api_lfunc_write(u08 num, u32 val)
 {
+  switch(num) {
+    case PROTO_LFUNC_WRITE_TEST_VALUE:
+      long_val = val;
+      break;
+  }
   uart_send_pstring(PSTR("lfunc_write:"));
   uart_send_hex_byte(num);
   uart_send('=');
@@ -94,39 +141,11 @@ void proto_api_lfunc_write(u08 num, u32 val)
   uart_send_crlf();
 }
 
-// registers
-
-void reg_api_set_value(u08 range, u08 reg, u16 value)
-{
-  uart_send_pstring(PSTR("reg_set:"));
-  uart_send_hex_byte(range);
-  uart_send(':');
-  uart_send_hex_byte(reg);
-  uart_send('=');
-  uart_send_hex_word(value);
-  uart_send_crlf();
-}
-
-u16 reg_api_get_value(u08 range, u08 reg)
-{
-  u16 val = 0xdead;
-  uart_send_pstring(PSTR("reg_get:"));
-  uart_send_hex_byte(range);
-  uart_send(':');
-  uart_send_hex_byte(reg);
-  uart_send('=');
-  uart_send_hex_word(val);
-  uart_send_crlf();
-  return val;
-}
-
-// messages
-
-u08 buf[512];
+// message i/o
 
 u16 proto_api_read_msg_size(u08 chan)
 {
-  return 256;
+  return num_words;
 }
 
 u08 *proto_api_read_msg_begin(u08 chan,u16 size)
@@ -144,11 +163,7 @@ void proto_api_read_msg_done(u08 chan, u16 size)
 
 u16 proto_api_write_msg_size(u08 chan, u16 size)
 {
-  if(size <= 256) {
-    return size;
-  } else {
-    return 0;
-  }
+  return num_words;
 }
 
 u08 *proto_api_write_msg_begin(u08 chan,u16 size)
@@ -196,9 +211,9 @@ int main(void)
   knok_main();
 
   proto_init();
-  proto_first();
+  proto_first_cmd();
   while(1) {
-      proto_handle();
+      proto_handle_mini();
       system_wdt_reset();
   }
 
