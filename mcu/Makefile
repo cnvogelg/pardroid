@@ -95,7 +95,7 @@ endif
 INCLUDES := src
 INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
-INCLUDES += src/base
+INCLUDES += src/base src/proto
 INCLUDES += src/pamela src/paloma src/handler src/driver src/test src/param
 INCLUDES += ../common/src
 INCLUDES += $(DRIVER_INCLUDES) $(TOOL_INCLUDES)
@@ -114,6 +114,9 @@ TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PROTO_SRCS)
 TEST_PROTO_SRCS += test-proto.c
 FW_ID_test-proto-fw = 0x8008
 FW_VER_test-proto-fw = $(VERSION_TAG)
+$(eval $(call dist-pbl,test-proto-fw))
+$(eval $(call make-pbl,test-proto-fw))
+$(eval $(call dist-hex,test-proto-fw))
 $(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-param
