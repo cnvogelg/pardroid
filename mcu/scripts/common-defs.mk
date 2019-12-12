@@ -102,20 +102,6 @@ $(DIST_DIR)/$1$(DIST_TAG).hex: $(BIN_DIR)/$1.hex
 	$(H)cp $$< $$@
 endef
 
-# get-fw-id
-# derive firmware id from file name
-# $1 = file name *.img or *.pbl
-define get-fw-id
-$(FW_ID_$(notdir $(basename $1)))
-endef
-
-# get-fw-ver
-# derive firmware version from file name
-# $1 = file name *.img or *.pbl
-define get-fw-ver
-$(FW_VER_$(notdir $(basename $1)))
-endef
-
 create_dir = $(shell test -d $1 || mkdir -p $1)
 
 # create dirs

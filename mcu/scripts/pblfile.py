@@ -9,16 +9,13 @@ import sys
 import struct
 
 # get params
-if len(sys.argv) != 7:
-  print("Usage: <in.img> <max_size> <mach_tag> <fw_id> <version_tag> <out.pbl>")
+if len(sys.argv) != 4:
+  print("Usage: <in.img> <max_size> <out.pbl>")
   sys.exit(1)
 
 in_bin = sys.argv[1]
 max_size = int(sys.argv[2])
-mach_tag = int(sys.argv[3][2:],16)
-fw_id = int(sys.argv[4][2:],16)
-version_tag = int(sys.argv[5][2:],16)
-out_pbl = sys.argv[6]
+out_pbl = sys.argv[3]
 
 # read input rom image
 with open(in_bin, "rb") as fh:
@@ -28,6 +25,21 @@ with open(in_bin, "rb") as fh:
 if len(rom_data) != max_size:
   print("INVALID SIZE!")
   sys.exit(1)
+
+# find fw info in ROM
+pos = rom_data.find(b'FWID')
+if pos > 0:
+  fw_info_fmt = ">HHH" # big endian
+else:
+  pos = rom_data.find(b'DIWF')
+  if pos > 0:
+    fw_info_fmt = "<HHH" # little endian
+  else:
+    print("NO FWID found!!")
+    sys.exit(1)
+# skip magic
+pos += 4
+fw_id, version_tag, mach_tag = struct.unpack_from(fw_info_fmt, rom_data, pos)
 
 # add pablo file header (big endian):
 # +0: PBL1                magic
@@ -39,10 +51,14 @@ if len(rom_data) != max_size:
 # #16: total
 pbl_hdr = b'PBL1' + struct.pack(">IHHHH", max_size, fw_id, version_tag, mach_tag, 0)
 
-# write imaget
+# write image
 with open(out_pbl, "wb") as fh:
   fh.write(pbl_hdr)
   fh.write(rom_data)
+
+out_file = os.path.basename(out_pbl)
+print("%-16s  SIZE=%06x  FW=%04x  VER=%04x  MACH=%04x" % \
+  (out_file, max_size, fw_id, version_tag, mach_tag))
 
 # done
 sys.exit(0)

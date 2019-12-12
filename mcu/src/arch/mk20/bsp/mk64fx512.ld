@@ -46,6 +46,7 @@ SECTIONS
 		KEEP(*(.flashconfig*))
 		*(.text*)
 		*(.rodata*)
+		KEEP(*(.rodata.fw_info))
 		. = ALIGN(4);
 		KEEP(*(.init))
 		. = ALIGN(4);

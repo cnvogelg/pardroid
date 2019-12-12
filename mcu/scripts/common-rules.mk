@@ -87,12 +87,12 @@ dist-all:
 # generate pablo flash image
 %.img: %.bin
 	@echo "  IMG  $(@F)  id=$(call get-fw-id,$(@F))  ver=$(call get-fw-ver,$(@F))"
-	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $(MACHTAG_ID) $(call get-fw-id,$(@F)) $(call get-fw-ver,$(@F)) $@
+	$(H)scripts/pblgen.py $< $(CONFIG_MAX_ROM) $@
 
 # generate pablo flash image
 %.pbl: %.img
 	@echo "  PBL  $(@F)  id=$(call get-fw-id,$(@F))  ver=$(call get-fw-ver,$(@F))"
-	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $(MACHTAG_ID) $(call get-fw-id,$(@F)) $(call get-fw-ver,$(@F)) $@
+	$(H)scripts/pblfile.py $< $(CONFIG_MAX_ROM) $@
 
 .PRECIOUS: %.img %.bin
 
