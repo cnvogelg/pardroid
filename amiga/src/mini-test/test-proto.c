@@ -55,20 +55,20 @@ int dosmain(void)
                 // functions
                 PutStr("wfunc_read");
                 UWORD wdata = 0;
-                error = proto_function_read_word(ph, 0, &wdata);
+                error = proto_wfunc_read(ph, 0, &wdata);
                 Printf("-> %ld : %lx\n", (LONG)error, (ULONG)wdata);
 
                 PutStr("wfunc_write");
-                error = proto_function_write_word(ph, 0, 0xdead);
+                error = proto_wfunc_write(ph, 0, 0xdead);
                 Printf("-> %ld\n", (LONG)error);
 
                 PutStr("lfunc_read");
                 ULONG ldata = 0;
-                error = proto_function_read_long(ph, 0, &ldata);
+                error = proto_lfunc_read(ph, 0, &ldata);
                 Printf("-> %ld : %lx\n", (LONG)error, ldata);
 
                 PutStr("lfunc_write");
-                error = proto_function_write_long(ph, 0, 0xcafebabe);
+                error = proto_lfunc_write(ph, 0, 0xcafebabe);
                 Printf("-> %ld\n", (LONG)error);
 
                 // message
@@ -76,11 +76,11 @@ int dosmain(void)
                 PutStr("msg read");
                 UBYTE buf[512];
                 UWORD words = 256;
-                error = proto_msg_read_single(ph, 0, buf, &words);
+                error = proto_chn_msg_read(ph, 0, buf, 256);
                 Printf("-> %ld : #%ld\n", (LONG)error, (ULONG)words);
 
                 PutStr("msg write");
-                error = proto_msg_write_single(ph, 0, buf, 256);
+                error = proto_chn_msg_write(ph, 0, buf, 256);
                 Printf("-> %ld\n", (LONG)error);
 
                 proto_exit(ph);

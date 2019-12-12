@@ -180,7 +180,7 @@ static int write_word(proto_handle_t *ph, UBYTE cmd, UWORD data)
   return result;
 }
 
-int proto_function_read_word(proto_handle_t *ph, UBYTE num, UWORD *data)
+int proto_wfunc_read(proto_handle_t *ph, UBYTE num, UWORD *data)
 {
   if(num > PROTO_MAX_FUNCTION) {
     return PROTO_RET_INVALID_FUNCTION;
@@ -189,7 +189,7 @@ int proto_function_read_word(proto_handle_t *ph, UBYTE num, UWORD *data)
   return read_word(ph, cmd, data);
 }
 
-int proto_function_write_word(proto_handle_t *ph, UBYTE num, UWORD data)
+int proto_wfunc_write(proto_handle_t *ph, UBYTE num, UWORD data)
 {
   if(num > PROTO_MAX_FUNCTION) {
     return PROTO_RET_INVALID_FUNCTION;
@@ -222,7 +222,7 @@ static int write_long(proto_handle_t *ph, UBYTE cmd, ULONG data)
   return result;
 }
 
-int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
+int proto_lfunc_read(proto_handle_t *ph, UBYTE num, ULONG *data)
 {
   if(num > PROTO_MAX_FUNCTION) {
     return PROTO_RET_INVALID_FUNCTION;
@@ -231,7 +231,7 @@ int proto_function_read_long(proto_handle_t *ph, UBYTE num, ULONG *data)
   return read_long(ph, cmd, data);
 }
 
-int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
+int proto_lfunc_write(proto_handle_t *ph, UBYTE num, ULONG data)
 {
   if(num > PROTO_MAX_FUNCTION) {
     return PROTO_RET_INVALID_FUNCTION;
@@ -240,99 +240,40 @@ int proto_function_write_long(proto_handle_t *ph, UBYTE num, ULONG data)
   return write_long(ph, cmd, data);
 }
 
-int proto_offset_read(proto_handle_t *ph, UBYTE chn, ULONG *offset)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_READ_OFFSET + chn;
-  return read_long(ph, cmd, offset);
-}
-
-int proto_offset_write(proto_handle_t *ph, UBYTE chn, ULONG offset)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_WRITE_OFFSET + chn;
-  return write_long(ph, cmd, offset);
-}
-
-int proto_mtu_read(proto_handle_t *ph, UBYTE chn, UWORD *mtu)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_READ_MTU + chn;
-  return read_word(ph, cmd, mtu);
-}
-
-int proto_mtu_write(proto_handle_t *ph, UBYTE chn, WORD mtu)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_WRITE_MTU + chn;
-  return write_word(ph, cmd, mtu);  
-}
-
-int proto_msg_write(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
-  UBYTE dcmd = chn + PROTO_CMD_MSG_WRITE_DATA;
-  UBYTE scmd = chn + PROTO_CMD_MSG_WRITE_SIZE;
+  UBYTE cmd = chn + PROTO_CMD_CHN_WRITE_DATA;
   UWORD size = (UWORD)msgiov->total_words;
-  if(size == 0) {
-    return PROTO_RET_OK;
-  }
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_word(port, timeout_flag, scmd, &size);
-  if(result == 0) {
-    result = proto_low_write_block(port, timeout_flag, dcmd, &msgiov->first);
-  }
+  int result = proto_low_write_block(port, timeout_flag, cmd, &msgiov->first);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_msg_read(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
   if(chn >= PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
-  UBYTE dcmd = chn + PROTO_CMD_MSG_READ_DATA;
-  UBYTE scmd = chn + PROTO_CMD_MSG_READ_SIZE;
-  UWORD size = 0;
-  UWORD max_size = (UWORD)msgiov->total_words;
-  if(max_size == 0) {
-    return PROTO_RET_OK;
-  }
+  UBYTE cmd = chn + PROTO_CMD_CHN_READ_DATA;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_word(port, timeout_flag, scmd, &size);
-  if(result == 0) {
-    if(size > max_size) {
-      result = PROTO_RET_MSG_TOO_LARGE;
-    } else if(size == 0) {
-      result = PROTO_RET_OK;
-    } else {
-      result = proto_low_read_block(port, timeout_flag, dcmd, &msgiov->first);
-    }
-  }
+  int result = proto_low_read_block(port, timeout_flag, cmd, &msgiov->first);
   timer_stop(ph->timer);
 
-  msgiov->total_words = size;
   return result;
 }
 
-int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
+int proto_chn_msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   proto_iov_t msgiov = {
     num_words, /* total size */
@@ -340,22 +281,95 @@ int proto_msg_write_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_
       buf,       /* chunk pointer */
       0 }          /* next node */
   };
-  return proto_msg_write(ph, chn, &msgiov);
+  return proto_chn_msg_writev(ph, chn, &msgiov);
 }
 
-int proto_msg_read_single(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *max_words)
+int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   proto_iov_t msgiov = {
-    *max_words, /* total size */
-    { *max_words, /* chunk size */
+    num_words, /* total size */
+    { num_words, /* chunk size */
       buf,        /* chunk pointer */
       0 }         /* next node */
   };
-  int result = proto_msg_read(ph, chn, &msgiov);
-  /* store returned result size */
-  *max_words = msgiov.total_words;
-  return result;
+  return proto_chn_msg_readv(ph, chn, &msgiov);
 }
+
+// extended commands
+
+int proto_chn_get_rx_size(proto_handle_t *ph, UBYTE chn, UWORD *ret_words)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_GET_RX_SIZE + chn;
+  return read_word(ph, cmd, ret_words);
+}
+
+int proto_chn_set_rx_size(proto_handle_t *ph, UBYTE chn, UWORD num_words)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_SET_RX_SIZE + chn;
+  return write_word(ph, cmd, num_words);
+}
+
+int proto_chn_set_tx_size(proto_handle_t *ph, UBYTE chn, UWORD num_words)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_SET_TX_SIZE + chn;
+  return write_word(ph, cmd, num_words);
+}
+
+int proto_chn_set_rx_offset(proto_handle_t *ph, UBYTE chn, ULONG offset)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_SET_RX_OFFSET + chn;
+  return write_long(ph, cmd, offset);
+}
+
+int proto_chn_set_tx_offset(proto_handle_t *ph, UBYTE chn, ULONG offset)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_SET_TX_OFFSET + chn;
+  return write_long(ph, cmd, offset);
+}
+
+int proto_chn_request_rx(proto_handle_t *ph, UBYTE chn)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_REQUEST_RX + chn;
+  return proto_action(ph, cmd);
+}
+
+int proto_chn_cancel_rx(proto_handle_t *ph, UBYTE chn)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_CANCEL_RX + chn;
+  return proto_action(ph, cmd);
+}
+
+int proto_chn_cancel_tx(proto_handle_t *ph, UBYTE chn)
+{
+  if(chn > PROTO_MAX_CHANNEL) {
+    return PROTO_RET_INVALID_CHANNEL;
+  }
+  UBYTE cmd = PROTO_CMD_CHN_CANCEL_TX + chn;
+  return proto_action(ph, cmd);
+}
+
+// verbose error
 
 const char *proto_perror(int res)
 {

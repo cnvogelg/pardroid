@@ -1,7 +1,7 @@
 #ifndef BOOTLOADER_H
 #define BOOTLOADER_H
 
-#include "pamela.h"
+#include "proto_env.h"
 #include "pblfile.h"
 
 struct bootinfo {
@@ -55,16 +55,16 @@ typedef struct bl_flash_data bl_read_data_t;
 typedef int (*bl_flash_cb_t)(bl_flash_data_t *data, void *user_data);
 typedef int (*bl_read_cb_t)(bl_read_data_t *data, void *user_data);
 
-extern int bootloader_enter(pamela_handle_t *pb, bootinfo_t *bi);
-extern int bootloader_leave(pamela_handle_t *pb);
+extern int bootloader_enter(proto_env_handle_t *pb, bootinfo_t *bi);
+extern int bootloader_leave(proto_env_handle_t *pb);
 
-extern int bootloader_update_fw_info(pamela_handle_t *pb, bootinfo_t *bi);
+extern int bootloader_update_fw_info(proto_env_handle_t *pb, bootinfo_t *bi);
 extern int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf);
 
-extern int bootloader_flash(pamela_handle_t *pb, bootinfo_t *bi,
+extern int bootloader_flash(proto_env_handle_t *pb, bootinfo_t *bi,
                             bl_flash_cb_t pre_callback,
                             void *user_data);
-extern int bootloader_read(pamela_handle_t *pb, bootinfo_t *bi,
+extern int bootloader_read(proto_env_handle_t *pb, bootinfo_t *bi,
                            bl_read_cb_t pre_callback,
                            bl_read_cb_t post_callback,
                            void *user_data);

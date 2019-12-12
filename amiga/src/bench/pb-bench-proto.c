@@ -9,7 +9,7 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "pamela.h"
+#include "proto_env.h"
 #include "bench.h"
 #include "bench_main.h"
 
@@ -23,12 +23,12 @@ static void proto_err(int res)
 #define WAIT_S      0
 #define WAIT_US     100000UL
 
-static ULONG run_with_events(bench_def_t *def, pamela_handle_t *pb, bench_func_t func)
+static ULONG run_with_events(bench_def_t *def, proto_env_handle_t *pb, bench_func_t func)
 {
   /* init events */
-  int res = pamela_init_events(pb);
-  if(res != PAMELA_OK) {
-    Printf("ERROR: pamela_init_events: %ld %s!!\n",
+  int res = proto_env_init_events(pb);
+  if(res != PROTO_ENV_OK) {
+    Printf("ERROR: proto_env_init_events: %ld %s!!\n",
            (LONG)res, (LONG)proto_perror(res));
     return 0;
   }
@@ -37,7 +37,7 @@ static ULONG run_with_events(bench_def_t *def, pamela_handle_t *pb, bench_func_t
   ULONG val = func(def, pb);
 
   /* cleanup events */
-  pamela_exit_events(pb);
+  proto_env_exit_events(pb);
 
   return val;
 }
@@ -49,10 +49,10 @@ static ULONG run_with_events(bench_def_t *def, pamela_handle_t *pb, bench_func_t
 #define TEST_MODE_NORMAL  0
 #define TEST_MODE_ECHO    1
 
-static int set_test_mode(pamela_handle_t *pb, UBYTE mode)
+static int set_test_mode(proto_env_handle_t *pb, UBYTE mode)
 {
 #if 0
-  proto_handle_t *proto = pamela_get_proto(pb);
+  proto_handle_t *proto = proto_env_get_proto(pb);
   /* set test mode */
   int res = reg_set(proto, REG_TEST_MODE, mode);
   if(res != 0) {
@@ -65,7 +65,7 @@ static int set_test_mode(pamela_handle_t *pb, UBYTE mode)
 #endif
 }
 
-static ULONG run_in_test_mode(bench_def_t *def, pamela_handle_t *pb, bench_func_t func, UBYTE mode)
+static ULONG run_in_test_mode(bench_def_t *def, proto_env_handle_t *pb, bench_func_t func, UBYTE mode)
 {
   /* set echo test mode */
   int res = set_test_mode(pb, mode);
@@ -83,13 +83,13 @@ static ULONG run_in_test_mode(bench_def_t *def, pamela_handle_t *pb, bench_func_
 
 /* ----- run loop helper ----- */
 
-typedef int (*loop_func_t)(pamela_handle_t *ph, ULONG iter,
+typedef int (*loop_func_t)(proto_env_handle_t *ph, ULONG iter,
                            UBYTE *buffer, UWORD num_words);
 
-static ULONG run_kbps_loop(pamela_handle_t *pb, loop_func_t func, ULONG size_mult)
+static ULONG run_kbps_loop(proto_env_handle_t *pb, loop_func_t func, ULONG size_mult)
 {
-  timer_handle_t *timer = pamela_get_timer(pb);
-  proto_handle_t *proto = pamela_get_proto(pb);
+  timer_handle_t *timer = proto_env_get_timer(pb);
+  proto_handle_t *proto = proto_env_get_proto(pb);
 
   ULONG num = bench_get_num();
   ULONG size = bench_get_size();
@@ -138,71 +138,37 @@ static ULONG run_kbps_loop(pamela_handle_t *pb, loop_func_t func, ULONG size_mul
 
 /* ----- bench functions ----- */
 
-static int func_msg_write(pamela_handle_t *pb, ULONG iter,
+static int func_msg_write(proto_env_handle_t *pb, ULONG iter,
                           UBYTE *buffer, UWORD num_words)
 {
-  proto_handle_t *ph = pamela_get_proto(pb);
-  return proto_msg_write_single(ph, 0, buffer, num_words);
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  return proto_chn_msg_write(ph, 0, buffer, num_words);
 }
 
-static int func_msg_read(pamela_handle_t *pb, ULONG iter,
+static int func_msg_read(proto_env_handle_t *pb, ULONG iter,
                          UBYTE *buffer, UWORD num_words)
 {
-  proto_handle_t *ph = pamela_get_proto(pb);
-  UWORD nw = num_words;
-  return proto_msg_read_single(ph, 0, buffer, &nw);
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
 }
 
-static int func_msg_write_read(pamela_handle_t *pb, ULONG iter,
+static int func_msg_write_read(proto_env_handle_t *pb, ULONG iter,
                                UBYTE *buffer, UWORD num_words)
 {
-  proto_handle_t *ph = pamela_get_proto(pb);
-  int status = proto_msg_write_single(ph, 0, buffer, num_words);
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_msg_write(ph, 0, buffer, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
-  UWORD size = num_words;
-  return proto_msg_read_single(ph, 0, buffer, &size);
-}
-
-static int func_msg_write_read_sig(pamela_handle_t *pb, ULONG iter,
-                                   UBYTE *buffer, UWORD num_words)
-{
-  proto_handle_t *ph = pamela_get_proto(pb);
-
-  /* write message */
-  int res = proto_msg_write_single(ph, 0, buffer, num_words);
-  if(res != PROTO_RET_OK) {
-    return res;
-  }
-
-  /* wait for read pending signal */
-  ULONG got_mask = pamela_wait_event(pb, WAIT_S, WAIT_US, 0);
-
-  /* check status */
-  ULONG status;
-  res = pamela_read_status(pb, &status);
-  if(res != PROTO_RET_OK) {
-    return res;
-  }
-
-  /* channel 0 read pending flag */
-  if(status != 0x0001) {
-    Printf("\nstatus=%08lx got_mask=%08lx\n", status, got_mask);
-    Printf("ERROR #%ld: No read pending??\n", iter);
-  }
-
-  /* read message back */
-  UWORD size = num_words;
-  return proto_msg_read_single(ph, 0, buffer, &size);
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
 }
 
 /* ----- benchmarks ----- */
 
 static ULONG bench_action_init(bench_def_t *def, void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pamela_get_proto(pb);
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  proto_handle_t *ph = proto_env_get_proto(pb);
 
   ULONG deltas[2] = { 0,0 };
   int error = proto_action_bench(ph, PROTO_ACTION_PING, deltas);
@@ -214,8 +180,8 @@ static ULONG bench_action_init(bench_def_t *def, void *user_data)
 
 static ULONG bench_action_exit(bench_def_t *def, void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  proto_handle_t *ph = pamela_get_proto(pb);
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  proto_handle_t *ph = proto_env_get_proto(pb);
 
   ULONG deltas[2] = { 0,0 };
   int error = proto_action_bench(ph, PROTO_ACTION_PING, deltas);
@@ -227,32 +193,20 @@ static ULONG bench_action_exit(bench_def_t *def, void *user_data)
 
 static ULONG bench_msg_write(bench_def_t *def, void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
   return run_kbps_loop(pb, func_msg_write, 1);
 }
 
 static ULONG bench_msg_read(bench_def_t *def, void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
   return run_kbps_loop(pb, func_msg_read, 1);
 }
 
 static ULONG bench_msg_write_read(bench_def_t *def, void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
   return run_kbps_loop(pb, func_msg_write_read, 2);
-}
-
-static ULONG run_msg_write_read_sig(bench_def_t *def, void *user_data)
-{
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  return run_kbps_loop(pb, func_msg_write_read_sig, 2);
-}
-
-static ULONG bench_msg_write_read_sig(bench_def_t *def, void *user_data)
-{
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  return run_in_test_mode(def, pb, run_msg_write_read_sig, TEST_MODE_ECHO);
 }
 
 /* benchmark table */
@@ -263,20 +217,19 @@ bench_def_t all_benches[] = {
   { bench_msg_write, "mw", "message write benchmark (Kbps)" },
   { bench_msg_read, "mr", "message read benchmark (Kbps)" },
   { bench_msg_write_read, "mwr", "message write/read benchmark (Kbps)" },
-  { bench_msg_write_read_sig, "mwrs", "message write/read+sig benchmark (Kbps)" },
   { NULL, NULL, NULL }
 };
 
 void *bench_api_init(void)
 {
-  pamela_handle_t *pb;
+  proto_env_handle_t *pb;
 
   int init_res;
-  pb = pamela_init((struct Library *)SysBase, &init_res, PAMELA_INIT_NORMAL);
-  if(init_res == PAMELA_OK) {
+  pb = proto_env_init((struct Library *)SysBase, &init_res);
+  if(init_res == PROTO_ENV_OK) {
     return pb;
   } else {
-    PutStr(pamela_perror(init_res));
+    PutStr(proto_env_perror(init_res));
     PutStr(" -> ABORT\n");
     return NULL;
   }
@@ -284,6 +237,6 @@ void *bench_api_init(void)
 
 void bench_api_exit(void *user_data)
 {
-  pamela_handle_t *pb = (pamela_handle_t *)user_data;
-  pamela_exit(pb);
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  proto_env_exit(pb);
 }

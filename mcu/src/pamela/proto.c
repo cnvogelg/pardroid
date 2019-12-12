@@ -58,6 +58,8 @@ void proto_clr_busy(void)
   busy--;
   if(busy == 0) {
     proto_low_busy_lo();
+    // trigger signal
+    proto_trigger_signal();
   }
 }
 

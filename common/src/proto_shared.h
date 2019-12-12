@@ -88,14 +88,14 @@
 #define PROTO_WFUNC_READ_TEST_FW_ID             0x00
 #define PROTO_WFUNC_READ_TEST_FW_VERSION        0x01
 #define PROTO_WFUNC_READ_TEST_MACHTAG           0x02
-#define PROTO_WFUNC_READ_TEST_NUM_WORDS         0x03
-#define PROTO_WFUNC_READ_TEST_USE_SPI           0x04
-#define PROTO_WFUNC_READ_TEST_VALUE             0x05
+#define PROTO_WFUNC_READ_TEST_FLAGS             0x03
+#define PROTO_WFUNC_READ_TEST_VALUE             0x04
+#define PROTO_WFUNC_READ_TEST_GET_TX_SIZE       0x05
+#define PROTO_WFUNC_READ_TEST_MAX_WORDS         0x06
 
 // proto test: write word
-#define PROTO_WFUNC_WRITE_TEST_NUM_WORDS        0x00
-#define PROTO_WFUNC_WRITE_TEST_USE_SPI          0x01
-#define PROTO_WFUNC_WRITE_TEST_VALUE            0x02
+#define PROTO_WFUNC_WRITE_TEST_FLAGS            0x00
+#define PROTO_WFUNC_WRITE_TEST_VALUE            0x01
 
 // -- long function --
 // read
@@ -113,6 +113,8 @@
 
 // proto test: read long
 #define PROTO_LFUNC_READ_TEST_VALUE             0x00
+#define PROTO_LFUNC_READ_TEST_RX_OFFSET         0x01
+#define PROTO_LFUNC_READ_TEST_TX_OFFSET         0x02
 // proto test: write long
 #define PROTO_LFUNC_WRITE_TEST_VALUE            0x00
 
@@ -120,3 +122,10 @@
 #define PROTO_STATUS_MASK_RX_PENDING            0x3f
 #define PROTO_STATUS_MASK_ERROR                 0x40
 #define PROTO_STATUS_MASK_BUSY                  0x80
+
+// -- test flags --
+#define PROTO_TEST_FLAGS_USE_SPI                0x01
+#define PROTO_TEST_FLAGS_MSG_ERROR              0x02
+#define PROTO_TEST_FLAGS_RX_REQUEST             0x10
+#define PROTO_TEST_FLAGS_RX_CANCEL              0x20
+#define PROTO_TEST_FLAGS_TX_CANCEL              0x40

@@ -9,11 +9,14 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "pamela.h"
 #include "proto.h"
-#include "test.h"
-#include "tests_pamela.h"
+#include "proto_env.h"
 
+#include "test.h"
+#include "proto-testsuite.h"
+#include "proto-testsuite-msg.h"
+#include "proto-testsuite-event.h"
+#include "proto-testsuite-ext.h"
 
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
    "Bias/K/N,Size/K/N,"
@@ -35,7 +38,10 @@ static params_t params;
 
 /* define tests */
 static test_t all_tests[] = {
-  TESTS_PAMELA_ALL
+  TESTS_PROTO_ALL
+  TESTS_PROTO_MSG
+  TESTS_PROTO_EVENT
+  TESTS_PROTO_EXT
   { NULL, NULL, NULL }
 };
 
@@ -87,7 +93,7 @@ void setup_test_config(test_param_t *p)
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t *ph;
+  proto_env_handle_t *ph;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -100,20 +106,28 @@ int dosmain(void)
 
   /* setup pamela */
   int init_res;
-  ph = pamela_init((struct Library *)SysBase, &init_res, PAMELA_INIT_NORMAL);
-  if(init_res == PAMELA_OK) {
+  ph = proto_env_init((struct Library *)SysBase, &init_res);
+  if(ph != NULL) {
 
-    /* setup test */
-    test_param_t param;
-    param.user_data = ph;
-    setup_test_config(&param);
+    /* reset box */
+    proto_handle_t *prh = proto_env_get_proto(ph);
+    int pres = proto_reset(prh);
+    if(pres != PROTO_RET_OK) {
+      PutStr(proto_perror(pres));
+      PutStr(" -> RESET box failed!\n");
+    } else {
+      /* setup test */
+      test_param_t param;
+      param.user_data = ph;
+      setup_test_config(&param);
 
-    /* run test */
-    res = test_main(all_tests, &param);
+      /* run test */
+      res = test_main(all_tests, &param);
+    }
 
-    pamela_exit(ph);
+    proto_env_exit(ph);
   } else {
-    PutStr(pamela_perror(init_res));
+    PutStr(proto_env_perror(init_res));
     PutStr(" -> ABORT\n");
   }
 

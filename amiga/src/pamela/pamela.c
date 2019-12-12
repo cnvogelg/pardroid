@@ -94,7 +94,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags)
 
   /* check fw */
   UWORD fw_id = 0;
-  int pres = proto_function_read_word(ph->proto, PROTO_WFUNC_READ_FW_ID, &fw_id);
+  int pres = proto_wfunc_read(ph->proto, PROTO_WFUNC_READ_FW_ID, &fw_id);
   if(pres != PROTO_RET_OK) {
     *res = PAMELA_ERROR_MAGIC_READ;
     pamela_exit(ph);
@@ -240,7 +240,7 @@ UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph)
 
 int pamela_read_status(pamela_handle_t *ph, ULONG *status)
 {
-  return proto_function_read_long(ph->proto, PROTO_LFUNC_READ_STATUS, status);
+  return proto_lfunc_read(ph->proto, PROTO_LFUNC_READ_STATUS, status);
 }
 
 int pamela_get_mtu(pamela_handle_t *ph, UBYTE chan, UWORD *ret_mtu)

@@ -8,7 +8,7 @@
 #include "types.h"
 #include "arch.h"
 
-#include "pamela.h"
+#include "proto_env.h"
 #include "pblfile.h"
 #include "bootloader.h"
 #include "machtag.h"
@@ -112,7 +112,7 @@ static int flash_func(bl_flash_data_t *fd, void *user_data)
   return BOOTLOADER_RET_OK;
 }
 
-static int do_flash(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_flash(proto_env_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 {
   int bl_res;
 
@@ -178,7 +178,7 @@ static int post_verify_func(bl_flash_data_t *fd, void *user_data)
   }
 }
 
-static int do_verify(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_verify(proto_env_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 {
   int bl_res;
 
@@ -212,7 +212,7 @@ static int do_verify(pamela_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
 int dosmain(void)
 {
   struct RDArgs *args;
-  pamela_handle_t *pb;
+  proto_env_handle_t *pb;
   pblfile_t pf;
 
   /* First parse args */
@@ -259,9 +259,8 @@ int dosmain(void)
   if(file_result == PBLFILE_OK) {
     /* setup pamela */
     int pb_res;
-    int flags = PAMELA_INIT_BOOT;
-    pb = pamela_init((struct Library *)SysBase, &pb_res, flags);
-    if(pb_res == PAMELA_OK) {
+    pb = proto_env_init((struct Library *)SysBase, &pb_res);
+    if(pb_res == PROTO_ENV_OK) {
       bootinfo_t bi;
 
       PutStr("Entering bootloader...");
@@ -312,9 +311,9 @@ int dosmain(void)
         show_error(bl_res);
       }
 
-      pamela_exit(pb);
+      proto_env_exit(pb);
     } else {
-      Printf("FAILED pamela: %s\n", (LONG)pamela_perror(pb_res));
+      Printf("FAILED pamela: %s\n", (LONG)proto_env_perror(pb_res));
       res = RETURN_ERROR;
     }
 

@@ -16,7 +16,7 @@ ALL_COMPILERS=vbcc gcc
 
 # paths
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
-INCLUDES+=src/pamela src/pablo
+INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src include
 INCLUDES+=src/device/shared src/device/pamela src/device/test
@@ -24,13 +24,13 @@ VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
-PROTO_SRCS = proto_low.s proto.c
+PROTO_SRCS = proto_low.s proto_env.c proto.c
 TIMER_SRCS = timer.c
 TEST_SRCS = test.c
 BENCH_SRCS = bench.c bench_main.c
 
-PAMELA_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
-PAMELA_SRCS += pamela.c pam_engine.c
+PROTO_ENV_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
+PAMELA_SRCS = $(PAMELA_PROTO_SRCS) pamela.c pam_engine.c
 
 # ---- mini tests
 # test-pario
@@ -46,20 +46,23 @@ TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_
 $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
 
 # ----- tests
-# pb-test-pamela
-PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS) tests_pamela.c
-$(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
-$(eval $(call dist-program,pb-test-pamela))
+# pb-test-proto
+PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS) 
+PB_TEST_PROTO_SRCS += proto-testsuite-msg.c proto-testsuite-event.c
+PB_TEST_PROTO_SRCS += proto-testsuite-ext.c
+PB_TEST_PROTO_SRCS += proto-testsuite.c
+$(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
+$(eval $(call dist-program,pb-test-proto))
 
 # ----- bench
 # pb-bench-proto
-PB_BENCH_PAMELA_SRCS = pb-bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
-$(eval $(call make-program,pb-bench-pamela,$(PB_BENCH_PAMELA_SRCS)))
-$(eval $(call dist-program,pb-bench-pamela))
+PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PROTO_ENV_SRCS) $(BENCH_SRCS)
+$(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
+$(eval $(call dist-program,pb-bench-proto))
 
 # ----- tools
 # pablo
-PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PAMELA_SRCS)
+PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_ENV_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 $(eval $(call dist-program,pablo))
 
@@ -95,3 +98,6 @@ $(eval $(call dist-program,pamdev_test))
 
 # rules
 include scripts/common-rules.mk
+
+gcc:
+	$(MAKE) COMPILER=gcc
