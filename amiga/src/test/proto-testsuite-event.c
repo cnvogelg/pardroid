@@ -202,7 +202,7 @@ int run_event_busy(test_t *t, test_param_t *p)
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -235,7 +235,7 @@ int run_event_busy(test_t *t, test_param_t *p)
     return 1;
   }
 
-  return assert_num_triggers(p, "busy", pb, 2, 1);
+  return assert_num_triggers(p, "busy", pb, 1, 1);
 }
 
 // TEST: check that busy trigger signal

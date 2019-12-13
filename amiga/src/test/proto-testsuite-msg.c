@@ -252,11 +252,10 @@ int test_msg_size_max(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  UWORD max_bytes;
+  UWORD max_bytes = 0;
 
   /* get max words */
-  UWORD max_words = 0;
-  int res = proto_wfunc_read(proto, PROTO_WFUNC_READ_TEST_MAX_WORDS, &max_words);
+  int res = proto_wfunc_read(proto, PROTO_WFUNC_READ_TEST_MAX_WORDS, &max_bytes);
   if(res != PROTO_RET_OK) {
     return res;
   }
@@ -313,15 +312,14 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   }
 
   /* send buffer */
-  proto_iov_node_t part2_w = {
+  proto_iov_t part2_w = {
       c2_words,
       c2_buf,
-      0};
+      NULL};
   proto_iov_t msgiov_w = {
-      words,
-      {c1_words,
-       c1_buf,
-       &part2_w}};
+      c1_words,
+      c1_buf,
+      &part2_w};
   res = proto_chn_msg_writev(proto, test_channel, &msgiov_w);
   if (res != 0)
   {
@@ -344,15 +342,14 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   }
 
   /* receive buffer */
-  proto_iov_node_t part2_r = {
+  proto_iov_t part2_r = {
       c2_words,
       c2_buf,
-      0};
+      NULL};
   proto_iov_t msgiov_r = {
-      words_r,
-      {c1_words,
-       c1_buf,
-       &part2_r}};
+      c1_words,
+      c1_buf,
+      &part2_r};
   res = proto_chn_msg_readv(proto, test_channel, &msgiov_r);
   if (res != 0)
   {
@@ -426,7 +423,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -497,7 +494,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   UWORD words = size >> 1;
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);

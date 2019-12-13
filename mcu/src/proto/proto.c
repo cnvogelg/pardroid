@@ -165,10 +165,6 @@ static void handle_chn_read_data(u08 chan)
   // get filled buffer and send it
   u16 msg_size = 0;
   u08 *buf = proto_api_read_msg_begin(chan, &msg_size);
-  if(msg_size == 0)
-  {
-    return;
-  }
   if(buf == NULL) {
     DC('#');
     proto_low_read_block_spi(msg_size);
@@ -185,9 +181,6 @@ static void handle_chn_write_data(u08 chan)
   // get buffer and fill it
   u16 msg_size = 0;
   u08 *buf = proto_api_write_msg_begin(chan, &msg_size);
-  if(msg_size == 0) {
-    return;
-  }
   if(buf == NULL) {
     DC('#');
     proto_low_write_block_spi(msg_size);

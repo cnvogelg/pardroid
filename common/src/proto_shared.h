@@ -52,8 +52,7 @@
 
 // test proto: actions
 #define PROTO_ACTION_TEST_SIGNAL                0x04
-#define PROTO_ACTION_TEST_BUSY_BEGIN            0x05
-#define PROTO_ACTION_TEST_BUSY_END              0x06
+#define PROTO_ACTION_TEST_BUSY_LOOP             0x05
 
 // -- word function -- 
 // read

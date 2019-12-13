@@ -33,6 +33,24 @@ u32 rx_offset = 0;
 u32 tx_offset = 0;
 u16 word_val = 0x4711;
 u32 long_val = 0xdeadbeef;
+u08 enter_busy = 0;
+
+static void busy_loop(void)
+{
+  uart_send_pstring(PSTR("busy:begin"));
+  proto_set_busy();
+
+  // wait for a second
+  for(int i=0;i<5;i++) {
+    system_wdt_reset();
+    uart_send('.');
+    timer_delay(200);
+  }
+
+  proto_clr_busy();
+  uart_send_pstring(PSTR("end"));
+  uart_send_crlf();
+}
 
 // action handler
 
@@ -49,15 +67,8 @@ void proto_api_action(u08 num)
       uart_send_crlf();
       proto_trigger_signal();
       break;
-    case PROTO_ACTION_TEST_BUSY_BEGIN:
-      uart_send_pstring(PSTR("busy:begin!"));
-      uart_send_crlf();
-      proto_set_busy();
-      break;
-    case PROTO_ACTION_TEST_BUSY_END:
-      uart_send_pstring(PSTR("busy:end!"));
-      uart_send_crlf();
-      proto_clr_busy();
+    case PROTO_ACTION_TEST_BUSY_LOOP:
+      enter_busy = 1;
       break;
   }
 }
@@ -223,7 +234,12 @@ void proto_api_chn_set_rx_size(u08 chan, u16 size)
 
 void proto_api_chn_set_tx_size(u08 chan, u16 size)
 {
-
+  uart_send_pstring(PSTR("tx_size="));
+  uart_send_hex_word(size);
+  uart_send_crlf();
+  if(tx_size <= MAX_WORDS) {
+    tx_size = size;
+  }
 }
 
 void proto_api_chn_request_rx(u08 chan)
@@ -267,6 +283,11 @@ int main(void)
   while(1) {
       proto_handle();
       system_wdt_reset();
+
+      if(enter_busy) {
+        busy_loop();
+        enter_busy = 0;
+      }
   }
 
   return 0;
