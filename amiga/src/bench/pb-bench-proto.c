@@ -86,13 +86,28 @@ static ULONG run_in_test_mode(bench_def_t *def, proto_env_handle_t *pb, bench_fu
 typedef int (*loop_func_t)(proto_env_handle_t *ph, ULONG iter,
                            UBYTE *buffer, UWORD num_words);
 
-static ULONG run_kbps_loop(proto_env_handle_t *pb, loop_func_t func, ULONG size_mult)
+typedef int (*init_func_t)(proto_env_handle_t *ph, UWORD num_words);
+
+static ULONG run_kbps_loop(proto_env_handle_t *pb, 
+                           init_func_t init_func,
+                           loop_func_t loop_func,
+                           ULONG size_mult)
 {
   timer_handle_t *timer = proto_env_get_timer(pb);
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   ULONG num = bench_get_num();
   ULONG size = bench_get_size();
+  ULONG num_words = size >> 1;
+
+  /* call init */
+  if(init_func != NULL) {
+    int status = init_func(pb, num_words);
+    if(status != PROTO_RET_OK) {
+      PutStr("\nERROR: init failed!\n");
+      return 0;
+    }
+  }
 
   /* alloc buffer */
   UBYTE *buf = AllocVec(size, MEMF_PUBLIC);
@@ -100,7 +115,6 @@ static ULONG run_kbps_loop(proto_env_handle_t *pb, loop_func_t func, ULONG size_
     PutStr("\nERROR: No Memory!\n");
     return 0;
   }
-  ULONG num_words = size >> 1;
   ULONG sum_size = 0;
   ULONG i;
 
@@ -110,7 +124,7 @@ static ULONG run_kbps_loop(proto_env_handle_t *pb, loop_func_t func, ULONG size_
 
   /* run loop */
   for(i=0;i<num;i++) {
-    int status = func(pb, i, buf, (UWORD)num_words);
+    int status = loop_func(pb, i, buf, (UWORD)num_words);
     if(status != PROTO_RET_OK) {
       Printf("\nERROR: Aborting @%lu with %ld\n", i, status);
       break;
@@ -138,25 +152,139 @@ static ULONG run_kbps_loop(proto_env_handle_t *pb, loop_func_t func, ULONG size_
 
 /* ----- bench functions ----- */
 
-static int func_msg_write(proto_env_handle_t *pb, ULONG iter,
+// only msg
+
+static int init_msg_write(proto_env_handle_t *pb, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  return proto_chn_set_tx_size(ph, 0, num_words);
+}
+
+static int loop_msg_write(proto_env_handle_t *pb, ULONG iter,
                           UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
   return proto_chn_msg_write(ph, 0, buffer, num_words);
 }
 
-static int func_msg_read(proto_env_handle_t *pb, ULONG iter,
+static int init_msg_read(proto_env_handle_t *pb, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  return proto_chn_set_rx_size(ph, 0, num_words);
+}
+
+static int loop_msg_read(proto_env_handle_t *pb, ULONG iter,
                          UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
   return proto_chn_msg_read(ph, 0, buffer, num_words);
 }
 
-static int func_msg_write_read(proto_env_handle_t *pb, ULONG iter,
+static int init_msg_write_read(proto_env_handle_t *pb, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_set_rx_size(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_set_tx_size(ph, 0, num_words);
+}
+
+static int loop_msg_write_read(proto_env_handle_t *pb, ULONG iter,
                                UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
   int status = proto_chn_msg_write(ph, 0, buffer, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
+}
+
+// msg + size
+
+static int loop_msg_write_size(proto_env_handle_t *pb, ULONG iter,
+                               UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_set_tx_size(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_write(ph, 0, buffer, num_words);
+}
+
+static int loop_msg_read_size(proto_env_handle_t *pb, ULONG iter,
+                              UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_set_rx_size(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
+}
+
+static int loop_msg_write_read_size(proto_env_handle_t *pb, ULONG iter,
+                                    UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+
+  int status = proto_chn_set_tx_size(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  status = proto_chn_msg_write(ph, 0, buffer, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  
+  status = proto_chn_set_rx_size(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
+}
+
+// msg + offset
+
+static int loop_msg_write_offset(proto_env_handle_t *pb, ULONG iter,
+                                 UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_set_tx_offset(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_write(ph, 0, buffer, num_words);
+}
+
+static int loop_msg_read_offset(proto_env_handle_t *pb, ULONG iter,
+                                UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_chn_set_rx_offset(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  return proto_chn_msg_read(ph, 0, buffer, num_words);
+}
+
+static int loop_msg_write_read_offset(proto_env_handle_t *pb, ULONG iter,
+                                      UBYTE *buffer, UWORD num_words)
+{
+  proto_handle_t *ph = proto_env_get_proto(pb);
+
+  int status = proto_chn_set_tx_offset(ph, 0, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  status = proto_chn_msg_write(ph, 0, buffer, num_words);
+  if(status != PROTO_RET_OK) {
+    return status;
+  }
+  
+  status = proto_chn_set_rx_offset(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
@@ -191,22 +319,64 @@ static ULONG bench_action_exit(bench_def_t *def, void *user_data)
   return deltas[1];
 }
 
+// only msg
+
 static ULONG bench_msg_write(bench_def_t *def, void *user_data)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
-  return run_kbps_loop(pb, func_msg_write, 1);
+  return run_kbps_loop(pb, init_msg_write, loop_msg_write, 1);
 }
 
 static ULONG bench_msg_read(bench_def_t *def, void *user_data)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
-  return run_kbps_loop(pb, func_msg_read, 1);
+  return run_kbps_loop(pb, init_msg_read, loop_msg_read, 1);
 }
 
 static ULONG bench_msg_write_read(bench_def_t *def, void *user_data)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
-  return run_kbps_loop(pb, func_msg_write_read, 2);
+  return run_kbps_loop(pb, init_msg_write_read, loop_msg_write_read, 2);
+}
+
+// msg + size
+
+static ULONG bench_msg_write_size(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, NULL, loop_msg_write_size, 1);
+}
+
+static ULONG bench_msg_read_size(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, NULL, loop_msg_read_size, 1);
+}
+
+static ULONG bench_msg_write_read_size(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, NULL, loop_msg_write_read_size, 2);
+}
+
+// msg + offset
+
+static ULONG bench_msg_write_offset(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, init_msg_write, loop_msg_write_offset, 1);
+}
+
+static ULONG bench_msg_read_offset(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, init_msg_read, loop_msg_read_offset, 1);
+}
+
+static ULONG bench_msg_write_read_offset(bench_def_t *def, void *user_data)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  return run_kbps_loop(pb, init_msg_write_read, loop_msg_write_read_offset, 2);
 }
 
 /* benchmark table */
@@ -214,9 +384,19 @@ static ULONG bench_msg_write_read(bench_def_t *def, void *user_data)
 bench_def_t all_benches[] = {
   { bench_action_init, "ai", "test action command init latency (us)" },
   { bench_action_exit, "ae", "test action command exit latency (us)" },
+  
   { bench_msg_write, "mw", "message write benchmark (Kbps)" },
   { bench_msg_read, "mr", "message read benchmark (Kbps)" },
   { bench_msg_write_read, "mwr", "message write/read benchmark (Kbps)" },
+
+  { bench_msg_write_size, "mws", "size + message write benchmark (Kbps)" },
+  { bench_msg_read_size, "mrs", "size + message read benchmark (Kbps)" },
+  { bench_msg_write_read_size, "mwrs", "size + message write/read benchmark (Kbps)" },
+
+  { bench_msg_write_offset, "mwo", "offset + message write benchmark (Kbps)" },
+  { bench_msg_read_offset, "mro", "offset + message read benchmark (Kbps)" },
+  { bench_msg_write_read_offset, "mwro", "offset + message write/read benchmark (Kbps)" },
+
   { NULL, NULL, NULL }
 };
 
@@ -227,6 +407,13 @@ void *bench_api_init(void)
   int init_res;
   pb = proto_env_init((struct Library *)SysBase, &init_res);
   if(init_res == PROTO_ENV_OK) {
+    proto_handle_t *ph = proto_env_get_proto(pb);
+    int status = proto_reset(ph);
+    if(status != PROTO_RET_OK) {
+      PutStr("RESET FAILED!\n");
+      proto_env_exit(pb);
+      return NULL;
+    }
     return pb;
   } else {
     PutStr(proto_env_perror(init_res));
