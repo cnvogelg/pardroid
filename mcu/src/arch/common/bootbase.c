@@ -8,6 +8,7 @@
 #include "uart.h"
 #include "proto_low.h"
 #include "proto.h"
+#include "proto_api.h"
 #include "flash.h"
 #include "machtag.h"
 #include "fwid.h"
@@ -129,35 +130,32 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
 
 // msg i/o is used to transfer page data - channel is ignored in bootloader
 
-u08 *proto_api_read_msg_begin(u08 chan, u16 size)
+u08 *proto_api_read_msg_begin(u08 chan, u16 *size)
 {
+  *size = page_words;
   uart_send('r');
   flash_read_page(page_addr, page_buf);
   return page_buf;
 }
 
-void proto_api_read_msg_done(u08 chan,u16 size)
+void proto_api_read_msg_done(u08 chan)
 {
   uart_send('.');
 }
 
-u08 *proto_api_write_msg_begin(u08 chan, u16 size)
+u08 *proto_api_write_msg_begin(u08 chan, u16 *size)
 {
+  *size = page_words;
   uart_send('w');
   return page_buf;
 }
 
-void proto_api_write_msg_done(u08 chan, u16 size)
+void proto_api_write_msg_done(u08 chan)
 {
-  if(size == page_words) {
-    uart_send('(');
-    flash_program_page(page_addr, page_buf);
-    uart_send(')');
-    status = BOOT_STATUS_OK;
-  } else {
-    uart_send('?');
-    status = BOOT_STATUS_INVALID_PAGE_SIZE;
-  }
+  uart_send('(');
+  flash_program_page(page_addr, page_buf);
+  uart_send(')');
+  status = BOOT_STATUS_OK;
 }
 
 void proto_low_write_block_spi(u16 num_words)
