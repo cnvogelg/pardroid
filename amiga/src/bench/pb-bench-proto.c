@@ -425,5 +425,13 @@ void *bench_api_init(void)
 void bench_api_exit(void *user_data)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)user_data;
+  
+  // return to knok
+  proto_handle_t *ph = proto_env_get_proto(pb);
+  int status = proto_knok(ph);
+  if(status != PROTO_RET_OK) {
+    PutStr("ENTERING KNOK FAILED!\n");
+  }
+
   proto_env_exit(pb);
 }
