@@ -12,6 +12,8 @@ int test_msg_write(test_t *t, test_param_t *p);
 int test_msg_read(test_t *t, test_param_t *p);
 int test_msg_write_busy(test_t *t, test_param_t *p);
 int test_msg_read_busy(test_t *t, test_param_t *p);
+int test_msg_write_spi(test_t *t, test_param_t *p);
+int test_msg_read_spi(test_t *t, test_param_t *p);
 
 #define TESTS_PROTO_MSG \
   { test_msg_empty, "me", "write/read empty message"}, \
@@ -23,5 +25,7 @@ int test_msg_read_busy(test_t *t, test_param_t *p);
   { test_msg_read, "mr", "read message of given size"}, \
   { test_msg_write_busy, "mwb", "write message while being busy"}, \
   { test_msg_read_busy, "mrb", "read message while being busy"}, \
+  { test_msg_write_spi, "mws", "write message to SPI"}, \
+  { test_msg_read_spi, "mrs", "read message from SPI"}, \
 
 #endif

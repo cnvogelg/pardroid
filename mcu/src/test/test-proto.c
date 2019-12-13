@@ -20,6 +20,7 @@
 
 #include "fwid.h"
 #include "fw_info.h"
+#include "spi.h"
 
 FW_INFO(FWID_TEST_PROTO, VERSION_TAG)
 
@@ -171,11 +172,19 @@ u08 *proto_api_read_msg_begin(u08 chan, u16 *size)
   uart_send_hex_byte(chan);
   uart_send('+');
   uart_send_hex_word(*size);
-  return buf;
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_read_msg_done(u08 chan)
 {
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_disable_cs0();
+  }
   uart_send('}');
   uart_send_crlf();
 }
@@ -187,11 +196,19 @@ u08 *proto_api_write_msg_begin(u08 chan,u16 *size)
   uart_send_hex_byte(chan);
   uart_send('+');
   uart_send_hex_word(*size);
-  return buf;
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_write_msg_done(u08 chan)
 {
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_disable_cs0();
+  }
   uart_send('}');
   uart_send_crlf();
 }
@@ -269,6 +286,7 @@ int main(void)
 {
   system_init();
   //led_init();
+  spi_init();
 
   uart_init();
   uart_send_pstring(PSTR("parbox: test-proto!"));

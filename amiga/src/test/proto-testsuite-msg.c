@@ -404,6 +404,56 @@ int test_msg_write(test_t *t, test_param_t *p)
   return 0;
 }
 
+int test_msg_write_spi(test_t *t, test_param_t *p)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
+  proto_handle_t *proto = proto_env_get_proto(pb);
+  ULONG size = get_default_size();
+
+  /* set test flags */
+  int res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, PROTO_TEST_FLAGS_USE_SPI);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "set flags";
+    return res;
+  }
+
+  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  if (mem_w == 0)
+  {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w, p);
+
+  UWORD words = size >> 1;
+
+  /* send buffer */
+  res = msg_write(proto, test_channel, mem_w, words);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  FreeVec(mem_w);
+
+  /* clear test flags */
+  res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, 0);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "clear flags";
+    return res;
+  }
+
+  return 0;
+}
+
 int test_msg_write_busy(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
@@ -473,6 +523,54 @@ int test_msg_read(test_t *t, test_param_t *p)
   }
 
   FreeVec(mem_r);
+  return 0;
+}
+
+int test_msg_read_spi(test_t *t, test_param_t *p)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
+  proto_handle_t *proto = proto_env_get_proto(pb);
+  ULONG size = get_default_size();
+  ULONG size_r = get_size(size);
+
+   /* set test flags */
+  int res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, PROTO_TEST_FLAGS_USE_SPI);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "set flags";
+    return res;
+  }
+
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if (mem_r == 0)
+  {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  /* receive buffer */
+  UWORD got_words = size_r >> 1;
+  res = msg_read(proto, test_channel, mem_r, got_words);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return 1;
+  }
+
+  FreeVec(mem_r);
+
+  /* clear test flags */
+  res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, 0);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "clear flags";
+    return res;
+  }
+
   return 0;
 }
 
