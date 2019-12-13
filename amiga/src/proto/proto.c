@@ -86,20 +86,25 @@ int proto_knok(proto_handle_t *ph)
   return proto_action_no_busy(ph, PROTO_ACTION_KNOK);
 }
 
-int proto_action(proto_handle_t *ph, UBYTE num)
+static int raw_action(proto_handle_t *ph, UBYTE cmd)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
-  if(num > PROTO_MAX_ACTION) {
-    return PROTO_RET_INVALID_ACTION;
-  }
-  UBYTE cmd = PROTO_CMD_ACTION + num;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
   int result = proto_low_action(port, timeout_flag, cmd);
   timer_stop(ph->timer);
 
   return result;
+}
+
+int proto_action(proto_handle_t *ph, UBYTE num)
+{
+  if(num > PROTO_MAX_ACTION) {
+    return PROTO_RET_INVALID_ACTION;
+  }
+  UBYTE cmd = PROTO_CMD_ACTION + num;
+  return raw_action(ph, cmd);
 }
 
 int proto_action_no_busy(proto_handle_t *ph, UBYTE num)
@@ -345,7 +350,7 @@ int proto_chn_request_rx(proto_handle_t *ph, UBYTE chn)
     return PROTO_RET_INVALID_CHANNEL;
   }
   UBYTE cmd = PROTO_CMD_CHN_REQUEST_RX + chn;
-  return proto_action(ph, cmd);
+  return raw_action(ph, cmd);
 }
 
 int proto_chn_cancel_rx(proto_handle_t *ph, UBYTE chn)
@@ -354,7 +359,7 @@ int proto_chn_cancel_rx(proto_handle_t *ph, UBYTE chn)
     return PROTO_RET_INVALID_CHANNEL;
   }
   UBYTE cmd = PROTO_CMD_CHN_CANCEL_RX + chn;
-  return proto_action(ph, cmd);
+  return raw_action(ph, cmd);
 }
 
 int proto_chn_cancel_tx(proto_handle_t *ph, UBYTE chn)
@@ -363,7 +368,7 @@ int proto_chn_cancel_tx(proto_handle_t *ph, UBYTE chn)
     return PROTO_RET_INVALID_CHANNEL;
   }
   UBYTE cmd = PROTO_CMD_CHN_CANCEL_TX + chn;
-  return proto_action(ph, cmd);
+  return raw_action(ph, cmd);
 }
 
 // verbose error
