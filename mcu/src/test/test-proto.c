@@ -2,8 +2,6 @@
 #include "types.h"
 #include "arch.h"
 
-#define DEBUG 1
-
 #include "debug.h"
 
 #include "uart.h"
@@ -20,6 +18,7 @@
 
 #include "fwid.h"
 #include "fw_info.h"
+#include "spi.h"
 
 FW_INFO(FWID_TEST_PROTO, VERSION_TAG)
 
@@ -33,14 +32,34 @@ u32 rx_offset = 0;
 u32 tx_offset = 0;
 u16 word_val = 0x4711;
 u32 long_val = 0xdeadbeef;
+u08 enter_busy = 0;
+
+static void busy_loop(void)
+{
+  uart_send_pstring(PSTR("busy:begin"));
+  proto_set_busy();
+
+  // wait for a second
+  for(int i=0;i<5;i++) {
+    system_wdt_reset();
+    uart_send('.');
+    timer_delay(200);
+  }
+
+  proto_clr_busy();
+  uart_send_pstring(PSTR("end"));
+  uart_send_crlf();
+}
 
 // action handler
 
 void proto_api_action(u08 num)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("action:"));
   uart_send_hex_byte(num);
   uart_send_crlf();
+#endif
 
   // triger signal
   switch(num) {
@@ -49,15 +68,8 @@ void proto_api_action(u08 num)
       uart_send_crlf();
       proto_trigger_signal();
       break;
-    case PROTO_ACTION_TEST_BUSY_BEGIN:
-      uart_send_pstring(PSTR("busy:begin!"));
-      uart_send_crlf();
-      proto_set_busy();
-      break;
-    case PROTO_ACTION_TEST_BUSY_END:
-      uart_send_pstring(PSTR("busy:end!"));
-      uart_send_crlf();
-      proto_clr_busy();
+    case PROTO_ACTION_TEST_BUSY_LOOP:
+      enter_busy = 1;
       break;
   }
 }
@@ -90,11 +102,13 @@ u16  proto_api_wfunc_read(u08 num)
       val = MAX_WORDS;
       break;
   }
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("wfunc_read:"));
   uart_send_hex_byte(num);
   uart_send('=');
   uart_send_hex_word(val);
   uart_send_crlf();
+#endif
   return val;
 }
 
@@ -108,11 +122,14 @@ void proto_api_wfunc_write(u08 num, u16 val)
       word_val = val;
       break;
   }
+
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("wfunc_write:"));
   uart_send_hex_byte(num);
   uart_send('=');
   uart_send_hex_word(val);
   uart_send_crlf();
+#endif
 }
 
 u32 proto_api_lfunc_read(u08 num)
@@ -129,11 +146,13 @@ u32 proto_api_lfunc_read(u08 num)
       val = tx_offset;
       break;
   }
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("lfunc_read:"));
   uart_send_hex_byte(num);
   uart_send('=');
   uart_send_hex_long(val);
   uart_send_crlf();
+#endif
   return val;
 }
 
@@ -144,11 +163,13 @@ void proto_api_lfunc_write(u08 num, u32 val)
       long_val = val;
       break;
   }
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("lfunc_write:"));
   uart_send_hex_byte(num);
   uart_send('=');
   uart_send_hex_long(val);
   uart_send_crlf();
+#endif
 }
 
 // message i/o
@@ -156,66 +177,104 @@ void proto_api_lfunc_write(u08 num, u32 val)
 u08 *proto_api_read_msg_begin(u08 chan, u16 *size)
 {
   *size = rx_size;
+
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("msg_read:{"));
   uart_send_hex_byte(chan);
   uart_send('+');
   uart_send_hex_word(*size);
-  return buf;
+#endif
+
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_read_msg_done(u08 chan)
 {
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_disable_cs0();
+  }
+
+#ifdef FLAVOR_DEBUG
   uart_send('}');
   uart_send_crlf();
+#endif
 }
 
 u08 *proto_api_write_msg_begin(u08 chan,u16 *size)
 {
   *size = tx_size;
+
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("msg_write:{"));
   uart_send_hex_byte(chan);
   uart_send('+');
   uart_send_hex_word(*size);
-  return buf;
+#endif
+
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_enable_cs0();
+    return NULL;
+  } else {
+    return buf;
+  }
 }
 
 void proto_api_write_msg_done(u08 chan)
 {
+  if(test_flags & PROTO_TEST_FLAGS_USE_SPI) {
+    spi_disable_cs0();
+  }
+
+#ifdef FLAVOR_DEBUG
   uart_send('}');
   uart_send_crlf();
+#endif
 }
 
 // extended commands
 
 void proto_api_chn_set_rx_offset(u08 chan, u32 offset)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("rx_offset="));
   uart_send_hex_long(rx_offset);
   uart_send_crlf();
+#endif
   rx_offset = offset;
 }
 
 void proto_api_chn_set_tx_offset(u08 chan, u32 offset)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("tx_offset="));
   uart_send_hex_long(tx_offset);
   uart_send_crlf();
+#endif
   tx_offset = offset;
 }
 
 u16  proto_api_chn_get_rx_size(u08 chan)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("rx_size:"));
   uart_send_hex_word(rx_size);
   uart_send_crlf();
+#endif
   return rx_size;
 }
 
 void proto_api_chn_set_rx_size(u08 chan, u16 size)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("rx_size="));
   uart_send_hex_word(size);
   uart_send_crlf();
+#endif
   if(rx_size <= MAX_WORDS) {
     rx_size = size;
   }
@@ -223,27 +282,40 @@ void proto_api_chn_set_rx_size(u08 chan, u16 size)
 
 void proto_api_chn_set_tx_size(u08 chan, u16 size)
 {
-
+#ifdef FLAVOR_DEBUG
+  uart_send_pstring(PSTR("tx_size="));
+  uart_send_hex_word(size);
+  uart_send_crlf();
+#endif
+  if(tx_size <= MAX_WORDS) {
+    tx_size = size;
+  }
 }
 
 void proto_api_chn_request_rx(u08 chan)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("request_rx"));
   uart_send_crlf();
+#endif
   test_flags |= PROTO_TEST_FLAGS_RX_REQUEST;
 }
 
 void proto_api_chn_cancel_rx(u08 chan)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("cancel_rx"));
   uart_send_crlf();
+#endif
   test_flags |= PROTO_TEST_FLAGS_RX_CANCEL;
 }
 
 void proto_api_chn_cancel_tx(u08 chan)
 {
+#ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("cancel_tx"));
   uart_send_crlf();
+#endif
   test_flags |= PROTO_TEST_FLAGS_TX_CANCEL;
 }
 
@@ -253,6 +325,7 @@ int main(void)
 {
   system_init();
   //led_init();
+  spi_init();
 
   uart_init();
   uart_send_pstring(PSTR("parbox: test-proto!"));
@@ -267,6 +340,11 @@ int main(void)
   while(1) {
       proto_handle();
       system_wdt_reset();
+
+      if(enter_busy) {
+        busy_loop();
+        enter_busy = 0;
+      }
   }
 
   return 0;

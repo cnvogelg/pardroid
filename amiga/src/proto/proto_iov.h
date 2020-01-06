@@ -1,17 +1,10 @@
 #ifndef PROTO_IOV_H
 #define PROTO_IOV_H
 
-struct proto_iov_node {
+struct proto_iov {
   ULONG       num_words;
   UBYTE      *data;
-  struct proto_iov_node  *next;
-};
-typedef struct proto_iov_node proto_iov_node_t;
-
-/* io vector for vectorized message transfer */
-struct proto_iov {
-  ULONG       total_words;
-  struct proto_iov_node  first;
+  struct proto_iov  *next;
 };
 typedef struct proto_iov proto_iov_t;
 

@@ -139,7 +139,7 @@ int test_ping_busy(test_t *t, test_param_t *p)
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -206,7 +206,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
   UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -282,7 +282,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
   ULONG v = 0xdeadbeef + val;
 
   /* enable busy mode */
-  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_BEGIN);
+  int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
   if (res != 0)
   {
     p->error = proto_perror(res);

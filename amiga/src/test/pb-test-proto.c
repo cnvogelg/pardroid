@@ -125,6 +125,13 @@ int dosmain(void)
       res = test_main(all_tests, &param);
     }
 
+    /* return to knok */
+    pres = proto_knok(prh);
+    if(pres != PROTO_RET_OK) {
+      PutStr(proto_perror(pres));
+      PutStr(" -> entering KNOK failed!\n");
+    }
+
     proto_env_exit(ph);
   } else {
     PutStr(proto_env_perror(init_res));

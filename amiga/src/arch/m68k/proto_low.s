@@ -677,7 +677,7 @@ plmr_chunk:
         move.l          (a2)+,a0
         ; last chunk?
         tst.w           d0
-        beq.s           plmw_done
+        beq.s           plmr_done
         ; enter chunk copy loop
         subq.w          #1,d0 ; for dbra
 
