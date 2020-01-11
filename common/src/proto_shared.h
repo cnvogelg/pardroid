@@ -63,8 +63,8 @@
 #define PROTO_WFUNC_READ_ERROR_MASK             0x04
 #define PROTO_WFUNC_READ_CHN_INDEX              0x05
 #define PROTO_WFUNC_READ_CHN_MTU                0x06
-#define PROTO_WFUNC_READ_CHN_ERROR_CODE         0x07
-#define PROTO_WFUNC_READ_CHN_PROPERTIES         0x08
+#define PROTO_WFUNC_READ_CHN_STATUS             0x07
+#define PROTO_WFUNC_READ_CHN_MODE               0x08
 #define PROTO_WFUNC_READ_CHN_DEF_MTU            0x09
 #define PROTO_WFUNC_READ_USER                   0x0a
 

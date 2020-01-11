@@ -30,7 +30,7 @@ TEST_SRCS = test.c
 BENCH_SRCS = bench.c bench_main.c
 
 PROTO_ENV_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
-PAMELA_SRCS = $(PAMELA_PROTO_SRCS) pamela.c pam_engine.c
+PAMELA_SRCS = channel.c
 
 # ---- mini tests
 # test-pario
@@ -53,6 +53,12 @@ PB_TEST_PROTO_SRCS += proto-testsuite-ext.c
 PB_TEST_PROTO_SRCS += proto-testsuite.c
 $(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
 $(eval $(call dist-program,pb-test-proto))
+
+# pb-test-pamela
+PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PROTO_ENV_SRCS) $(PAMELA_SRCS) $(TEST_SRCS) 
+PB_TEST_PAMELA_SRCS += pamela-testsuite.c
+$(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
+$(eval $(call dist-program,pb-test-pamela))
 
 # ----- bench
 # pb-bench-proto
