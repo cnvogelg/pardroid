@@ -11,18 +11,18 @@
     (via_costs 50)
     (plane_via_costs 5)
     (start_ripup_costs 100)
-    (start_pass_no 1037)
+    (start_pass_no 2243)
     (layer_rule F.Cu
       (active on)
       (preferred_direction horizontal)
       (preferred_direction_trace_costs 1.0)
-      (against_preferred_direction_trace_costs 2.2)
+      (against_preferred_direction_trace_costs 2.0)
     )
     (layer_rule B.Cu
       (active on)
       (preferred_direction vertical)
       (preferred_direction_trace_costs 1.0)
-      (against_preferred_direction_trace_costs 1.8)
+      (against_preferred_direction_trace_costs 2.0)
     )
   )
   (rule
@@ -73,7 +73,7 @@
     "Net-(J1-Pad14)" /SEL /POUT /BUSY /ACK /DATA7 /DATA6 /DATA5
     /DATA4 /DATA3 /DATA2 /DATA1 /DATA0 /STROBE /LED /TXD
     /RST /SDA /SCL /SS1 "/SD_DETECT" "Net-(J5-Pad3)" "Net-(J5-Pad1)" "Net-(U1-Pad31)"
-    "/SS_ENC" "/SS_WIZ" "Net-(J7-Pad7)" "/EN_INT"
+    "Net-(J7-Pad7)" "Net-(J6-Pad2)"
     (clearance_class "kicad_default")
     (via_rule kicad_default)
     (rule
@@ -84,7 +84,7 @@
     )
   )
   (class Power
-    GND +3V3 VCC
+    +3V3 GND VCC
     (clearance_class Power)
     (via_rule Power)
     (rule

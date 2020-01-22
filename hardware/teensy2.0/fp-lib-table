@@ -1,4 +1,4 @@
 (fp_lib_table
   (lib (name teensy)(type KiCad)(uri ${KICAD_USER_LIB_DIR}/teensy.pretty)(options "")(descr ""))
-  (lib (name digikey-footprints)(type KiCad)(uri ${KICAD_USER_LIB_DIR}/digikey-footprints.pretty)(options "")(descr ""))
+  (lib (name digikey-footprints)(type KiCad)(uri ${KICAD_USER_LIB_DIR}/digikey-kicad-library/digikey-footprints.pretty)(options "")(descr ""))
 )
