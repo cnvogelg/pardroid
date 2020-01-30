@@ -50,7 +50,7 @@ BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
 COMMON_SRCS = machtag.c fwid.c
-BASE_SRCS = timer.c strobe.c spi.c crc.c $(BASE_ARCH_SRCS)
+BASE_SRCS = timer.c strobe.c spi.c crc.c led.c i2c.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PARAM_SRCS = param.c param_def.c crc.c
 
@@ -90,6 +90,8 @@ ifdef CONFIG_TOOL_UFAT
 TOOL_SRCS += ufat.c
 TOOL_INCLUDES += src/tools/ufat
 endif
+DRIVER_SRCS += ssd1306.c display.c font8x16.c
+DRIVER_INCLUDES += src/driver/display src/driver/display/ssd1306
 
 # common includes
 INCLUDES := src
@@ -139,6 +141,13 @@ ifdef CONFIG_DRIVER_WIZNET
 TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
+# test-display
+ifdef CONFIG_DRIVER_DISPLAY
+TEST_DISPLAY_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_DISPLAY_SRCS += test-display.c ssd1306.c display.c font6x8.c
+$(eval $(call make-firmware,test-display-fw,$(TEST_DISPLAY_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-ufat
