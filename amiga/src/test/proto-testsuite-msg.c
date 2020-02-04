@@ -320,7 +320,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
       c1_words,
       c1_buf,
       &part2_w};
-  res = proto_chn_msg_writev(proto, test_channel, &msgiov_w);
+  res = proto_chn_msg_writev(proto, test_channel, &msgiov_w, words);
   if (res != 0)
   {
     p->error = proto_perror(res);
@@ -350,7 +350,115 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
       c1_words,
       c1_buf,
       &part2_r};
-  res = proto_chn_msg_readv(proto, test_channel, &msgiov_r);
+  res = proto_chn_msg_readv(proto, test_channel, &msgiov_r, words_r);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "read";
+    return res;
+  }
+
+  /* check buf */
+  ULONG pos = check_buffer(size, mem_w, mem_r);
+  if (pos < size)
+  {
+    p->error = "value mismatch";
+    p->section = "compare";
+    sprintf(p->extra, "@%08lx: w=%02x r=%02x", pos, (UWORD)mem_w[pos], (UWORD)mem_r[pos]);
+    return 1;
+  }
+
+  FreeVec(mem_w);
+  FreeVec(mem_r);
+  return 0;
+}
+
+int test_msg_size_chunks_len(test_t *t, test_param_t *p)
+{
+  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
+  proto_handle_t *proto = proto_env_get_proto(pb);
+
+  ULONG extra = 32;
+  ULONG size = get_default_size();
+  if (size < 4)
+  {
+    size = 4;
+  }
+
+  UBYTE *mem_w = AllocVec(size + extra, MEMF_PUBLIC);
+  if (mem_w == 0)
+  {
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  ULONG size_r = get_size(size);
+  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  if (mem_r == 0)
+  {
+    FreeVec(mem_w);
+    p->error = "out of mem";
+    p->section = "init";
+    return 1;
+  }
+
+  fill_buffer(size, mem_w, p);
+
+  ULONG words = size >> 1;
+  ULONG c1_words = words >> 1;
+  ULONG c2_words = words - c1_words;
+  UBYTE *c1_buf = mem_w;
+  UBYTE *c2_buf = mem_w + (c1_words << 1);
+
+  /* set tx size */
+  int res = proto_chn_set_tx_size(proto, test_channel, words);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "tx_size";
+    return res;
+  }
+
+  /* send buffer */
+  proto_iov_t part2_w = {
+      c2_words + (extra >> 1), // make buffer longer than total
+      c2_buf,
+      NULL};
+  proto_iov_t msgiov_w = {
+      c1_words,
+      c1_buf,
+      &part2_w};
+  res = proto_chn_msg_writev(proto, test_channel, &msgiov_w, words);
+  if (res != 0)
+  {
+    p->error = proto_perror(res);
+    p->section = "write";
+    return res;
+  }
+
+  ULONG words_r = size_r >> 1;
+  c1_buf = mem_r;
+  c2_buf = mem_r + (c1_words << 1);
+  c2_words = words_r - c1_words;
+
+  /* set rx size */
+  res = proto_chn_set_rx_size(proto, test_channel, words_r);
+  if(res != 0) {
+    p->error = proto_perror(res);
+    p->section = "rx_size";
+    return res;
+  }
+
+  /* receive buffer */
+  proto_iov_t part2_r = {
+      c2_words + (extra >> 1), // make buffer longer than total
+      c2_buf,
+      NULL};
+  proto_iov_t msgiov_r = {
+      c1_words,
+      c1_buf,
+      &part2_r};
+  res = proto_chn_msg_readv(proto, test_channel, &msgiov_r, words_r);
   if (res != 0)
   {
     p->error = proto_perror(res);

@@ -578,12 +578,13 @@ plrrl_abort:
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to proto_node_iov
 ;      d0 = cmd
+;      d1 = num_words
 ; out: d0 = result
 ;
 ; node:
-; +4:  ULONG  chunk_words
-; +8:  UBYTE  *chunk_data
-; +12: node   *next_node
+; +0:  ULONG  chunk_words
+; +4:  UBYTE  *chunk_data
+; +8:  node   *next_node
 ;
 _proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
@@ -602,12 +603,17 @@ _proto_low_write_block:
         bset            d3,d5 ; d5 = clk_hi
 
 plmw_chunks:
-        ; get chunk size and buffer
+        ; get current d0=chunk size and a0=buffer pointer
         move.l          (a2)+,d0
         move.l          (a2)+,a0
-        ; last chunk?
-        tst.w           d0
-        beq.s           plmw_done
+        ; adjust chunk size if total size is smaller
+        cmp.w           d0,d1
+        bhi.s           plmw_skip
+        ; use total size as chunk size
+        move.w          d1,d0
+ plmw_skip:      
+        ; adjust total size
+        sub.w           d0,d1
         ; enter chunk copy loop
         subq.w          #1,d0 ; for dbra
 
@@ -622,16 +628,18 @@ plmw_loop:
 
         dbra            d0,plmw_loop
 
-        ; read next node
-        move.l          (a2),d0
-        tst.l           d0
-        beq.s           plmw_done
-        move.l          d0,a2
-        bra.s           plmw_chunks
+        ; end?
+        tst.w           d1
+        beq.s           plmr_done
+
+        ; next chunk
+        move.l          (a2),a2
+        bra.s           plmr_chunk
 
 plmw_done:
         ; ok
         moveq   #RET_OK,d0
+
         ; final sync
         clk_hi
         wait_rak_hi    plmw_end
@@ -650,6 +658,7 @@ plmw_abort:
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to proto_node_iov (see above)
 ;      d0 = cmd byte
+;      d1 = num_words
 ; out: d0 = result
 _proto_low_read_block:
         movem.l d2-d7/a2-a6,-(sp)
@@ -672,12 +681,17 @@ _proto_low_read_block:
         bset            d3,d6 ; d6 = clk_hi
 
 plmr_chunk:
-        ; get current chunk size and pointer
+        ; get current d0=chunk size and a0=buffer pointer
         move.l          (a2)+,d0
         move.l          (a2)+,a0
-        ; last chunk?
-        tst.w           d0
-        beq.s           plmr_done
+        ; adjust chunk size if total size is smaller
+        cmp.w           d0,d1
+        bhi.s           plmr_skip
+        ; use total size as chunk size
+        move.w          d1,d0
+ plmr_skip:      
+        ; adjust total size
+        sub.w           d0,d1
         ; enter chunk copy loop
         subq.w          #1,d0 ; for dbra
 
@@ -690,18 +704,18 @@ plmr_loop:
         get_data        (a0)+
         dbra            d0,plmr_loop
 
-        ; next chunk?
-        move.l          (a2),d0
-        tst.l           d0
-        beq.s           plmr_done_ok
-        move.l          d0,a2
+        ; end?
+        tst.w           d1
+        beq.s           plmr_done
+
+        ; next chunk
+        move.l          (a2),a2
         bra.s           plmr_chunk
 
-plmr_done_ok:
+plmr_done:
         ; ok
         moveq   #RET_OK,d0
 
-plmr_done:
         ; switch: port write
         clk_lo
         ddr_out

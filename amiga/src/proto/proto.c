@@ -245,7 +245,7 @@ int proto_lfunc_write(proto_handle_t *ph, UBYTE num, ULONG data)
   return write_long(ph, cmd, data);
 }
 
-int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWORD num_words)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
@@ -255,13 +255,13 @@ int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
   UBYTE cmd = chn + PROTO_CMD_CHN_WRITE_DATA;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_block(port, timeout_flag, cmd, msgiov);
+  int result = proto_low_write_block(port, timeout_flag, cmd, msgiov, num_words);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWORD num_words)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
@@ -271,7 +271,7 @@ int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
   UBYTE cmd = chn + PROTO_CMD_CHN_READ_DATA;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_block(port, timeout_flag, cmd, msgiov);
+  int result = proto_low_read_block(port, timeout_flag, cmd, msgiov, num_words);
   timer_stop(ph->timer);
 
   return result;
@@ -284,7 +284,7 @@ int proto_chn_msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_wor
     buf,       /* chunk pointer */
     NULL       /* next node */
   };
-  return proto_chn_msg_writev(ph, chn, &msgiov);
+  return proto_chn_msg_writev(ph, chn, &msgiov, num_words);
 }
 
 int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
@@ -294,7 +294,7 @@ int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_word
     buf,        /* chunk pointer */
     NULL        /* next node */
   };
-  return proto_chn_msg_readv(ph, chn, &msgiov);
+  return proto_chn_msg_readv(ph, chn, &msgiov, num_words);
 }
 
 // extended commands
