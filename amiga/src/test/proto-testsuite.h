@@ -2,6 +2,7 @@
 #define PROTO_TESTSUITE_H
 
 #include "test.h"
+#include "test-buffer.h"
 
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel);
@@ -22,10 +23,7 @@ int test_offset_busy(test_t *t, test_param_t *p);
 int recover_from_busy(proto_handle_t *proto, test_param_t *p);
 
 // test parameter
-extern UWORD test_size;
-extern UWORD test_bias;
-extern UWORD test_add_size;
-extern UWORD test_sub_size;
+extern test_buffer_param_t test_buf_param;
 extern UBYTE test_channel;
 
 #define TESTS_PROTO_ALL \

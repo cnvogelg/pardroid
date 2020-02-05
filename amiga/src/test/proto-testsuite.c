@@ -18,20 +18,18 @@
 #include "fwid.h"
 #include "test.h"
 #include "proto-testsuite.h"
+#include "proto_test_shared.h"
 
-UWORD test_size;
-UWORD test_bias;
-UWORD test_add_size;
-UWORD test_sub_size;
+test_buffer_param_t test_buf_param;
 UBYTE test_channel;
 
 void tests_proto_config(UWORD size, UWORD bias, UWORD add_size, UWORD sub_size,
                         UBYTE channel)
 {
-  test_size = size;
-  test_bias = bias;
-  test_add_size = add_size;
-  test_sub_size = sub_size;
+  test_buf_param.size = size;
+  test_buf_param.bias = bias;
+  test_buf_param.add_size = add_size;
+  test_buf_param.sub_size = sub_size;
   test_channel = channel;
 }
 
@@ -166,7 +164,7 @@ int test_wfunc_write_read(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
+  UWORD v = 0xbabe + (UWORD)p->iter + test_buf_param.bias;
 
   /* write */
   int res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_VALUE, v);
@@ -203,7 +201,7 @@ int test_wfunc_busy(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  UWORD v = 0xbabe + (UWORD)p->iter + test_bias;
+  UWORD v = 0xbabe + (UWORD)p->iter + test_buf_param.bias;
 
   /* enable busy mode */
   int res = proto_action(proto, PROTO_ACTION_TEST_BUSY_LOOP);
@@ -240,7 +238,7 @@ int test_lfunc_write_read(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  UWORD val = (UWORD)p->iter + test_bias;
+  UWORD val = (UWORD)p->iter + test_buf_param.bias;
   ULONG v = 0xdeadbeef + val;
 
   /* write */
@@ -278,7 +276,7 @@ int test_lfunc_busy(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  UWORD val = (UWORD)p->iter + test_bias;
+  UWORD val = (UWORD)p->iter + test_buf_param.bias;
   ULONG v = 0xdeadbeef + val;
 
   /* enable busy mode */

@@ -7,6 +7,7 @@
 #include "debug.h"
 
 #include "bootloader.h"
+#include "bootloader_shared.h"
 #include "proto.h"
 #include "types.h"
 #include "arch.h"

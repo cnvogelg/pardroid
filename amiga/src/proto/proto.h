@@ -46,13 +46,9 @@ extern int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD n
 
 // extended commands
 extern int proto_chn_get_rx_size(proto_handle_t *ph, UBYTE chn, UWORD *rx_size);
-extern int proto_chn_set_rx_size(proto_handle_t *ph, UBYTE chn, UWORD rx_size);
 extern int proto_chn_set_tx_size(proto_handle_t *ph, UBYTE chn, UWORD tx_size);
-extern int proto_chn_set_rx_offset(proto_handle_t *ph, UBYTE chn, ULONG rx_offset);
-extern int proto_chn_set_tx_offset(proto_handle_t *ph, UBYTE chn, ULONG tx_offset);
-extern int proto_chn_request_rx(proto_handle_t *ph, UBYTE chn);
-extern int proto_chn_cancel_rx(proto_handle_t *ph, UBYTE chn);
-extern int proto_chn_cancel_tx(proto_handle_t *ph, UBYTE chn);
+extern int proto_chn_set_offset(proto_handle_t *ph, UBYTE chn, ULONG rx_offset);
+extern int proto_chn_cancel_transfer(proto_handle_t *ph, UBYTE chn);
 
 extern const char *proto_perror(int res);
 

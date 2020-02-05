@@ -26,11 +26,11 @@ BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
 PROTO_SRCS = proto_low.s proto_env.c proto.c
 TIMER_SRCS = timer.c
-TEST_SRCS = test.c
+TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c
 
 PROTO_ENV_SRCS = $(BASE_SRCS) $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS)
-PAMELA_SRCS = channel.c
+PAMELA_SRCS = channel.c channel_ops.c
 
 # ---- mini tests
 # test-pario

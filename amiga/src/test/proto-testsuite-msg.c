@@ -14,8 +14,10 @@
 
 #include "proto.h"
 #include "proto_env.h"
+#include "proto_test_shared.h"
 #include "proto-testsuite-msg.h"
 #include "proto-testsuite.h"
+#include "test-buffer.h"
 
 static int msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD size)
 {
@@ -29,7 +31,7 @@ static int msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD size)
 
 static int msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD size)
 {
-  int res = proto_chn_set_rx_size(ph, chn, size);
+  int res = proto_chn_set_tx_size(ph, chn, size);
   if(res != 0) {
     return res;
   }
@@ -97,113 +99,26 @@ int test_msg_tiny(test_t *t, test_param_t *p)
   return 0;
 }
 
-static ULONG get_default_size(void)
-{
-  /* get buffer size */
-  ULONG size = 1024;
-  if (test_size != 0)
-  {
-    size = test_size;
-    if (size < 2)
-    {
-      size = 2;
-    }
-    if (size & 1 == 1)
-    {
-      size++;
-    }
-  }
-  return size;
-}
-
-static UBYTE get_start_byte(test_param_t *p)
-{
-  /* set start byte value */
-  UBYTE start = 0;
-  if (test_bias != 0)
-  {
-    start = (UBYTE)test_bias;
-  }
-  start += p->iter;
-  return start;
-}
-
-static ULONG get_size(ULONG size)
-{
-  if (test_add_size != 0)
-  {
-    size += test_add_size;
-  }
-  if (test_sub_size != 0)
-  {
-    size -= test_sub_size;
-  }
-  return size;
-}
-
-static void fill_buffer(ULONG size, UBYTE *mem, test_param_t *p)
-{
-  /* fill buffer */
-  UBYTE data = get_start_byte(p);
-  for (ULONG i = 0; i < size; i++)
-  {
-    mem[i] = data++;
-  }
-}
-
-static int validate_buffer(ULONG size, UBYTE *mem, test_param_t *p)
-{
-  UBYTE data = get_start_byte(p);
-  for (ULONG i = 0; i < size; i++)
-  {
-    if (mem[i] != data)
-    {
-      return 1;
-    }
-    data++;
-  }
-  return 0;
-}
-
-static ULONG check_buffer(ULONG size, UBYTE *mem1, UBYTE *mem2)
-{
-  /* check buf */
-  ULONG result = size;
-  for (ULONG i = 0; i < size; i++)
-  {
-    if (mem1[i] != mem2[i])
-    {
-      result = i;
-      break;
-    }
-  }
-  return result;
-}
-
 static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
 
-  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
-  if (mem_w == 0)
+  UBYTE *mem_w = test_buffer_alloc(size, p);
+  if (mem_w == NULL)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  ULONG size_r = get_size(size);
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    FreeVec(mem_w);
-    p->error = "out of mem";
-    p->section = "init";
+    test_buffer_free(mem_w);
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   UWORD words = size >> 1;
 
@@ -226,7 +141,7 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
   }
 
   /* check buf */
-  ULONG pos = check_buffer(size, mem_w, mem_r);
+  ULONG pos = test_buffer_check(size, mem_w, mem_r);
   if (pos < size)
   {
     p->error = "value mismatch";
@@ -235,15 +150,15 @@ static int msg_read_write(test_t *t, test_param_t *p, ULONG size)
     return 1;
   }
 
-  FreeVec(mem_w);
-  FreeVec(mem_r);
+  test_buffer_free(mem_w);
+  test_buffer_free(mem_r);
   return 0;
 }
 
 // TEST: write & read
 int test_msg_size(test_t *t, test_param_t *p)
 {
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
   return msg_read_write(t, p, size);
 }
 
@@ -271,31 +186,27 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
 
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
   if (size < 4)
   {
     size = 4;
   }
 
-  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  UBYTE *mem_w = test_buffer_alloc(size, p);
   if (mem_w == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  ULONG size_r = get_size(size);
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    FreeVec(mem_w);
-    p->error = "out of mem";
-    p->section = "init";
+    test_buffer_free(mem_w);
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   ULONG words = size >> 1;
   ULONG c1_words = words >> 1;
@@ -333,14 +244,6 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   c2_buf = mem_r + (c1_words << 1);
   c2_words = words_r - c1_words;
 
-  /* set rx size */
-  res = proto_chn_set_rx_size(proto, test_channel, words_r);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "rx_size";
-    return res;
-  }
-
   /* receive buffer */
   proto_iov_t part2_r = {
       c2_words,
@@ -359,7 +262,7 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
   }
 
   /* check buf */
-  ULONG pos = check_buffer(size, mem_w, mem_r);
+  ULONG pos = test_buffer_check(size, mem_w, mem_r);
   if (pos < size)
   {
     p->error = "value mismatch";
@@ -368,8 +271,8 @@ int test_msg_size_chunks(test_t *t, test_param_t *p)
     return 1;
   }
 
-  FreeVec(mem_w);
-  FreeVec(mem_r);
+  test_buffer_free(mem_w);
+  test_buffer_free(mem_r);
   return 0;
 }
 
@@ -379,31 +282,27 @@ int test_msg_size_chunks_len(test_t *t, test_param_t *p)
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   ULONG extra = 32;
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
   if (size < 4)
   {
     size = 4;
   }
 
-  UBYTE *mem_w = AllocVec(size + extra, MEMF_PUBLIC);
+  UBYTE *mem_w = test_buffer_alloc(size + extra, p);
   if (mem_w == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  ULONG size_r = get_size(size);
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    FreeVec(mem_w);
-    p->error = "out of mem";
-    p->section = "init";
+    test_buffer_free(mem_w);
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   ULONG words = size >> 1;
   ULONG c1_words = words >> 1;
@@ -441,14 +340,6 @@ int test_msg_size_chunks_len(test_t *t, test_param_t *p)
   c2_buf = mem_r + (c1_words << 1);
   c2_words = words_r - c1_words;
 
-  /* set rx size */
-  res = proto_chn_set_rx_size(proto, test_channel, words_r);
-  if(res != 0) {
-    p->error = proto_perror(res);
-    p->section = "rx_size";
-    return res;
-  }
-
   /* receive buffer */
   proto_iov_t part2_r = {
       c2_words + (extra >> 1), // make buffer longer than total
@@ -467,7 +358,7 @@ int test_msg_size_chunks_len(test_t *t, test_param_t *p)
   }
 
   /* check buf */
-  ULONG pos = check_buffer(size, mem_w, mem_r);
+  ULONG pos = test_buffer_check(size, mem_w, mem_r);
   if (pos < size)
   {
     p->error = "value mismatch";
@@ -476,8 +367,8 @@ int test_msg_size_chunks_len(test_t *t, test_param_t *p)
     return 1;
   }
 
-  FreeVec(mem_w);
-  FreeVec(mem_r);
+  test_buffer_free(mem_w);
+  test_buffer_free(mem_r);
   return 0;
 }
 
@@ -485,17 +376,15 @@ int test_msg_write(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
 
-  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  UBYTE *mem_w = test_buffer_alloc(size, p);
   if (mem_w == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   UWORD words = size >> 1;
 
@@ -508,7 +397,7 @@ int test_msg_write(test_t *t, test_param_t *p)
     return res;
   }
 
-  FreeVec(mem_w);
+  test_buffer_free(mem_w);
   return 0;
 }
 
@@ -516,7 +405,7 @@ int test_msg_write_spi(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
 
   /* set test flags */
   int res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, PROTO_TEST_FLAGS_USE_SPI);
@@ -527,15 +416,13 @@ int test_msg_write_spi(test_t *t, test_param_t *p)
     return res;
   }
 
-  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  UBYTE *mem_w = test_buffer_alloc(size, p);
   if (mem_w == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   UWORD words = size >> 1;
 
@@ -548,7 +435,7 @@ int test_msg_write_spi(test_t *t, test_param_t *p)
     return res;
   }
 
-  FreeVec(mem_w);
+  test_buffer_free(mem_w);
 
   /* clear test flags */
   res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, 0);
@@ -566,17 +453,15 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
 
-  UBYTE *mem_w = AllocVec(size, MEMF_PUBLIC);
+  UBYTE *mem_w = test_buffer_alloc(size, p);
   if (mem_w == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
-  fill_buffer(size, mem_w, p);
+  test_buffer_fill(size, mem_w, &test_buf_param, p);
 
   UWORD words = size >> 1;
 
@@ -601,7 +486,7 @@ int test_msg_write_busy(test_t *t, test_param_t *p)
   /* recover from busy mode */
   res = recover_from_busy(proto, p);
 
-  FreeVec(mem_w);
+  test_buffer_free(mem_w);
   return res;
 }
 
@@ -609,14 +494,12 @@ int test_msg_read(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
-  ULONG size_r = get_size(size);
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
 
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
@@ -630,7 +513,7 @@ int test_msg_read(test_t *t, test_param_t *p)
     return 1;
   }
 
-  FreeVec(mem_r);
+  test_buffer_free(mem_r);
   return 0;
 }
 
@@ -638,8 +521,8 @@ int test_msg_read_spi(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
-  ULONG size_r = get_size(size);
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
 
    /* set test flags */
   int res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, PROTO_TEST_FLAGS_USE_SPI);
@@ -650,11 +533,9 @@ int test_msg_read_spi(test_t *t, test_param_t *p)
     return res;
   }
 
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
@@ -668,7 +549,7 @@ int test_msg_read_spi(test_t *t, test_param_t *p)
     return 1;
   }
 
-  FreeVec(mem_r);
+  test_buffer_free(mem_r);
 
   /* clear test flags */
   res = proto_wfunc_write(proto, PROTO_WFUNC_WRITE_TEST_FLAGS, 0);
@@ -686,14 +567,12 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
   proto_handle_t *proto = proto_env_get_proto(pb);
-  ULONG size = get_default_size();
-  ULONG size_r = get_size(size);
+  ULONG size = test_buffer_get_default_size(&test_buf_param);
+  ULONG size_r = test_buffer_get_adjusted_size(size, &test_buf_param);
 
-  BYTE *mem_r = AllocVec(size_r, MEMF_PUBLIC);
+  BYTE *mem_r = test_buffer_alloc(size_r, p);
   if (mem_r == 0)
   {
-    p->error = "out of mem";
-    p->section = "init";
     return 1;
   }
 
@@ -721,6 +600,6 @@ int test_msg_read_busy(test_t *t, test_param_t *p)
   /* recover from busy mode */
   res = recover_from_busy(proto, p);
 
-  FreeVec(mem_r);
+  test_buffer_free(mem_r);
   return res;
 }

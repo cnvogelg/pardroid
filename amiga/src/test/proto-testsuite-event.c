@@ -14,6 +14,7 @@
 
 #include "proto.h"
 #include "proto_env.h"
+#include "proto_test_shared.h"
 #include "proto-testsuite-event.h"
 #include "proto-testsuite.h"
 

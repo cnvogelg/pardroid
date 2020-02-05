@@ -308,15 +308,6 @@ int proto_chn_get_rx_size(proto_handle_t *ph, UBYTE chn, UWORD *ret_words)
   return read_word(ph, cmd, ret_words);
 }
 
-int proto_chn_set_rx_size(proto_handle_t *ph, UBYTE chn, UWORD num_words)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_CHN_SET_RX_SIZE + chn;
-  return write_word(ph, cmd, num_words);
-}
-
 int proto_chn_set_tx_size(proto_handle_t *ph, UBYTE chn, UWORD num_words)
 {
   if(chn > PROTO_MAX_CHANNEL) {
@@ -326,48 +317,21 @@ int proto_chn_set_tx_size(proto_handle_t *ph, UBYTE chn, UWORD num_words)
   return write_word(ph, cmd, num_words);
 }
 
-int proto_chn_set_rx_offset(proto_handle_t *ph, UBYTE chn, ULONG offset)
+int proto_chn_set_offset(proto_handle_t *ph, UBYTE chn, ULONG offset)
 {
   if(chn > PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
-  UBYTE cmd = PROTO_CMD_CHN_SET_RX_OFFSET + chn;
+  UBYTE cmd = PROTO_CMD_CHN_SET_OFFSET + chn;
   return write_long(ph, cmd, offset);
 }
 
-int proto_chn_set_tx_offset(proto_handle_t *ph, UBYTE chn, ULONG offset)
+int proto_chn_cancel_transfer(proto_handle_t *ph, UBYTE chn)
 {
   if(chn > PROTO_MAX_CHANNEL) {
     return PROTO_RET_INVALID_CHANNEL;
   }
-  UBYTE cmd = PROTO_CMD_CHN_SET_TX_OFFSET + chn;
-  return write_long(ph, cmd, offset);
-}
-
-int proto_chn_request_rx(proto_handle_t *ph, UBYTE chn)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_CHN_REQUEST_RX + chn;
-  return raw_action(ph, cmd);
-}
-
-int proto_chn_cancel_rx(proto_handle_t *ph, UBYTE chn)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_CHN_CANCEL_RX + chn;
-  return raw_action(ph, cmd);
-}
-
-int proto_chn_cancel_tx(proto_handle_t *ph, UBYTE chn)
-{
-  if(chn > PROTO_MAX_CHANNEL) {
-    return PROTO_RET_INVALID_CHANNEL;
-  }
-  UBYTE cmd = PROTO_CMD_CHN_CANCEL_TX + chn;
+  UBYTE cmd = PROTO_CMD_CHN_CANCEL_TRANSFER + chn;
   return raw_action(ph, cmd);
 }
 

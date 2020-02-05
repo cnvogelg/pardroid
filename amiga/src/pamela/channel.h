@@ -3,81 +3,86 @@
 
 #include "proto_env.h"
 
-// channel modes (mask)
-#define CHANNEL_MODE_RX_VAR_SIZE        0x01
-#define CHANNEL_MODE_TX_VAR_SIZE        0x02
-#define CHANNEL_MODE_VAR_SIZE           0x03
-#define CHANNEL_MODE_RX_OFFSET          0x04
-#define CHANNEL_MODE_TX_OFFSET          0x08
-#define CHANNEL_MODE_OFFSET             0x0c
-
 // channel ops return values
 #define CHANNEL_RET_OK                  0
-#define CHANNEL_RET_BUSY                1  // device is busy
-#define CHANNEL_RET_PARTIAL             2  // read/write is not finished yet
-// errors
-#define CHANNEL_RET_ERROR_SET_INDEX     3
-#define CHANNEL_RET_ERROR_GET_STATUS    4
-#define CHANNEL_RET_ERROR_SET_MTU       5
-#define CHANNEL_RET_ERROR_GET_MTU       6
-#define CHANNEL_RET_ERROR_GET_MODE      7
-#define CHANNEL_RET_ERROR_NOT_AVAIL     8
-#define CHANNEL_RET_ERROR_CALL_OPEN     9
-#define CHANNEL_RET_ERROR_OPEN_FAILED   10
-#define CHANNEL_RET_ERROR_NOT_READY     11
-#define CHANNEL_RET_ERROR_CALL_CLOSE    12
-#define CHANNEL_RET_ERROR_CLOSE_FAILED  13
-#define CHANNEL_RET_ERROR_CALL_RESET    14
-#define CHANNEL_RET_ERROR_RESET_FAILED  15
+#define CHANNEL_RET_STAY                1
+#define CHANNEL_RET_WRONG_STATE         2
+#define CHANNEL_RET_WRONG_MSG           3
+#define CHANNEL_RET_PROTO_ERROR         4
+#define CHANNEL_RET_NO_AVAILABLE        5
+#define CHANNEL_RET_OPEN_FAILED         6
+#define CHANNEL_RET_CLOSE_FAILED        7
+#define CHANNEL_RET_RESET_FAILED        8
+#define CHANNEL_RET_DEVICE_ERROR        9
+#define CHANNEL_RET_STATE_MISMATCH      10
+#define CHANNEL_RET_CANCEL              11
+#define CHANNEL_RET_MSG_SIZE_MISMATCH   12
 
-// channel status of device
-#define CHANNEL_STATUS_UNKNOWN          0
-#define CHANNEL_STATUS_AVAILABLE        1
-#define CHANNEL_STATUS_READY            2
-#define CHANNEL_STATUS_READ_PENDING     3
-#define CHANNEL_STATUS_IN_READ          4
-#define CHANNEL_STATUS_IN_WRITE         5
-// error states
-#define CHANNEL_STATUS_ERROR            0x10
-#define CHANNEL_STATUS_OPEN_ERROR       0x11
-#define CHANNEL_STATUS_CLOSE_ERROR      0x12
-#define CHANNEL_STATUS_WRITE_ERROR      0x13
-#define CHANNEL_STATUS_READ_ERROR       0x14
+// operations
+#define CHANNEL_OP_READ                 0
+#define CHANNEL_OP_WRITE                1
+
+// channel state machine
+#define CHANNEL_STATE_OPEN             0
+#define CHANNEL_STATE_IDLE             1
+#define CHANNEL_STATE_TRANSFER         2
+#define CHANNEL_STATE_CANCEL           3
+#define CHANNEL_STATE_CLOSE            4
+#define CHANNEL_STATE_ERROR            5
+#define CHANNEL_STATE_RESET            6
+#define CHANNEL_STATE_POLL             7
+#define CHANNEL_STATE_CLOSED           8
 
 // opaque channel handle
 struct channel_handle;
 typedef struct channel_handle channel_handle_t;
 
-// channel ops
+// message
+struct channel_message {
+    proto_iov_t data;
+    UWORD       num_words;
+    UWORD       operation;
+    ULONG       offset;
+    // optional
+    void        *user_data;
+    // result
+    UWORD       got_words;
+    UWORD       result;
+};
+typedef struct channel_message channel_message_t;
+
+// callback functions
+typedef void (*channel_state_cb_t)(channel_handle_t *ch, UWORD state);
+typedef void (*channel_transfer_cb_t)(channel_handle_t *ch, channel_message_t *msg);
+
+// channel init/exit
 extern channel_handle_t *channel_init(UBYTE channel_id, struct Library *SysBase,
                                       proto_env_handle_t *pe);
 extern void channel_exit(channel_handle_t *ch);
 
-extern const char *channel_perror(UWORD status);
-
-// open and request an MTU (if != 0) and get effective MTU back
-extern int channel_open(channel_handle_t *ch, UWORD *mtu_words);
-extern int channel_close(channel_handle_t *ch);
-extern int channel_reset(channel_handle_t *ch);
-
 // query info
-extern UWORD channel_mode(channel_handle_t *ch);
-extern UWORD channel_status(channel_handle_t *ch);
-extern int channel_proto_error(channel_handle_t *ch);
+extern const char *channel_perror(UWORD result);
+extern UWORD channel_get_mtu(channel_handle_t *ch);
+extern UWORD channel_get_max_words(channel_handle_t *ch);
+extern UWORD channel_get_mode(channel_handle_t *ch);
+extern UWORD channel_get_state(channel_handle_t *ch);
+extern int channel_get_proto_error(channel_handle_t *ch);
 
-// simple read/write (spread across multiple mtus if necessary)
-extern int channel_write(channel_handle_t *ch, proto_iov_t *msgiov, ULONG offset);
-extern int channel_read(channel_handle_t *ch, proto_iov_t *msgiov, ULONG offset, UWORD *ret_words);
+// open and request an MTU (if != 0) or use default
+extern int channel_open(channel_handle_t *ch, UWORD req_mtu, UWORD req_words);
+extern int channel_close(channel_handle_t *ch);
+extern void channel_reset(channel_handle_t *ch);
+extern int channel_poll(channel_handle_t *ch);
 
-// partial read/write (max one mtu per call)
-extern int channel_write_begin(channel_handle_t *ch, proto_iov_t *msgiov, ULONG offset);
-extern int channel_write_next(channel_handle_t *ch);
-extern int channel_write_cancel(channel_handle_t *ch);
-extern int channel_write_end(channel_handle_t *ch);
+// setup callbacks
+extern void channel_set_state_cb(channel_handle_t *ch, channel_state_cb_t func);
+extern void channel_set_transfer_cb(channel_handle_t *ch, channel_transfer_cb_t func);
 
-extern int channel_read_begin(channel_handle_t *ch, proto_iov_t *msgiov, ULONG offset);
-extern int channel_read_next(channel_handle_t *ch);
-extern int channel_read_cancel(channel_handle_t *ch);
-extern int channel_read_end(channel_handle_t *ch, UWORD *ret_words);
+// main worker call. returns resulting state
+extern UWORD channel_work(channel_handle_t *ch);
+
+// read/write message
+extern int channel_transfer(channel_handle_t *ch, channel_message_t *msg);
+extern int channel_cancel(channel_handle_t *ch, channel_message_t *msg);
 
 #endif

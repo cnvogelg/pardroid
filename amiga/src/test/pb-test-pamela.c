@@ -18,7 +18,8 @@
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,"
    "Bias/K/N,Size/K/N,"
    "AddSize/K/N,SubSize/K/N,"
-   "Channel/K/N,Verbose/S";
+   "Channel/K/N,Verbose/S,"
+   "MTU/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
@@ -30,6 +31,7 @@ typedef struct {
   ULONG *sub_size;
   ULONG *channel;
   ULONG verbose;
+  ULONG *mtu;
 } params_t;
 static params_t params;
 
@@ -60,7 +62,7 @@ void setup_test_config(test_param_t *p)
   p->verbose = params.verbose;
 
   /* proto test setup */
-  UWORD size = 0;
+  UWORD size = 512;
   if(params.size) {
     size = (UWORD)*params.size;
   }
@@ -80,8 +82,12 @@ void setup_test_config(test_param_t *p)
   if(params.channel) {
     channel = (UBYTE)*params.channel;
   }
+  WORD mtu = 64;
+  if(params.mtu) {
+    mtu = (UWORD)*params.mtu;
+  }
 
-  tests_pamela_config(size, bias, add_size, sub_size, channel);
+  tests_pamela_config(size, bias, add_size, sub_size, channel, mtu);
 }
 
 int dosmain(void)

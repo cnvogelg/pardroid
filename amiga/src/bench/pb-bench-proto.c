@@ -170,7 +170,7 @@ static int loop_msg_write(proto_env_handle_t *pb, ULONG iter,
 static int init_msg_read(proto_env_handle_t *pb, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
-  return proto_chn_set_rx_size(ph, 0, num_words);
+  return proto_chn_set_tx_size(ph, 0, num_words);
 }
 
 static int loop_msg_read(proto_env_handle_t *pb, ULONG iter,
@@ -183,10 +183,6 @@ static int loop_msg_read(proto_env_handle_t *pb, ULONG iter,
 static int init_msg_write_read(proto_env_handle_t *pb, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
-  int status = proto_chn_set_rx_size(ph, 0, num_words);
-  if(status != PROTO_RET_OK) {
-    return status;
-  }
   return proto_chn_set_tx_size(ph, 0, num_words);
 }
 
@@ -218,7 +214,7 @@ static int loop_msg_read_size(proto_env_handle_t *pb, ULONG iter,
                               UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
-  int status = proto_chn_set_rx_size(ph, 0, num_words);
+  int status = proto_chn_set_tx_size(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
@@ -238,11 +234,6 @@ static int loop_msg_write_read_size(proto_env_handle_t *pb, ULONG iter,
   if(status != PROTO_RET_OK) {
     return status;
   }
-  
-  status = proto_chn_set_rx_size(ph, 0, num_words);
-  if(status != PROTO_RET_OK) {
-    return status;
-  }
   return proto_chn_msg_read(ph, 0, buffer, num_words);
 }
 
@@ -252,7 +243,7 @@ static int loop_msg_write_offset(proto_env_handle_t *pb, ULONG iter,
                                  UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
-  int status = proto_chn_set_tx_offset(ph, 0, num_words);
+  int status = proto_chn_set_offset(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
@@ -263,7 +254,7 @@ static int loop_msg_read_offset(proto_env_handle_t *pb, ULONG iter,
                                 UBYTE *buffer, UWORD num_words)
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
-  int status = proto_chn_set_rx_offset(ph, 0, num_words);
+  int status = proto_chn_set_offset(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
@@ -275,7 +266,7 @@ static int loop_msg_write_read_offset(proto_env_handle_t *pb, ULONG iter,
 {
   proto_handle_t *ph = proto_env_get_proto(pb);
 
-  int status = proto_chn_set_tx_offset(ph, 0, num_words);
+  int status = proto_chn_set_offset(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
@@ -284,7 +275,7 @@ static int loop_msg_write_read_offset(proto_env_handle_t *pb, ULONG iter,
     return status;
   }
   
-  status = proto_chn_set_rx_offset(ph, 0, num_words);
+  status = proto_chn_set_offset(ph, 0, num_words);
   if(status != PROTO_RET_OK) {
     return status;
   }
