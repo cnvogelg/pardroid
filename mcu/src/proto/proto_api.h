@@ -19,13 +19,9 @@ extern u08 *proto_api_write_msg_begin(u08 chan, u16 *size);
 extern void proto_api_write_msg_done(u08 chan);
 
 // channel ops
-extern void proto_api_chn_set_rx_offset(u08 chan, u32 offset);
-extern void proto_api_chn_set_tx_offset(u08 chan, u32 offset);
+extern void proto_api_chn_set_offset(u08 chan, u32 offset);
 extern u16  proto_api_chn_get_rx_size(u08 chan);
-extern void proto_api_chn_set_rx_size(u08 chan, u16 size);
 extern void proto_api_chn_set_tx_size(u08 chan, u16 size);
-extern void proto_api_chn_request_rx(u08 chan);
-extern void proto_api_chn_cancel_rx(u08 chan);
-extern void proto_api_chn_cancel_tx(u08 chan);
+extern void proto_api_chn_cancel_transfer(u08 chan);
 
 #endif

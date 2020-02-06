@@ -14,6 +14,7 @@
 #include "knok.h"
 #include "proto.h"
 #include "proto_shared.h"
+#include "proto_test_shared.h"
 #include "proto_api.h"
 
 #include "fwid.h"
@@ -26,10 +27,8 @@ FW_INFO(FWID_TEST_PROTO, VERSION_TAG)
 u08 buf[MAX_WORDS * 2];
 
 u16 test_flags = 0;
-u16 rx_size = MAX_WORDS;
-u16 tx_size = MAX_WORDS;
-u32 rx_offset = 0;
-u32 tx_offset = 0;
+u16 the_size = MAX_WORDS;
+u32 the_offset = 0;
 u16 word_val = 0x4711;
 u32 long_val = 0xdeadbeef;
 u08 enter_busy = 0;
@@ -95,9 +94,6 @@ u16  proto_api_wfunc_read(u08 num)
     case PROTO_WFUNC_READ_TEST_VALUE:
       val = word_val;
       break;
-    case PROTO_WFUNC_READ_TEST_GET_TX_SIZE:
-      val = tx_size;
-      break;
     case PROTO_WFUNC_READ_TEST_MAX_WORDS:
       val = MAX_WORDS;
       break;
@@ -139,11 +135,8 @@ u32 proto_api_lfunc_read(u08 num)
     case PROTO_LFUNC_READ_TEST_VALUE:
       val = long_val;
       break;
-    case PROTO_LFUNC_READ_TEST_RX_OFFSET:
-      val = rx_offset;
-      break;
-    case PROTO_LFUNC_READ_TEST_TX_OFFSET:
-      val = tx_offset;
+    case PROTO_LFUNC_READ_TEST_OFFSET:
+      val = the_offset;
       break;
   }
 #ifdef FLAVOR_DEBUG
@@ -176,7 +169,7 @@ void proto_api_lfunc_write(u08 num, u32 val)
 
 u08 *proto_api_read_msg_begin(u08 chan, u16 *size)
 {
-  *size = rx_size;
+  *size = the_size;
 
 #ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("msg_read:{"));
@@ -207,7 +200,7 @@ void proto_api_read_msg_done(u08 chan)
 
 u08 *proto_api_write_msg_begin(u08 chan,u16 *size)
 {
-  *size = tx_size;
+  *size = the_size;
 
 #ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("msg_write:{"));
@@ -238,46 +231,24 @@ void proto_api_write_msg_done(u08 chan)
 
 // extended commands
 
-void proto_api_chn_set_rx_offset(u08 chan, u32 offset)
+void proto_api_chn_set_offset(u08 chan, u32 offset)
 {
 #ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("rx_offset="));
-  uart_send_hex_long(rx_offset);
+  uart_send_pstring(PSTR("offset="));
+  uart_send_hex_long(offset);
   uart_send_crlf();
 #endif
-  rx_offset = offset;
-}
-
-void proto_api_chn_set_tx_offset(u08 chan, u32 offset)
-{
-#ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("tx_offset="));
-  uart_send_hex_long(tx_offset);
-  uart_send_crlf();
-#endif
-  tx_offset = offset;
+  the_offset = offset;
 }
 
 u16  proto_api_chn_get_rx_size(u08 chan)
 {
 #ifdef FLAVOR_DEBUG
   uart_send_pstring(PSTR("rx_size:"));
-  uart_send_hex_word(rx_size);
+  uart_send_hex_word(the_size);
   uart_send_crlf();
 #endif
-  return rx_size;
-}
-
-void proto_api_chn_set_rx_size(u08 chan, u16 size)
-{
-#ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("rx_size="));
-  uart_send_hex_word(size);
-  uart_send_crlf();
-#endif
-  if(rx_size <= MAX_WORDS) {
-    rx_size = size;
-  }
+  return the_size;
 }
 
 void proto_api_chn_set_tx_size(u08 chan, u16 size)
@@ -287,36 +258,18 @@ void proto_api_chn_set_tx_size(u08 chan, u16 size)
   uart_send_hex_word(size);
   uart_send_crlf();
 #endif
-  if(tx_size <= MAX_WORDS) {
-    tx_size = size;
+  if(size <= MAX_WORDS) {
+    the_size = size;
   }
 }
 
-void proto_api_chn_request_rx(u08 chan)
+void proto_api_chn_cancel_transfer(u08 chan)
 {
 #ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("request_rx"));
+  uart_send_pstring(PSTR("cancel_transfer"));
   uart_send_crlf();
 #endif
-  test_flags |= PROTO_TEST_FLAGS_RX_REQUEST;
-}
-
-void proto_api_chn_cancel_rx(u08 chan)
-{
-#ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("cancel_rx"));
-  uart_send_crlf();
-#endif
-  test_flags |= PROTO_TEST_FLAGS_RX_CANCEL;
-}
-
-void proto_api_chn_cancel_tx(u08 chan)
-{
-#ifdef FLAVOR_DEBUG
-  uart_send_pstring(PSTR("cancel_tx"));
-  uart_send_crlf();
-#endif
-  test_flags |= PROTO_TEST_FLAGS_TX_CANCEL;
+  test_flags |= PROTO_TEST_FLAGS_CANCEL_TRANSFER;
 }
 
 // ----- main -----

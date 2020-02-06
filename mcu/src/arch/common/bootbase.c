@@ -3,6 +3,7 @@
 #include "arch.h"
 
 #include "bootbase.h"
+#include "bootloader_shared.h"
 #include "proto_shared.h"
 #include "pablo.h"
 #include "uart.h"

@@ -120,18 +120,10 @@ static void handle_lfunc_write(u08 num)
 
 // channel operations
 
-static void handle_chn_set_rx_offset(u08 chan)
+static void handle_chn_set_offset(u08 chan)
 {
   u32 off = proto_low_write_long();
-  proto_api_chn_set_rx_offset(chan, off);
-  proto_low_end();
-  DL(off); DNL;
-}
-
-static void handle_chn_set_tx_offset(u08 chan)
-{
-  u32 off = proto_low_write_long();
-  proto_api_chn_set_tx_offset(chan, off);
+  proto_api_chn_set_offset(chan, off);
   proto_low_end();
   DL(off); DNL;
 }
@@ -140,14 +132,6 @@ static void handle_chn_get_rx_size(u08 chan)
 {
   u16 size = proto_api_chn_get_rx_size(chan);
   proto_low_read_word(size);
-  proto_low_end();
-  DW(size); DNL;
-}
-
-static void handle_chn_set_rx_size(u08 chan)
-{
-  u16 size = proto_low_write_word();
-  proto_api_chn_set_rx_size(chan, size);
   proto_low_end();
   DW(size); DNL;
 }
@@ -192,24 +176,10 @@ static void handle_chn_write_data(u08 chan)
   proto_low_end();
 }
 
-static void handle_chn_request_rx(u08 chan)
+static void handle_chn_cancel_transfer(u08 chan)
 {
   proto_low_action();
-  proto_api_chn_request_rx(chan);
-  proto_low_end();
-}
-
-static void handle_chn_cancel_rx(u08 chan)
-{
-  proto_low_action();
-  proto_api_chn_cancel_rx(chan);
-  proto_low_end();
-}
-
-static void handle_chn_cancel_tx(u08 chan)
-{
-  proto_low_action();
-  proto_api_chn_cancel_tx(chan);
+  proto_api_chn_cancel_transfer(chan);
   proto_low_end();
 }
 
@@ -260,36 +230,20 @@ void proto_handle(void)
       break;
 
     case PROTO_CMD_CHN_GET_RX_SIZE:
-      DC('R');
+      DC('s');
       handle_chn_get_rx_size(chn);
       break;
-    case PROTO_CMD_CHN_SET_RX_SIZE:
-      DC('r');
-      handle_chn_set_rx_size(chn);
-      break;
     case PROTO_CMD_CHN_SET_TX_SIZE:
-      DC('r');
+      DC('S');
       handle_chn_set_tx_size(chn);
       break;
-    case PROTO_CMD_CHN_SET_RX_OFFSET:
+    case PROTO_CMD_CHN_SET_OFFSET:
       DC('o');
-      handle_chn_set_rx_offset(chn);
+      handle_chn_set_offset(chn);
       break;
-    case PROTO_CMD_CHN_SET_TX_OFFSET:
-      DC('O');
-      handle_chn_set_tx_offset(chn);
-      break;
-    case PROTO_CMD_CHN_REQUEST_RX:
-      DC('x');
-      handle_chn_request_rx(chn);
-      break;
-    case PROTO_CMD_CHN_CANCEL_RX:
+    case PROTO_CMD_CHN_CANCEL_TRANSFER:
       DC('c');
-      handle_chn_cancel_rx(chn);
-      break;
-    case PROTO_CMD_CHN_CANCEL_TX:
-      DC('C');
-      handle_chn_cancel_tx(chn);
+      handle_chn_cancel_transfer(chn);
       break;
 
     default:
