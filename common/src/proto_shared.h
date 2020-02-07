@@ -56,13 +56,15 @@
 #define PROTO_WFUNC_READ_MACHTAG                0x02
 #define PROTO_WFUNC_READ_STATUS_MASK            0x03
 #define PROTO_WFUNC_READ_ERROR_MASK             0x04
-#define PROTO_WFUNC_READ_CHN_INDEX              0x05
-#define PROTO_WFUNC_READ_CHN_MTU                0x06
-#define PROTO_WFUNC_READ_CHN_MAX_WORDS          0x07
-#define PROTO_WFUNC_READ_CHN_STATUS             0x08
-#define PROTO_WFUNC_READ_CHN_MODE               0x09
-#define PROTO_WFUNC_READ_CHN_DEF_MTU            0x0a
-#define PROTO_WFUNC_READ_USER                   0x0b
+#define PROTO_WFUNC_READ_CHANNEL_MASK           0x05
+#define PROTO_WFUNC_READ_CHN_INDEX              0x06
+#define PROTO_WFUNC_READ_CHN_MTU                0x07
+#define PROTO_WFUNC_READ_CHN_MAX_WORDS          0x08
+#define PROTO_WFUNC_READ_CHN_STATUS             0x09
+#define PROTO_WFUNC_READ_CHN_MODE               0x0a
+#define PROTO_WFUNC_READ_CHN_DEF_MTU            0x0b
+#define PROTO_WFUNC_READ_CHN_ERROR_CODE         0x0c
+#define PROTO_WFUNC_READ_USER                   0x0d
 
 // write
 #define PROTO_WFUNC_WRITE_CHN_INDEX             0x00

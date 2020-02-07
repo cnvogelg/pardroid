@@ -63,7 +63,7 @@ PROTO_SRCS += proto.c knok.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
-PAMELA_SRCS += pamela.c proto_api.c channel.c
+PAMELA_SRCS += pamela.c channel.c proto_api.c status.c
 
 # paloma
 PALOMA_SRCS = handler.c handler_reg.c handler_regl.c msgio.c channel.c
@@ -156,12 +156,12 @@ endif
 
 # ----- main test suites -----
 # test-pamela
-#TEST_PAMELA_SRCS = $(PAMELA_SRCS) enc28j60.c
-#TEST_PAMELA_SRCS += test-pamela.c
-#$(eval $(call dist-pbl,test-pamela-fw))
-#$(eval $(call make-pbl,test-pamela-fw))
-#$(eval $(call dist-hex,test-pamela-fw))
-#$(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
+TEST_PAMELA_SRCS = $(PAMELA_SRCS) enc28j60.c
+TEST_PAMELA_SRCS += test-pamela.c
+$(eval $(call dist-pbl,test-pamela-fw))
+$(eval $(call make-pbl,test-pamela-fw))
+$(eval $(call dist-hex,test-pamela-fw))
+$(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-paloma
 #TEST_PALOMA_SRCS = $(PAMELA_SRCS) $(PALOMA_SRCS)

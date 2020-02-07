@@ -4,6 +4,7 @@
 
 #include "knok.h"
 #include "proto.h"
+#include "pamela.h"
 
 void pamela_init(void)
 {
@@ -14,10 +15,11 @@ void pamela_init(void)
   proto_init();
 
   // receive first action (reset or bootloader)
-  proto_first();
+  proto_first_cmd();
 }
 
 void pamela_handle(void)
 {
   proto_handle();
+  channel_work_all();
 }

@@ -10,303 +10,202 @@
 #include "uartutil.h"
 #include "rominfo.h"
 #include "fwid.h"
-#include "proto.h"
+#include "fw_info.h"
 #include "system.h"
-#include "timer.h"
-#include "func.h"
-#include "status.h"
-#include "spi.h"
 
 #include "pamela.h"
-#include "test-pamela.h"
-#include "enc28j60.h"
-#include "fw.h"
-#include "fwid.h"
 
 FW_INFO(FWID_TEST_PAMELA, VERSION_TAG)
 
-static u16 wfunc_val = 0;
-static u32 lfunc_val = 0;
-static u32 offset = 0;
+// my channels
+channel_t my_channels[2];
 
+// access channels
+channel_ptr_t channel_api_get_channel(u08 id)
+{
+  if(id < 2) {
+    return &my_channels[id];
+  } else {
+    return NULL;
+  }
+}
+
+u16 channel_api_get_mask(void)
+{
+  return 0x03; // bit 0,1 are the active channels
+}
+
+// buffer
 #define MAX_WORDS 512
 static u08 buf[MAX_WORDS * 2];
-static u16 buf_words = MAX_WORDS;
 
-static u08 enter_busy_loop = 0;
-
-void busy_loop(void)
+// handler functions
+u08 my_open(u08 chn)
 {
-  uart_send_pstring(PSTR("busy:begin"));
-  status_set_busy();
+  uart_send_pstring(PSTR("[open]"));
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
+  return 0; // OK
+}
 
-  // wait for a second
-  for(int i=0;i<5;i++) {
-    system_wdt_reset();
-    uart_send('.');
-    timer_delay(200);
-  }
+void my_work(u08 chn)
+{
+  uart_send('.');
+}
 
-  status_clr_busy();
-  uart_send_pstring(PSTR("end"));
+void my_close(u08 chn)
+{
+  uart_send_pstring(PSTR("[close]"));
+  uart_send_hex_byte(chn);
   uart_send_crlf();
 }
 
-// action handler
-
-void proto_api_action(u08 num)
+void my_reset(u08 chn)
 {
-  uart_send_pstring(PSTR("action:"));
-  uart_send_hex_byte(num);
-  uart_send_crlf();
-
-  // triger signal
-  if(num == TEST_PAMELA_ACTION_TRIGGER_SIGNAL) {
-    uart_send_pstring(PSTR("signal!"));
-    uart_send_crlf();
-    proto_trigger_signal();
-  }
-  else if(num == TEST_PAMELA_ACTION_BUSY_LOOP) {
-    uart_send_pstring(PSTR("busy!"));
-    uart_send_crlf();
-    enter_busy_loop = 1;
-  }
-}
-
-// function handler
-
-u16  proto_api_wfunc_read(u08 num)
-{
-  u16 val;
-  if(num < PROTO_WFUNC_READ_USER) {
-    val = func_read_word(num);
-  } else {
-    switch(num) {
-      case TEST_PAMELA_WFUNC_READ_TEST_VALUE:
-        val = wfunc_val;
-        break;
-      default:
-        val = 0;
-        break;
-    }
-  }
-  uart_send_pstring(PSTR("wfunc_read:"));
-  uart_send_hex_byte(num);
-  uart_send('=');
-  uart_send_hex_word(val);
-  uart_send_crlf();
-  return val;
-}
-
-void proto_api_wfunc_write(u08 num, u16 val)
-{
-  if(num < PROTO_WFUNC_WRITE_USER) {
-    func_write_word(num, val);
-  } else {
-    switch(num) {
-      case TEST_PAMELA_WFUNC_WRITE_TEST_VALUE:
-        wfunc_val = val;
-        break;
-    }
-  }
-  uart_send_pstring(PSTR("wfunc_write:"));
-  uart_send_hex_byte(num);
-  uart_send('=');
-  uart_send_hex_word(val);
+  uart_send_pstring(PSTR("[reset]"));
+  uart_send_hex_byte(chn);
   uart_send_crlf();
 }
 
-u32 proto_api_lfunc_read(u08 num)
+u16 my_set_mtu(u08 chn, u16 new_mtu)
 {
-  u32 val;
-  if(num < PROTO_LFUNC_READ_USER) {
-    val = func_read_long(num);
-  } else {
-    switch(num) {
-      case TEST_PAMELA_LFUNC_READ_TEST_VALUE:
-        val = lfunc_val;
-        break;
-      default:
-        val = 0;
-        break;
-    }
-  }
-  uart_send_pstring(PSTR("lfunc_read:"));
-  uart_send_hex_byte(num);
-  uart_send('=');
-  uart_send_hex_long(val);
-  uart_send_crlf();
-  return val;
-}
-
-void proto_api_lfunc_write(u08 num, u32 val)
-{
-  if(num < PROTO_LFUNC_WRITE_USER) {
-    func_write_long(num, val);
-  } else {
-    switch(num) {
-      case TEST_PAMELA_LFUNC_SET_STATUS:
-        status_set_mask(val);
-        break;
-      case TEST_PAMELA_LFUNC_WRITE_TEST_VALUE:
-        lfunc_val = val;
-        break;
-    }
-  }
-  uart_send_pstring(PSTR("lfunc_write:"));
-  uart_send_hex_byte(num);
-  uart_send('=');
-  uart_send_hex_long(val);
-  uart_send_crlf();
-}
-
-// messages
-
-u16 proto_api_read_msg_size(u08 chan)
-{
-  return buf_words;
-}
-
-u08 *proto_api_read_msg_begin(u08 chan,u16 num_words)
-{
-  uart_send_pstring(PSTR("msg_read:{"));
-  uart_send_hex_byte(chan);
+  uart_send_pstring(PSTR("[mtu]"));
+  uart_send_hex_byte(chn);
   uart_send(':');
-  uart_send_hex_word(buf_words);
-  if(chan == TEST_PAMELA_SPI_CHANNEL) {
-    uart_send('S');
-    spi_enable_cs0();
-    return NULL;
-  } 
-  else if(chan == TEST_PAMELA_NET_CHANNEL) {
-    uart_send('N');
-    enc28j60_test_begin_rx();
-    return NULL;
-  }
-  else {
-    return buf;
-  }
-}
-
-void proto_api_read_msg_done(u08 chan,u16 num_words)
-{
-  if(chan == TEST_PAMELA_SPI_CHANNEL) {
-    uart_send('S');
-    spi_disable_cs0();
-  }
-  else if(chan == TEST_PAMELA_NET_CHANNEL) {
-    uart_send('N');
-    enc28j60_test_end_rx();
-  }
-  uart_send('}');
+  uart_send_hex_word(new_mtu);
   uart_send_crlf();
-  /* clear rx pending */
-  status_clr_rx_pending(chan);
+  return new_mtu;
 }
 
-u16 proto_api_write_msg_size(u08 chan, u16 size)
+// ----- read -----
+
+u16 my_read_begin(u08 chn, u16 mtu, u32 offset)
 {
-  if(size <= MAX_WORDS) {
-    buf_words = size;
-    return size;
-  } else {
-    return 0;
-  }
+  uart_send_pstring(PSTR("[r:mtu="));
+  uart_send_hex_word(mtu);
+  uart_send_pstring(PSTR(",of="));
+  uart_send_hex_long(offset);
+  uart_send(']');
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
+  return MAX_WORDS;
 }
 
-u08 *proto_api_write_msg_begin(u08 chan,u16 num_words)
+u08 *my_read_chunk_begin(u08 chn, u16 off, u16 size)
 {
-  uart_send_pstring(PSTR("msg_write:{"));
-  uart_send_hex_byte(chan);
+  uart_send_pstring(PSTR("[R@"));
+  uart_send_hex_word(off);
+  uart_send('+');
+  uart_send_hex_word(size);
+  uart_send(']');
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
+  return &buf[off<<1]; 
+}
+
+void my_read_chunk_end(u08 chn)
+{
+  uart_send_pstring(PSTR("[R!]"));
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
+}
+
+void my_read_end(u08 chn, u08 cancelled)
+{
+  uart_send_pstring(PSTR("[r!]"));
+  uart_send_hex_byte(chn);
   uart_send(':');
-  uart_send_hex_word(buf_words);
-  if(chan == TEST_PAMELA_SPI_CHANNEL) {
-    uart_send('S');
-    spi_enable_cs0();
-    return NULL;
-  } 
-  else if(chan == TEST_PAMELA_NET_CHANNEL) {
-    uart_send('N');
-    enc28j60_test_begin_tx();
-    return NULL;
-  }
-  else {
-    return buf;
-  }
+  uart_send_hex_byte(cancelled);
+  uart_send_crlf();
 }
 
-void proto_api_write_msg_done(u08 chan,u16 num_words)
+// ----- write -----
+
+void my_write_begin(u08 chn, u16 mtu, u32 offset, u16 size)
 {
-  if(chan == TEST_PAMELA_SPI_CHANNEL) {
-    uart_send('S');
-    spi_disable_cs0();
-  }
-  else if(chan == TEST_PAMELA_NET_CHANNEL) {
-    uart_send('N');
-    enc28j60_test_end_tx();
-  }
-  uart_send('}');
-
-  /* set rx pending for echo */
-  status_set_rx_pending(chan);
+  uart_send_pstring(PSTR("[w:mtu="));
+  uart_send_hex_word(mtu);
+  uart_send_pstring(PSTR(",of="));
+  uart_send_hex_long(offset);
+  uart_send('+');
+  uart_send_hex_word(size);
+  uart_send(']');
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
 }
 
-u32 proto_api_read_offset(u08 chan)
+u08 *my_write_chunk_begin(u08 chn, u16 off, u16 size)
 {
-  return offset;
+  uart_send_pstring(PSTR("[W@"));
+  uart_send_hex_word(off);
+  uart_send('+');
+  uart_send_hex_word(size);
+  uart_send(']');
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
+  return &buf[off<<1]; 
 }
 
-void proto_api_write_offset(u08 chan, u32 off)
+void my_write_chunk_end(u08 chn)
 {
-  offset = off;
+  uart_send_pstring(PSTR("[W!]"));
+  uart_send_hex_byte(chn);
+  uart_send_crlf();
 }
 
-u16 proto_api_read_mtu(u08 chan)
+void my_write_end(u08 chn, u08 cancelled)
 {
-  return buf_words;
+  uart_send_pstring(PSTR("[w!]"));
+  uart_send_hex_byte(chn);
+  uart_send(':');
+  uart_send_hex_byte(cancelled);
+  uart_send_crlf();
 }
 
-void proto_api_write_mtu(u08 chan, u16 mtu)
-{
-  if(mtu <= MAX_WORDS) {
-    buf_words = mtu;
-  }
-}
+// ----- define my handler -----
+HANDLER_BEGIN(my_handler)
+  // parameters
+  .def_mtu = 64,
+  .max_size = MAX_WORDS,
+  .mode = CHANNEL_MODE_NONE,
+  // functions
+  .open = my_open,
+  .work = my_work,
+  .close = my_close,
+  .reset = my_reset,
+
+  .read_begin = my_read_begin,
+  .read_chunk_begin = my_read_chunk_begin,
+  .read_chunk_end = my_read_chunk_end,
+  .read_end = my_read_end,
+
+  .write_begin = my_write_begin,
+  .write_chunk_begin = my_write_chunk_begin,
+  .write_chunk_end = my_write_chunk_end,
+  .write_end = my_write_end,
+
+  .set_mtu = my_set_mtu
+HANDLER_END
+
 
 int main(void)
 {
   system_init();
   
-  spi_init();
-  
   uart_init();
   uart_send_pstring(PSTR("parbox: test-pamela!"));
   uart_send_crlf();
 
-  // setup enc28j60
-  uart_send_pstring(PSTR("enc28j60: init rev="));
-  u08 rev;
-  u08 ok = enc28j60_init(&rev);
-  uart_send_hex_byte(rev);
-  uart_send_pstring(PSTR(" ok="));
-  uart_send_hex_byte(ok);
-  uart_send_crlf();
-  enc28j60_test_setup();
-
   rom_info();
 
   pamela_init();
+  channel_init(&my_channels[0], &my_handler);
+  channel_init(&my_channels[1], &my_handler);
 
   while(1) {
     system_wdt_reset();
     pamela_handle();
-
-    // make a busy wait?
-    if(enter_busy_loop) {
-      busy_loop();
-      enter_busy_loop = 0;
-    }
-  }
+ }
 
   return 0;
 }
