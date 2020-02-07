@@ -2,6 +2,8 @@
 all: info $(FIRMWARES)
 
 help:
+	@echo "Global Rules:"
+	@echo
 	@echo "  all         make all firmwares"
 	@echo "  info        show current setup"
 	@echo "  release     release build"
@@ -13,6 +15,22 @@ help:
 	@echo
 	@echo "  dist        dist build of current firmware"
 	@echo "  dist-all    dist build of all firmwares"
+	@echo
+	@echo "Build Firmware:"
+	@echo
+	@for a in $(sort $(FIRMWARES)) ; do echo "  $$a" ; done
+	@echo
+	@echo "  *-sym       show symbols of firmware"
+	@echo "  *-code      show code size of firmware"
+	@echo "  *-check     check size"
+	@echo "  *-prog      program/flash firmware"
+	@echo
+	@echo "Flags:  make <flag>=<value>"
+	@echo
+	@echo "CONFIG:"
+	@for a in $(sort $(ALL_CONFIGS)) ; do echo "  $$a" ; done
+	@echo "FLAVOR:"
+	@for a in $(sort $(ALL_FLAVORS)) ; do echo "  $$a" ; done
 
 info:
 	@echo "--- flavor=$(FLAVOR) arch=$(CONFIG_ARCH) mach=$(CONFIG_MACH) ---"
