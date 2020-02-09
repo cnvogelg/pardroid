@@ -60,9 +60,9 @@
 #define PROTO_WFUNC_READ_CHN_INDEX              0x06
 #define PROTO_WFUNC_READ_CHN_MTU                0x07
 #define PROTO_WFUNC_READ_CHN_MAX_WORDS          0x08
-#define PROTO_WFUNC_READ_CHN_STATUS             0x09
-#define PROTO_WFUNC_READ_CHN_MODE               0x0a
-#define PROTO_WFUNC_READ_CHN_DEF_MTU            0x0b
+#define PROTO_WFUNC_READ_CHN_MODE               0x09
+#define PROTO_WFUNC_READ_CHN_DEF_MTU            0x0a
+#define PROTO_WFUNC_READ_CHN_DEV_STATE          0x0b
 #define PROTO_WFUNC_READ_CHN_ERROR_CODE         0x0c
 #define PROTO_WFUNC_READ_USER                   0x0d
 

@@ -2,6 +2,10 @@
 #include "arch.h"
 #include "autoconf.h"
 
+#define DEBUG CONFIG_DEBUG_PAMELA
+
+#include "debug.h"
+
 #include "channel.h"
 #include "handler.h"
 #include "status.h"
@@ -12,12 +16,14 @@ static channel_ptr_t get_channel(u08 id)
   if(chn != NULL) {
     // not attached?
     if(chn->handler == NULL) {
+      DS("[!NO_HND]");
       channel_set_error_code(id, CHANNEL_ERROR_ATTACH);
       return NULL;
     }
     return chn;
   } else {
-    channel_set_error_code(id, CHANNEL_ERROR_HANDLER_OPEN);
+    DS("[!NO_CHN]");
+    channel_set_error_code(id, CHANNEL_ERROR_NO_CHANNEL);
     return NULL;
   }
 }
@@ -27,7 +33,8 @@ static channel_ptr_t get_channel(u08 id)
 void channel_init(channel_ptr_t chn, handler_ptr_t handler)
 {
   if(chn != NULL) {
-    chn->state = CHANNEL_STATE_ATTACHED;
+    chn->dev_state = CHANNEL_DEV_STATE_AVAILABLE;
+    chn->flags = CHANNEL_FLAGS_NONE;
     chn->error_code = CHANNEL_ERROR_NONE;
     chn->mtu = 0;
     chn->handler = handler;
@@ -43,7 +50,7 @@ void channel_work(u08 id)
     if(hnd != NULL) {
       hnd_work_func_t func = HANDLER_FUNC_WORK(hnd);
       if(func != NULL) {
-        if((chn->state & CHANNEL_STATE_OPENED)==CHANNEL_STATE_OPENED) {
+        if(chn->dev_state == CHANNEL_DEV_STATE_READY) {
           func(id);
         }
       }
@@ -74,7 +81,8 @@ void channel_open(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // update status
-  chn->state |= CHANNEL_STATE_OPENED;
+  chn->dev_state = CHANNEL_DEV_STATE_READY;
+  chn->flags = CHANNEL_FLAGS_NONE;
   chn->tr_num_words = 0;
   chn->tr_got_words = 0;
   chn->tr_offset = 0;
@@ -98,7 +106,7 @@ void channel_close(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // update status
-  chn->state &= ~CHANNEL_STATE_OPENED;
+  chn->dev_state = CHANNEL_DEV_STATE_AVAILABLE;
 
   // call handler
   hnd_close_func_t func = HANDLER_FUNC_CLOSE(handler);
@@ -116,7 +124,7 @@ void channel_reset(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // reset status
-  chn->state = CHANNEL_STATE_ATTACHED;
+  chn->dev_state = CHANNEL_DEV_STATE_AVAILABLE;
 
   // call handler
   hnd_reset_func_t func = HANDLER_FUNC_RESET(handler);
@@ -151,6 +159,15 @@ u16 channel_get_mode(u08 id)
   return HANDLER_GET_MODE(handler);
 }
 
+u08 channel_get_dev_state(u08 id)
+{
+  channel_ptr_t chn = get_channel(id);
+  if(chn == NULL) {
+    return CHANNEL_DEV_STATE_UNAVAILABLE;
+  }
+  return chn->dev_state;
+}
+
 u16 channel_get_def_mtu(u08 id)
 {
   channel_ptr_t chn = get_channel(id);
@@ -160,6 +177,17 @@ u16 channel_get_def_mtu(u08 id)
   handler_ptr_t handler = chn->handler;
 
   return HANDLER_GET_DEF_MTU(handler);
+}
+
+u16 channel_get_max_words(u08 id)
+{
+  channel_ptr_t chn = get_channel(id);
+  if(chn == NULL) {
+    return 0;
+  }
+  handler_ptr_t handler = chn->handler;
+
+  return HANDLER_GET_MAX_WORDS(handler);
 }
 
 u16 channel_get_mtu(u08 id)
@@ -198,7 +226,6 @@ u16 channel_get_error_code(u08 id)
   u16 code = chn->error_code;
   status_clr_error_flag(id);
   chn->error_code = 0;
-  chn->state &= ~CHANNEL_STATE_ERROR;
   return code;
 }
 
@@ -210,7 +237,7 @@ void channel_set_error_code(u08 id, u16 error_code)
     return;
   }
   chn->error_code = error_code;
-  chn->state |= CHANNEL_STATE_ERROR;
+  chn->dev_state = CHANNEL_DEV_STATE_ERROR;
   status_set_error_flag(id);
 }
 
@@ -224,7 +251,7 @@ u16 channel_read_begin(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if(chn->state & CHANNEL_STATE_OP_MASK) {
+  if(chn->flags & CHANNEL_FLAGS_OP_MASK) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return 0;
   }
@@ -239,7 +266,7 @@ u16 channel_read_begin(u08 id)
   // setup transfer state
   chn->tr_num_words = num_words;
   chn->tr_got_words = 0;
-  chn->state |= CHANNEL_STATE_RX_OP;
+  chn->flags |= CHANNEL_FLAGS_RX_OP;
   return num_words;
 }
 
@@ -252,7 +279,7 @@ u08 *channel_read_chunk_begin(u08 id, u16 *ret_size)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if((chn->state & CHANNEL_STATE_OP_MASK) != CHANNEL_STATE_RX_OP) {
+  if((chn->flags & CHANNEL_FLAGS_OP_MASK) != CHANNEL_FLAGS_RX_OP) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return NULL;
   }
@@ -283,7 +310,7 @@ void channel_read_chunk_end(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if((chn->state & CHANNEL_STATE_OP_MASK) != CHANNEL_STATE_RX_OP) {
+  if((chn->flags & CHANNEL_FLAGS_OP_MASK) != CHANNEL_FLAGS_RX_OP) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return;
   }
@@ -313,7 +340,7 @@ void channel_write_begin(u08 id, u16 num_words)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if(chn->state & CHANNEL_STATE_OP_MASK) {
+  if(chn->flags & CHANNEL_FLAGS_OP_MASK) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return;
   }
@@ -327,7 +354,7 @@ void channel_write_begin(u08 id, u16 num_words)
   // setup transfer state
   chn->tr_num_words = num_words;
   chn->tr_got_words = 0;
-  chn->state |= CHANNEL_STATE_TX_OP;
+  chn->flags |= CHANNEL_FLAGS_TX_OP;
 }
 
 u08 *channel_write_chunk_begin(u08 id, u16 *ret_size)
@@ -339,7 +366,7 @@ u08 *channel_write_chunk_begin(u08 id, u16 *ret_size)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if((chn->state & CHANNEL_STATE_OP_MASK) != CHANNEL_STATE_TX_OP) {
+  if((chn->flags & CHANNEL_FLAGS_OP_MASK) != CHANNEL_FLAGS_TX_OP) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return NULL;
   }
@@ -370,7 +397,7 @@ void channel_write_chunk_end(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // is a transfer operation running?
-  if((chn->state & CHANNEL_STATE_OP_MASK) != CHANNEL_STATE_TX_OP) {
+  if((chn->flags & CHANNEL_FLAGS_OP_MASK) != CHANNEL_FLAGS_TX_OP) {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
     return;
   }
@@ -400,21 +427,21 @@ void channel_transfer_cancel(u08 id)
   handler_ptr_t handler = chn->handler;
 
   // abort read
-  u08 state = chn->state;
-  if((state & CHANNEL_STATE_RX_OP)==CHANNEL_STATE_RX_OP) {
+  u08 flags = chn->flags;
+  if((flags & CHANNEL_FLAGS_RX_OP)==CHANNEL_FLAGS_RX_OP) {
     hnd_read_end_func_t func = HANDLER_FUNC_READ_END(handler);
     if(func != NULL) {
       func(id, 1);
     }
-    chn->state &= ~CHANNEL_STATE_RX_OP;
+    chn->flags &= ~CHANNEL_FLAGS_RX_OP;
   }
   // abort write
-  else if((state & CHANNEL_STATE_TX_OP)==CHANNEL_STATE_TX_OP) {
+  else if((flags & CHANNEL_FLAGS_TX_OP)==CHANNEL_FLAGS_TX_OP) {
     hnd_write_end_func_t func = HANDLER_FUNC_WRITE_END(handler);
     if(func != NULL) {
       func(id, 1);
     }
-    chn->state &= ~CHANNEL_STATE_TX_OP;
+    chn->flags &= ~CHANNEL_FLAGS_TX_OP;
   }
   else {
     channel_set_error_code(id, CHANNEL_ERROR_OP_RUNNING);
