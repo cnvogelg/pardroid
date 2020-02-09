@@ -591,8 +591,8 @@ _proto_low_write_block:
         setup_port_regs
 
         ; sync with slave
-        check_rak_hi    plrw_end
-        check_busy      plrw_end
+        check_rak_hi    plmw_end
+        check_busy      plmw_end
         set_cmd         d0
         clk_lo
         wait_rak_lo_busy  plmw_abort
@@ -602,10 +602,13 @@ _proto_low_write_block:
         bclr            d3,d4 ; d4 = clk_lo
         bset            d3,d5 ; d5 = clk_hi
 
-plmw_chunks:
+plmw_chunk:
         ; get current d0=chunk size and a0=buffer pointer
         move.l          (a2)+,d0
         move.l          (a2)+,a0
+        ; empty chunk?
+        tst.w           d0
+        beq.s           plmw_empty
         ; adjust chunk size if total size is smaller
         cmp.w           d0,d1
         bhi.s           plmw_skip
@@ -627,14 +630,14 @@ plmw_loop:
         clk_set         d4
 
         dbra            d0,plmw_loop
-
+plmw_empty:
         ; end?
         tst.w           d1
-        beq.s           plmr_done
+        beq.s           plmw_done
 
         ; next chunk
         move.l          (a2),a2
-        bra.s           plmr_chunk
+        bra.s           plmw_chunk
 
 plmw_done:
         ; ok
@@ -684,6 +687,9 @@ plmr_chunk:
         ; get current d0=chunk size and a0=buffer pointer
         move.l          (a2)+,d0
         move.l          (a2)+,a0
+        ; empty chunk
+        tst.w           d0
+        beq.s           plmr_empty
         ; adjust chunk size if total size is smaller
         cmp.w           d0,d1
         bhi.s           plmr_skip
@@ -703,7 +709,7 @@ plmr_loop:
         clk_set         d6
         get_data        (a0)+
         dbra            d0,plmr_loop
-
+plmr_empty:
         ; end?
         tst.w           d1
         beq.s           plmr_done
