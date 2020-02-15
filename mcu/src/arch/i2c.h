@@ -8,6 +8,6 @@ extern u08 i2c_read(u08 addr, u08 *data, u16 len);
 extern u08 i2c_start(u08 addr, u08 write);
 extern void i2c_stop(void);
 extern u08 i2c_write_byte(u08 data);
-extern u08 i2c_read_byte(u08 ack);
+extern u08 i2c_read_byte(u08 ack, u08 *data);
 
 #endif

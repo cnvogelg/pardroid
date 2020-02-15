@@ -85,7 +85,7 @@ u08 i2c_write_byte(u08 data)
 	return 0;
 }
 
-u08 i2c_read_byte(u08 ack)
+u08 i2c_read_byte(u08 ack, u08 *data)
 {
 	// start read
 	u08 val = (1<<TWINT) | (1<<TWEN); 
@@ -94,7 +94,8 @@ u08 i2c_read_byte(u08 ack)
 	}
 	TWCR = val;
 	while( !(TWCR & (1<<TWINT)) );
-	return TWDR;
+	*data = TWDR;
+	return 0;
 }
 
 u08 i2c_write(u08 addr, const u08 *data, u16 len)
@@ -108,11 +109,11 @@ u08 i2c_write(u08 addr, const u08 *data, u16 len)
 	for(u16 i=0;i<len;i++) {
 		res = i2c_write_byte(data[i]);
 		if(res)
-			return res;
+			break;
 	}
 
 	i2c_stop();
-	return 0;
+	return res;
 }
 
 u08 i2c_read(u08 addr, u08 *data, u16 len)
@@ -124,9 +125,11 @@ u08 i2c_read(u08 addr, u08 *data, u16 len)
 		return res;
 	
 	for(u16 i=len;i>=0;i--) {
-		data[i] = i2c_read_byte(i!=0);
+		res = i2c_read_byte(i!=0,&data[i]);
+		if(res)
+			break;
 	}
 
 	i2c_stop();
-	return 0;
+	return res;
 }
