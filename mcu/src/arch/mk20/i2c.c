@@ -63,7 +63,7 @@ void i2c_init(void)
   SIM_SCGC4 |= SIM_SCGC4_I2C0;
 
   // set frequency
-  I2C0_F = 0x28;
+  I2C0_F = 0x19;
 
   // glitch filter
   I2C0_FLT = 3;
