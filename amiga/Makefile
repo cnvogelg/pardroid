@@ -24,8 +24,12 @@ INCLUDES+=src/device/shared src/device/pamela src/device/test
 VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
-PARIO_SRCS = pario.c pario_irq.s
-PROTO_SRCS = proto_low.s proto_low_cfg.c proto_env.c proto.c
+PARIO_SRCS = $(PARIO_$(CONFIG_MACH)_SRCS)
+PARIO_cia_SRCS = pario.c pario_irq.s
+PARIO_net_SRCS = pario.c
+PROTO_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) proto_env.c proto.c
+PROTO_cia_SRCS = proto_low.s proto_low_cfg.c
+PROTO_net_SRCS = proto_low.c
 TIMER_SRCS = timer.c
 TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c
@@ -35,19 +39,21 @@ PAMELA_SRCS = channel.c channel_ops.c
 
 # ---- mini tests
 # test-pario
+ifeq "$(CONFIG_MACH)" "cia"
 TEST_PARIO_SRCS = test-pario.c $(PARIO_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-pario,$(TEST_PARIO_SRCS)))
+endif
 
 # test-timer
 TEST_TIMER_SRCS = test-timer.c $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 
 # test-proto
-TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
+TEST_PROTO_SRCS = test-proto.c $(PROTO_SRCS) $(PARIO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,test-proto,$(TEST_PROTO_SRCS)))
 
 # test-udp
-TEST_UDP_SRCS = test-udp.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
+TEST_UDP_SRCS = test-udp.c $(BASE_SRCS)
 $(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
 
 # ----- tests
