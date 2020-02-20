@@ -45,6 +45,10 @@ $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 TEST_PARIO_SRCS = test-proto.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-proto,$(TEST_PARIO_SRCS)))
 
+# test-udp
+TEST_UDP_SRCS = test-udp.c $(PARIO_SRCS) $(PROTO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
+
 # ----- tests
 # pb-test-proto
 PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS) 
