@@ -1,6 +1,7 @@
 BASE_DIR=..
 # config
-CONFIG?=configs/amiga68000.config
+DEFAULT_CONFIG=m68k-cia
+CONFIG?=configs/$(DEFAULT_CONFIG).config
 COMPILER?=vbcc
 include $(BASE_DIR)/scripts/gencfg.mk
 # common defs
@@ -11,7 +12,7 @@ include scripts/toolchain-$(CONFIG_ARCH).mk
 # version
 include ../version.mk
 
-ALL_CONFIGS=configs/amiga68000.config
+ALL_CONFIGS=configs/m68k-cia.config
 ALL_COMPILERS=vbcc gcc
 
 # paths
@@ -24,7 +25,7 @@ VPATH=$(INCLUDES)
 
 BASE_SRCS = debug.c
 PARIO_SRCS = pario.c pario_irq.s
-PROTO_SRCS = proto_low.s proto_env.c proto.c
+PROTO_SRCS = proto_low.s proto_low_cfg.c proto_env.c proto.c
 TIMER_SRCS = timer.c
 TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c

@@ -8,14 +8,6 @@
 #include "proto.h"
 #include "proto_low.h"
 
-/* proto signals */
-#define clk_mask    sel_mask
-#define rak_mask    pout_mask
-#define cflg_mask   busy_mask
-
-#define DDR_DATA_OUT  0xff
-#define DDR_DATA_IN   0x00
-
 struct proto_handle {
     struct pario_port   *port;
     struct timer_handle *timer;
@@ -38,15 +30,8 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, str
   ph->timeout_ms = 500000UL;
   ph->sys_base = SysBase;
 
-  /* control: clk,cflg=out(1) rak=in*/
-  *port->ctrl_ddr |= port->clk_mask;
-  *port->ctrl_ddr &= ~(port->rak_mask | port->cflg_mask);
-  *port->ctrl_port |= port->all_mask;
-
-  /* data: port=0, ddr=0xff (OUT) */
-  *port->data_port = 0;
-  *port->data_ddr  = 0xff;
-
+  proto_low_config_port(port);
+  
   return ph;
 }
 

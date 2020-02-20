@@ -15,6 +15,7 @@
 #include "autoconf.h"
 #include "debug.h"
 #include "pario.h"
+#include "pario_port.h"
 #include "compiler.h"
 
 extern struct CIA ciaa, ciab;

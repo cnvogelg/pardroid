@@ -5,6 +5,7 @@
 #include "autoconf.h"
 #include "debug.h"
 #include "pario.h"
+#include "pario_port.h"
 
 int dosmain(void)
 {
