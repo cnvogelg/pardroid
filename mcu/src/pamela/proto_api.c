@@ -4,8 +4,9 @@
 #include "autoconf.h"
 #include "arch.h"
 
-#define DEBUG CONFIG_DEBUG_PROTO
+#define DEBUG CONFIG_DEBUG_PAMELA
 
+#include "debug.h"
 #include "proto_api.h"
 #include "channel.h"
 #include "fw_info.h"
@@ -51,12 +52,16 @@ u16 proto_api_wfunc_read(u08 num)
       return channel_id;
     case PROTO_WFUNC_READ_CHN_MTU:
       return channel_get_mtu(channel_id);
-    case PROTO_WFUNC_READ_CHN_ERROR_CODE:
-      return channel_get_error_code(channel_id);
+    case PROTO_WFUNC_READ_CHN_MAX_WORDS:
+      return channel_get_max_words(channel_id);
     case PROTO_WFUNC_READ_CHN_MODE:
       return channel_get_mode(channel_id);
     case PROTO_WFUNC_READ_CHN_DEF_MTU:
       return channel_get_def_mtu(channel_id);
+    case PROTO_WFUNC_READ_CHN_DEV_STATE:
+      return channel_get_dev_state(channel_id);
+    case PROTO_WFUNC_READ_CHN_ERROR_CODE:
+      return channel_get_error_code(channel_id);
     default:
       return 0;
   }

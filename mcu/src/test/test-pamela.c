@@ -166,7 +166,7 @@ void my_write_end(u08 chn, u08 cancelled)
 HANDLER_BEGIN(my_handler)
   // parameters
   .def_mtu = 64,
-  .max_size = MAX_WORDS,
+  .max_words = MAX_WORDS,
   .mode = CHANNEL_MODE_NONE,
   // functions
   .open = my_open,

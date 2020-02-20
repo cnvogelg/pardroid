@@ -2,15 +2,14 @@
 #define CHANNEL_H
 
 #include "proto_shared.h"
+#include "channel_shared.h"
 #include "handler.h"
 
-/* channel status is a bit field */
-#define CHANNEL_STATE_ATTACHED     0x01
-#define CHANNEL_STATE_OPENED       0x02
-#define CHANNEL_STATE_ERROR        0x04
-#define CHANNEL_STATE_RX_OP        0x40
-#define CHANNEL_STATE_TX_OP        0x80
-#define CHANNEL_STATE_OP_MASK      0xc0
+/* internal flags (mask) */
+#define CHANNEL_FLAGS_NONE         0x00
+#define CHANNEL_FLAGS_RX_OP        0x01
+#define CHANNEL_FLAGS_TX_OP        0x02
+#define CHANNEL_FLAGS_OP_MASK      0x03
 
 // attached & opened & no error
 #define CHANNEL_MASK_VALID          0x07
@@ -25,7 +24,8 @@
 #define CHANNEL_ERROR_NO_CHANNEL    0x06
 
 struct channel {
-  u08            state;        /* channel state */
+  u08            dev_state;    /* channel device state */
+  u08            flags;        /* internal flags */
   u16            error_code;   /* detailed error code */
   u16            mtu;          /* current MTU */
   handler_ptr_t  handler;      /* assigned handler or NULL */
@@ -51,8 +51,10 @@ extern void channel_reset(u08 id);
 
 extern void channel_set_mtu(u08 id, u16 mtu);
 extern u16  channel_get_mode(u08 id);
+extern u08  channel_get_dev_state(u08 id);
 extern u16  channel_get_def_mtu(u08 id);
 extern u16  channel_get_mtu(u08 id);
+extern u16  channel_get_max_words(u08 id);
 extern void channel_set_offset(u08 id, u32 offset);
 extern u32  channel_get_offset(u08 id);
 

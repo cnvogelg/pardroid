@@ -27,7 +27,7 @@ typedef u16  (*hnd_set_mtu_func_t)(u08 chan, u16 new_mtu);
 struct handler {
   // constant parameters of the handler
   u16                           def_mtu;
-  u16                           max_size;
+  u16                           max_words;
   u16                           mode;
 
   hnd_open_func_t               open;
@@ -55,7 +55,7 @@ typedef const handler_t *handler_ptr_t;
 #define HANDLER_END                  };
 
 #define HANDLER_GET_DEF_MTU(hnd)     read_rom_word(&hnd->def_mtu)
-#define HANDLER_GET_MAX_SIZE(hnd)    read_rom_word(&hnd->max_size)
+#define HANDLER_GET_MAX_WORDS(hnd)   read_rom_word(&hnd->max_words)
 #define HANDLER_GET_MODE(hnd)        read_rom_word(&hnd->mode)
 
 #define HANDLER_FUNC_OPEN(hnd)        ((hnd_open_func_t)read_rom_rom_ptr(&hnd->open))

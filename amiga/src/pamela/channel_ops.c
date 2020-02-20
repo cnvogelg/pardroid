@@ -29,7 +29,7 @@ static int get_dev_state(channel_handle_t *ch)
 {
     UWORD status;
 
-    int res = proto_wfunc_read(ch->proto, PROTO_WFUNC_READ_CHN_STATUS, &status);
+    int res = proto_wfunc_read(ch->proto, PROTO_WFUNC_READ_CHN_DEV_STATE, &status);
     if(res != PROTO_RET_OK) {
         ch->proto_error = res;
         return CHANNEL_RET_PROTO_ERROR;
