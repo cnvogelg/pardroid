@@ -19,6 +19,9 @@ struct pario_handle {
   BYTE                  signal;
 
   struct pario_port     port;
+  BYTE *                msg_buf;
+  ULONG                 msg_max;
+  ULONG                 msg_seq;
 };
 
 #endif

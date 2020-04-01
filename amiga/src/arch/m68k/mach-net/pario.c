@@ -18,6 +18,7 @@
 
 #define MY_PORT 2000
 #define PEER_PORT 2001
+#define BUF_SIZE 1024
 
 struct pario_handle *pario_init(struct Library *SysBase)
 {
@@ -32,6 +33,14 @@ struct pario_handle *pario_init(struct Library *SysBase)
   ph->peer_sock_fd = -1;
   /* store ref to myself in fake port */
   ph->port.handle = ph;
+
+  /* allocate message buffer */
+  ph->msg_max = BUF_SIZE;
+  ph->msg_buf = AllocMem(ph->msg_max, MEMF_CLEAR);
+  if(ph->msg_buf == NULL) {
+    pario_exit(ph);
+    return NULL;
+  }
 
   /* open bsdsocket.library */
   ph->socketBase = OpenLibrary("bsdsocket.library",0);
@@ -78,6 +87,10 @@ void pario_exit(struct pario_handle *ph)
   }
   if(ph->peer_sock_fd >= 0) {
     udp_close(ph, ph->peer_sock_fd);
+  }
+
+  if(ph->msg_buf != NULL) {
+    FreeMem(ph->msg_buf, ph->msg_max);
   }
 
   /* free handle */

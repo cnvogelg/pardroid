@@ -76,7 +76,7 @@ int udp_send(struct pario_handle *ph, int sock_fd, struct sockaddr_in *peer_addr
     return -1;
   }  
 
-  return num;
+  return 0;
 }
 
 int udp_recv(struct pario_handle *ph, int sock_fd, struct sockaddr_in *ret_peer_addr,
@@ -96,4 +96,20 @@ int udp_recv(struct pario_handle *ph, int sock_fd, struct sockaddr_in *ret_peer_
   }
 
   return num;
+}
+
+int udp_wait_recv(struct pario_handle *ph, int sock_fd, ULONG timeout_us)
+{
+    struct timeval tv = { .tv_usec = timeout_us, .tv_sec = 0};
+    long n;
+    fd_set read_fds;
+
+    FD_ZERO(&read_fds);
+    FD_SET(sock_fd, &read_fds);
+
+    n = WaitSelect(sock_fd + 1, &read_fds, NULL, NULL, &tv, NULL);
+    if(n==-1) {
+        D(("WaitSelect: failed!\n"));
+    }
+    return n;
 }

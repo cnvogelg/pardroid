@@ -9,5 +9,6 @@ extern int udp_send(struct pario_handle *ph, int sock_fd, struct sockaddr_in *pe
                     void *buffer, ULONG len);
 extern int udp_recv(struct pario_handle *ph, int sock_fd, struct sockaddr_in *ret_peer_addr,
                     void *buffer, ULONG len);
+extern int udp_wait_recv(struct pario_handle *ph, int sock_fd, ULONG timeout);
 
 #endif
