@@ -8,11 +8,12 @@
 #include <resources/cia.h>
 #include <hardware/cia.h>
 
+#include "autoconf.h"
+
 #ifdef CONFIG_DEBUG_PARIO
 #define KDEBUG
 #endif
 
-#include "autoconf.h"
 #include "debug.h"
 #include "pario.h"
 #include "pario_port.h"
