@@ -90,9 +90,11 @@ int udp_recv(struct pario_handle *ph, int sock_fd, struct sockaddr_in *ret_peer_
     return num;
   }
 
-  if(addr_len != sizeof(struct sockaddr_in)) {
-    D(("recvfrom: invalid addr len: %ld\n", addr_len));
-    return -1;
+  if(ret_peer_addr != NULL) {
+    if(addr_len != sizeof(struct sockaddr_in)) {
+      D(("recvfrom: invalid addr len: %ld\n", addr_len));
+      return -1;
+    }
   }
 
   return num;

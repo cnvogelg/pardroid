@@ -18,7 +18,7 @@
 
 #define MY_PORT 2000
 #define PEER_PORT 2001
-#define BUF_SIZE 1024
+#define BUF_SIZE 32768
 
 struct pario_handle *pario_init(struct Library *SysBase)
 {

@@ -37,7 +37,7 @@ static int msg_transmit(struct pario_port *port, UBYTE cmd, void *data,
   int res;
 
   // prepare packet
-  ULONG magic = 0x41504200 | cmd; // 'PAR'
+  ULONG magic = 0x41504200 | cmd; // 'APB' + cmd
   ULONG *ptr = (ULONG *)ph->msg_buf;
   *ptr = magic;
   *(ptr+1) = ph->msg_seq;
@@ -169,7 +169,34 @@ ASM int proto_low_read_block(REG(a0, struct pario_port *port),
                              REG(a2, proto_iov_t *msgiov),
                              REG(d1, UWORD num_words))
 {
-  return 0;
+  ULONG size = num_words * 2;
+  struct pario_handle *ph = port->handle;
+
+  // check size
+  if((size + 8) > ph->msg_max) {
+      struct pario_handle *ph = port->handle;
+      D(("read_block: size too large: %ld\n", size));
+      return RET_MSG_TOO_LARGE;
+  }
+
+  // recv but do not copy buffer
+  int result = msg_transmit(port, cmd, NULL, 0, size);
+  if(result != RET_OK) {
+    return result;
+  }
+
+  // copy to iov
+  UBYTE *buf = (UBYTE *)(ph->msg_buf + 8);
+  UBYTE *ptr;
+  while(msgiov != NULL) {
+    ptr = msgiov->data;
+    size = msgiov->num_words * 2;
+    memcpy(ptr, buf, size);
+    buf += size;
+    msgiov = msgiov->next;
+  }
+
+  return RET_OK;
 }
 
 ASM int proto_low_write_block(REG(a0, struct pario_port *port),
@@ -178,5 +205,27 @@ ASM int proto_low_write_block(REG(a0, struct pario_port *port),
                               REG(a2, proto_iov_t *msgiov),
                               REG(d1, UWORD num_words))
 {
-  return 0;
+  ULONG size = num_words * 2;
+  struct pario_handle *ph = port->handle;
+
+  // check size
+  if((size + 8) > ph->msg_max) {
+      struct pario_handle *ph = port->handle;
+      D(("write_block: size too large: %ld\n", size));
+      return RET_MSG_TOO_LARGE;
+  }
+
+  // copy to iov
+  UBYTE *buf = (UBYTE *)(ph->msg_buf + 8);
+  UBYTE *ptr;
+  while(msgiov != NULL) {
+    ptr = msgiov->data;
+    size = msgiov->num_words * 2;
+    memcpy(buf, ptr, size);
+    buf += size;
+    msgiov = msgiov->next;
+  }
+
+  // recv but do not copy buffer
+  return msg_transmit(port, cmd, NULL, size, 0);
 }
