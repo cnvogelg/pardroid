@@ -1,6 +1,6 @@
 #include <exec/types.h>
 #include <proto/exec.h>
-#include <proto/alib.h>
+#include <clib/alib_protos.h>
 
 #include "autoconf.h"
 

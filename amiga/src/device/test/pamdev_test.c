@@ -1,6 +1,6 @@
 #include <proto/exec.h>
 #include <proto/dos.h>
-#include <proto/alib.h>
+#include <clib/alib_protos.h>
 
 #include <dos/dos.h>
 #include <exec/exec.h>
@@ -22,7 +22,7 @@ int dosmain(void)
     struct RDArgs *args;
     char *device = "pambox.device";
     ULONG unit = 0;
- 
+
     /* First parse args */
     args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
     if(args == NULL) {
