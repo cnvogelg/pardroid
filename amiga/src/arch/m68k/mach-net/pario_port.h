@@ -1,15 +1,17 @@
 #ifndef PARIO_PORT_H
 #define PARIO_PORT_H
 
+#include "udp.h"
+
 struct pario_handle;
 
 struct pario_port {
-  struct pario_handle  *handle; 
+  struct pario_handle  *handle;
 };
 
 struct pario_handle {
   struct Library *      sysBase;
-  struct Library *      socketBase;
+  struct udp_handle     udp_handle;
   int                   my_sock_fd;
   int                   peer_sock_fd;
   struct sockaddr_in    my_addr;

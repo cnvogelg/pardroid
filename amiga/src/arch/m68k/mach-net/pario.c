@@ -38,43 +38,51 @@ struct pario_handle *pario_init(struct Library *SysBase)
   ph->msg_max = BUF_SIZE;
   ph->msg_buf = AllocMem(ph->msg_max, MEMF_CLEAR);
   if(ph->msg_buf == NULL) {
-    pario_exit(ph);
-    return NULL;
+    D(("udp_init: no mem!\n"))
+    goto init_failed;
   }
 
-  /* open bsdsocket.library */
-  ph->socketBase = OpenLibrary("bsdsocket.library",0);
-  if(ph->socketBase != NULL) {
-    D(("opened bsdsocket.library\n"));
-
-    /* setup my addr */
-    if(udp_addr_setup(ph, &ph->my_addr, "localhost", MY_PORT)==0) {
-      D(("setup my addr\n"));
-      /* setup peer addr */
-      if(udp_addr_setup(ph, &ph->peer_addr, "localhost", PEER_PORT)==0) {
-        D(("setup peer port\n"));
-        /* setup my bound socket */
-        ph->my_sock_fd = udp_open(ph, &ph->my_addr);
-        if(ph->my_sock_fd >= 0) {
-          D(("opened my socket\n"));
-          /* setup inbound peer socket */
-          ph->peer_sock_fd = udp_open(ph, NULL);
-          if(ph->peer_sock_fd != 0) {
-            /* all ok! */
-            return ph;
-          }
-        }
-      }
-    }
+  /* setup udp */
+  struct udp_handle *udp = &ph->udp_handle;
+  if(udp_init(udp,(struct ExecBase *)SysBase)!=0) {
+    D(("udp: init failed!\n"));
+    goto init_failed;
   }
 
+  /* setup my addr */
+  if(udp_addr_setup(udp, &ph->my_addr, "0.0.0.0", MY_PORT)!=0) {
+    D(("udp: setup my addr failed\n"));
+    goto init_failed;
+  }
+  /* setup peer addr */
+  if(udp_addr_setup(udp, &ph->peer_addr, "localhost", PEER_PORT)!=0) {
+    D(("udp: setup peer port failed\n"));
+    goto init_failed;
+  }
+
+  /* setup my bound socket */
+  ph->my_sock_fd = udp_open(udp, &ph->my_addr);
+  if(ph->my_sock_fd < 0) {
+    D(("open my socket failed\n"));
+    goto init_failed;
+  }
+  /* setup inbound peer socket */
+  ph->peer_sock_fd = udp_open(udp, NULL);
+  if(ph->peer_sock_fd < 0) {
+    D(("open peer socket failed\n"));
+    goto init_failed;
+  }
+
+  /* all ok */
+  return ph;
+
+init_failed:
   /* something failed */
   pario_exit(ph);
   return NULL;
 }
 
 #define SysBase ph->sysBase
-#define SocketBase ph->socketBase
 
 void pario_exit(struct pario_handle *ph)
 {
@@ -82,13 +90,20 @@ void pario_exit(struct pario_handle *ph)
     return;
   }
 
+  /* udp shutdown */
+  struct udp_handle *udp = &ph->udp_handle;
   if(ph->my_sock_fd >= 0) {
-    udp_close(ph, ph->my_sock_fd);
+    udp_close(udp, ph->my_sock_fd);
   }
   if(ph->peer_sock_fd >= 0) {
-    udp_close(ph, ph->peer_sock_fd);
+    udp_close(udp, ph->peer_sock_fd);
   }
 
+  if(udp->socketBase != NULL) {
+    udp_exit(udp);
+  }
+
+  /* msg buffer */
   if(ph->msg_buf != NULL) {
     FreeMem(ph->msg_buf, ph->msg_max);
   }
@@ -128,5 +143,5 @@ void pario_confirm_ack_irq(struct pario_handle *ph)
 {
 }
 
-// UDP helper 
+// UDP helper
 

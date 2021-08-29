@@ -26,6 +26,7 @@ int dosmain(void)
             PutStr("proto_init\n");
             struct proto_handle *ph = proto_init(port, th, (struct Library *)SysBase);
             if(ph != NULL) {
+                Printf("proto %ld\n", ph);
 
                 // actions
                 PutStr("bootloader");
@@ -84,16 +85,20 @@ int dosmain(void)
                 Printf("-> %ld\n", (LONG)error);
 
                 proto_exit(ph);
+                PutStr("proto done\n");
             } else {
                 PutStr("error setting up proto!\n");
             }
             timer_exit(th);
+            PutStr("timer done\n");
         } else {
             PutStr("error setting up timer!\n");
         }
         pario_exit(ph);
+        PutStr("pario done\n");
     } else {
         PutStr("error setting up pario!\n");
     }
+    PutStr("done\n");
     return 0;
 }

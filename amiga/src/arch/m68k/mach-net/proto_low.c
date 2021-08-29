@@ -27,7 +27,7 @@
 
 void proto_low_config_port(struct pario_port *port)
 {
-    // 
+    //
 }
 
 static int msg_transmit(struct pario_port *port, UBYTE cmd, void *data,
@@ -52,14 +52,15 @@ static int msg_transmit(struct pario_port *port, UBYTE cmd, void *data,
   ULONG msg_size = tx_size + 8;
 
   // send packet
-  res = udp_send(ph, ph->peer_sock_fd, &ph->peer_addr, ph->msg_buf, msg_size);
+  struct udp_handle *udp = &ph->udp_handle;
+  res = udp_send(udp, ph->peer_sock_fd, &ph->peer_addr, ph->msg_buf, msg_size);
   if(res != 0) {
     D(("transmit: error udp_send!\n"));
     return RET_RAK_INVALID;
   }
 
   // wait for response
-  res = udp_wait_recv(ph, ph->peer_sock_fd, 500000UL);
+  res = udp_wait_recv(udp, ph->peer_sock_fd, 0, 500000UL, NULL);
   if(res == 0) {
     D(("transmit: timeout!\n"));
     return RET_TIMEOUT;
@@ -70,7 +71,7 @@ static int msg_transmit(struct pario_port *port, UBYTE cmd, void *data,
   }
 
   // read response packet
-  res = udp_recv(ph, ph->peer_sock_fd, NULL, ph->msg_buf, ph->msg_max);
+  res = udp_recv(udp, ph->peer_sock_fd, NULL, ph->msg_buf, ph->msg_max);
   if(res < 0) {
     D(("transmit: recv error!\n"));
     return RET_RAK_INVALID;
@@ -126,7 +127,7 @@ ASM int proto_low_action_bench(REG(a0, struct pario_port *port),
                                REG(a1, volatile UBYTE *timeout_flag),
                                REG(a2, struct cb_data *cbd),
                                REG(d0, UBYTE cmd))
-{ 
+{
   int result = msg_transmit(port, cmd, NULL, 0, 0);
   return result;
 }
