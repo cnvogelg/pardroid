@@ -2,3 +2,4 @@ BUILD
 DIST
 parbox-*.zip
 install
+__pycache__/

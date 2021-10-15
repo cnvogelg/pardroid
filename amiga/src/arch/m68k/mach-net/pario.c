@@ -1,7 +1,7 @@
 #define __NOLIBBASE__
 #include <proto/exec.h>
 #include <libraries/bsdsocket.h>
-#include <proto/bsdsocket.h>
+#include <clib/alib_protos.h>
 
 #include "autoconf.h"
 
@@ -14,11 +14,18 @@
 
 #include "pario.h"
 #include "pario_port.h"
-#include "udp.h"
+#include "sim_msg.h"
 
-#define MY_PORT 2000
-#define PEER_PORT 2001
-#define BUF_SIZE 32768
+
+SAVEDS static void task_main(void);
+
+static APTR *get_my_user_data(void)
+{
+  /* retrieve global sys base */
+  struct Library *SysBase = *((struct Library **)4);
+  struct Task *task = FindTask(NULL);
+  return task->tc_UserData;
+}
 
 struct pario_handle *pario_init(struct Library *SysBase)
 {
@@ -29,10 +36,6 @@ struct pario_handle *pario_init(struct Library *SysBase)
     return NULL;
   }
   ph->sysBase = SysBase;
-  ph->my_sock_fd = -1;
-  ph->peer_sock_fd = -1;
-  /* store ref to myself in fake port */
-  ph->port.handle = ph;
 
   /* allocate message buffer */
   ph->msg_max = BUF_SIZE;
@@ -42,34 +45,10 @@ struct pario_handle *pario_init(struct Library *SysBase)
     goto init_failed;
   }
 
-  /* setup udp */
-  struct udp_handle *udp = &ph->udp_handle;
-  if(udp_init(udp,(struct ExecBase *)SysBase)!=0) {
-    D(("udp: init failed!\n"));
-    goto init_failed;
-  }
-
-  /* setup my addr */
-  if(udp_addr_setup(udp, &ph->my_addr, "0.0.0.0", MY_PORT)!=0) {
-    D(("udp: setup my addr failed\n"));
-    goto init_failed;
-  }
-  /* setup peer addr */
-  if(udp_addr_setup(udp, &ph->peer_addr, "localhost", PEER_PORT)!=0) {
-    D(("udp: setup peer port failed\n"));
-    goto init_failed;
-  }
-
-  /* setup my bound socket */
-  ph->my_sock_fd = udp_open(udp, &ph->my_addr);
-  if(ph->my_sock_fd < 0) {
-    D(("open my socket failed\n"));
-    goto init_failed;
-  }
-  /* setup inbound peer socket */
-  ph->peer_sock_fd = udp_open(udp, NULL);
-  if(ph->peer_sock_fd < 0) {
-    D(("open peer socket failed\n"));
+  /* alloc sim_msg for commands */
+  int res = sim_msg_client_init(&ph->hnd_cmd);
+  if(res < 0) {
+    D(("sim_msg: cmd: failed: %ld\n", res));
     goto init_failed;
   }
 
@@ -90,18 +69,8 @@ void pario_exit(struct pario_handle *ph)
     return;
   }
 
-  /* udp shutdown */
-  struct udp_handle *udp = &ph->udp_handle;
-  if(ph->my_sock_fd >= 0) {
-    udp_close(udp, ph->my_sock_fd);
-  }
-  if(ph->peer_sock_fd >= 0) {
-    udp_close(udp, ph->peer_sock_fd);
-  }
-
-  if(udp->socketBase != NULL) {
-    udp_exit(udp);
-  }
+  /* free sim_msg cmd */
+  sim_msg_client_exit(&ph->hnd_cmd);
 
   /* msg buffer */
   if(ph->msg_buf != NULL) {
@@ -116,12 +85,24 @@ int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE sign
 {
   ph->sig_task = sigTask;
   ph->signal = signal;
+  SetSignal(0, 1 << ph->signal);
+
+  /* setup status task */
+  Forbid();
+  ph->recv_task = CreateTask("pario_sim", 0, (CONST APTR)task_main, 8000);
+  ph->recv_task->tc_UserData = ph;
+  Permit();
+
   return 0;
 }
 
 void pario_cleanup_ack_irq(struct pario_handle *ph)
 {
-  // nothing to do
+  /* kill status task */
+
+
+  ph->sig_task = NULL;
+  ph->signal = -1;
 }
 
 struct pario_port *pario_get_port(struct pario_handle *ph)
@@ -131,17 +112,52 @@ struct pario_port *pario_get_port(struct pario_handle *ph)
 
 UWORD pario_get_ack_irq_counter(struct pario_handle *ph)
 {
-  return 0;
+  return ph->irq_cnt;
 }
 
 UWORD pario_get_signal_counter(struct pario_handle *ph)
 {
-   return 0;
+   return ph->sig_cnt;
 }
 
 void pario_confirm_ack_irq(struct pario_handle *ph)
 {
+  ph->sent_signal = 0;
+  SetSignal(0, 1 << ph->signal);
 }
 
-// UDP helper
+SAVEDS static void task_main(void)
+{
+  struct pario_handle *ph = (struct pario_handle *)get_my_user_data();
+  D(("recv_main: %ld\n", ph));
+
+  struct sim_msg_handle hnd;
+  int res = sim_msg_client_init(&hnd);
+
+  if(res==0) {
+
+    /* main loop */
+    ULONG status = 0;
+    while(1) {
+      // get next event
+      res = sim_msg_client_do_status(&hnd, &status);
+      if(res == 0) {
+
+      } else {
+        D(("sim_msg: status: do failed: %ld\n", res));
+      }
+    }
+
+    sim_msg_client_exit(&hnd);
+  } else {
+    D(("sim_msg: status: init failed: %ld\n", res));
+  }
+
+  /* kill myself */
+  D(("Task: die\n"));
+  struct Task *me = FindTask(NULL);
+  DeleteTask(me);
+  Wait(0);
+  D(("Task: NEVER!\n"));
+}
 

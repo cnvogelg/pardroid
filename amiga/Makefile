@@ -26,7 +26,7 @@ VPATH=$(INCLUDES)
 BASE_SRCS = debug.c
 PARIO_SRCS = $(PARIO_$(CONFIG_MACH)_SRCS)
 PARIO_cia_SRCS = pario.c pario_irq.s
-PARIO_net_SRCS = pario.c
+PARIO_net_SRCS = pario.c sim_msg.c
 PROTO_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) proto_env.c proto.c
 PROTO_cia_SRCS = proto_low.s proto_low_cfg.c
 PROTO_net_SRCS = proto_low.c udp.c
@@ -58,7 +58,7 @@ $(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
 
 # ----- tests
 # pb-test-proto
-PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS) 
+PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS)
 PB_TEST_PROTO_SRCS += proto-testsuite-msg.c proto-testsuite-event.c
 PB_TEST_PROTO_SRCS += proto-testsuite-ext.c
 PB_TEST_PROTO_SRCS += proto-testsuite.c
@@ -66,7 +66,7 @@ $(eval $(call make-program,pb-test-proto,$(PB_TEST_PROTO_SRCS)))
 $(eval $(call dist-program,pb-test-proto))
 
 # pb-test-pamela
-PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PROTO_ENV_SRCS) $(PAMELA_SRCS) $(TEST_SRCS) 
+PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PROTO_ENV_SRCS) $(PAMELA_SRCS) $(TEST_SRCS)
 PB_TEST_PAMELA_SRCS += pamela-testsuite.c
 $(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
 $(eval $(call dist-program,pb-test-pamela))
@@ -82,6 +82,21 @@ $(eval $(call dist-program,pb-bench-proto))
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_ENV_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 $(eval $(call dist-program,pablo))
+
+# pario simulator
+ifeq "$(CONFIG_MACH)" "net"
+PARIO_SIM_SRCS = pario_sim.c sim_msg.c sim_pkt.c udp.c timer.c
+$(eval $(call make-program,pario_sim,$(PARIO_SIM_SRCS)))
+$(eval $(call dist-program,pario_sim))
+
+PARIO_SIM_TEST_SRCS = pario_sim_test.c sim_msg.c
+$(eval $(call make-program,pario_sim_test,$(PARIO_SIM_TEST_SRCS)))
+$(eval $(call dist-program,pario_sim_test))
+
+SIM_PKT_TEST_SRCS = sim_pkt_test.c sim_pkt.c udp.c timer.c
+$(eval $(call make-program,sim_pkt_test,$(SIM_PKT_TEST_SRCS)))
+$(eval $(call dist-program,sim_pkt_test))
+endif
 
 # ----- bootstrap
 # boot.bin
