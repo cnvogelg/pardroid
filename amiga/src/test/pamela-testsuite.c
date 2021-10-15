@@ -192,8 +192,7 @@ int test_channel_read_func(channel_handle_t *ch, test_t *t, test_param_t *p)
 
     UWORD num_words = (UWORD)size >> 1;
     channel_message_t msg = {
-        .data.data = buf,
-        .data.num_words = num_words,
+        .data = buf,
         .num_words = num_words,
         .operation = CHANNEL_OP_READ
     };
@@ -232,8 +231,7 @@ int test_channel_write_func(channel_handle_t *ch, test_t *t, test_param_t *p)
 
     UWORD num_words = (UWORD)size >> 1;
     channel_message_t msg = {
-        .data.data = buf,
-        .data.num_words = num_words,
+        .data = buf,
         .num_words = num_words,
         .operation = CHANNEL_OP_WRITE
     };

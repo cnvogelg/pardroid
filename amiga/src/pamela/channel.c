@@ -216,13 +216,13 @@ int channel_transfer(channel_handle_t *ch, channel_message_t *msg)
         return CHANNEL_RET_WRONG_MSG;
     }
     if(ch->state != CHANNEL_STATE_IDLE) {
-        return CHANNEL_RET_WRONG_STATE; 
+        return CHANNEL_RET_WRONG_STATE;
     }
 
     ch->state = CHANNEL_STATE_TRANSFER;
     ch->tr_msg = msg;
     ch->tr_words = 0;
-    ch->tr_iov = msg->data;
+    ch->tr_buf = msg->data;
     return CHANNEL_RET_OK;
 }
 

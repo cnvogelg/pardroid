@@ -50,8 +50,8 @@ int pamela_get_mtu(pamela_handle_t *ph, UBYTE chan, UWORD *mtu);
 int pamela_set_mtu(pamela_handle_t *ph, UBYTE chan, WORD mtu);
 
 /* message I/O with MTU checking - return PROTO errors! */
-extern int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
-extern int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov);
+extern int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, UBYTE *buf);
+extern int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, UBYTE *buf);
 extern int pamela_msg_write_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
 extern int pamela_msg_read_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *num_words);
 

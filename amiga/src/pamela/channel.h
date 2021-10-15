@@ -39,7 +39,7 @@ typedef struct channel_handle channel_handle_t;
 
 // message
 struct channel_message {
-    proto_iov_t data;
+    UBYTE      *data;
     UWORD       num_words;
     UWORD       operation;
     ULONG       offset;

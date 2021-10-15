@@ -12,7 +12,6 @@
 #include "debug.h"
 
 #include "pario.h"
-#include "proto_iov.h"
 #include "proto_low.h"
 #include "pario_port.h"
 #include "proto_shared.h"
@@ -102,7 +101,7 @@ ASM int proto_low_write_long(REG(a0, struct pario_port *port),
 ASM int proto_low_read_block(REG(a0, struct pario_port *port),
                              REG(a1, volatile UBYTE *timeout_flag),
                              REG(d0, UBYTE cmd),
-                             REG(a2, proto_iov_t *msgiov),
+                             REG(a2, UBYTE *buf),
                              REG(d1, UWORD num_words))
 {
   ULONG size = num_words * 2;
@@ -133,7 +132,7 @@ ASM int proto_low_read_block(REG(a0, struct pario_port *port),
 ASM int proto_low_write_block(REG(a0, struct pario_port *port),
                               REG(a1, volatile UBYTE *timeout_flag),
                               REG(d0, UBYTE cmd),
-                              REG(a2, proto_iov_t *msgiov),
+                              REG(a2, UBYTE *buf),
                               REG(d1, UWORD num_words))
 {
   ULONG size = num_words * 2;

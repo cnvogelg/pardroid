@@ -22,7 +22,7 @@ struct channel_handle
     UWORD               req_words;
 
     UWORD               tr_words;
-    proto_iov_t         tr_iov;
+    UBYTE              *tr_buf;
 
     int                 error_code;
     int                 proto_error;

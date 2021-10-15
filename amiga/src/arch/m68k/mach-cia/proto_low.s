@@ -411,7 +411,7 @@ plrw_abort:
         bra.s    plrw_end
 
 
-; --- proto_low_write_lonf ---
+; --- proto_low_write_long ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to data
@@ -514,7 +514,7 @@ plrr_abort:
         bra.s    plrr_end
 
 
-; --- proto_low_read_lonf ---
+; --- proto_low_read_long ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
 ;      a2 = ptr to test byte
@@ -576,16 +576,10 @@ plrrl_abort:
 ; --- proto_low_write_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to proto_node_iov
+;      a2 = ptr to data
 ;      d0 = cmd
 ;      d1 = num_words
 ; out: d0 = result
-;
-; node:
-; +0:  ULONG  chunk_words
-; +4:  UBYTE  *chunk_data
-; +8:  node   *next_node
-;
 _proto_low_write_block:
         movem.l d2-d7/a2-a6,-(sp)
         setup_port_regs
@@ -602,23 +596,8 @@ _proto_low_write_block:
         bclr            d3,d4 ; d4 = clk_lo
         bset            d3,d5 ; d5 = clk_hi
 
-plmw_chunk:
-        ; get current d0=chunk size and a0=buffer pointer
-        move.l          (a2)+,d0
-        move.l          (a2)+,a0
-        ; empty chunk?
-        tst.w           d0
-        beq.s           plmw_empty
-        ; adjust chunk size if total size is smaller
-        cmp.w           d0,d1
-        bhi.s           plmw_skip
-        ; use total size as chunk size
-        move.w          d1,d0
- plmw_skip:      
-        ; adjust total size
-        sub.w           d0,d1
         ; enter chunk copy loop
-        subq.w          #1,d0 ; for dbra
+        subq.w          #1,d1 ; for dbra
 
         ; data block loop
 plmw_loop:
@@ -629,17 +608,8 @@ plmw_loop:
         set_data        (a0)+
         clk_set         d4
 
-        dbra            d0,plmw_loop
-plmw_empty:
-        ; end?
-        tst.w           d1
-        beq.s           plmw_done
+        dbra            d1,plmw_loop
 
-        ; next chunk
-        move.l          (a2),a2
-        bra.s           plmw_chunk
-
-plmw_done:
         ; ok
         moveq   #RET_OK,d0
 
@@ -659,7 +629,7 @@ plmw_abort:
 ; --- proto_low_read_block ---
 ; in:  a0 = port ptr
 ;      a1 = timeout byte ptr
-;      a2 = ptr to proto_node_iov (see above)
+;      a2 = ptr to data
 ;      d0 = cmd byte
 ;      d1 = num_words
 ; out: d0 = result
@@ -683,23 +653,8 @@ _proto_low_read_block:
         bclr            d3,d4 ; d4 = clk_lo
         bset            d3,d6 ; d6 = clk_hi
 
-plmr_chunk:
-        ; get current d0=chunk size and a0=buffer pointer
-        move.l          (a2)+,d0
-        move.l          (a2)+,a0
-        ; empty chunk
-        tst.w           d0
-        beq.s           plmr_empty
-        ; adjust chunk size if total size is smaller
-        cmp.w           d0,d1
-        bhi.s           plmr_skip
-        ; use total size as chunk size
-        move.w          d1,d0
- plmr_skip:      
-        ; adjust total size
-        sub.w           d0,d1
         ; enter chunk copy loop
-        subq.w          #1,d0 ; for dbra
+        subq.w          #1,d1 ; for dbra
 
 plmr_loop:
         ; odd byte
@@ -708,17 +663,8 @@ plmr_loop:
         ; even byte
         clk_set         d6
         get_data        (a0)+
-        dbra            d0,plmr_loop
-plmr_empty:
-        ; end?
-        tst.w           d1
-        beq.s           plmr_done
+        dbra            d1,plmr_loop
 
-        ; next chunk
-        move.l          (a2),a2
-        bra.s           plmr_chunk
-
-plmr_done:
         ; ok
         moveq   #RET_OK,d0
 

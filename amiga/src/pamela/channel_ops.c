@@ -20,7 +20,7 @@ static int set_channel_index(channel_handle_t *ch)
     int res = proto_wfunc_write(ch->proto, PROTO_WFUNC_WRITE_CHN_INDEX, ch->id);
     if(res != PROTO_RET_OK) {
         ch->proto_error = res;
-        return CHANNEL_RET_PROTO_ERROR;   
+        return CHANNEL_RET_PROTO_ERROR;
     }
     return CHANNEL_RET_OK;
 }
@@ -92,7 +92,7 @@ int channel_op_open(channel_handle_t *ch)
         return CHANNEL_RET_PROTO_ERROR;
     }
     ch->max_words = max_words;
-   
+
     /* get mode from device */
     UWORD mode = 0;
     res = proto_wfunc_read(ch->proto, PROTO_WFUNC_READ_CHN_MODE, &mode);
@@ -194,25 +194,8 @@ int channel_op_reset(channel_handle_t *ch)
 
 static int advance_iov(channel_handle_t *ch, UWORD size)
 {
-    proto_iov_t *iov = &ch->tr_iov;
-    while(size > 0) {
-        // iov is too small -> move on
-        if(iov->num_words < size) {
-            // no next one???
-            if(iov->next == NULL) {
-                return CHANNEL_RET_MSG_SIZE_MISMATCH;
-            }
-            size -= iov->num_words;
-            // advance to next one
-            *iov = *iov->next;
-        }
-        else {
-            // adjust current iov
-            iov->data += size<<1;
-            iov->num_words -= size;
-            size = 0;
-        }
-    }
+    ch->tr_buf += size<<1;
+    ch->tr_words -= size;
     return CHANNEL_RET_OK;
 }
 
@@ -228,7 +211,7 @@ static int read_op(channel_handle_t *ch)
             if(res != PROTO_RET_OK) {
                 ch->proto_error = res;
                 return CHANNEL_RET_PROTO_ERROR;
-            } 
+            }
         }
 
         // get message size
@@ -258,7 +241,7 @@ static int read_op(channel_handle_t *ch)
     }
 
     // transfer a chunk
-    int res = proto_chn_msg_readv(ch->proto, ch->id, &ch->tr_iov, size);
+    int res = proto_chn_msg_read(ch->proto, ch->id, ch->tr_buf, size);
     if(res != PROTO_RET_OK) {
         ch->proto_error = res;
         return CHANNEL_RET_PROTO_ERROR;
@@ -290,7 +273,7 @@ static int write_op(channel_handle_t *ch)
             if(res != PROTO_RET_OK) {
                 ch->proto_error = res;
                 return CHANNEL_RET_PROTO_ERROR;
-            } 
+            }
         }
 
         // send size of message
@@ -316,7 +299,7 @@ static int write_op(channel_handle_t *ch)
     }
 
     // transfer a chunk
-    int res = proto_chn_msg_writev(ch->proto, ch->id, &ch->tr_iov, size);
+    int res = proto_chn_msg_write(ch->proto, ch->id, ch->tr_buf, size);
     if(res != PROTO_RET_OK) {
         ch->proto_error = res;
         return CHANNEL_RET_PROTO_ERROR;
@@ -347,7 +330,7 @@ int channel_op_transfer(channel_handle_t *ch)
     }
     else {
         res = write_op(ch);
-    } 
+    }
 
     // transform device busy and stay in transfer
     if((res == CHANNEL_RET_PROTO_ERROR) && (ch->proto_error = PROTO_RET_DEVICE_BUSY)) {
@@ -364,7 +347,7 @@ int channel_op_transfer(channel_handle_t *ch)
 
         if(ch->transfer_cb != NULL) {
             ch->transfer_cb(ch, msg);
-        }   
+        }
     }
     return res;
 }
@@ -372,7 +355,7 @@ int channel_op_transfer(channel_handle_t *ch)
 int channel_op_cancel(channel_handle_t *ch)
 {
     channel_message_t *msg = ch->tr_msg;
-    
+
     // cancel state
     msg->result = CHANNEL_RET_CANCEL;
     msg->got_words -= ch->tr_words;

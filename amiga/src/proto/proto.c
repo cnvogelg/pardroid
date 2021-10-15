@@ -31,7 +31,7 @@ proto_handle_t *proto_init(struct pario_port *port, struct timer_handle *th, str
   ph->sys_base = SysBase;
 
   proto_low_config_port(port);
-  
+
   return ph;
 }
 
@@ -155,7 +155,7 @@ static int read_word(proto_handle_t *ph, UBYTE cmd, UWORD *data)
   int result = proto_low_read_word(port, timeout_flag, cmd, data);
   timer_stop(ph->timer);
 
-  return result;  
+  return result;
 }
 
 static int write_word(proto_handle_t *ph, UBYTE cmd, UWORD data)
@@ -230,7 +230,7 @@ int proto_lfunc_write(proto_handle_t *ph, UBYTE num, ULONG data)
   return write_long(ph, cmd, data);
 }
 
-int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWORD num_words)
+int proto_chn_msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
@@ -240,13 +240,13 @@ int proto_chn_msg_writev(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWO
   UBYTE cmd = chn + PROTO_CMD_CHN_WRITE_DATA;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_write_block(port, timeout_flag, cmd, msgiov, num_words);
+  int result = proto_low_write_block(port, timeout_flag, cmd, buf, num_words);
   timer_stop(ph->timer);
 
   return result;
 }
 
-int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWORD num_words)
+int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
 {
   struct pario_port *port = ph->port;
   volatile BYTE *timeout_flag = timer_get_flag(ph->timer);
@@ -256,30 +256,10 @@ int proto_chn_msg_readv(proto_handle_t *ph, UBYTE chn, proto_iov_t *msgiov, UWOR
   UBYTE cmd = chn + PROTO_CMD_CHN_READ_DATA;
 
   timer_start(ph->timer, ph->timeout_s, ph->timeout_ms);
-  int result = proto_low_read_block(port, timeout_flag, cmd, msgiov, num_words);
+  int result = proto_low_read_block(port, timeout_flag, cmd, buf, num_words);
   timer_stop(ph->timer);
 
   return result;
-}
-
-int proto_chn_msg_write(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
-{
-  proto_iov_t msgiov = {
-    num_words, /* chunk size */
-    buf,       /* chunk pointer */
-    NULL       /* next node */
-  };
-  return proto_chn_msg_writev(ph, chn, &msgiov, num_words);
-}
-
-int proto_chn_msg_read(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)
-{
-  proto_iov_t msgiov = {
-    num_words,  /* chunk size */
-    buf,        /* chunk pointer */
-    NULL        /* next node */
-  };
-  return proto_chn_msg_readv(ph, chn, &msgiov, num_words);
 }
 
 // extended commands

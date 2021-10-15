@@ -294,7 +294,7 @@ int pamela_set_mtu(pamela_handle_t *ph, UBYTE chan, WORD mtu)
 static int check_size(pamela_handle_t *ph, UBYTE chn, UWORD max_size)
 {
   UWORD mtu;
-  
+
   int res = pamela_get_mtu(ph, chn, &mtu);
   if(res != PROTO_RET_OK) {
     return res;
@@ -307,7 +307,7 @@ static int check_size(pamela_handle_t *ph, UBYTE chn, UWORD max_size)
   }
 }
 
-int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, UBYTE *buf)
 {
   UWORD max_size = (UWORD)msgiov->total_words;
   int res;
@@ -316,10 +316,10 @@ int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
   if(res != PROTO_RET_OK) {
     return res;
   }
-  return proto_msg_write(ph->proto, chn, msgiov);
+  return proto_msg_write(ph->proto, chn, buf);
 }
 
-int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
+int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, UBYTE *buf)
 {
   UWORD max_size = (UWORD)msgiov->total_words;
   int res;
@@ -328,7 +328,7 @@ int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, proto_iov_t *msgiov)
   if(res != PROTO_RET_OK) {
     return res;
   }
-  return proto_msg_read(ph->proto, chn, msgiov);
+  return proto_msg_read(ph->proto, chn, buf);
 }
 
 int pamela_msg_write_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words)

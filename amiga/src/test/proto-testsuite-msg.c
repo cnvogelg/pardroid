@@ -181,6 +181,7 @@ int test_msg_size_max(test_t *t, test_param_t *p)
   return msg_read_write(t, p, max_bytes);
 }
 
+#if 0
 int test_msg_size_chunks(test_t *t, test_param_t *p)
 {
   proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
@@ -371,6 +372,7 @@ int test_msg_size_chunks_len(test_t *t, test_param_t *p)
   test_buffer_free(mem_r);
   return 0;
 }
+#endif
 
 int test_msg_write(test_t *t, test_param_t *p)
 {
