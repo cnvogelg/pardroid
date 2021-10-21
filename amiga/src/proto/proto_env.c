@@ -5,16 +5,15 @@
 #include "compiler.h"
 #include "debug.h"
 
+#include "timer.h"
+#include "pario.h"
+#include "proto_atom.h"
 #include "proto_env.h"
-#include "proto_shared.h"
-#include "types.h"
-#include "arch.h"
 
 struct proto_env_handle {
   struct pario_handle *pario;
   struct timer_handle *timer;
-  struct proto_handle *proto;
-  struct pario_port *port;
+  proto_handle_t *proto;
   struct Library *sys_base;
   ULONG  ack_irq_sigmask;
   ULONG  timer_sigmask;
@@ -32,7 +31,6 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
   ph->pario = NULL;
   ph->timer = NULL;
   ph->proto = NULL;
-  ph->port = NULL;
   ph->sys_base = SysBase;
 
   ph->pario = pario_init(SysBase);
@@ -40,8 +38,6 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
     *res = PROTO_ENV_ERROR_INIT_PARIO;
     return NULL;
   }
-
-  ph->port = pario_get_port(ph->pario);
 
   ph->timer = timer_init(SysBase);
   if(ph->timer == NULL) {
@@ -52,7 +48,7 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
     return NULL;
   }
 
-  ph->proto = proto_init(ph->port, ph->timer, SysBase);
+  ph->proto = proto_atom_init(ph->pario, ph->timer, SysBase);
   if(ph->proto == NULL) {
     pario_exit(ph->pario);
     ph->pario = NULL;
@@ -73,7 +69,7 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
 void proto_env_exit(proto_env_handle_t *ph)
 {
   if(ph->proto != NULL) {
-    proto_exit(ph->proto);
+    proto_atom_exit(ph->proto);
     ph->proto = NULL;
   }
 

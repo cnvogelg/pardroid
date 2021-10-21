@@ -60,7 +60,7 @@ check_rak_hi  MACRO
 check_rak_lo  MACRO
         btst    d2,(a5)
         beq.s   \@
-        moveq   #RET_MSG_TOO_LARGE,d0
+        moveq   #RET_RAK_INVALID,d0
         bra     \1
 \@:
         ENDM

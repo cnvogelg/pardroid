@@ -26,10 +26,8 @@ VPATH=$(INCLUDES)
 BASE_SRCS = debug.c
 PARIO_SRCS = $(PARIO_$(CONFIG_MACH)_SRCS)
 PARIO_cia_SRCS = pario.c pario_irq.s
-PARIO_net_SRCS = pario.c sim_msg.c
-PROTO_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) proto_env.c proto.c
+PROTO_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) proto_atom.c proto_env.c
 PROTO_cia_SRCS = proto_low.s proto_low_cfg.c
-PROTO_net_SRCS = proto_low.c udp.c
 TIMER_SRCS = timer.c
 TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c
@@ -48,15 +46,21 @@ endif
 TEST_TIMER_SRCS = test-timer.c $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 
-# test-proto
-TEST_PROTO_SRCS = test-proto.c $(PROTO_SRCS) $(PARIO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-proto,$(TEST_PROTO_SRCS)))
+# test-proto-atom
+TEST_PROTO_ATOM_SRCS = test-proto-atom.c $(PROTO_SRCS) $(PARIO_SRCS) $(TIMER_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,test-proto-atom,$(TEST_PROTO_ATOM_SRCS)))
 
 # test-udp
 TEST_UDP_SRCS = test-udp.c $(BASE_SRCS)
 $(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
 
 # ----- tests
+# pb-test-proto-atom
+PB_TEST_PROTO_ATOM_SRCS = pb-test-proto-atom.c $(PROTO_ENV_SRCS) $(TEST_SRCS)
+PB_TEST_PROTO_ATOM_SRCS += proto-atom-testsuite.c
+$(eval $(call make-program,pb-test-proto-atom,$(PB_TEST_PROTO_ATOM_SRCS)))
+$(eval $(call dist-program,pb-test-proto-atom))
+
 # pb-test-proto
 PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS)
 PB_TEST_PROTO_SRCS += proto-testsuite-msg.c proto-testsuite-event.c
@@ -76,6 +80,9 @@ $(eval $(call dist-program,pb-test-pamela))
 PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PROTO_ENV_SRCS) $(BENCH_SRCS)
 $(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
 $(eval $(call dist-program,pb-bench-proto))
+
+# disabled for now
+ifeq "a" "b"
 
 # ----- tools
 # pablo
@@ -127,6 +134,8 @@ $(eval $(call dist-device,pamnet.device))
 PAMDEV_TEST_SRCS = pamdev_test.c
 $(eval $(call make-program,pamdev_test,$(PAMDEV_TEST_SRCS)))
 $(eval $(call dist-program,pamdev_test))
+
+endif
 
 # rules
 include scripts/common-rules.mk
