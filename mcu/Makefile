@@ -59,7 +59,7 @@ PROTO_SRCS = $(PROTO_ARCH_SRCS)
 ifdef CONFIG_BOOTSTRAP
 PROTO_SRCS += bootstrap.c bootrexx.c
 endif
-PROTO_SRCS += proto.c knok.c
+PROTO_SRCS += proto_atom.c knok.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -109,13 +109,16 @@ TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
 $(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
-# test-proto
-TEST_PROTO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PROTO_SRCS)
-TEST_PROTO_SRCS += test-proto.c
-$(eval $(call dist-pbl,test-proto-fw))
-$(eval $(call make-pbl,test-proto-fw))
-$(eval $(call dist-hex,test-proto-fw))
-$(eval $(call make-firmware,test-proto-fw,$(TEST_PROTO_SRCS),$(CONFIG_MAX_ROM)))
+# test-proto-atom
+TEST_PROTO_ATOM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
+TEST_PROTO_ATOM_SRCS += test-proto-atom.c
+#$(eval $(call dist-pbl,test-proto-atom-fw))
+#$(eval $(call make-pbl,test-proto-atom-fw))
+#$(eval $(call dist-hex,test-proto-atom-fw))
+$(eval $(call make-firmware,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_ROM)))
+
+# disabled for now
+ifeq "a" "b"
 
 # test-param
 TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
@@ -193,7 +196,10 @@ $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SI
 endif
 #endif
 
-DEFAULT_FIRMWARE=test-proto-fw
+# disable
+endif
+
+DEFAULT_FIRMWARE=test-proto-atom-fw
 
 # ---------- rules ----------
 include scripts/common-rules.mk
