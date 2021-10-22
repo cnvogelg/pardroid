@@ -9,6 +9,8 @@
 #define TEST_READ_BLOCK       6
 #define TEST_WRITE_BLOCK      7
 
+#define TEST_IRQ              8
+
 #define TEST_BUF_SIZE         512
 
 #endif

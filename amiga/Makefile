@@ -58,8 +58,12 @@ $(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
 # pb-test-proto-atom
 PB_TEST_PROTO_ATOM_SRCS = pb-test-proto-atom.c $(PROTO_ENV_SRCS) $(TEST_SRCS)
 PB_TEST_PROTO_ATOM_SRCS += proto-atom-testsuite.c
+PB_TEST_PROTO_ATOM_SRCS += proto-env-testsuite.c
 $(eval $(call make-program,pb-test-proto-atom,$(PB_TEST_PROTO_ATOM_SRCS)))
 $(eval $(call dist-program,pb-test-proto-atom))
+
+# disabled for now
+ifeq "a" "b"
 
 # pb-test-proto
 PB_TEST_PROTO_SRCS = pb-test-proto.c $(PROTO_ENV_SRCS) $(TEST_SRCS)
@@ -80,9 +84,6 @@ $(eval $(call dist-program,pb-test-pamela))
 PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PROTO_ENV_SRCS) $(BENCH_SRCS)
 $(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
 $(eval $(call dist-program,pb-bench-proto))
-
-# disabled for now
-ifeq "a" "b"
 
 # ----- tools
 # pablo

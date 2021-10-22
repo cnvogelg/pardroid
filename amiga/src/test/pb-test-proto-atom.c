@@ -16,6 +16,7 @@
 
 #include "test.h"
 #include "proto-atom-testsuite.h"
+#include "proto-env-testsuite.h"
 
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Verbose/S";
 typedef struct {
@@ -30,6 +31,7 @@ static params_t params;
 /* define tests */
 static test_t all_tests[] = {
   TESTS_PROTO_ATOM
+  TESTS_PROTO_ENV
   { NULL, NULL, NULL }
 };
 
