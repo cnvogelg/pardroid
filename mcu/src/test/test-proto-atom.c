@@ -54,9 +54,6 @@ static int buf_check(void)
 
 static void handle_cmd(u08 cmd)
 {
-  u16 wval;
-  u32 lval;
-
   switch(cmd) {
     case TEST_ACTION:
       proto_atom_action();
@@ -75,11 +72,15 @@ static void handle_cmd(u08 cmd)
       break;
 
     case TEST_WRITE_WORD:
-      wval = proto_atom_write_word();
 #ifdef FLAVOR_DEBUG
-      uart_send_pstring(PSTR("write word: "));
-      uart_send_hex_word(wval);
-      uart_send_crlf();
+      {
+        u16 wval = proto_atom_write_word();
+        uart_send_pstring(PSTR("write word: "));
+        uart_send_hex_word(wval);
+        uart_send_crlf();
+      }
+#else
+      proto_atom_write_word();
 #endif
       break;
 
@@ -92,11 +93,15 @@ static void handle_cmd(u08 cmd)
       break;
 
     case TEST_WRITE_LONG:
-      lval = proto_atom_write_long();
 #ifdef FLAVOR_DEBUG
-      uart_send_pstring(PSTR("write long: "));
-      uart_send_hex_long(lval);
-      uart_send_crlf();
+      {
+        u32 lval = proto_atom_write_long();
+        uart_send_pstring(PSTR("write long: "));
+        uart_send_hex_long(lval);
+        uart_send_crlf();
+      }
+#else
+      proto_atom_write_long();
 #endif
       break;
 

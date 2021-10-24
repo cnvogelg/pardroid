@@ -13,6 +13,11 @@ int test_write_long(test_t *t, test_param_t *p);
 int test_read_block(test_t *t, test_param_t *p);
 int test_write_block(test_t *t, test_param_t *p);
 
+int test_busy_action(test_t *t, test_param_t *p);
+int test_busy_word(test_t *t, test_param_t *p);
+int test_busy_long(test_t *t, test_param_t *p);
+int test_busy_block(test_t *t, test_param_t *p);
+
 #define TESTS_PROTO_ATOM \
   { test_action, "a", "action"}, \
   { test_action_no_busy, "anb", "action no busy"}, \
@@ -23,5 +28,9 @@ int test_write_block(test_t *t, test_param_t *p);
   { test_write_long, "wl", "write long"}, \
   { test_read_block, "rb", "read block"}, \
   { test_write_block, "wb", "write block"}, \
+  { test_busy_action, "ba", "busy vs action"}, \
+  { test_busy_word, "bw", "busy vs rw word"}, \
+  { test_busy_word, "bl", "busy vs rw long"}, \
+  { test_busy_word, "bb", "busy vs rw block"}, \
 
 #endif
