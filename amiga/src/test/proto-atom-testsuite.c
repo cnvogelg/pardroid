@@ -83,11 +83,11 @@ int test_read_word(test_t *t, test_param_t *p)
     return res;
   }
 
-   if (value != 0xcafe)
+   if (value != TEST_WORD)
   {
     p->error = "value mismatch";
     p->section = "compare";
-    sprintf(p->extra, "w=%04x r=%04x", 0xcafe, value);
+    sprintf(p->extra, "w=%04x r=%04x", TEST_WORD, value);
     return 1;
   }
 
@@ -125,11 +125,11 @@ int test_read_long(test_t *t, test_param_t *p)
     return res;
   }
 
-   if (value != 0xcafebabe)
+   if (value != TEST_LONG)
   {
     p->error = "value mismatch";
     p->section = "compare";
-    sprintf(p->extra, "w=%04lx r=%04lx", 0xcafebabeUL, value);
+    sprintf(p->extra, "w=%04lx r=%04lx", TEST_LONG, value);
     return 1;
   }
 
@@ -172,19 +172,23 @@ int test_read_block(test_t *t, test_param_t *p)
     return res;
   }
 
+  int errors = 0;
   for(int i=0;i<TEST_BUF_SIZE;i++) {
-    UBYTE val = (UBYTE)(i & 0xff);
+    UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
     if (buf[i] != val)
     {
       p->error = "value mismatch";
       p->section = "compare";
-      sprintf(p->extra, "@%ld: w=%04lx r=%04lx", (LONG)i, (ULONG)val, (ULONG)buf[i]);
-      return 1;
+      sprintf(p->extra, "@%ld: w=%04lx r=%04lx (errors=%d)", (LONG)i, (ULONG)val, (ULONG)buf[i], errors);
+      errors ++;
     }
   }
 
   test_buffer_free(buf);
 
+  if(errors > 0) {
+    return 1;
+  }
   return 0;
 }
 
@@ -200,7 +204,7 @@ int test_write_block(test_t *t, test_param_t *p)
   }
 
   for(int i=0;i<TEST_BUF_SIZE;i++) {
-    buf[i] = (UBYTE)(i & 0xff);
+    buf[i] = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
   }
 
   int res = proto_atom_write_block(proto, TEST_WRITE_BLOCK, buf, TEST_BUF_SIZE);

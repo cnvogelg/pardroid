@@ -99,7 +99,7 @@ u08 proto_atom_get_cmd(void)
 {
   // read command from bits 0..4 in idle byte
   u08 cmd = proto_low_get_cmd();
-  if(cmd == PROTO_NO_CMD) {
+  if((cmd == PROTO_NO_CMD) || (cmd==0)) {
     // no clock lined pulled -> idle
     return PROTO_NO_CMD;
   }

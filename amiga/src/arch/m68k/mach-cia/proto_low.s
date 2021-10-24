@@ -602,10 +602,10 @@ _proto_low_write_block:
         ; data block loop
 plmw_loop:
         ; odd byte
-        set_data        (a0)+
+        set_data        (a2)+
         clk_set         d5
         ; even byte
-        set_data        (a0)+
+        set_data        (a2)+
         clk_set         d4
 
         dbra            d1,plmw_loop
@@ -659,10 +659,10 @@ _proto_low_read_block:
 plmr_loop:
         ; odd byte
         clk_set         d4
-        get_data        (a0)+
+        get_data        (a2)+
         ; even byte
         clk_set         d6
-        get_data        (a0)+
+        get_data        (a2)+
         dbra            d1,plmr_loop
 
         ; ok

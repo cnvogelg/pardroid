@@ -18,6 +18,7 @@
 // constants
 #define TEST_BUF_SIZE         512
 #define TEST_WORD             0xbabe
-#define TEST_LONG             0xcafebabe
+#define TEST_LONG             0xcafebabeUL
+#define TEST_BYTE_OFFSET      0xab
 
 #endif

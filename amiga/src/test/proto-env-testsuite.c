@@ -132,7 +132,7 @@ static int run_event_sig(test_t *t, test_param_t *p)
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   /* trigger signal */
-  int res = proto_atom_action(proto, TEST_IRQ);
+  int res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
     p->error = proto_env_perror(res);
@@ -164,7 +164,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   proto_handle_t *proto = proto_env_get_proto(pb);
 
   /* trigger signal */
-  int res = proto_atom_action(proto, TEST_IRQ);
+  int res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
     p->error = proto_env_perror(res);
@@ -173,7 +173,7 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   }
 
   /* trigger signal 2 */
-  res = proto_atom_action(proto, TEST_IRQ);
+  res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
     p->error = proto_env_perror(res);

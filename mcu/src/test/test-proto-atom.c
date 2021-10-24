@@ -25,8 +25,31 @@ u08 buf[TEST_BUF_SIZE];
 static void buf_init(void)
 {
   for(u16 i=0;i<TEST_BUF_SIZE;i++) {
-    buf[i] = (u08)(i & 0xff);
+    buf[i] = (u08)((i + TEST_BYTE_OFFSET) & 0xff);
   }
+}
+
+static void buf_dump(void)
+{
+  for(u16 i=0;i<TEST_BUF_SIZE;i++) {
+    uart_send_hex_byte(buf[i]);
+    uart_send_spc();
+    if((i % 15)==15) {
+      uart_send_crlf();
+    }
+  }
+}
+
+static int buf_check(void)
+{
+  int errors = 0;
+  for(u16 i=0;i<TEST_BUF_SIZE;i++) {
+    u08 val = (u08)((i + TEST_BYTE_OFFSET) & 0xff);
+    if(val != buf[i]) {
+      errors++;
+    }
+  }
+  return errors;
 }
 
 static void handle_cmd(u08 cmd)
@@ -78,6 +101,7 @@ static void handle_cmd(u08 cmd)
       break;
 
     case TEST_READ_BLOCK:
+      buf_init();
       proto_atom_read_block(buf, TEST_BUF_SIZE);
 #ifdef FLAVOR_DEBUG
       uart_send_pstring(PSTR("read block"));
@@ -87,6 +111,9 @@ static void handle_cmd(u08 cmd)
 
     case TEST_WRITE_BLOCK:
       proto_atom_write_block(buf, TEST_BUF_SIZE);
+      if(buf_check() > 0) {
+        buf_dump();
+      }
 #ifdef FLAVOR_DEBUG
       uart_send_pstring(PSTR("write block"));
       uart_send_crlf();
@@ -159,8 +186,6 @@ int main(void)
   rom_info();
 
   proto_atom_init();
-
-  buf_init();
 
   while(1) {
       u08 cmd = proto_atom_get_cmd();
