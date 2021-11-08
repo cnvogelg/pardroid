@@ -7,38 +7,55 @@
 #include "debug.h"
 
 #include "knok.h"
+#include "knok_api.h"
 #include "strobe.h"
 #include "uart.h"
 #include "uartutil.h"
 #include "system.h"
 #include "timer.h"
 #include "led.h"
-#include "proto_shared.h"
-
-// get generated bootstrap code
-#ifdef CONFIG_BOOTSTRAP
-#include "bootstrap.h"
-#include "bootrexx.h"
-#endif
+#include "proto_dev_shared.h"
 
 #define SEND_OK                  0
 #define SEND_NOT_STARTED         1
 #define SEND_ABORTED             2
 #define SEND_NOT_FINISHED        3
 
-#ifdef CONFIG_BOOTSTRAP
-static u08 knok_upload(rom_pchar data, u16 size, rom_pchar title)
+#define BIND(x) __attribute__ ((weak, alias(#x)))
+
+// default handler for upload
+// re-implement these in your own code!
+static u08 knok_upload_byte_dummy(void)
+{
+  return '?';
+}
+
+static knok_api_upload_byte_func_t knok_upload_dummy(u16 *size)
+{
+  *size = 3;
+  return knok_upload_byte_dummy;
+}
+
+knok_api_upload_byte_func_t knok_api_upload_boot(u16 *) BIND(knok_upload_dummy);
+knok_api_upload_byte_func_t knok_api_upload_rexx(u16 *) BIND(knok_upload_dummy);
+knok_api_upload_byte_func_t knok_api_upload_rxbt(u16 *) BIND(knok_upload_dummy);
+
+
+static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pchar title)
 {
   u08 res = SEND_OK;
 
-  uart_send_pstring(PSTR("upload:@"));
-  uart_send_hex_ptr(data);
-  uart_send('+');
+  uart_send_pstring(PSTR("upload:+"));
   uart_send_hex_word(size);
   uart_send(':');
   uart_send_pstring(title);
 
-  strobe_send_begin(data, size);
+  // nothing to do?
+  if(size == 0) {
+    return SEND_NOT_STARTED;
+  }
+
+  strobe_send_begin(byte_func, size);
 
   u16 interval = 200;
   u08 flag = STROBE_FLAG_NONE;
@@ -176,7 +193,6 @@ end_upload:
 
   return res;
 }
-#endif /* CONFIG_BOOTSTRAP */
 
 void blink_hello(void)
 {
@@ -201,7 +217,7 @@ void knok_main(void)
   // we also accept bootloader to enter main loop if no bootloader is available
   // otherwise we would constantly stay in a reset loop
   u08 data = strobe_get_data();
-  if(data == PROTO_CMD_ACTION_RESET || data == PROTO_CMD_ACTION_BOOTLOADER) {
+  if(data == PROTO_DEV_CMD_ACTION_RESET || data == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
     uart_send_pstring(PSTR("exyt"));
     uart_send_crlf();
     return;
@@ -218,10 +234,10 @@ void knok_main(void)
   while(1) {
 
     // if a reset or bootloader command is active then reset immediately
-    // bootloader command will be answered by bootloader 
+    // bootloader command will be answered by bootloader
     // RESET_ACTION leaves knok mode in early exit next time (see above)
     u08 data = strobe_get_data();
-    if(data == PROTO_CMD_ACTION_RESET || data == PROTO_CMD_ACTION_BOOTLOADER) {
+    if(data == PROTO_DEV_CMD_ACTION_RESET || data == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
       uart_send_pstring(PSTR("bail"));
       uart_send_crlf();
       system_sys_reset();
@@ -232,24 +248,24 @@ void knok_main(void)
     u32 key;
     if(strobe_get_key(&key)) {
       DL(key); DNL;
+      u16 size;
+      knok_api_upload_byte_func_t byte_func;
       switch(key) {
-#ifdef CONFIG_BOOTSTRAP
         // upload raw bootstrap code without header (for wb1.3 type)
         case KNOK_KEY_BOOT:
-          knok_upload((rom_pchar)(bootstrap_code + BOOTSTRAP_HEADER_SIZE),
-                      BOOTSTRAP_DATA_SIZE, PSTR("boot"));
+          byte_func = knok_api_upload_boot(&size);
+          knok_upload(size, byte_func, PSTR("boot"));
           break;
         // upload stage1: rexx boot script
         case KNOK_KEY_REXX:
-          knok_upload((rom_pchar)bootrexx_code, sizeof(bootrexx_code),
-                      PSTR("rexx"));
+          byte_func = knok_api_upload_rexx(&size);
+          knok_upload(size, byte_func, PSTR("rexx"));
           break;
         // upload stage2: bootstrap binary with header
         case KNOK_KEY_RXBT:
-          knok_upload((rom_pchar)bootstrap_code, sizeof(bootstrap_code),
-                      PSTR("RXBT"));
+          byte_func = knok_api_upload_rxbt(&size);
+          knok_upload(size, byte_func, PSTR("rxbt"));
           break;
-#endif
         // blink hello
         case KNOK_KEY_HELO:
           blink_hello();

@@ -11,13 +11,15 @@
 #define STROBE_FLAG_BUFFER_FILLED  4
 #define STROBE_FLAG_IS_BUSY        8
 
+typedef u08 (*strobe_send_get_func_t)(void);
+
 extern void strobe_init_port(void);
 extern void strobe_init_irq(void);
 extern void strobe_exit(void);
 extern u08  strobe_get_key(u32 *key);
 extern u08  strobe_get_data(void);
 
-extern void strobe_send_begin(rom_pchar data, u16 size);
+extern void strobe_send_begin(strobe_send_get_func_t func, u16 size);
 extern void strobe_send_end(void);
 
 extern u08  strobe_read_flag(void);

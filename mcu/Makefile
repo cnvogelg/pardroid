@@ -59,7 +59,7 @@ PROTO_SRCS = $(PROTO_ARCH_SRCS)
 ifdef CONFIG_BOOTSTRAP
 PROTO_SRCS += bootstrap.c bootrexx.c
 endif
-PROTO_SRCS += proto_atom.c knok.c
+PROTO_SRCS += proto_atom.c knok.c proto_dev.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -116,6 +116,14 @@ TEST_PROTO_ATOM_SRCS += test-proto-atom.c
 #$(eval $(call make-pbl,test-proto-atom-fw))
 #$(eval $(call dist-hex,test-proto-atom-fw))
 $(eval $(call make-firmware,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-proto-dev
+TEST_PROTO_DEV_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
+TEST_PROTO_DEV_SRCS += proto_dev.c test-proto-dev.c knok.c
+#$(eval $(call dist-pbl,test-proto-dev-fw))
+#$(eval $(call make-pbl,test-proto-dev-fw))
+#$(eval $(call dist-hex,test-proto-dev-fw))
+$(eval $(call make-firmware,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)))
 
 # disabled for now
 ifeq "a" "b"

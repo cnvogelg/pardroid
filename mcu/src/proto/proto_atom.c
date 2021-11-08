@@ -6,9 +6,7 @@
 #include "proto_low.h"
 #include "proto_atom.h"
 #include "debug.h"
-#include "system.h"
 #include "timer.h"
-#include "status.h"
 
 void proto_atom_init(void)
 {

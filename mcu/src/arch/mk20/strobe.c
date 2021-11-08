@@ -13,7 +13,7 @@ static volatile u08 state;
 static u08 strobe_count;
 static volatile u32 strobe_key;
 
-static rom_pchar send_data;
+static strobe_send_get_func_t send_get_func;
 static u16 send_size;
 
 typedef void (*strobe_func_t)(void);
@@ -138,9 +138,8 @@ static void strobe_write_func(void)
     state = STROBE_FLAG_GOT_STROBE;
 
     // setup next byte
-    u08 data = *send_data;
+    u08 data = send_get_func();
     pario_set_data(data);
-    send_data++;
     send_size--;
   }
 
@@ -161,15 +160,14 @@ static void strobe_write_func(void)
   pario_ack_hi();
 }
 
-void strobe_send_begin(rom_pchar data, u16 size)
+void strobe_send_begin(strobe_send_get_func_t func, u16 size)
 {
   // keep send range
-  send_data = data;
+  send_get_func = func;
   send_size = size;
 
   // setup first byte
-  u08 val = *send_data;
-  send_data++;
+  u08 val = send_get_func();
   send_size--;
 
   strobe_func = strobe_write_func;
