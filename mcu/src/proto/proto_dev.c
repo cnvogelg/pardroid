@@ -42,7 +42,7 @@ void proto_dev_init()
   DC('}');
 }
 
-void proto_dev_handle(u08 cmd)
+static void proto_dev_handle(u08 cmd)
 {
   switch(cmd) {
     /* actions */
@@ -92,4 +92,16 @@ void proto_dev_handle(u08 cmd)
       DC('!'); DC('?');
       break;
   }
+}
+
+u08 proto_dev_get_cmd(void)
+{
+  u08 cmd = proto_atom_get_cmd();
+  // is driver command?
+  if((cmd & PROTO_CMD_MASK) == PROTO_DEV_CMD_MASK) {
+    proto_dev_handle(cmd);
+    // already handled...
+    return PROTO_NO_CMD;
+  }
+  return cmd;
 }

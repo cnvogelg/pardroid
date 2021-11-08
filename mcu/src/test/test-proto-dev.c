@@ -35,10 +35,8 @@ int main(void)
   proto_dev_init();
 
   while(1) {
-      u08 cmd = proto_atom_get_cmd();
-      if(proto_dev_is_cmd(cmd)) {
-        proto_dev_handle(cmd);
-      } else {
+      u08 cmd = proto_dev_get_cmd();
+      if(cmd != PROTO_NO_CMD) {
         // invalid command
         uart_send('#');
         uart_send_hex_byte(cmd);

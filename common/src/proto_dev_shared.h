@@ -4,6 +4,10 @@
 
 /* command range 0x10..0x1f is reserved for device commands */
 
+/* command mask */
+#define PROTO_CMD_MASK                    0xf0
+#define PROTO_DEV_CMD_MASK                0x10
+
 /* actions to trigger device mode changes */
 #define PROTO_DEV_CMD_ACTION_PING         0x10
 #define PROTO_DEV_CMD_ACTION_BOOTLOADER   0x11
