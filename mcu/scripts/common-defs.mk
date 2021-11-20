@@ -50,6 +50,18 @@ map-src-to-tgt = $(patsubst %.c,$(OBJ_DIR)/%.o,$(filter %.c,$1)) \
 map-bin = $(patsubst %,$(BIN_DIR)/%,$1)
 map-dist = $(patsubst %,$(DIST_DIR)/%,$(notdir $1))
 
+# make-full-fw
+# $1 = program name
+# $2 = srcs for program
+# $3 = max rom size
+# $4 = extra ld flags
+define make-fw
+$(call dist-pbl,$1)
+$(call make-pbl,$1)
+$(call dist-hex,$1)
+$(call make-firmware,$1,$2,$3,$4)
+endef
+
 # make-program rules
 # $1 = program name
 # $2 = srcs for program

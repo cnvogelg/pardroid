@@ -110,23 +110,17 @@ VPATH=$(INCLUDES) $(BUILD_DIR)
 # test-base
 TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
 TEST_BASE_SRCS += test-base.c
-$(eval $(call make-firmware,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
+$(eval $(call make-fw,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto-atom
 TEST_PROTO_ATOM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
 TEST_PROTO_ATOM_SRCS += test-proto-atom.c
-#$(eval $(call dist-pbl,test-proto-atom-fw))
-#$(eval $(call make-pbl,test-proto-atom-fw))
-#$(eval $(call dist-hex,test-proto-atom-fw))
-$(eval $(call make-firmware,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_ROM)))
+$(eval $(call make-fw,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto-dev
 TEST_PROTO_DEV_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
 TEST_PROTO_DEV_SRCS += proto_dev.c test-proto-dev.c knok.c
-#$(eval $(call dist-pbl,test-proto-dev-fw))
-#$(eval $(call make-pbl,test-proto-dev-fw))
-#$(eval $(call dist-hex,test-proto-dev-fw))
-$(eval $(call make-firmware,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)))
+$(eval $(call make-fw,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)))
 
 # disabled for now
 ifeq "a" "b"
@@ -231,6 +225,6 @@ $(ROMINFO_FILE): $(ROMINFO)
 	@echo "  ROMINFO gen $@"
 	$(H)$(ROMINFO) -o $(ROMINFO_FILE) -v \
 		$(CONFIG_ARCH) $(CONFIG_MCU) $(CONFIG_MACH) $(CONFIG_MACH_VARIANT) \
-		ver:$(VERSION) $(VERSION_DATE)
+		ver:$(VERSION) $(VERSION_DATE) $(FLAVOR)
 
 src/base/rominfo.c: $(ROMINFO_FILE)
