@@ -14,6 +14,7 @@
 #include "system.h"
 #include "timer.h"
 #include "led.h"
+#include "rominfo.h"
 #include "proto_dev_shared.h"
 
 #define SEND_OK                  0
@@ -39,6 +40,15 @@ static knok_api_upload_byte_func_t knok_upload_dummy(u16 *size)
 knok_api_upload_byte_func_t knok_api_upload_boot(u16 *) BIND(knok_upload_dummy);
 knok_api_upload_byte_func_t knok_api_upload_rexx(u16 *) BIND(knok_upload_dummy);
 knok_api_upload_byte_func_t knok_api_upload_rxbt(u16 *) BIND(knok_upload_dummy);
+
+static rom_pchar  rom_data_ptr;
+
+static u08 knok_upload_byte_rom(void)
+{
+  u08 data = read_rom_char(rom_data_ptr);
+  rom_data_ptr++;
+  return data;
+}
 
 
 static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pchar title)
@@ -265,6 +275,11 @@ void knok_main(void)
         case KNOK_KEY_RXBT:
           byte_func = knok_api_upload_rxbt(&size);
           knok_upload(size, byte_func, PSTR("rxbt"));
+          break;
+        // show rom info
+        case KNOK_KEY_INFO:
+          rom_data_ptr = rom_info_str;
+          knok_upload(ROMINFO_SIZE, knok_upload_byte_rom, PSTR("info"));
           break;
         // blink hello
         case KNOK_KEY_HELO:

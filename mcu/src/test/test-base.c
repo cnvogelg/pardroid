@@ -12,6 +12,10 @@
 #include "system.h"
 #include "led.h"
 #include "timer.h"
+#include "fwid.h"
+#include "fw_info.h"
+
+FW_INFO(FWID_TEST_BASE, VERSION_TAG)
 
 // define the tests you want
 //#define TEST_WAIT_WATCHDOG

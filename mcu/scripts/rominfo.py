@@ -18,9 +18,10 @@ def write_header(output, rominfo):
 #define {0}
 
 #define ROMINFO_STRING "{1}"
+#define ROMINFO_SIZE {2}
 
 #endif
-  """.format(base, rominfo)
+  """.format(base, rominfo, len(rominfo))
   with open(output, "w") as fh:
     fh.write(data)
 
