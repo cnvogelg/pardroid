@@ -37,6 +37,10 @@ CFLAGS_DEFINES += -DMACHTAG=$(MACHTAG_SYMBOL) -DMACH_$(MACH_UPPER)
 VERSION_TAG=$(shell scripts/vertag.py $(VERSION_MAJOR) $(VERSION_MINOR))
 CFLAGS_DEFINES += -DVERSION_TAG=$(VERSION_TAG)
 
+# generate rom info file
+ROMINFO_FILE = $(BUILD_DIR)/rominfo_gen.h
+ROMINFO=scripts/rominfo.py
+
 # generated bootstrap code
 BOOTSTRAP_CODE = ../amiga/BUILD/$(FLAVOR)-vbcc/m68k-cia/boot.bin
 BOOTSTRAP_H = $(BUILD_DIR)/bootstrap.h
@@ -49,7 +53,6 @@ BOOTREXX_H = $(BUILD_DIR)/bootrexx.h
 BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
-COMMON_SRCS = machtag.c fwid.c
 BASE_SRCS = timer.c strobe.c spi.c crc.c led.c i2c.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PARAM_SRCS = param.c param_def.c crc.c
@@ -222,3 +225,12 @@ $(BOOTREXX_H) $(BOOTREXX_C): $(BOOTSTRAP_GEN) $(BOOTREXX_CODE)
 	@echo "  BOOTREXX from $(BOOTREXX_CODE)"
 	$(H)$(BOOTSTRAP_GEN) $(BOOTREXX_CODE) $(BOOTREXX_C) $(BOOTREXX_H) \
 		bootrexx
+
+# ----- rominfo rules -----
+$(ROMINFO_FILE): $(ROMINFO)
+	@echo "  ROMINFO gen $@"
+	$(H)$(ROMINFO) -o $(ROMINFO_FILE) -v \
+		$(CONFIG_ARCH) $(CONFIG_MCU) $(CONFIG_MACH) $(CONFIG_MACH_VARIANT) \
+		ver:$(VERSION) $(VERSION_DATE)
+
+src/base/rominfo.c: $(ROMINFO_FILE)
