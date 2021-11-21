@@ -9,11 +9,10 @@
 #include "compiler.h"
 #include "debug.h"
 
-#include "proto_atom.h"
+#include "proto_dev.h"
 
 #include "test.h"
-#include "proto-atom-testsuite.h"
-#include "proto-env-testsuite.h"
+#include "proto-dev-testsuite.h"
 
 static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Verbose/S";
 typedef struct {
@@ -27,8 +26,7 @@ static params_t params;
 
 /* define tests */
 static test_t all_tests[] = {
-  TESTS_PROTO_ATOM
-  TESTS_PROTO_ENV
+  TESTS_PROTO_DEV
   { NULL, NULL, NULL }
 };
 
@@ -72,7 +70,7 @@ int dosmain(void)
   int init_res;
   penv = proto_env_init((struct Library *)SysBase, &init_res);
   if(penv != NULL) {
-    ph = proto_atom_init(penv);
+    ph = proto_dev_init(penv);
     if(ph != NULL) {
       /* setup test */
       test_param_t param;
@@ -82,7 +80,7 @@ int dosmain(void)
       /* run test */
       res = test_main(all_tests, &param);
 
-      proto_atom_exit(ph);
+      proto_dev_exit(ph);
     } else {
       PutStr("proto failed!\n");
     }
