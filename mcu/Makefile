@@ -55,14 +55,10 @@ BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 # base sources
 BASE_SRCS = timer.c strobe.c spi.c crc.c led.c i2c.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
-PARAM_SRCS = param.c param_def.c crc.c
 
-# proto
-PROTO_SRCS = $(PROTO_ARCH_SRCS)
-ifdef CONFIG_BOOTSTRAP
-PROTO_SRCS += bootstrap.c bootrexx.c
-endif
-PROTO_SRCS += proto_atom.c knok.c proto_dev.c
+# proto sources
+PROTO_ATOM_SRCS = $(PROTO_ARCH_SRCS) proto_atom.c
+PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) knok.c proto_dev.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -108,17 +104,17 @@ VPATH=$(INCLUDES) $(BUILD_DIR)
 
 # ----- test firmware images -----
 # test-base
-TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS)
+TEST_BASE_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_BASE_SRCS += test-base.c
 $(eval $(call make-fw,test-base-fw,$(TEST_BASE_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto-atom
-TEST_PROTO_ATOM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
+TEST_PROTO_ATOM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ATOM_SRCS)
 TEST_PROTO_ATOM_SRCS += test-proto-atom.c
 $(eval $(call make-fw,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_ROM)))
 
 # test-proto-dev
-TEST_PROTO_DEV_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) proto_atom.c
+TEST_PROTO_DEV_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_DEV_SRCS)
 TEST_PROTO_DEV_SRCS += proto_dev.c test-proto-dev.c knok.c
 $(eval $(call make-fw,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)))
 
