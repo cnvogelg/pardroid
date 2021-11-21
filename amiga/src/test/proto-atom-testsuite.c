@@ -24,13 +24,12 @@
 
 int test_action(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   int res = proto_atom_action(proto, TEST_ACTION);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action";
     return res;
   }
@@ -40,13 +39,12 @@ int test_action(test_t *t, test_param_t *p)
 
 int test_action_no_busy(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   int res = proto_atom_action_no_busy(proto, TEST_ACTION);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action";
     return res;
   }
@@ -56,14 +54,13 @@ int test_action_no_busy(test_t *t, test_param_t *p)
 
 int test_action_bench(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   ULONG delay[2];
   int res = proto_atom_action_bench(proto, TEST_ACTION, delay);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action";
     return res;
   }
@@ -73,14 +70,13 @@ int test_action_bench(test_t *t, test_param_t *p)
 
 int test_busy_action(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   // set busy
   int res = proto_atom_action(proto, TEST_SET_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "set busy";
     return res;
   }
@@ -89,7 +85,7 @@ int test_busy_action(test_t *t, test_param_t *p)
   res = proto_atom_action(proto, TEST_ACTION);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action not busy";
     return res;
   }
@@ -98,7 +94,7 @@ int test_busy_action(test_t *t, test_param_t *p)
   res = proto_atom_action_no_busy(proto, TEST_ACTION);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action vs busy";
     return res;
   }
@@ -107,7 +103,7 @@ int test_busy_action(test_t *t, test_param_t *p)
   res = proto_atom_action_no_busy(proto, TEST_CLR_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "clr busy";
     return res;
   }
@@ -119,14 +115,13 @@ int test_busy_action(test_t *t, test_param_t *p)
 
 int test_read_word(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   UWORD value;
   int res = proto_atom_read_word(proto, TEST_READ_WORD, &value);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read_word";
     return res;
   }
@@ -144,14 +139,13 @@ int test_read_word(test_t *t, test_param_t *p)
 
 int test_write_word(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   UWORD value = 0xbabe;
   int res = proto_atom_write_word(proto, TEST_WRITE_WORD, value);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write_word";
     return res;
   }
@@ -161,14 +155,13 @@ int test_write_word(test_t *t, test_param_t *p)
 
 int test_busy_word(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   // set busy
   int res = proto_atom_action(proto, TEST_SET_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "set busy";
     return res;
   }
@@ -178,7 +171,7 @@ int test_busy_word(test_t *t, test_param_t *p)
   res = proto_atom_read_word(proto, TEST_READ_WORD, &val);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read word not busy";
     return res;
   }
@@ -187,7 +180,7 @@ int test_busy_word(test_t *t, test_param_t *p)
   res = proto_atom_write_word(proto, TEST_WRITE_WORD, val);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write word not busy";
     return res;
   }
@@ -196,7 +189,7 @@ int test_busy_word(test_t *t, test_param_t *p)
   res = proto_atom_action_no_busy(proto, TEST_CLR_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "clr busy";
     return res;
   }
@@ -208,14 +201,13 @@ int test_busy_word(test_t *t, test_param_t *p)
 
 int test_read_long(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   ULONG value;
   int res = proto_atom_read_long(proto, TEST_READ_LONG, &value);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read_long";
     return res;
   }
@@ -233,14 +225,13 @@ int test_read_long(test_t *t, test_param_t *p)
 
 int test_write_long(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   ULONG value = 0xcafebabe;
   int res = proto_atom_write_long(proto, TEST_WRITE_LONG, value);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write_long";
     return res;
   }
@@ -250,14 +241,13 @@ int test_write_long(test_t *t, test_param_t *p)
 
 int test_busy_lonf(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   // set busy
   int res = proto_atom_action(proto, TEST_SET_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "set busy";
     return res;
   }
@@ -267,7 +257,7 @@ int test_busy_lonf(test_t *t, test_param_t *p)
   res = proto_atom_read_long(proto, TEST_READ_LONG, &val);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read long not busy";
     return res;
   }
@@ -276,7 +266,7 @@ int test_busy_lonf(test_t *t, test_param_t *p)
   res = proto_atom_write_long(proto, TEST_WRITE_LONG, val);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write long not busy";
     return res;
   }
@@ -285,7 +275,7 @@ int test_busy_lonf(test_t *t, test_param_t *p)
   res = proto_atom_action_no_busy(proto, TEST_CLR_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "clr busy";
     return res;
   }
@@ -297,8 +287,7 @@ int test_busy_lonf(test_t *t, test_param_t *p)
 
 int test_read_block(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
   if (buf == NULL)
@@ -309,7 +298,7 @@ int test_read_block(test_t *t, test_param_t *p)
   int res = proto_atom_read_block(proto, TEST_READ_BLOCK, buf, TEST_BUF_SIZE);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read_block";
     return res;
   }
@@ -336,8 +325,7 @@ int test_read_block(test_t *t, test_param_t *p)
 
 int test_write_block(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
   if (buf == NULL)
@@ -352,7 +340,7 @@ int test_write_block(test_t *t, test_param_t *p)
   int res = proto_atom_write_block(proto, TEST_WRITE_BLOCK, buf, TEST_BUF_SIZE);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write_block";
     return res;
   }
@@ -364,8 +352,7 @@ int test_write_block(test_t *t, test_param_t *p)
 
 int test_busy_block(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
 
   UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
   if (buf == NULL)
@@ -377,7 +364,7 @@ int test_busy_block(test_t *t, test_param_t *p)
   int res = proto_atom_action(proto, TEST_SET_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "set busy";
     return res;
   }
@@ -386,7 +373,7 @@ int test_busy_block(test_t *t, test_param_t *p)
   res = proto_atom_read_block(proto, TEST_READ_BLOCK, buf, TEST_BUF_SIZE);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "read block not busy";
     return res;
   }
@@ -395,7 +382,7 @@ int test_busy_block(test_t *t, test_param_t *p)
   res = proto_atom_write_block(proto, TEST_WRITE_BLOCK, buf, TEST_BUF_SIZE);
   if (res != PROTO_RET_DEVICE_BUSY)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "write block not busy";
     return res;
   }
@@ -404,7 +391,7 @@ int test_busy_block(test_t *t, test_param_t *p)
   res = proto_atom_action_no_busy(proto, TEST_CLR_BUSY);
   if (res != 0)
   {
-    p->error = proto_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "clr busy";
     return res;
   }

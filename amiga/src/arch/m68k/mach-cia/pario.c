@@ -49,7 +49,7 @@ struct pario_handle {
 
 const char *pario_tag = "pario";
 
-static void setup_port(struct pario_handle *ph)
+static void setup_port(pario_handle_t *ph)
 {
   struct pario_port *p = &ph->port;
 
@@ -78,7 +78,7 @@ static void setup_port(struct pario_handle *ph)
   ph->old_ctrl_ddr  = *p->ctrl_ddr  & p->all_mask;
 }
 
-static void restore_port(struct pario_handle *ph)
+static void restore_port(pario_handle_t *ph)
 {
   struct pario_port *p = &ph->port;
 
@@ -93,7 +93,7 @@ static void restore_port(struct pario_handle *ph)
   *p->ctrl_ddr  = ctrl_ddr  | ph->old_ctrl_ddr;
 }
 
-struct pario_handle *pario_init(struct Library *SysBase)
+pario_handle_t *pario_init(struct Library *SysBase)
 {
   /* alloc handle */
   struct pario_handle *ph;
@@ -135,7 +135,7 @@ struct pario_handle *pario_init(struct Library *SysBase)
 
 #define SysBase ph->sysBase
 
-void pario_exit(struct pario_handle *ph)
+void pario_exit(pario_handle_t *ph)
 {
   if(ph == NULL) {
     return;
@@ -155,14 +155,14 @@ void pario_exit(struct pario_handle *ph)
   FreeMem(ph, sizeof(struct pario_handle));
 }
 
-struct pario_port *pario_get_port(struct pario_handle *ph)
+struct pario_port *pario_get_port(pario_handle_t *ph)
 {
   return &ph->port;
 }
 
 extern void ASM pario_irq_handler(REG(a1, struct pario_handle *ph));
 
-int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE signal)
+int pario_setup_ack_irq(pario_handle_t *ph, struct Task *sigTask, BYTE signal)
 {
   int error = 0;
 
@@ -207,7 +207,7 @@ int pario_setup_ack_irq(struct pario_handle *ph, struct Task *sigTask, BYTE sign
   return error;
 }
 
-void pario_cleanup_ack_irq(struct pario_handle *ph)
+void pario_cleanup_ack_irq(pario_handle_t *ph)
 {
   if(ph->initFlags & 4 == 0) {
     return;
@@ -226,17 +226,17 @@ void pario_cleanup_ack_irq(struct pario_handle *ph)
   ph->initFlags &= ~4;
 }
 
-UWORD pario_get_ack_irq_counter(struct pario_handle *ph)
+UWORD pario_get_ack_irq_counter(pario_handle_t *ph)
 {
   return ph->irq_counter;
 }
 
-UWORD pario_get_signal_counter(struct pario_handle *ph)
+UWORD pario_get_signal_counter(pario_handle_t *ph)
 {
   return ph->sig_counter;
 }
 
-void pario_confirm_ack_irq(struct pario_handle *ph)
+void pario_confirm_ack_irq(pario_handle_t *ph)
 {
   ph->sent_signal = 0;
   SetSignal(0, ph->sigMask);

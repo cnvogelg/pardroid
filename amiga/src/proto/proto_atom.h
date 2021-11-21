@@ -1,6 +1,8 @@
 #ifndef PROTO_ATOM_H
 #define PROTO_ATOM_H
 
+#include "proto_env.h"
+
 // error codes
 #define PROTO_RET_OK                0
 #define PROTO_RET_RAK_INVALID       1
@@ -13,8 +15,9 @@ struct proto_handle;
 typedef struct proto_handle proto_handle_t;
 
 // init/exit of handle
-extern proto_handle_t *proto_atom_init(struct pario_handle *ph, struct timer_handle *th, struct Library *SysBase);
+extern proto_handle_t *proto_atom_init(proto_env_handle_t *penv);
 extern void proto_atom_exit(proto_handle_t *ph);
+extern proto_env_handle_t *proto_atom_get_env(proto_handle_t *ph);
 
 // actions
 extern int proto_atom_action(proto_handle_t *ph, UBYTE cmd);
@@ -34,6 +37,6 @@ extern int proto_atom_read_block(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWOR
 extern int proto_atom_write_block(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_bytes);
 
 // verbose error
-extern const char *proto_perror(int res);
+extern const char *proto_atom_perror(int res);
 
 #endif

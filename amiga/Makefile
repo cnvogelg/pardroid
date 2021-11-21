@@ -31,8 +31,8 @@ PARIO_cia_SRCS = pario.c pario_irq.s
 
 # pario+proto
 PROTO_cia_SRCS = proto_low.s proto_low_cfg.c
-PROTO_ATOM_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) proto_atom.c proto_env.c
-PROTO_ATOM_SRCS += $(TIMER_SRCS) $(PARIO_SRCS)
+PROTO_ENV_SRCS = proto_env.c $(TIMER_SRCS) $(PARIO_SRCS)
+PROTO_ATOM_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) $(PROTO_ENV_SRCS) proto_atom.c
 
 # test+bench
 TEST_SRCS = test.c test-buffer.c
@@ -50,6 +50,10 @@ $(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
 # test-udp
 TEST_UDP_SRCS = test-udp.c $(BASE_SRCS)
 $(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
+
+# test-proto-env
+TEST_PROTO_ENV_SRCS = test-proto-env.c $(PROTO_ENV_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,test-proto-env,$(TEST_PROTO_ENV_SRCS)))
 
 # test-proto-atom
 TEST_PROTO_ATOM_SRCS = test-proto-atom.c $(PROTO_ATOM_SRCS) $(BASE_SRCS)

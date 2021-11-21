@@ -11,6 +11,7 @@
 #include "proto_atom.h"
 
 struct proto_handle {
+    proto_env_handle_t  *penv;
     struct pario_port   *port;
     struct timer_handle *timer;
     ULONG                timeout_s;
@@ -18,7 +19,10 @@ struct proto_handle {
     struct Library      *sys_base;
 };
 
-proto_handle_t *proto_atom_init(struct pario_handle *pario, struct timer_handle *th, struct Library *SysBase)
+#undef SysBase
+#define SysBase proto_env_get_sysbase(penv)
+
+proto_handle_t *proto_atom_init(proto_env_handle_t *penv)
 {
   proto_handle_t *ph;
 
@@ -26,11 +30,12 @@ proto_handle_t *proto_atom_init(struct pario_handle *pario, struct timer_handle 
   if(ph == NULL) {
     return NULL;
   }
-  ph->port = pario_get_port(pario);
-  ph->timer = th;
+  ph->penv = penv;
+  ph->port = pario_get_port(proto_env_get_pario(penv));
+  ph->timer = proto_env_get_timer(penv);
   ph->timeout_s  = 0;
   ph->timeout_ms = 500000UL;
-  ph->sys_base = SysBase;
+  ph->sys_base = proto_env_get_sysbase(penv);
 
   proto_low_config_port(ph->port);
 
@@ -47,6 +52,11 @@ void proto_atom_exit(proto_handle_t *ph)
   }
   /* free handle */
   FreeMem(ph, sizeof(struct proto_handle));
+}
+
+proto_env_handle_t *proto_atom_get_env(proto_handle_t *ph)
+{
+  return ph->penv;
 }
 
 int proto_atom_action(proto_handle_t *ph, UBYTE cmd)
@@ -189,7 +199,7 @@ int proto_atom_read_block(proto_handle_t *ph, UBYTE cmd, UBYTE *buf, UWORD num_b
 
 // verbose error
 
-const char *proto_perror(int res)
+const char *proto_atom_perror(int res)
 {
   switch(res) {
     case PROTO_RET_OK:

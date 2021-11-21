@@ -106,18 +106,19 @@ static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
 
 static int run_timer_sig(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
+  proto_env_handle_t *penv = proto_atom_get_env(proto);
 
   /* wait for either timeout or ack */
-  ULONG got = proto_env_wait_event(pb, WAIT_S, WAIT_US, 0);
+  ULONG got = proto_env_wait_event(penv, WAIT_S, WAIT_US, 0);
 
-  int res = assert_timer_mask(p, "main", pb, got);
+  int res = assert_timer_mask(p, "main", penv, got);
   if (res != 0)
   {
     return 1;
   }
 
-  return assert_num_triggers(p, "main", pb, 0, 0);
+  return assert_num_triggers(p, "main", penv, 0, 0);
 }
 
 // TEST: timer signal (internal)
@@ -128,28 +129,28 @@ int test_timer_sig(test_t *t, test_param_t *p)
 
 static int run_event_sig(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
+  proto_env_handle_t *penv = proto_atom_get_env(proto);
 
   /* trigger signal */
   int res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
-    p->error = proto_env_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action to trigger signal";
     return 1;
   }
 
   /* wait for either timeout or trigger signal */
-  ULONG got = proto_env_wait_event(pb, WAIT_S, WAIT_US, 0);
+  ULONG got = proto_env_wait_event(penv, WAIT_S, WAIT_US, 0);
 
-  res = assert_trigger_mask(p, "main", pb, got);
+  res = assert_trigger_mask(p, "main", penv, got);
   if (res != 0)
   {
     return 1;
   }
 
-  return assert_num_triggers(p, "main", pb, 1, 1);
+  return assert_num_triggers(p, "main", penv, 1, 1);
 }
 
 // TEST: wait for signal event
@@ -160,14 +161,14 @@ int test_event_sig(test_t *t, test_param_t *p)
 
 static int run_event_sig2(test_t *t, test_param_t *p)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
-  proto_handle_t *proto = proto_env_get_proto(pb);
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
+  proto_env_handle_t *penv = proto_atom_get_env(proto);
 
   /* trigger signal */
   int res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
-    p->error = proto_env_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action to trigger signal";
     return 1;
   }
@@ -176,21 +177,21 @@ static int run_event_sig2(test_t *t, test_param_t *p)
   res = proto_atom_action(proto, TEST_PULSE_IRQ);
   if (res != 0)
   {
-    p->error = proto_env_perror(res);
+    p->error = proto_atom_perror(res);
     p->section = "action to trigger signal 2";
     return 1;
   }
 
   /* wait for either timeout or trigger signal */
-  ULONG got = proto_env_wait_event(pb, WAIT_S, WAIT_US, 0);
+  ULONG got = proto_env_wait_event(penv, WAIT_S, WAIT_US, 0);
 
-  res = assert_trigger_mask(p, "main", pb, got);
+  res = assert_trigger_mask(p, "main", penv, got);
   if (res != 0)
   {
     return 1;
   }
 
-  return assert_num_triggers(p, "main", pb, 2, 1);
+  return assert_num_triggers(p, "main", penv, 2, 1);
 }
 
 // TEST: wait for two signal events

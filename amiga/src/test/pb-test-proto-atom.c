@@ -59,7 +59,8 @@ void setup_test_config(test_param_t *p)
 int dosmain(void)
 {
   struct RDArgs *args;
-  proto_env_handle_t *ph;
+  proto_env_handle_t *penv;
+  proto_handle_t *ph;
 
   /* First parse args */
   args = ReadArgs(TEMPLATE, (LONG *)&params, NULL);
@@ -72,18 +73,23 @@ int dosmain(void)
 
   /* setup pamela */
   int init_res;
-  ph = proto_env_init((struct Library *)SysBase, &init_res);
-  if(ph != NULL) {
+  penv = proto_env_init((struct Library *)SysBase, &init_res);
+  if(penv != NULL) {
+    ph = proto_atom_init(penv);
+    if(ph != NULL) {
+      /* setup test */
+      test_param_t param;
+      param.user_data = ph;
+      setup_test_config(&param);
 
-    /* setup test */
-    test_param_t param;
-    param.user_data = ph;
-    setup_test_config(&param);
+      /* run test */
+      res = test_main(all_tests, &param);
 
-    /* run test */
-    res = test_main(all_tests, &param);
-
-    proto_env_exit(ph);
+      proto_atom_exit(ph);
+    } else {
+      PutStr("proto failed!\n");
+    }
+    proto_env_exit(penv);
   } else {
     PutStr(proto_env_perror(init_res));
     PutStr(" -> ABORT\n");

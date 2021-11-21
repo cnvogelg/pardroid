@@ -7,13 +7,11 @@
 
 #include "timer.h"
 #include "pario.h"
-#include "proto_atom.h"
 #include "proto_env.h"
 
 struct proto_env_handle {
   struct pario_handle *pario;
   struct timer_handle *timer;
-  proto_handle_t *proto;
   struct Library *sys_base;
   ULONG  ack_irq_sigmask;
   ULONG  timer_sigmask;
@@ -30,7 +28,6 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
 
   ph->pario = NULL;
   ph->timer = NULL;
-  ph->proto = NULL;
   ph->sys_base = SysBase;
 
   ph->pario = pario_init(SysBase);
@@ -48,17 +45,6 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
     return NULL;
   }
 
-  ph->proto = proto_atom_init(ph->pario, ph->timer, SysBase);
-  if(ph->proto == NULL) {
-    pario_exit(ph->pario);
-    ph->pario = NULL;
-    timer_exit(ph->timer);
-    ph->timer = NULL;
-
-    *res = PROTO_ENV_ERROR_INIT_PROTO;
-    return NULL;
-  }
-
   *res = PROTO_ENV_OK;
   return ph;
 }
@@ -68,11 +54,6 @@ proto_env_handle_t *proto_env_init(struct Library *SysBase, int *res)
 
 void proto_env_exit(proto_env_handle_t *ph)
 {
-  if(ph->proto != NULL) {
-    proto_atom_exit(ph->proto);
-    ph->proto = NULL;
-  }
-
   if(ph->timer != NULL) {
     timer_exit(ph->timer);
     ph->timer = NULL;
@@ -86,14 +67,19 @@ void proto_env_exit(proto_env_handle_t *ph)
   FreeMem(ph, sizeof(proto_env_handle_t));
 }
 
-proto_handle_t *proto_env_get_proto(proto_env_handle_t *ph)
+pario_handle_t *proto_env_get_pario(proto_env_handle_t *ph)
 {
-  return ph->proto;
+  return ph->pario;
 }
 
 timer_handle_t *proto_env_get_timer(proto_env_handle_t *ph)
 {
   return ph->timer;
+}
+
+struct Library *proto_env_get_sysbase(proto_env_handle_t *ph)
+{
+  return ph->sys_base;
 }
 
 int proto_env_init_events(proto_env_handle_t *ph)
@@ -195,8 +181,6 @@ const char *proto_env_perror(int res)
       return "pario init failed";
     case PROTO_ENV_ERROR_INIT_TIMER:
       return "timer init failed";
-    case PROTO_ENV_ERROR_INIT_PROTO:
-      return "proto init failed";
     case PROTO_ENV_ERROR_NO_SIGNAL:
       return "can't alloc signal";
     case PROTO_ENV_ERROR_ACK_IRQ:
