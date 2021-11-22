@@ -84,10 +84,11 @@ static int assert_num_triggers(test_param_t *p, const char *section,
 
 static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
 {
-  proto_env_handle_t *pb = (proto_env_handle_t *)p->user_data;
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
+  proto_env_handle_t *penv = proto_atom_get_env(proto);
 
   /* init events */
-  int res = proto_env_init_events(pb);
+  int res = proto_env_init_events(penv);
   if (res != PROTO_RET_OK)
   {
     p->error = proto_env_perror(res);
@@ -99,7 +100,7 @@ static int run_with_events(test_t *t, test_param_t *p, test_func_t func)
   res = func(t, p);
 
   /* cleanup events */
-  proto_env_exit_events(pb);
+  proto_env_exit_events(penv);
 
   return res;
 }
