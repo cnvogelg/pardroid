@@ -3,7 +3,7 @@
 
 #include "rominfo_gen.h"
 
-extern rom_pchar rom_info_str;
+extern const char rom_info_str[] ROM_ATTR;
 extern void rom_info(void);
 
 #endif

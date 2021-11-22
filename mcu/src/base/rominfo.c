@@ -7,7 +7,7 @@
 #include "rominfo.h"
 #include "fw_info.h"
 
-rom_pchar rom_info_str = ROMINFO_STRING;
+const char rom_info_str[] ROM_ATTR = ROMINFO_STRING;
 
 void rom_info(void)
 {
@@ -17,9 +17,9 @@ void rom_info(void)
   // firmware info
   uart_send_pstring(PSTR("fwid:"));
   uart_send_hex_word(FW_GET_ID());
-  uart_send_pstring(PSTR("mach:"));
+  uart_send_pstring(PSTR(",mach:"));
   uart_send_hex_word(FW_GET_MACHTAG());
-  uart_send_pstring(PSTR("vers:"));
+  uart_send_pstring(PSTR(",vers:"));
   uart_send_hex_word(FW_GET_VERSION());
   uart_send_crlf();
 }
