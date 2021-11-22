@@ -40,29 +40,29 @@ TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c
 
 # ---- mini tests
-# test-pario
-TEST_PARIO_SRCS = test-pario.c $(PARIO_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-pario,$(TEST_PARIO_SRCS)))
+# minitest-pario
+MINITEST_PARIO_SRCS = minitest-pario.c $(PARIO_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-pario,$(MINITEST_PARIO_SRCS)))
 
-# test-timer
-TEST_TIMER_SRCS = test-timer.c $(TIMER_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-timer,$(TEST_TIMER_SRCS)))
+# minitest-timer
+MINITEST_TIMER_SRCS = minitest-timer.c $(TIMER_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-timer,$(MINITEST_TIMER_SRCS)))
 
-# test-udp
-TEST_UDP_SRCS = test-udp.c $(BASE_SRCS)
-$(eval $(call make-program,test-udp,$(TEST_UDP_SRCS)))
+# minitest-udp
+MINITEST_UDP_SRCS = minitest-udp.c $(BASE_SRCS)
+$(eval $(call make-program,minitest-udp,$(MINITEST_UDP_SRCS)))
 
-# test-proto-env
-TEST_PROTO_ENV_SRCS = test-proto-env.c $(PROTO_ENV_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-proto-env,$(TEST_PROTO_ENV_SRCS)))
+# minitest-proto-env
+MINITEST_PROTO_ENV_SRCS = minitest-proto-env.c $(PROTO_ENV_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-proto-env,$(MINITEST_PROTO_ENV_SRCS)))
 
-# test-proto-atom
-TEST_PROTO_ATOM_SRCS = test-proto-atom.c $(PROTO_ATOM_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-proto-atom,$(TEST_PROTO_ATOM_SRCS)))
+# minitest-proto-atom
+MINITEST_PROTO_ATOM_SRCS = minitest-proto-atom.c $(PROTO_ATOM_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-proto-atom,$(MINITEST_PROTO_ATOM_SRCS)))
 
-# test-proto-dev
-TEST_PROTO_DEV_SRCS = test-proto-atom.c $(PROTO_DEV_SRCS) $(BASE_SRCS)
-$(eval $(call make-program,test-proto-dev,$(TEST_PROTO_DEV_SRCS)))
+# minitest-proto-dev
+MINITEST_PROTO_DEV_SRCS = minitest-proto-atom.c $(PROTO_DEV_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-proto-dev,$(MINITEST_PROTO_DEV_SRCS)))
 
 # ----- tests
 # pb-test-proto-atom
