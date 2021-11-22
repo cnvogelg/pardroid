@@ -19,12 +19,10 @@ struct proto_handle {
     struct Library      *sys_base;
 };
 
-#undef SysBase
-#define SysBase proto_env_get_sysbase(penv)
-
 proto_handle_t *proto_atom_init(proto_env_handle_t *penv)
 {
   proto_handle_t *ph;
+  struct Library *SysBase = (struct Library *)proto_env_get_sysbase(penv);
 
   ph = AllocMem(sizeof(struct proto_handle), MEMF_CLEAR | MEMF_PUBLIC);
   if(ph == NULL) {
@@ -35,7 +33,7 @@ proto_handle_t *proto_atom_init(proto_env_handle_t *penv)
   ph->timer = proto_env_get_timer(penv);
   ph->timeout_s  = 0;
   ph->timeout_ms = 500000UL;
-  ph->sys_base = proto_env_get_sysbase(penv);
+  ph->sys_base = SysBase;
 
   proto_low_config_port(ph->port);
 

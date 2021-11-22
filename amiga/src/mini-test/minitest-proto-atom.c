@@ -7,6 +7,7 @@
 #include "debug.h"
 #include "proto_env.h"
 #include "proto_atom.h"
+#include "proto_atom_test_shared.h"
 
 int dosmain(void)
 {
@@ -26,46 +27,46 @@ int dosmain(void)
 
             // actions
             PutStr("action 1");
-            error = proto_atom_action(ph, 1);
+            error = proto_atom_action(ph, TEST_ACTION);
             Printf("-> %ld\n", (LONG)error);
 
             PutStr("action 2 (no busy)");
-            error = proto_atom_action_no_busy(ph, 2);
+            error = proto_atom_action_no_busy(ph, TEST_ACTION);
             Printf("-> %ld\n", (LONG)error);
 
             PutStr("action 3 (bench)");
             ULONG delay[2];
-            error = proto_atom_action_bench(ph, 3, delay);
+            error = proto_atom_action_bench(ph, TEST_ACTION, delay);
             Printf("-> %ld t1=%ld  t2=%ld\n", (LONG)error, delay[0], delay[1]);
 
             // read/write word
             PutStr("read_word");
             UWORD wdata = 0;
-            error = proto_atom_read_word(ph, 0x10, &wdata);
+            error = proto_atom_read_word(ph, TEST_READ_WORD, &wdata);
             Printf("-> %ld : %lx\n", (LONG)error, (ULONG)wdata);
 
             PutStr("write_word");
-            error = proto_atom_write_word(ph, 0x11, 0xdead);
+            error = proto_atom_write_word(ph, TEST_WRITE_WORD, 0xdead);
             Printf("-> %ld\n", (LONG)error);
 
             // read/write long
             PutStr("read_long");
             ULONG ldata = 0;
-            error = proto_atom_read_long(ph, 0x20, &ldata);
+            error = proto_atom_read_long(ph, TEST_READ_LONG, &ldata);
             Printf("-> %ld : %lx\n", (LONG)error, ldata);
 
             PutStr("write_long");
-            error = proto_atom_write_long(ph, 0x21, 0xcafebabe);
+            error = proto_atom_write_long(ph, TEST_WRITE_LONG, 0xcafebabe);
             Printf("-> %ld\n", (LONG)error);
 
             // read/write block
-            PutStr("reaw_block");
-            UBYTE buf[512];
-            error = proto_atom_read_block(ph, 0x30, buf, 512);
+            PutStr("read_block");
+            UBYTE buf[TEST_BUF_SIZE];
+            error = proto_atom_read_block(ph, TEST_READ_BLOCK, buf, TEST_BUF_SIZE);
             Printf("-> %ld\n", (LONG)error);
 
             PutStr("write_block");
-            error = proto_atom_write_block(ph, 0x31, buf, 512);
+            error = proto_atom_write_block(ph, TEST_WRITE_BLOCK, buf, TEST_BUF_SIZE);
             Printf("-> %ld\n", (LONG)error);
 
             proto_atom_exit(ph);
