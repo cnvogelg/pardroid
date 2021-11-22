@@ -27,7 +27,7 @@ int main(void)
   led_init();
 
   uart_init();
-  uart_send_pstring(PSTR("parbox: test-proto-dev!"));
+  uart_send_pstring(PSTR("\r\n\r\n-----\r\nparbox: test-proto-dev!"));
   uart_send_crlf();
 
   rom_info();

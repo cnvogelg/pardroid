@@ -23,7 +23,9 @@ void proto_dev_init()
   //
   // BOOTLOADER only occurs if no bootloader was found
   // then gracefully handle it like a reset
+  DC('['); DNL;
   knok_main();
+  DC(']'); DNL;
 
   // init proto now
   proto_atom_init();

@@ -61,7 +61,7 @@ MINITEST_PROTO_ATOM_SRCS = minitest-proto-atom.c $(PROTO_ATOM_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-proto-atom,$(MINITEST_PROTO_ATOM_SRCS)))
 
 # minitest-proto-dev
-MINITEST_PROTO_DEV_SRCS = minitest-proto-atom.c $(PROTO_DEV_SRCS) $(BASE_SRCS)
+MINITEST_PROTO_DEV_SRCS = minitest-proto-dev.c $(PROTO_DEV_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-proto-dev,$(MINITEST_PROTO_DEV_SRCS)))
 
 # ----- tests

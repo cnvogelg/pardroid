@@ -44,17 +44,17 @@ int proto_dev_action_ping(proto_handle_t *ph)
 
 int proto_dev_action_bootloader(proto_handle_t *ph)
 {
-  return proto_atom_action(ph, PROTO_DEV_CMD_ACTION_BOOTLOADER);
+  return proto_atom_action_no_busy(ph, PROTO_DEV_CMD_ACTION_BOOTLOADER);
 }
 
 int proto_dev_action_reset(proto_handle_t *ph)
 {
-  return proto_atom_action(ph, PROTO_DEV_CMD_ACTION_RESET);
+  return proto_atom_action_no_busy(ph, PROTO_DEV_CMD_ACTION_RESET);
 }
 
 int proto_dev_action_knok(proto_handle_t *ph)
 {
-  return proto_atom_action(ph, PROTO_DEV_CMD_ACTION_KNOK);
+  return proto_atom_action_no_busy(ph, PROTO_DEV_CMD_ACTION_KNOK);
 }
 
 /* device parameters */
