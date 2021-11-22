@@ -197,6 +197,7 @@ int test_main(test_t all_tests[], test_param_t *param)
       }
       PutStr("----- Result -----\n");
       Printf("Total: %ld, Failed: %ld\n", cnt, num_failed);
+      return final_res;
     }
     /* run all tests a single time */
     else {
