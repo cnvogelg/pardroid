@@ -5,28 +5,29 @@
 #include "autoconf.h"
 #include "compiler.h"
 #include "debug.h"
-#include "proto_dev.h"
+#include "proto_io.h"
 
 int dosmain(void)
 {
     proto_env_handle_t *penv;
     int error;
 
-    PutStr("test-proto-dev\n");
+    PutStr("test-proto-io\n");
     penv = proto_env_init((struct Library *)SysBase, &error);
     if(penv != NULL) {
         PutStr("proto env OK\n");
 
         /* setup proto low */
-        PutStr("proto_dev_init\n");
-        proto_handle_t *ph = proto_dev_init(penv);
+        PutStr("proto_io_init\n");
+        proto_handle_t *ph = proto_io_init(penv);
         if(ph != NULL) {
             Printf("proto %ld\n", (ULONG)ph);
 
-            int res = proto_dev_action_ping(ph);
-            Printf("ping: ret=%ld\n", res);
+            UWORD mask = 0;
+            int res = proto_io_get_event_mask(ph, &mask);
+            Printf("event mask: ret=%ld mask=%x\n", res, mask);
 
-            proto_dev_exit(ph);
+            proto_io_exit(ph);
             PutStr("proto done\n");
         } else {
             PutStr("error setting up proto!\n");

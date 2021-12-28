@@ -34,6 +34,7 @@ PROTO_cia_SRCS = proto_low.s proto_low_cfg.c
 PROTO_ENV_SRCS = proto_env.c $(TIMER_SRCS) $(PARIO_SRCS)
 PROTO_ATOM_SRCS = $(PROTO_$(CONFIG_MACH)_SRCS) $(PROTO_ENV_SRCS) proto_atom.c
 PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) proto_dev.c
+PROTO_IO_SRCS = $(PROTO_DEV_SRCS) proto_io.c
 
 # test+bench
 TEST_SRCS = test.c test-buffer.c
@@ -64,6 +65,10 @@ $(eval $(call make-program,minitest-proto-atom,$(MINITEST_PROTO_ATOM_SRCS)))
 MINITEST_PROTO_DEV_SRCS = minitest-proto-dev.c $(PROTO_DEV_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-proto-dev,$(MINITEST_PROTO_DEV_SRCS)))
 
+# minitest-proto-io
+MINITEST_PROTO_IO_SRCS = minitest-proto-io.c $(PROTO_IO_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-proto-io,$(MINITEST_PROTO_IO_SRCS)))
+
 # ----- tests
 # test-proto-atom
 TEST_PROTO_ATOM_SRCS = test-proto-atom.c $(PROTO_ATOM_SRCS) $(TEST_SRCS)
@@ -77,6 +82,12 @@ TEST_PROTO_DEV_SRCS = test-proto-dev.c $(PROTO_DEV_SRCS) $(TEST_SRCS)
 TEST_PROTO_DEV_SRCS += proto-dev-testsuite.c
 $(eval $(call make-program,test-proto-dev,$(TEST_PROTO_DEV_SRCS)))
 $(eval $(call dist-program,test-proto-dev))
+
+# test-proto-io
+TEST_PROTO_IO_SRCS = test-proto-io.c $(PROTO_IO_SRCS) $(TEST_SRCS)
+TEST_PROTO_IO_SRCS += proto-io-testsuite.c
+$(eval $(call make-program,test-proto-io,$(TEST_PROTO_IO_SRCS)))
+$(eval $(call dist-program,test-proto-io))
 
 # disabled for now
 ifeq "a" "b"

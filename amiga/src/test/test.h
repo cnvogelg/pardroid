@@ -27,4 +27,34 @@ typedef struct test {
 
 extern int test_main(test_t all_tests[], test_param_t *param);
 
+#define TEST_FUNC(bla) \
+  int bla(test_t *t, test_param_t *p)
+
+#define CHECK_RES(res, sec) \
+  if (res != 0) \
+  { \
+    p->error = proto_atom_perror(res); \
+    p->section = sec; \
+    return res; \
+  }
+
+#define CHECK_EQUAL(got, exp, sec) \
+  if (got != exp) \
+  { \
+    p->error = "value mismatch"; \
+    p->section = sec; \
+    sprintf(p->extra, "got=%04x exp=%04x", got, exp); \
+    return 1; \
+  }
+
+#define CHECK_LEQUAL(got, exp, sec) \
+  if (got != exp) \
+  { \
+    p->error = "value mismatch"; \
+    p->section = sec; \
+    sprintf(p->extra, "got=%04lx exp=%04lx", got, exp); \
+    return 1; \
+  }
+
+
 #endif

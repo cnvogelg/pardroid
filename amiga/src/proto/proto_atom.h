@@ -33,8 +33,8 @@ extern int proto_atom_read_long(proto_handle_t *ph, UBYTE cmd, ULONG *data);
 extern int proto_atom_write_long(proto_handle_t *ph, UBYTE cmd, ULONG data);
 
 // read/write block
-extern int proto_atom_read_block(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_bytes);
-extern int proto_atom_write_block(proto_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_bytes);
+extern int proto_atom_read_block(proto_handle_t *ph, UBYTE cmd, UBYTE *buf, UWORD num_bytes);
+extern int proto_atom_write_block(proto_handle_t *ph, UBYTE cmd, UBYTE *buf, UWORD num_bytes);
 
 // verbose error
 extern const char *proto_atom_perror(int res);

@@ -23,7 +23,7 @@ int dosmain(void)
         PutStr("proto_atom_init\n");
         proto_handle_t *ph = proto_atom_init(penv);
         if(ph != NULL) {
-            Printf("proto %ld\n", ph);
+            Printf("proto %ld\n", (ULONG)ph);
 
             // actions
             PutStr("action 1");

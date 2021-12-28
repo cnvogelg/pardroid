@@ -1,7 +1,7 @@
 BASE_DIR=..
 
 # config setup
-CONFIG?=configs/pbnano.config
+CONFIG?=configs/teensy20.config
 ifeq "$(words $(wildcard $(CONFIG)))" "0"
 	dummy:=$(error config not found: $(CONFIG))
 endif
@@ -59,6 +59,7 @@ BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 # proto sources
 PROTO_ATOM_SRCS = $(PROTO_ARCH_SRCS) proto_atom.c
 PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) knok.c proto_dev.c
+PROTO_IO_SRCS = $(PROTO_DEV_SRCS) proto_io.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -115,8 +116,13 @@ $(eval $(call make-fw,test-proto-atom-fw,$(TEST_PROTO_ATOM_SRCS),$(CONFIG_MAX_RO
 
 # test-proto-dev
 TEST_PROTO_DEV_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_DEV_SRCS)
-TEST_PROTO_DEV_SRCS += proto_dev.c test-proto-dev.c knok.c
+TEST_PROTO_DEV_SRCS += test-proto-dev.c
 $(eval $(call make-fw,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-proto-io
+TEST_PROTO_IO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_IO_SRCS)
+TEST_PROTO_IO_SRCS += test-proto-io.c
+$(eval $(call make-fw,test-proto-io-fw,$(TEST_PROTO_IO_SRCS),$(CONFIG_MAX_ROM)))
 
 # disabled for now
 ifeq "a" "b"

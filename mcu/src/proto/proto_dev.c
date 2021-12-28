@@ -1,7 +1,7 @@
 #include "types.h"
 #include "autoconf.h"
 
-#define DEBUG CONFIG_DEBUG_PROTO
+#define DEBUG CONFIG_DEBUG_PROTO_DEV
 
 #include "arch.h"
 #include "debug.h"
