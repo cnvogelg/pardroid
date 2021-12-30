@@ -14,6 +14,9 @@
 #include "proto_boot.h"
 #include "proto_boot_shared.h"
 #include "proto_boot_test_shared.h"
+#include "proto_dev.h"
+#include "proto_dev_shared.h"
+#include "proto_atom.h"
 
 #include "fwid.h"
 #include "fw_info.h"
@@ -113,6 +116,25 @@ void proto_boot_api_flash_page(void)
 {
   uart_send_pstring(PSTR("flash page"));
   uart_send_crlf();
+
+#define TEST_OFFSET 2
+
+  u16 errors = 0;
+  for(u16 i=0;i<TEST_PAGE_SIZE;i++) {
+    u08 val = (u08)((i + TEST_OFFSET) & 0xff);
+    if(data_buf[i] != val) {
+      uart_send_pstring(PSTR("XX: @"));
+      uart_send_hex_word(i);
+      uart_send(':');
+      uart_send_hex_byte(data_buf[i]);
+      uart_send(',');
+      uart_send_hex_byte(val);
+      uart_send_crlf();
+      errors++;
+    }
+  }
+  uart_send_hex_word(errors);
+  uart_send_crlf();
 }
 
 // ----- main -----
@@ -128,22 +150,21 @@ int main(void)
 
   rom_info();
 
-  // wait for boot loader
-  while(1) {
-    if(proto_boot_init() == PROTO_BOOT_INIT_PROTO) {
-      break;
+  int res = proto_boot_init();
+
+  // take care of a reset
+  if(res == PROTO_BOOT_INIT_APP) {
+    u08 cmd = proto_atom_get_cmd();
+    if(cmd == PROTO_DEV_CMD_ACTION_RESET) {
+      proto_atom_action();
+      uart_send_pstring(PSTR("handle reset"));
+      uart_send_crlf();
     }
-
-    uart_send('.');
-    timer_delay(200);
-
-    system_wdt_reset();
   }
 
-  // failed to enter bootloader...
+  // enter bootloader...
   uart_send_pstring(PSTR("enter boot"));
   uart_send_crlf();
-
 
   while(1) {
     // handle all proto io commands
