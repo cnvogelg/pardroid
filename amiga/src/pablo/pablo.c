@@ -61,8 +61,10 @@ static void show_file_info(const char *file_name, pblfile_t *pf)
   show_machtag(pf->mach_tag);
 }
 
-static void show_bootinfo(bootinfo_t *bi)
+static void show_bootinfo(boot_handle_t *bh)
 {
+  bootinfo_t *bi = &bh->info;
+
   Printf("Flash ROM:  size=%08lx, page=%04lx\n",
     bi->rom_size, (ULONG)bi->page_size);
 
@@ -73,8 +75,10 @@ static void show_bootinfo(bootinfo_t *bi)
   show_machtag(bi->bl_mach_tag);
 }
 
-static void show_fw_info(bootinfo_t *bi)
+static void show_fw_info(boot_handle_t *bh)
 {
+  bootinfo_t *bi = &bh->info;
+
   if(bi->fw_mach_tag != bi->bl_mach_tag) {
     PutStr("Firmware:   not found.\n");
   } else {
@@ -97,7 +101,7 @@ static void show_error(int bl_res)
   PutStr("BL Error: ");
   PutStr(bootloader_perror(bl_res));
   PutStr(", (Proto=");
-  PutStr(proto_perror(bl_res & BOOTLOADER_RET_PROTO_MASK));
+  PutStr(proto_atom_perror(bl_res & BOOTLOADER_RET_PROTO_MASK));
   PutStr(")\n");
 }
 
@@ -112,19 +116,19 @@ static int flash_func(bl_flash_data_t *fd, void *user_data)
   return BOOTLOADER_RET_OK;
 }
 
-static int do_flash(proto_env_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_flash(boot_handle_t *bh, pblfile_t *pf)
 {
   int bl_res;
 
   PutStr("Flashing...\n");
-  bl_res = bootloader_flash(pb, bi, flash_func, pf);
+  bl_res = bootloader_flash(bh, flash_func, pf);
   if(bl_res == BOOTLOADER_RET_OK) {
     PutStr("\nDone\n");
 
     // after flashing re-read fw infos
-    bl_res = bootloader_update_fw_info(pb, bi);
+    bl_res = bootloader_update_fw_info(bh);
     if(bl_res == BOOTLOADER_RET_OK) {
-      show_fw_info(bi);
+      show_fw_info(bh);
     } else {
       PutStr("Read Info Aborted: ");
       show_error(bl_res);
@@ -178,9 +182,10 @@ static int post_verify_func(bl_flash_data_t *fd, void *user_data)
   }
 }
 
-static int do_verify(proto_env_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
+static int do_verify(boot_handle_t *bh, pblfile_t *pf)
 {
   int bl_res;
+  bootinfo_t *bi = &bh->info;
 
   PutStr("Verifying...");
 
@@ -195,7 +200,7 @@ static int do_verify(proto_env_handle_t *pb, bootinfo_t *bi, pblfile_t *pf)
   md.page_buf = page_buf;
   md.page_size = bi->page_size;
 
-  bl_res = bootloader_read(pb, bi, pre_verify_func, post_verify_func, &md);
+  bl_res = bootloader_read(bh, pre_verify_func, post_verify_func, &md);
   if(bl_res == BOOTLOADER_RET_OK) {
     PutStr("\nDone\n");
   } else {
@@ -261,19 +266,19 @@ int dosmain(void)
     int pb_res;
     pb = proto_env_init((struct Library *)SysBase, &pb_res);
     if(pb_res == PROTO_ENV_OK) {
-      bootinfo_t bi;
+      boot_handle_t bh;
 
       PutStr("Entering bootloader...");
-      int bl_res = bootloader_enter(pb, &bi);
+      int bl_res = bootloader_init(pb, &bh);
       if(bl_res == BOOTLOADER_RET_OK) {
         PutStr("ok\n");
-        show_bootinfo(&bi);
-        show_fw_info(&bi);
+        show_bootinfo(&bh);
+        show_fw_info(&bh);
 
         // check a file
         if(file_name != 0) {
           PutStr("Matching flash file...");
-          bl_res = bootloader_check_file(&bi, &pf);
+          bl_res = bootloader_check_file(&bh, &pf);
           if(bl_res == BOOTLOADER_RET_OK) {
             PutStr("ok\n");
           } else {
@@ -283,12 +288,12 @@ int dosmain(void)
 
         // flash?
         if((bl_res == BOOTLOADER_RET_OK) && params.flash) {
-          bl_res = do_flash(pb, &bi, &pf);
+          bl_res = do_flash(&bh, &pf);
         }
 
         // verify?
         if((bl_res == BOOTLOADER_RET_OK) && (params.verify || params.flash)) {
-          bl_res = do_verify(pb, &bi, &pf);
+          bl_res = do_verify(&bh, &pf);
         }
 
         // leave bootloader? - only if no error occurred
@@ -297,7 +302,7 @@ int dosmain(void)
         }
         else if(bl_res == BOOTLOADER_RET_OK) {
           PutStr("Leaving bootloader...");
-          bl_res = bootloader_leave(pb);
+          bl_res = bootloader_leave(&bh);
           if(bl_res == BOOTLOADER_RET_OK) {
             PutStr("ok\n");
           } else {
@@ -306,6 +311,9 @@ int dosmain(void)
         } else {
           PutStr("Staying in bootloader: due to errors!\n");
         }
+
+        // free bootloader res
+        bootloader_exit(&bh);
       }
       else {
         show_error(bl_res);
@@ -313,7 +321,7 @@ int dosmain(void)
 
       proto_env_exit(pb);
     } else {
-      Printf("FAILED pamela: %s\n", (LONG)proto_env_perror(pb_res));
+      Printf("FAILED proto env setup: %s\n", (LONG)proto_env_perror(pb_res));
       res = RETURN_ERROR;
     }
 

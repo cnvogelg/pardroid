@@ -57,10 +57,10 @@ BASE_SRCS = timer.c strobe.c spi.c crc.c led.c i2c.c $(BASE_ARCH_SRCS)
 BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 
 # proto sources
-PROTO_ATOM_SRCS = $(PROTO_ARCH_SRCS) proto_atom.c
+PROTO_ATOM_SRCS = $(PROTO_ATOM_ARCH_SRCS) proto_atom.c
 PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) knok.c proto_dev.c
 PROTO_IO_SRCS = $(PROTO_DEV_SRCS) proto_io.c
-PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
+PROTO_BOOT_SRCS = $(PROTO_BOOT_ARCH_SRCS) proto_atom.c proto_dev.c proto_boot.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -197,20 +197,20 @@ $(eval $(call make-firmware,test-pamela-fw,$(TEST_PAMELA_SRCS),$(CONFIG_MAX_ROM)
 #$(eval $(call dist-hex,test-paloma-fw))
 #$(eval $(call make-firmware,test-paloma-fw,$(TEST_PALOMA_SRCS),$(CONFIG_MAX_ROM)))
 
+# disable
+endif
+
 # ----- bootloader -----
 #ifeq "$(FLAVOR)" "release"
 ifdef CONFIG_BOOTLOADER
 # bootloader
 BOOTLOADER_SRCS = uart.c system.c pablo.c uartutil.c
-BOOTLOADER_SRCS += proto.c bootbase.c bootloader.c flash.c
-BOOTLOADER_SRCS += $(BOOTLOADER_ARCH_SRCS)
+BOOTLOADER_SRCS += bootbase.c bootloader.c flash.c
+BOOTLOADER_SRCS += $(PROTO_BOOT_SRCS) $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
 $(eval $(call make-firmware,bootloader,$(BOOTLOADER_SRCS),$(CONFIG_BOOTLOADER_SIZE),$(LDFLAGS_BOOTLOADER)))
 endif
 #endif
-
-# disable
-endif
 
 DEFAULT_FIRMWARE=test-proto-atom-fw
 

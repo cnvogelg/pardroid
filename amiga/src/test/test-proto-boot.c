@@ -80,6 +80,7 @@ int dosmain(void)
       /* run test */
       res = test_main(all_tests, &param);
 
+      proto_boot_leave(ph);
       proto_boot_exit(ph);
     } else {
       PutStr("proto failed!\n");

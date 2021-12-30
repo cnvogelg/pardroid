@@ -3,6 +3,7 @@
 
 #include "proto_env.h"
 #include "pblfile.h"
+#include "proto_atom.h"
 
 struct bootinfo {
   /* bootloader */
@@ -17,6 +18,12 @@ struct bootinfo {
   UWORD   fw_crc;
 };
 typedef struct bootinfo bootinfo_t;
+
+struct boot_handle {
+    bootinfo_t  info;
+    proto_handle_t *proto;
+};
+typedef struct boot_handle boot_handle_t;
 
 /* channels */
 #define BOOTLOADER_CHN_PAGES            0
@@ -55,16 +62,17 @@ typedef struct bl_flash_data bl_read_data_t;
 typedef int (*bl_flash_cb_t)(bl_flash_data_t *data, void *user_data);
 typedef int (*bl_read_cb_t)(bl_read_data_t *data, void *user_data);
 
-extern int bootloader_enter(proto_env_handle_t *pb, bootinfo_t *bi);
-extern int bootloader_leave(proto_env_handle_t *pb);
+extern int bootloader_init(proto_env_handle_t *pb, boot_handle_t *bh);
+extern int bootloader_leave(boot_handle_t *bh);
+extern void bootloader_exit(boot_handle_t *bh);
 
-extern int bootloader_update_fw_info(proto_env_handle_t *pb, bootinfo_t *bi);
-extern int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf);
+extern int bootloader_update_fw_info(boot_handle_t *bh);
+extern int bootloader_check_file(boot_handle_t *bh, pblfile_t *pf);
 
-extern int bootloader_flash(proto_env_handle_t *pb, bootinfo_t *bi,
+extern int bootloader_flash(boot_handle_t *bh,
                             bl_flash_cb_t pre_callback,
                             void *user_data);
-extern int bootloader_read(proto_env_handle_t *pb, bootinfo_t *bi,
+extern int bootloader_read(boot_handle_t *bh,
                            bl_read_cb_t pre_callback,
                            bl_read_cb_t post_callback,
                            void *user_data);

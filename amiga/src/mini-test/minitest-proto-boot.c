@@ -27,6 +27,7 @@ int dosmain(void)
             int res = proto_boot_get_rom_crc(ph, &crc);
             Printf("crc: ret=%ld crc=%x\n", res, crc);
 
+            proto_boot_leave(ph);
             proto_boot_exit(ph);
             PutStr("proto done\n");
         } else {

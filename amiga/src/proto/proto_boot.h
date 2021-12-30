@@ -5,6 +5,7 @@
 
 /* init/exit of io mode */
 extern proto_handle_t *proto_boot_init(proto_env_handle_t *penv);
+extern int proto_boot_leave(proto_handle_t *ph);
 extern void proto_boot_exit(proto_handle_t *ph);
 
 /* rom info */

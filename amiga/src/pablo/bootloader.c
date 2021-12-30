@@ -7,26 +7,27 @@
 #include "debug.h"
 
 #include "bootloader.h"
-#include "bootloader_shared.h"
-#include "proto.h"
+#include "proto_boot.h"
+#include "proto_dev.h"
 #include "types.h"
 #include "arch.h"
 #include "fwid.h"
 
-int bootloader_enter(proto_env_handle_t *pb, bootinfo_t *bi)
+int bootloader_init(proto_env_handle_t *penv, boot_handle_t *bh)
 {
   int res;
-  proto_handle_t *ph = proto_env_get_proto(pb);
-
-  /* try to enter bootloader (ignored if already running */
-  res = proto_bootloader(ph);
-  if(res != PROTO_RET_OK) {
+  bootinfo_t *bi = &bh->info;
+ 
+  /* enter boot loader */
+  bh->proto = proto_boot_init(penv);
+  if(bh->proto == NULL) {
     return BOOTLOADER_RET_NO_BOOTLOADER | res;
   }
+  proto_handle_t *ph = bh->proto;
 
   /* check bootloader magic */
   UWORD fw_id;
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_FW_ID, &fw_id);
+  res = proto_dev_get_fw_id(ph, &fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -36,7 +37,7 @@ int bootloader_enter(proto_env_handle_t *pb, bootinfo_t *bi)
 
   /* read version tag */
   UWORD bl_version;
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_FW_VERSION, &bl_version);
+  res = proto_dev_get_fw_version(ph, &bl_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -44,52 +45,52 @@ int bootloader_enter(proto_env_handle_t *pb, bootinfo_t *bi)
   bi->bl_version = bl_version;
 
   /* bootloader mach tag */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_MACHTAG, &bi->bl_mach_tag);
+  res = proto_dev_get_mach_tag(ph, &bi->bl_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
-  /* page size */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_PAGE_WORDS, &bi->page_size);
-  if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_READ_ERROR | res;
-  }
-  bi->page_size *= 2;
-
-  /* rom size */
-  res = proto_lfunc_read(ph, PROTO_LFUNC_READ_BOOT_ROM_SIZE, &bi->rom_size);
+  /* page size in bytes */
+  res = proto_boot_get_page_size(ph, &bi->page_size);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
-  return bootloader_update_fw_info(pb, bi);
+  /* rom size in bytes */
+  res = proto_boot_get_rom_size(ph, &bi->rom_size);
+  if(res != PROTO_RET_OK) {
+    return BOOTLOADER_RET_READ_ERROR | res;
+  }
+
+  return bootloader_update_fw_info(bh);
 }
 
-int bootloader_update_fw_info(proto_env_handle_t *pb, bootinfo_t *bi)
+int bootloader_update_fw_info(boot_handle_t *bh)
 {
   int res;
-  proto_handle_t *ph = proto_env_get_proto(pb);
+  proto_handle_t *ph = bh->proto;
+  bootinfo_t *bi = &bh->info;
 
   /* firmware crc */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_ROM_CRC, &bi->fw_crc);
+  res = proto_boot_get_rom_crc(ph, &bi->fw_crc);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware mach tag */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_ROM_MACHTAG, &bi->fw_mach_tag);
+  res = proto_boot_get_rom_mach_tag(ph, &bi->fw_mach_tag);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware version */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION, &bi->fw_version);
+  res = proto_boot_get_rom_fw_version(ph, &bi->fw_version);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* firmware id */
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_BOOT_ROM_FW_ID, &bi->fw_id);
+  res = proto_boot_get_rom_fw_id(ph, &bi->fw_id);
   if(res != PROTO_RET_OK) {
     return BOOTLOADER_RET_READ_ERROR | res;
   }
@@ -97,8 +98,10 @@ int bootloader_update_fw_info(proto_env_handle_t *pb, bootinfo_t *bi)
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf)
+int bootloader_check_file(boot_handle_t *bh, pblfile_t *pf)
 {
+  bootinfo_t *bi = &bh->info;
+
   if(pf == NULL) {
     return BOOTLOADER_RET_INVALID_FILE;
   }
@@ -114,15 +117,15 @@ int bootloader_check_file(bootinfo_t *bi, pblfile_t *pf)
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_flash(proto_env_handle_t *pb, bootinfo_t *bi,
+int bootloader_flash(boot_handle_t *bh,
                      bl_flash_cb_t pre_flash_func,
                      void *user_data)
 {
   int res;
-  proto_handle_t *ph = proto_env_get_proto(pb);
+  proto_handle_t *ph = bh->proto;
+  bootinfo_t *bi = &bh->info;
 
   UWORD page_size = bi->page_size;
-  UWORD page_words = page_size >> 1;
   ULONG rom_size = bi->rom_size;
 
   bl_flash_data_t bu;
@@ -145,13 +148,13 @@ int bootloader_flash(proto_env_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_lfunc_write(ph, PROTO_LFUNC_WRITE_BOOT_PAGE_ADDR, bu.addr);
+    res = proto_boot_set_page_addr(ph, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
 
     /* send flash page (and do flash) */
-    res = proto_chn_msg_write(ph, BOOTLOADER_CHN_PAGES, data, page_words);
+    res = proto_boot_write_page(ph, data, page_size);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_WRITE_PAGE_ERROR | res;
     }
@@ -163,16 +166,16 @@ int bootloader_flash(proto_env_handle_t *pb, bootinfo_t *bi,
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_read(proto_env_handle_t *pb, bootinfo_t *bi,
+int bootloader_read(boot_handle_t *bh,
                     bl_read_cb_t pre_read_func,
                     bl_read_cb_t post_read_func,
                     void *user_data)
 {
   int res;
-  proto_handle_t *ph = proto_env_get_proto(pb);
+  proto_handle_t *ph = bh->proto;
+  bootinfo_t *bi = &bh->info;
 
   UWORD page_size = bi->page_size;
-  UWORD page_words = page_size >> 1;
   ULONG rom_size = bi->rom_size;
 
   bl_flash_data_t bu;
@@ -195,13 +198,13 @@ int bootloader_read(proto_env_handle_t *pb, bootinfo_t *bi,
     }
 
     /* set addr in bootloader */
-    res = proto_lfunc_write(ph, BOOTLOADER_CHN_PAGES, bu.addr);
+    res = proto_boot_set_page_addr(ph, bu.addr);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_FAILED_SET_ADDR | res;
     }
 
     /* read flash page (and do flash) */
-    res = proto_chn_msg_read(ph, BOOTLOADER_CHN_PAGES, data, page_words);
+    res = proto_boot_read_page(ph, data, page_size);
     if(res != PROTO_RET_OK) {
       return BOOTLOADER_RET_READ_PAGE_ERROR | res;
     }
@@ -221,30 +224,39 @@ int bootloader_read(proto_env_handle_t *pb, bootinfo_t *bi,
   return BOOTLOADER_RET_OK;
 }
 
-int bootloader_leave(proto_env_handle_t *pb)
+int bootloader_leave(boot_handle_t *bh)
 {
-  int res;
-  proto_handle_t *ph = proto_env_get_proto(pb);
+  int res, retval;
+  proto_handle_t *ph = bh->proto;
 
-  /* reset device */
-  res = proto_reset(ph);
+  /* leave boot loader */
+  res = proto_boot_leave(ph);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_NO_RESET | res;
+    retval = BOOTLOADER_RET_NO_RESET | res;
   }
 
   /* make sure we are in the application */
   UWORD fw_id;
-  res = proto_wfunc_read(ph, PROTO_WFUNC_READ_FW_ID, &fw_id);
+  res = proto_dev_get_fw_id(ph, &fw_id);
   if(res != PROTO_RET_OK) {
-    return BOOTLOADER_RET_READ_ERROR | res;
+    retval = BOOTLOADER_RET_READ_ERROR | res;
   }
 
   /* check bootloader version magic is NOT set */
   if(fw_id == FWID_BOOTLOADER_PABLO) {
-    return BOOTLOADER_RET_NO_FIRMWARE;
+    retval = BOOTLOADER_RET_NO_FIRMWARE;
+  } else {
+    retval = BOOTLOADER_RET_OK;
   }
 
-  return BOOTLOADER_RET_OK;
+  return retval;
+}
+
+void bootloader_exit(boot_handle_t *bh)
+{
+  proto_handle_t *ph = bh->proto;
+
+  proto_boot_exit(ph);
 }
 
 const char *bootloader_perror(int res)

@@ -3,81 +3,28 @@
 #include "arch.h"
 
 #include "bootbase.h"
-#include "bootloader_shared.h"
-#include "proto_shared.h"
 #include "pablo.h"
 #include "uart.h"
-#include "proto_low.h"
-#include "proto.h"
-#include "proto_api.h"
+#include "proto_boot.h"
 #include "flash.h"
 #include "machtag.h"
 #include "fwid.h"
+#include "fw_info.h"
+#include "pablo.h"
 
 #include "uartutil.h"
 
-static u08 status;
-static u16 page_words;
+static u16 page_bytes;
 static u32 page_addr;
 static u08 *page_buf;
 
-
-// ----- actions -----
-
-void proto_api_acion(u08 num)
-{
-  /* no extra action */
-}
-
-// ----- functions -----
-
-u16  proto_api_wfunc_read(u08 num)
-{
-  switch(num) {
-    case PROTO_WFUNC_READ_BOOT_FW_ID:
-      return FWID_BOOTLOADER_PABLO;
-    case PROTO_WFUNC_READ_BOOT_MACHTAG:
-      return MACHTAG;
-    case PROTO_WFUNC_READ_BOOT_FW_VERSION:
-      return VERSION_TAG;
-    case PROTO_WFUNC_READ_BOOT_ROM_CRC:
-      return pablo_get_rom_crc();
-    case PROTO_WFUNC_READ_BOOT_ROM_MACHTAG:
-      return pablo_get_mach_tag();
-    case PROTO_WFUNC_READ_BOOT_ROM_FW_VERSION:
-      return pablo_get_rom_version();
-    case PROTO_WFUNC_READ_BOOT_ROM_FW_ID:
-      return pablo_get_rom_fw_id();
-    case PROTO_WFUNC_READ_BOOT_PAGE_WORDS:
-      return page_words;
-    default:
-      return 0;
-  }
-}
-
-u32 proto_api_lfunc_read(u08 num)
-{
-  /* only ROM size for now */
-  uart_send('r');
-  return CONFIG_MAX_ROM;
-}
-
-void proto_api_lfunc_write(u08 num, u32 val)
-{
-  /* only page addr for now */
-  uart_send('A');
-  page_addr = val;
-}
-
-void proto_api_action(u08 num)
-{
-}
+FW_INFO(FWID_BOOTLOADER_PABLO, VERSION_TAG)
 
 // ----- main -----
 
 u08 bootbase_init(u16 page_size, u08 *buf_ptr)
 {
-  page_words = page_size / 2;
+  page_bytes = page_size;
   page_buf = buf_ptr;
 
   // say hello
@@ -85,12 +32,11 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
   uart_send('P');
 
   // setup proto
-  proto_init();
+  int res = proto_boot_init();
   uart_send('A');
 
-  // check if bootloader command is set - if not enter app
-  u08 cmd = proto_low_get_cmd();
-  if(cmd != (PROTO_CMD_ACTION | PROTO_ACTION_BOOTLOADER)) {
+  // we need to launch the app code
+  if(res == PROTO_BOOT_INIT_APP) {
     // check crc
     uart_send('B');
     u16 crc = pablo_check_rom_crc();
@@ -105,64 +51,78 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
       }
     }
   }
-  else {
-    // reply to bootloader command
-    uart_send('-');
-    proto_low_action();
-    proto_low_end();
-  }
-
-  // wait if computer is off
-  if(cmd == 0) {
-    uart_send('o');
-    while(proto_low_get_cmd() == 0) {
-      boot_wdt_reset();
-    }
-  }
 
   // enter main loop
   uart_send(':');
   while(1) {
-    proto_handle_mini();
+    proto_boot_handle_cmd();
     boot_wdt_reset();
   }
   return BOOTBASE_RET_CMD_LOOP;
 }
 
-// msg i/o is used to transfer page data - channel is ignored in bootloader
+// ----- boot API -----
 
-u08 *proto_api_read_msg_begin(u08 chan, u16 *size)
+u16 proto_boot_api_get_page_size(void)
 {
-  *size = page_words;
+  uart_send('p');
+  return page_bytes;
+}
+
+u32 proto_boot_api_get_rom_size(void)
+{
+  uart_send('r');
+  return CONFIG_MAX_ROM;
+}
+
+#define BIND(x) __attribute__ ((weak, alias(#x)))
+
+u16 proto_boot_api_get_rom_crc(void)
+{
+  return pablo_get_rom_crc();
+}
+
+u16 proto_boot_api_get_rom_mach_tag(void)
+{
+  return pablo_get_mach_tag();
+}
+
+u16 proto_boot_api_get_rom_fw_version(void)
+{
+  return pablo_get_rom_version();
+}
+
+u16 proto_boot_api_get_rom_fw_id(void)
+{
+  return pablo_get_rom_fw_id();
+}
+
+void proto_boot_api_set_page_addr(u32 addr)
+{
+  uart_send('a');
+  page_addr = addr;
+}
+
+void proto_boot_api_get_page_read_buf(u08 **buf, u16 *size)
+{
+  *buf = page_buf;
+  *size = page_bytes;
+  
   uart_send('r');
   flash_read_page(page_addr, page_buf);
-  return page_buf;
 }
 
-void proto_api_read_msg_done(u08 chan)
+void proto_boot_api_get_page_write_buf(u08 **buf, u16 *size)
 {
-  uart_send('.');
-}
+  *buf = page_buf;
+  *size = page_bytes;
 
-u08 *proto_api_write_msg_begin(u08 chan, u16 *size)
-{
-  *size = page_words;
   uart_send('w');
-  return page_buf;
 }
 
-void proto_api_write_msg_done(u08 chan)
+void proto_boot_api_flash_page(void)
 {
   uart_send('(');
   flash_program_page(page_addr, page_buf);
-  uart_send(')');
-  status = BOOT_STATUS_OK;
-}
-
-void proto_low_write_block_spi(u16 num_words)
-{
-}
-
-void proto_low_read_block_spi(u16 num_words)
-{
+  uart_send(')'); 
 }

@@ -6,6 +6,8 @@
 #include "arch.h"
 #include "debug.h"
 #include "system.h"
+#include "timer.h"
+#include "uart.h"
 
 #include "proto_atom.h"
 #include "proto_boot.h"
@@ -15,14 +17,30 @@
 
 int proto_boot_init(void)
 {
+  u08 cmd;
+
   proto_atom_init();
 
-  // make sure its a BOOTLOADER command
-  u08 cmd = proto_atom_get_cmd();
-  if(cmd != PROTO_DEV_CMD_ACTION_BOOTLOADER) {
-    // return to signal that the bootloader needs
-    // to enter application code
-    return PROTO_BOOT_INIT_APP;
+  while(1) {
+    // get current command
+    cmd = proto_atom_get_cmd();
+
+    // boot loader!
+    if(cmd == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
+      break;
+    }
+
+    // something else -> try to launch app
+    if(cmd != PROTO_NO_CMD) {
+      // return to signal that the bootloader needs
+      // to enter application code
+      return PROTO_BOOT_INIT_APP;
+    }
+
+    // wait for some new state
+    uart_send('.');
+    timer_delay(200);
+    system_wdt_reset();
   }
 
   // handle BOOTLOADER action
@@ -72,7 +90,7 @@ void proto_boot_handle_cmd()
         u08 *buf;
         u16 size;
         proto_boot_api_get_page_write_buf(&buf, &size);
-        proto_atom_write_block(buf, size);
+        proto_atom_write_block_nospi(buf, size);
         proto_boot_api_flash_page();
         break;
       }
@@ -81,7 +99,7 @@ void proto_boot_handle_cmd()
         u08 *buf;
         u16 size;
         proto_boot_api_get_page_read_buf(&buf, &size);
-        proto_atom_read_block(buf, size);
+        proto_atom_read_block_nospi(buf, size);
         break;
       }
     default:

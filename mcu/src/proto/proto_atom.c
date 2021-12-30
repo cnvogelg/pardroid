@@ -93,6 +93,20 @@ void proto_atom_write_block(u08 *buf, u16 num_bytes)
   proto_low_end();
 }
 
+void proto_atom_read_block_nospi(u08 *buf, u16 num_bytes)
+{
+  u16 num_words = num_bytes >> 1;
+  proto_low_read_block(num_words, buf);
+  proto_low_end();
+}
+
+void proto_atom_write_block_nospi(u08 *buf, u16 num_bytes)
+{
+  u16 num_words = num_bytes >> 1;
+  proto_low_write_block(num_words, buf);
+  proto_low_end();
+}
+
 u08 proto_atom_get_cmd(void)
 {
   // read command from bits 0..4 in idle byte

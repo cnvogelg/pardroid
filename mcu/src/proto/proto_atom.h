@@ -17,6 +17,9 @@ extern u32  proto_atom_write_long(void);
 extern void proto_atom_read_block(u08 *buf, u16 num_bytes);
 extern void proto_atom_write_block(u08 *buf, u16 num_bytes);
 
+extern void proto_atom_read_block_nospi(u08 *buf, u16 num_bytes);
+extern void proto_atom_write_block_nospi(u08 *buf, u16 num_bytes);
+
 extern u08 proto_atom_get_cmd(void);
 
 #endif
