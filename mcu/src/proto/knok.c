@@ -7,7 +7,6 @@
 #include "debug.h"
 
 #include "knok.h"
-#include "knok_api.h"
 #include "strobe.h"
 #include "uart.h"
 #include "uartutil.h"
