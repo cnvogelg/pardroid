@@ -60,6 +60,7 @@ BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
 PROTO_ATOM_SRCS = $(PROTO_ARCH_SRCS) proto_atom.c
 PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) knok.c proto_dev.c
 PROTO_IO_SRCS = $(PROTO_DEV_SRCS) proto_io.c
+PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
 
 # pamela
 PAMELA_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_SRCS)
@@ -123,6 +124,11 @@ $(eval $(call make-fw,test-proto-dev-fw,$(TEST_PROTO_DEV_SRCS),$(CONFIG_MAX_ROM)
 TEST_PROTO_IO_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_IO_SRCS)
 TEST_PROTO_IO_SRCS += test-proto-io.c
 $(eval $(call make-fw,test-proto-io-fw,$(TEST_PROTO_IO_SRCS),$(CONFIG_MAX_ROM)))
+
+# test-proto-boot
+TEST_PROTO_BOOT_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_BOOT_SRCS)
+TEST_PROTO_BOOT_SRCS += test-proto-boot.c
+$(eval $(call make-fw,test-proto-boot-fw,$(TEST_PROTO_BOOT_SRCS),$(CONFIG_MAX_ROM)))
 
 # disabled for now
 ifeq "a" "b"

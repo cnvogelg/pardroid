@@ -1,0 +1,11 @@
+#ifndef PROTO_BOOT_TEST_SHARED_H
+#define PROTO_BOOT_TEST_SHARED_H
+
+#define TEST_PAGE_SIZE      512
+#define TEST_ROM_SIZE       0x20000UL
+#define TEST_ROM_CRC        0x3456
+#define TEST_ROM_MACH_TAG   0x0107
+#define TEST_ROM_FW_VERSION 0x0142
+#define TEST_ROM_FW_ID      0x8899
+
+#endif
