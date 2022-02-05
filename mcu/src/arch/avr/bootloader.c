@@ -58,9 +58,9 @@ int main(void)
   // watchdog init
   wdt_enable(WDTO_500MS);
 
-  // check for app
-  u08 ret = bootbase_init(SPM_PAGESIZE, page_buf);
-  if(ret == BOOTBASE_RET_RUN_APP) {
-    run_app();
-  }
+  // try to enter bootloader and handle boot commands
+  bootbase_main(SPM_PAGESIZE, page_buf);
+
+  // if main returns then we have to run the app
+  run_app();
 }

@@ -32,7 +32,7 @@ proto_handle_t *proto_boot_init(proto_env_handle_t *penv)
 int proto_boot_leave(proto_handle_t *ph)
 {
   // trigger knok mode to return to save state of device
-  return proto_dev_action_reset(ph);
+  return proto_dev_action_knok(ph);
 }
 
 void proto_boot_exit(proto_handle_t *ph)

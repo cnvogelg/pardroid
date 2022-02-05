@@ -22,7 +22,7 @@ FW_INFO(FWID_BOOTLOADER_PABLO, VERSION_TAG)
 
 // ----- main -----
 
-u08 bootbase_init(u16 page_size, u08 *buf_ptr)
+void bootbase_main(u16 page_size, u08 *buf_ptr)
 {
   page_bytes = page_size;
   page_buf = buf_ptr;
@@ -47,18 +47,19 @@ u08 bootbase_init(u16 page_size, u08 *buf_ptr)
       if(rom_mach_tag == MACHTAG) {
         uart_send('O');
         // run app if valid -> run it
-        return BOOTBASE_RET_RUN_APP;
+        return;
       }
     }
+    // something failed with app? -> wait for bootloader command
+    proto_boot_wait();
   }
 
-  // enter main loop
+  // enter main loop of bootloader
   uart_send(':');
   while(1) {
     proto_boot_handle_cmd();
     boot_wdt_reset();
   }
-  return BOOTBASE_RET_CMD_LOOP;
 }
 
 // ----- boot API -----

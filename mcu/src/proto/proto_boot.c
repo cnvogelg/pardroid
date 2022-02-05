@@ -17,24 +17,39 @@
 
 int proto_boot_init(void)
 {
-  u08 cmd;
-
   proto_atom_init();
 
+  // get current command
+  u08 cmd = proto_atom_get_cmd();
+
+  // is it a bootloader command?
+  if(cmd == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
+    // handle BOOTLOADER action
+    // and then enter main loop
+    DC('{');
+    proto_atom_action();
+    DC('}');
+
+    return PROTO_BOOT_INIT_PROTO;
+  }
+
+  // something else or no command -> try to run app
+  return PROTO_BOOT_INIT_APP;
+}
+
+void proto_boot_wait(void)
+{
   while(1) {
-    // get current command
-    cmd = proto_atom_get_cmd();
+    u08 cmd = proto_atom_get_cmd();
 
-    // boot loader!
+    // is it a bootloader command? -> done waiting
     if(cmd == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
-      break;
-    }
-
-    // something else -> try to launch app
-    if(cmd != PROTO_NO_CMD) {
-      // return to signal that the bootloader needs
-      // to enter application code
-      return PROTO_BOOT_INIT_APP;
+      // handle BOOTLOADER action
+      // and then enter main loop
+      DC('{');
+      proto_atom_action();
+      DC('}');
+      return;
     }
 
     // wait for some new state
@@ -42,14 +57,6 @@ int proto_boot_init(void)
     timer_delay(200);
     system_wdt_reset();
   }
-
-  // handle BOOTLOADER action
-  // and then enter main loop
-  DC('{'); DB(cmd);
-  proto_atom_action();
-  DC('}');
-
-  return PROTO_BOOT_INIT_PROTO;
 }
 
 void proto_boot_handle_cmd()

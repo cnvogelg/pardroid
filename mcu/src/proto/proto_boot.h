@@ -6,6 +6,7 @@
 
 extern int  proto_boot_init(void);
 extern void proto_boot_handle_cmd(void);
+extern void proto_boot_wait(void);
 
 // ----- API -----
 extern u16 proto_boot_api_get_page_size(void);

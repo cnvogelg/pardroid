@@ -7,7 +7,7 @@
 #define BOOTBASE_RET_RUN_APP                0
 #define BOOTBASE_RET_CMD_LOOP               1
 
-extern u08 bootbase_init(u16 page_size, u08 *page_buf);
+extern void bootbase_main(u16 page_size, u08 *page_buf);
 
 extern void boot_wdt_reset(void);
 
