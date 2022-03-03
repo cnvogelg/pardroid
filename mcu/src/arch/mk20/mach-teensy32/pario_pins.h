@@ -98,9 +98,14 @@ INLINE void pario_busy_in(void)
   GPIOB_PDDR = old;
 }
 
-FORCE_INLINE void pario_data_ddr(uint8_t ddr)
+FORCE_INLINE void pario_data_ddr_out(void)
 {
-  GPIOD_PDDR = (GPIOD_PDDR & ~(DATA_MASK)) | ddr;
+  GPIOD_PDDR = (GPIOD_PDDR & ~(DATA_MASK)) | 0xff;
+}
+
+FORCE_INLINE void pario_data_ddr_in(void)
+{
+  GPIOD_PDDR = (GPIOD_PDDR & ~(DATA_MASK));
 }
 
 FORCE_INLINE uint8_t pario_get_data(void)

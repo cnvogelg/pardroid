@@ -1,5 +1,5 @@
 /*
- * i2c.c - I2C setup
+ * hw_i2c.c - I2C setup
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -29,10 +29,7 @@
 #include "autoconf.h"
 #include "types.h"
 
-#include "i2c.h"
-
-#include "uart.h"
-#include "uartutil.h"
+#include "hw_i2c.h"
 
 #if F_BUS != 36000000
 #error F_BUS
@@ -53,7 +50,7 @@
 
 */
 
-void i2c_init(void)
+void hw_i2c_init(void)
 {
   // configure pins
   PORTB_PCR3 = PORT_PCR_MUX(2) | PORT_PCR_ODE|PORT_PCR_SRE|PORT_PCR_DSE;
@@ -78,7 +75,7 @@ void i2c_init(void)
   I2C0_C1 = I2C_C1_IICEN;
 }
 
-u08 i2c_start(u08 addr, u08 write)
+u08 hw_i2c_start(u08 addr, u08 write)
 {
   // make sure bus is idle
   while(I2C0_S & I2C_S_BUSY);
@@ -111,13 +108,13 @@ u08 i2c_start(u08 addr, u08 write)
   return 0;
 }
 
-void i2c_stop(void)
+void hw_i2c_stop(void)
 {
   // remove MST to trigger stop condition
   I2C0_C1 = I2C_C1_IICEN;
 }
 
-u08 i2c_write_byte(u08 data)
+u08 hw_i2c_write_byte(u08 data)
 {
   // write data
   I2C0_D = data;
@@ -130,7 +127,7 @@ u08 i2c_write_byte(u08 data)
   return 0;
 }
 
-u08 i2c_read_byte(u08 ack, u08 *data)
+u08 hw_i2c_read_byte(u08 ack, u08 *data)
 {
   // wait for completion
   while(!(I2C0_S & I2C_S_IICIF));
@@ -142,40 +139,40 @@ u08 i2c_read_byte(u08 ack, u08 *data)
 	return 0;
 }
 
-u08 i2c_write(u08 addr, const u08 *data, u16 len)
+u08 hw_i2c_write(u08 addr, const u08 *data, u16 len)
 {
 	u08 res;
 
-	res = i2c_start(addr, 1);
+	res = hw_i2c_start(addr, 1);
 	if(res)
 		return res;
 
 	for(u16 i=0;i<len;i++) {
-		res = i2c_write_byte(data[i]);
+		res = hw_i2c_write_byte(data[i]);
     if(res != 0) {
       break;
     }
 	}
 
-	i2c_stop();
+	hw_i2c_stop();
 	return res;
 }
 
-u08 i2c_read(u08 addr, u08 *data, u16 len)
+u08 hw_i2c_read(u08 addr, u08 *data, u16 len)
 {
 	u08 res;
 
-	res = i2c_start(addr, 0);
+	res = hw_i2c_start(addr, 0);
 	if(res)
 		return res;
 	
 	for(u16 i=len;i>=0;i--) {
-		res = i2c_read_byte(i!=0, &data[i]);
+		res = hw_i2c_read_byte(i!=0, &data[i]);
     if(res != 0) {
       break;
     }
 	}
 
-	i2c_stop();
+	hw_i2c_stop();
 	return res;
 }

@@ -2,8 +2,8 @@
 #include "kinetis.h"
 
 #include "autoconf.h"
-#include "system.h"
-#include "timer.h"
+#include "hw_system.h"
+#include "hw_timer.h"
 #include "eeprom.h"
 
 static uint32_t last_ws;
@@ -18,14 +18,14 @@ void startup_early_hook(void)
   WDOG_PRESC = 0; // 1KHz dog timer
 }
 
-void system_init(void)
+void hw_system_init(void)
 {
   // watchdog already setup
 
   eeprom_initialize();
 }
 
-void system_sys_reset(void)
+void hw_system_sys_reset(void)
 {
   // fastest way to trigger a watchdog reset:
   // write invalid value to UNLOCK register
@@ -35,10 +35,10 @@ void system_sys_reset(void)
   while(1) {}
 }
 
-void system_wdt_reset(void)
+void hw_system_wdt_reset(void)
 {
   // only trigger ws reset at least every ms
-  uint32_t m = timer_millis();
+  uint32_t m = hw_timer_millis();
   if((m - last_ws) > 2) {
     last_ws = m;
 

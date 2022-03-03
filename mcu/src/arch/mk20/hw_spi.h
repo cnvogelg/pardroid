@@ -1,5 +1,5 @@
 /*
- * spi.h - SPI setup
+ * hw_spi.h - SPI setup
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -24,8 +24,8 @@
  *
  */
 
-#ifndef SPI_H
-#define SPI_H
+#ifndef HW_SPI_H
+#define HW_SPI_H
 
 #include "autoconf.h"
 
@@ -35,17 +35,17 @@
 #define SPI_SPEED_MAX   0
 #define SPI_SPEED_SLOW  1
 
-extern void spi_init(void);
-extern void spi_set_speed(u08 speed);
+extern void hw_spi_init(void);
+extern void hw_spi_set_speed(u08 speed);
 
-extern u08 spi_xfer(u08 data);
-INLINE void spi_out(u08 data) { spi_xfer(data); }
-INLINE u08 spi_in(void) { return spi_xfer(0xff); }
+extern u08 hw_spi_xfer(u08 data);
+INLINE void hw_spi_out(u08 data) { hw_spi_xfer(data); }
+INLINE u08 hw_spi_in(void) { return hw_spi_xfer(0xff); }
 
-#define spi_enable_cs0()  spi_pins_cs0_lo()
-#define spi_disable_cs0() spi_pins_cs0_hi()
+#define hw_spi_enable_cs0()  spi_pins_cs0_lo()
+#define hw_spi_disable_cs0() spi_pins_cs0_hi()
 
-#define spi_enable_cs1()  spi_pins_cs1_lo()
-#define spi_disable_cs1() spi_pins_cs1_hi()
+#define hw_spi_enable_cs1()  spi_pins_cs1_lo()
+#define hw_spi_disable_cs1() spi_pins_cs1_hi()
 
 #endif // SPI_H

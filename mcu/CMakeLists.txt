@@ -43,7 +43,7 @@ set(BASE_SRCS
 
         ${BASE_DIR}/uartutil.c
         ${BASE_DIR}/rominfo.c
-        ${BASE_DIR}/mem.c
+#        ${BASE_DIR}/mem.c
 )
 
 set(PROTO_ATOM_SRCS

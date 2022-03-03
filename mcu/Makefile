@@ -60,7 +60,7 @@ BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 # base sources
 BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c
 BASE_SRCS += $(BASE_ARCH_SRCS)
-BASE_SRCS += strobe.c crc.c uartutil.c pablo.c rominfo.c mem.c
+BASE_SRCS += strobe.c crc.c uartutil.c pablo.c rominfo.c #mem.c
 
 # proto sources
 PROTO_ATOM_SRCS = $(PROTO_ATOM_ARCH_SRCS) proto_atom.c

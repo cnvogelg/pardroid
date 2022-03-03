@@ -24,7 +24,7 @@
  *
  */
 
-#include "spi.h"
+#include "hw_spi.h"
 
 // missing SPI defines
 #define SPI_SR_RXCTR 0XF0
@@ -68,7 +68,7 @@
 #error F_BUS
 #endif
 
-void spi_init(void)
+void hw_spi_init(void)
 {
   // enable SPI module clock
   SIM_SCGC6 |= SIM_SCGC6_SPI0;
@@ -87,7 +87,7 @@ void spi_init(void)
   SPI0_MCR = SPI_MCR_MSTR | SPI_MCR_PCSIS(0x1F) | SPI_MCR_CLR_TXF | SPI_MCR_CLR_RXF;
 }
 
-void spi_set_speed(u08 s)
+void hw_spi_set_speed(u08 s)
 {
   uint32_t speed;
   if(s == SPI_SPEED_MAX) {
@@ -107,7 +107,7 @@ void spi_set_speed(u08 s)
   SPI0_MCR = SPI_MCR_MSTR | SPI_MCR_PCSIS(0x1F) | SPI_MCR_CLR_TXF | SPI_MCR_CLR_RXF;
 }
 
-u08 spi_xfer(u08 data)
+u08 hw_spi_xfer(u08 data)
 {
   SPI0_MCR |= SPI_MCR_CLR_RXF;
   SPI0_SR = SPI_SR_TCF;

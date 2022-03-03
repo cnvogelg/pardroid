@@ -3,13 +3,13 @@
 #include "autoconf.h"
 #include "types.h"
 
-#include "uart.h"
+#include "hw_uart.h"
 
 // calc baud divisor
 #define BAUD CONFIG_BAUD_RATE
 #define BAUD2DIV(baud)  (((F_CPU * 2) + ((baud) >> 1)) / (baud))
 
-void uart_init(void)
+void hw_uart_init(void)
 {
     // turn on UART clock
     SIM_SCGC4 |= SIM_SCGC4_UART0;
@@ -32,7 +32,7 @@ void uart_init(void)
     UART0_C2 = UART_C2_TE | UART_C2_RE;
 }
 
-void uart_send(u08 data)
+void hw_uart_send(u08 data)
 {
     // wait for last transfer complete
     while(!(UART0_S1 & UART_S1_TC));

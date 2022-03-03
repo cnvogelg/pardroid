@@ -1,28 +1,28 @@
-#ifndef TIMER_H
-#define TIMER_H
+#ifndef HW_TIMER_H
+#define HW_TIMER_H
 
 #include <stdint.h>
 #include "arch.h"
 
-typedef uint32_t timer_ms_t;
+typedef uint32_t hw_timer_ms_t;
 
-extern volatile timer_ms_t systick_millis_count;
+extern volatile hw_timer_ms_t systick_millis_count;
 
-extern void timer_delay(uint32_t ms);
+extern void hw_timer_delay_ms(uint32_t ms);
 
-INLINE timer_ms_t timer_millis(void)
+INLINE hw_timer_ms_t hw_timer_millis(void)
 {
-    volatile timer_ms_t ret = systick_millis_count;
+    volatile hw_timer_ms_t ret = systick_millis_count;
     return ret;
 }
 
-INLINE int timer_millis_timed_out(timer_ms_t start, uint16_t timeout)
+INLINE int hw_timer_millis_timed_out(hw_timer_ms_t start, uint16_t timeout)
 {
-    return (timer_millis() - start) > timeout;
+    return (hw_timer_millis() - start) > timeout;
 }
 
 /* from Teensyduino: core_pins.h */
-FORCE_INLINE void timer_delay_us(uint32_t usec)
+FORCE_INLINE void hw_timer_delay_us(uint32_t usec)
 {
 #if F_CPU == 240000000
     uint32_t n = usec * 80;
@@ -68,6 +68,6 @@ FORCE_INLINE void timer_delay_us(uint32_t usec)
     );
 }
 
-#define timer_delay_1us() timer_delay_us(1)
+#define hw_timer_delay_1us() hw_timer_delay_us(1)
 
 #endif

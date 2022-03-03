@@ -7,7 +7,7 @@
 #include "strobe.h"
 #include "knok.h"
 #include "pario_pins.h"
-#include "timer.h"
+#include "hw_timer.h"
 
 static volatile u08 state;
 static u08 strobe_count;
@@ -46,7 +46,7 @@ static void strobe_read_func(void)
 
   // pulse ack
   pario_ack_lo();
-  timer_delay_1us();
+  hw_timer_delay_1us();
   pario_ack_hi();
 }
 
@@ -156,7 +156,7 @@ static void strobe_write_func(void)
 
   // pulse ack
   pario_ack_lo();
-  timer_delay_1us();
+  hw_timer_delay_1us();
   pario_ack_hi();
 }
 
@@ -174,7 +174,7 @@ void strobe_send_begin(strobe_send_get_func_t func, u16 size)
 
   pario_busy_in();
   pario_set_data(val);
-  pario_data_ddr(0xff);
+  pario_data_ddr_out();
 
   state = STROBE_FLAG_NONE;
   strobe_count = 0;
@@ -199,13 +199,13 @@ void strobe_pulse_ack(void)
 {
   // pulse ack
   pario_ack_lo();
-  timer_delay_1us();
+  hw_timer_delay_1us();
   pario_ack_hi();
 }
 
 void strobe_send_end(void)
 {
-  pario_data_ddr(0x00);
+  pario_data_ddr_in();
   pario_busy_out();
 
   strobe_func = strobe_read_func;
