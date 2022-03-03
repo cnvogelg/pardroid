@@ -4,19 +4,20 @@
 
 #include "debug.h"
 
-#include "uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+#include "hw_spi.h"
+#include "hw_uart.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
 
 #include "proto_atom.h"
 #include "proto_atom_test_shared.h"
 
 #include "fwid.h"
 #include "fw_info.h"
-#include "spi.h"
 
 FW_INFO(FWID_TEST_PROTO_ATOM, VERSION_TAG)
 
@@ -180,11 +181,11 @@ static void handle_cmd(u08 cmd)
 
 int main(void)
 {
-  system_init();
-  led_init();
-  spi_init();
+  hw_system_init();
+  hw_led_init();
+  hw_spi_init();
+  hw_uart_init();
 
-  uart_init();
   uart_send_pstring(PSTR("parbox: test-proto-atom!"));
   uart_send_crlf();
 
@@ -198,7 +199,7 @@ int main(void)
         handle_cmd(cmd);
       }
 
-      system_wdt_reset();
+      hw_system_wdt_reset();
   }
 
   return 0;

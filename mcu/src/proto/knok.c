@@ -8,11 +8,10 @@
 
 #include "knok.h"
 #include "strobe.h"
-#include "uart.h"
 #include "uartutil.h"
-#include "system.h"
-#include "timer.h"
-#include "led.h"
+#include "hw_system.h"
+#include "hw_timer.h"
+#include "hw_led.h"
 #include "rominfo.h"
 #include "proto_dev_shared.h"
 
@@ -74,11 +73,11 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
   strobe_pulse_ack();
   uart_send('.');
 
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   u08 count = 0;
   u08 led = 1;
   while(1) {
-    if(timer_millis_timed_out(t0, interval)) {
+    if(hw_timer_millis_timed_out(t0, interval)) {
       flag = strobe_read_flag();
       if(flag & STROBE_FLAG_GOT_STROBE) {
         break;
@@ -96,24 +95,24 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
 
       // toggle led
       led = !led;
-      led_set(led);
+      hw_led_set(led);
 
-      t0 = timer_millis();
+      t0 = hw_timer_millis();
     }
     // keep wd happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
-  led_on();
+  hw_led_on();
   uart_send('{');
 
   // wait for transfer end
-  t0 = timer_millis();
+  t0 = hw_timer_millis();
   count = 0;
   interval = 1000;
   u08 busy_count = 0;
   while((flag & STROBE_FLAG_ALL_SENT)==0) {
-    if(timer_millis_timed_out(t0, interval)) {
+    if(hw_timer_millis_timed_out(t0, interval)) {
       flag = strobe_read_flag();
 
       // check busy
@@ -138,22 +137,22 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
         goto end_upload;
       }
 
-      t0 = timer_millis();
+      t0 = hw_timer_millis();
     }
     // keep wd happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
   uart_send('}');
-  led_off();
+  hw_led_off();
 
   // wait for transfer termination on Amiga side
-  t0 = timer_millis();
+  t0 = hw_timer_millis();
   count = 0;
   busy_count = 0;
   led = 0;
   while(1) {
-    if(timer_millis_timed_out(t0, interval)) {
+    if(hw_timer_millis_timed_out(t0, interval)) {
       // a filled buffer causes a delayed ack
       if(flag & STROBE_FLAG_BUFFER_FILLED) {
         uart_send('!');
@@ -182,16 +181,16 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
 
       // toggle led
       led = !led;
-      led_set(led);
+      hw_led_set(led);
 
       // next timer round
-      t0 = timer_millis();
+      t0 = hw_timer_millis();
 
       // new flag for next timer trigger
       flag = strobe_read_flag();
     }
     // keep wd happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
 end_upload:
@@ -207,10 +206,10 @@ void blink_hello(void)
 {
   uart_send_pstring(PSTR("helo!"));
   for(u08 i=0;i<5;i++) {
-    led_on();
-    timer_delay(100);
-    led_off();
-    timer_delay(100);
+    hw_led_on();
+    hw_timer_delay_ms(100);
+    hw_led_off();
+    hw_timer_delay_ms(100);
   }
 }
 
@@ -234,10 +233,10 @@ void knok_main(void)
 
   // we will entry knok mode so enable irq for strobe
   strobe_init_irq();
-  led_init();
-  led_on();
+  hw_led_init();
+  hw_led_on();
 
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   u08 led = 1;
   u16 led_interval = 100;
   while(1) {
@@ -249,7 +248,7 @@ void knok_main(void)
     if(data == PROTO_DEV_CMD_ACTION_RESET || data == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
       uart_send_pstring(PSTR("bail"));
       uart_send_crlf();
-      system_sys_reset();
+      hw_system_sys_reset();
       break;
     }
 
@@ -288,19 +287,19 @@ void knok_main(void)
     }
 
     // blink led per second
-    if(timer_millis_timed_out(t0, led_interval)) {
-      t0 = timer_millis();
+    if(hw_timer_millis_timed_out(t0, led_interval)) {
+      t0 = hw_timer_millis();
       led = !led;
-      led_set(led);
+      hw_led_set(led);
       led_interval = led ? 2000 : 100;
     }
 
     // keep wd happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
   strobe_exit();
-  led_exit();
+  hw_led_exit();
 
   uart_send_pstring(PSTR("boot!"));
   uart_send_crlf();

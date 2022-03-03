@@ -14,16 +14,21 @@ ALL_CONFIGS=configs/pbnano.config configs/pbcrasbe.config configs/avrnetio.confi
 ALL_CONFIGS+=configs/teensy20.config
 # mk20 configs
 ALL_CONFIGS+=configs/teensy32.config
+# rp2 configs
+ALL_CONFIGS+=configs/pico.config
 
 include $(BASE_DIR)/scripts/gencfg.mk
 # version
 include ../version.mk
 # common defs
 include scripts/common-defs.mk
+
+ifeq "$(CONFIG_MAKESYS)" ""
 # toolchain
 include scripts/toolchain-$(CONFIG_ARCH).mk
 # flash rules
 include scripts/flash-$(CONFIG_FLASH_TOOL).mk
+endif
 
 # machtag
 MACHTAG=$(BASE_DIR)/scripts/machtag.py

@@ -3,7 +3,7 @@
 
 #include "pario_pins.h"
 #include "proto_low.h"
-#include "spi.h"
+#include "hw_spi.h"
 
 /* signal names:
    IN
@@ -14,7 +14,8 @@
       POUT -> rak
 */
 
-#define ddr(x)    pario_data_ddr(x)
+#define ddr_in()  pario_data_ddr_in()
+#define ddr_out() pario_data_ddr_out()
 #define dout(x)   pario_set_data(x)
 #define din()     pario_get_data()
 
@@ -30,8 +31,6 @@
 
 #define wait_clk_hi()  while(!clk()) {}
 #define wait_clk_lo()  while(clk()) {}
-#define ddr_in()       ddr(0)
-#define ddr_out()      ddr(0xff)
 
 void proto_low_init(void)
 {
@@ -190,11 +189,11 @@ void proto_low_write_block_spi(u16 max_words)
   for(u16 i=0;i<max_words;i++) {
     wait_clk_hi();
     u08 d = din();
-    spi_out(d);
+    hw_spi_out(d);
 
     wait_clk_lo();
     d = din();
-    spi_out(d);
+    hw_spi_out(d);
   }
 
   irq_on();
@@ -209,11 +208,11 @@ void proto_low_read_block_spi(u16 num_words)
   ddr_out();
 
   for(u16 i=0;i<num_words;i++) {
-    u08 d = spi_in();
+    u08 d = hw_spi_in();
     wait_clk_lo();
     dout(d);
 
-    d = spi_in();
+    d = hw_spi_in();
     wait_clk_hi();
     dout(d);
   }

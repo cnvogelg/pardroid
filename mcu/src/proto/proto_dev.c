@@ -5,7 +5,7 @@
 
 #include "arch.h"
 #include "debug.h"
-#include "system.h"
+#include "hw_system.h"
 
 #include "proto_atom.h"
 #include "proto_dev.h"
@@ -34,7 +34,7 @@ void proto_dev_init()
   u08 cmd = proto_atom_get_cmd();
   if(cmd != PROTO_DEV_CMD_ACTION_RESET && cmd != PROTO_DEV_CMD_ACTION_BOOTLOADER) {
     DC('?'); DB(cmd); DNL;
-    system_sys_reset();
+    hw_system_sys_reset();
   }
 
   // handle RESET or BOOTLOADER action
@@ -58,13 +58,13 @@ static void proto_dev_handle(u08 cmd)
       // immediate reset to reach proto_dev_init()/boot code again
       // and ack the action there
       DC('!'); DB(cmd);
-      system_sys_reset();
+      hw_system_sys_reset();
       break;
     case PROTO_DEV_CMD_ACTION_KNOK:
       // to enter knok mode: finish action and then resets
       DC('!'); DC('K');
       proto_atom_action();
-      system_sys_reset();
+      hw_system_sys_reset();
       break;
     /* device constants */
     case PROTO_DEV_CMD_RWORD_FW_ID:

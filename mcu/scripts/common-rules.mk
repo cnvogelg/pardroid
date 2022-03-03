@@ -1,5 +1,18 @@
 # all rule
+
+# --- cmake ---
+ifeq "$(CONFIG_MAKESYS)" "cmake"
+
+all: info cmake-setup cmake-build
+
+include scripts/cmake-rules.mk
+
+# --- make ---
+else
+
 all: info $(FIRMWARES)
+
+endif
 
 help:
 	@echo "Global Rules:"

@@ -28,7 +28,7 @@
 #include "types.h"
 #include "arch.h"
 
-#include "uart.h"
+#include "hw_uart.h"
 #include "uartutil.h"
 
 void uart_send_pstring(rom_pchar data)
@@ -38,7 +38,7 @@ void uart_send_pstring(rom_pchar data)
     if(c == 0) {
       break;
     }
-    uart_send(c);
+    hw_uart_send(c);
     data++;
   }
 }
@@ -46,7 +46,7 @@ void uart_send_pstring(rom_pchar data)
 void uart_send_string(const char *str)
 {
   while(*str) {
-    uart_send((u08)*str);
+    hw_uart_send((u08)*str);
     str++;
   }
 }
@@ -54,19 +54,19 @@ void uart_send_string(const char *str)
 void uart_send_data(u08 *data,u08 len)
 {
   for(u08 i=0;i<len;i++) {
-    uart_send(data[i]);
+    hw_uart_send(data[i]);
   }
 }
 
 void uart_send_crlf(void)
 {
-  uart_send(13);
-  uart_send(10);
+  hw_uart_send(13);
+  hw_uart_send(10);
 }
 
 void uart_send_spc(void)
 {
-  uart_send((u08)' ');
+  hw_uart_send((u08)' ');
 }
 
 static u08 nybble_to_hex(u08 in)
@@ -79,8 +79,8 @@ static u08 nybble_to_hex(u08 in)
 
 void uart_send_hex_byte(u08 in)
 {
-  uart_send(nybble_to_hex(in >> 4));
-  uart_send(nybble_to_hex(in & 0xf));
+  hw_uart_send(nybble_to_hex(in >> 4));
+  hw_uart_send(nybble_to_hex(in & 0xf));
 }
 
 void uart_send_hex_word(u16 in)

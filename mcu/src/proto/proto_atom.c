@@ -6,7 +6,7 @@
 #include "proto_low.h"
 #include "proto_atom.h"
 #include "debug.h"
-#include "timer.h"
+#include "hw_timer.h"
 
 void proto_atom_init(void)
 {
@@ -19,7 +19,7 @@ void proto_atom_pulse_irq(void)
   // trigger ack irq at Amiga
   DC('#');
   proto_low_ack_lo();
-  timer_delay_1us();
+  hw_timer_delay_1us();
   proto_low_ack_hi();
 }
 

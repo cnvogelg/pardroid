@@ -5,7 +5,6 @@
 
 #if defined(CONFIG_DEBUG) && (DEBUG == 1)
 // enable debug output macros
-#include "uart.h"
 #include "uartutil.h"
 
 // debug char

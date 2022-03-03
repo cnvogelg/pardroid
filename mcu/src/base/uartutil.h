@@ -27,7 +27,10 @@
 #ifndef UARTUTIL_H
 #define UARTUTIL_H
 
+#include "hw_uart.h"
 #include "arch.h"
+
+INLINE void uart_send(u08 data) { hw_uart_send(data); }
 
 // send a c string from PROGMEM
 void uart_send_pstring(rom_pchar data);

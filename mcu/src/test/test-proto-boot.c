@@ -4,12 +4,13 @@
 
 #include "debug.h"
 
-#include "uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+#include "hw_uart.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
 
 #include "proto_boot.h"
 #include "proto_boot_shared.h"
@@ -141,10 +142,10 @@ void proto_boot_api_flash_page(void)
 
 int main(void)
 {
-  system_init();
-  led_init();
+  hw_system_init();
+  hw_led_init();
+  hw_uart_init();
 
-  uart_init();
   uart_send_pstring(PSTR("\r\n\r\n-----\r\nparbox: test-proto-boot!"));
   uart_send_crlf();
 
@@ -171,7 +172,7 @@ int main(void)
     proto_boot_handle_cmd();
 
     // keep watchdog happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
   return 0;

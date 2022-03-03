@@ -1,5 +1,5 @@
 /*
- * uart.h - serial hw routines
+ * hw_uart.h - serial hw routines
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -24,13 +24,13 @@
  *
  */
 
-#ifndef UART_H
-#define UART_H
+#ifndef HW_UART_H
+#define HW_UART_H
 
 // init uart and rts/cts
-void uart_init(void);
+void hw_uart_init(void);
 
 // write a byte to serial
-void uart_send(u08 data);
+void hw_uart_send(u08 data);
 
 #endif

@@ -6,9 +6,8 @@
 #include "mem.h"
 #include "mem_int.h"
 #include "debug.h"
-#include "uart.h"
 #include "uartutil.h"
-#include "system.h"
+#include "hw_system.h"
 
 #ifndef NULL
 #define NULL (void *)0
@@ -48,12 +47,12 @@ void mem_check(void)
 {
   if(*guard_ptr != 0x42) {
     uart_send_pstring(PSTR("mem_check: GUARD FAILED!!\n"));
-    system_sys_reset();
+    hw_system_sys_reset();
   }
 
   if(stack_pointer() <= guard_ptr) {
     uart_send_pstring(PSTR("mem_check: SP FAILED!!\n"));
-    system_sys_reset();
+    hw_system_sys_reset();
   }
 }
 

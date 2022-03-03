@@ -5,7 +5,6 @@
 
 #include "arch.h"
 #include "debug.h"
-#include "system.h"
 
 #include "proto_atom.h"
 #include "proto_dev.h"

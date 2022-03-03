@@ -4,12 +4,13 @@
 
 #include "debug.h"
 
-#include "uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+#include "hw_uart.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
 
 #include "proto_io.h"
 #include "proto_io_shared.h"
@@ -175,10 +176,10 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
 
 int main(void)
 {
-  system_init();
-  led_init();
+  hw_system_init();
+  hw_led_init();
+  hw_uart_init();
 
-  uart_init();
   uart_send_pstring(PSTR("\r\n\r\n-----\r\nparbox: test-proto-io!"));
   uart_send_crlf();
 
@@ -191,7 +192,7 @@ int main(void)
     proto_io_handle_cmd();
 
     // keep watchdog happy
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 
   return 0;

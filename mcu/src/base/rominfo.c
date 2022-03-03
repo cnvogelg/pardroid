@@ -2,7 +2,6 @@
 #include "types.h"
 #include "arch.h"
 
-#include "uart.h"
 #include "uartutil.h"
 #include "rominfo.h"
 #include "fw_info.h"

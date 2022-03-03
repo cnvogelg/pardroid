@@ -6,12 +6,12 @@
 
 #include "debug.h"
 
-#include "uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
 #include "fwid.h"
 #include "fw_info.h"
 
@@ -31,7 +31,7 @@ static void test_wait_watchdog(void)
   for(int i=0;i<100;i++) {
     uart_send_hex_byte(i);
     uart_send_crlf();
-    timer_delay(100);
+    hw_timer_delay_ms(100);
   }
 }
 #endif
@@ -41,19 +41,19 @@ static void test_sys_reset(void)
 {
   uart_send_pstring(PSTR("reset!"));
   uart_send_crlf();
-  system_sys_reset();
+  hw_system_sys_reset();
 }
 #endif
 
 #ifdef TEST_TIMER_TIMEOUT
 static void test_timer_timeout(void)
 {
-  timer_ms_t t1 = timer_millis();
+  hw_timer_ms_t t1 = hw_timer_millis();
   uart_send_pstring(PSTR("go "));
   uart_send_hex_word(t1);
   uart_send_crlf();
-  while(!timer_millis_timed_out(t1, 10000)) {
-    system_wdt_reset();
+  while(!hw_timer_millis_timed_out(t1, 10000)) {
+    hw_system_wdt_reset();
   }
   uart_send_pstring(PSTR("done"));
   uart_send_crlf();
@@ -62,10 +62,10 @@ static void test_timer_timeout(void)
 
 int main(void)
 {
-  system_init();
+  hw_system_init();
   //led_init();
 
-  uart_init();
+  hw_uart_init();
   uart_send_pstring(PSTR("parbox: test-base!"));
   uart_send_crlf();
 
@@ -82,13 +82,13 @@ int main(void)
 #endif
 
   for(int i=0;i<100;i++) {
-    system_wdt_reset();
+    hw_system_wdt_reset();
     uart_send('.');
-    timer_delay(200);
+    hw_timer_delay_ms(200);
   }
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  system_sys_reset();
+  hw_system_sys_reset();
   return 0;
 }
