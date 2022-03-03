@@ -27,11 +27,11 @@
 #include <avr/interrupt.h>
 
 #include "types.h"
-#include "timer.h"
+#include "hw_timer.h"
 
-volatile timer_ms_t  timer_ms;
+volatile hw_timer_ms_t  timer_ms;
 
-void timer_init(void)
+void hw_timer_init(void)
 {
   cli();
 

@@ -1,5 +1,5 @@
 /*
- * uart.c - serial hw routines
+ * hw_uart.c - serial hw routines
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -33,7 +33,7 @@
 #define BAUD CONFIG_BAUD_RATE
 #include <util/setbaud.h>
 
-#include "uart.h"
+#include "hw_uart.h"
 
 #ifdef UBRR0H
 
@@ -79,7 +79,7 @@
 #endif
 #endif
 
-void uart_init(void)
+void hw_uart_init(void)
 {
   // disable
   UCSRB = 0;
@@ -96,7 +96,7 @@ void uart_init(void)
   UCSRC = 0x86;
 }
 
-void uart_send(u08 data)
+void hw_uart_send(u08 data)
 {
   // wait for transmitter to become ready
   while(!( UCSRA & (1<<UDRE)));

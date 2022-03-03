@@ -15,6 +15,6 @@ ASFLAGS_ARCH += -Wa,-gstabs -x assembler-with-cpp
 LDFLAGS_BOOTLOADER := -Wl,--section-start=.text=$(CONFIG_BOOTLOADER_ADDR)
 LDFLAGS_BOOTLOADER += -Wl,--relax -nostartfiles -nostdlib -lgcc
 
-BASE_ARCH_SRCS = led.c
+BASE_ARCH_SRCS = hw_led.c
 PROTO_ATOM_ARCH_SRCS = proto_low_asm.S strobe_low_asm.S
 PROTO_BOOT_ARCH_SRCS = proto_low_boot.S

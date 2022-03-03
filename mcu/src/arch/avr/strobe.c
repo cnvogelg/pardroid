@@ -9,10 +9,7 @@
 #include "types.h"
 #include "strobe.h"
 #include "pario_pins.h"
-#include "system.h"
-#include "timer.h"
-
-#include "uart.h"
+#include "hw_timer.h"
 
 #define  ack_lo  PAR_ACK_PORT &= ~PAR_ACK_MASK
 #define  ack_hi  PAR_ACK_PORT |= PAR_ACK_MASK
@@ -62,7 +59,7 @@ static void strobe_read_func(void)
 
   // pulse ack
   ack_lo;
-  timer_delay_1us();
+  hw_timer_delay_1us();
   ack_hi;
 }
 
@@ -154,7 +151,7 @@ static void strobe_write_func(void)
 
   // pulse ack
   ack_lo;
-  timer_delay_1us();
+  hw_timer_delay_1us();
   ack_hi;
 }
 
@@ -190,7 +187,7 @@ void strobe_pulse_ack(void)
 {
   // pulse ack
   ack_lo;
-  timer_delay_1us();
+  hw_timer_delay_1us();
   ack_hi;
 }
 

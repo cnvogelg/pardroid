@@ -3,9 +3,9 @@
 #include <avr/interrupt.h>
 
 #include "autoconf.h"
-#include "timer.h"
+#include "hw_timer.h"
 
-void system_init(void)
+void hw_system_init(void)
 {
 #ifdef MACH_TEENSY20
   // set teensy clock to 16 MHz
@@ -19,16 +19,16 @@ void system_init(void)
   wdt_enable(WDTO_500MS);
   sei();
 
-  timer_init();
+  hw_timer_init();
 }
 
-void system_sys_reset(void)
+void hw_system_sys_reset(void)
 {
   wdt_enable(WDTO_15MS);
   while(1) { /* wait for the end */ }
 }
 
-void system_wdt_reset(void)
+void hw_system_wdt_reset(void)
 {
   wdt_reset();
 }

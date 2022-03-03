@@ -4,7 +4,7 @@
 
 #include "bootbase.h"
 #include "pablo.h"
-#include "uart.h"
+#include "hw_uart.h"
 #include "proto_boot.h"
 #include "flash.h"
 #include "machtag.h"
@@ -28,24 +28,24 @@ void bootbase_main(u16 page_size, u08 *buf_ptr)
   page_buf = buf_ptr;
 
   // say hello
-  uart_init();
-  uart_send('P');
+  hw_uart_init();
+  hw_uart_send('P');
 
   // setup proto
   int res = proto_boot_init();
-  uart_send('A');
+  hw_uart_send('A');
 
   // we need to launch the app code
   if(res == PROTO_BOOT_INIT_APP) {
     // check crc
-    uart_send('B');
+    hw_uart_send('B');
     u16 crc = pablo_check_rom_crc();
     if(crc == 0) {
-      uart_send('L');
+      hw_uart_send('L');
       // ensure that mach_tag matches in pablo footer
       u16 rom_mach_tag = pablo_get_mach_tag();
       if(rom_mach_tag == MACHTAG) {
-        uart_send('O');
+        hw_uart_send('O');
         // run app if valid -> run it
         return;
       }
@@ -66,13 +66,13 @@ void bootbase_main(u16 page_size, u08 *buf_ptr)
 
 u16 proto_boot_api_get_page_size(void)
 {
-  uart_send('p');
+  hw_uart_send('p');
   return page_bytes;
 }
 
 u32 proto_boot_api_get_rom_size(void)
 {
-  uart_send('r');
+  hw_uart_send('r');
   return CONFIG_MAX_ROM;
 }
 
@@ -100,7 +100,7 @@ u16 proto_boot_api_get_rom_fw_id(void)
 
 void proto_boot_api_set_page_addr(u32 addr)
 {
-  uart_send('a');
+  hw_uart_send('a');
   page_addr = addr;
 }
 
@@ -109,7 +109,7 @@ void proto_boot_api_get_page_read_buf(u08 **buf, u16 *size)
   *buf = page_buf;
   *size = page_bytes;
   
-  uart_send('r');
+  hw_uart_send('r');
   flash_read_page(page_addr, page_buf);
 }
 
@@ -118,12 +118,12 @@ void proto_boot_api_get_page_write_buf(u08 **buf, u16 *size)
   *buf = page_buf;
   *size = page_bytes;
 
-  uart_send('w');
+  hw_uart_send('w');
 }
 
 void proto_boot_api_flash_page(void)
 {
-  uart_send('(');
+  hw_uart_send('(');
   flash_program_page(page_addr, page_buf);
-  uart_send(')'); 
+  hw_uart_send(')'); 
 }

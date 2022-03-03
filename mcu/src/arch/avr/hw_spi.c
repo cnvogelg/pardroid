@@ -1,5 +1,5 @@
 /*
- * spi.h - SPI setup
+ * hw_spi.c - SPI setup
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -24,40 +24,37 @@
  *
  */
 
-#ifndef SPI_H
-#define SPI_H
+#include "hw_spi.h"
 
-#include "autoconf.h"
-
-#include <avr/io.h>
-
-#include "arch.h"
-#include "types.h"
-#include "spi_pins.h"
-
-#define SPI_SPEED_MAX   0
-#define SPI_SPEED_SLOW  1
-
-extern void spi_init(void);
-extern void spi_set_speed(u08 speed);
-
-FORCE_INLINE void spi_out(u08 data)
+void hw_spi_init(void)
 {
-  SPDR = data;
-  loop_until_bit_is_set(SPSR, SPIF);
+  // output: SS, MOSI, SCK
+  DDRB |= SPI_SS_MASK | SPI_MOSI_MASK | SPI_SCK_MASK;
+  // input: MISO
+  DDRB &= ~(SPI_MISO_MASK);
+
+  // MOSI, SCK = 0
+  PORTB &= ~(SPI_MOSI_MASK | SPI_SCK_MASK);
+  // SS = 1
+  PORTB |= SPI_SS_MASK;
+
+  // setup SS1
+  SPI_SS1_DDR  |= SPI_SS1_MASK;
+  SPI_SS1_PORT |= SPI_SS1_MASK;
+
+  SPCR = _BV(SPE) | _BV(MSTR); // 8 MHz @ 16
+  SPSR = _BV(SPI2X);
 }
 
-FORCE_INLINE u08 spi_in(void)
+void hw_spi_set_speed(u08 speed)
 {
-  SPDR = 0xff;
-  loop_until_bit_is_set(SPSR, SPIF);
-  return SPDR;
+  if(speed == SPI_SPEED_MAX) {
+    SPCR = _BV(SPE) | _BV(MSTR); // 8 MHz @ 16 MHz FPU (clk/2)
+    SPSR = _BV(SPI2X);
+  } else {
+    // (clk/128)  @16 MHz -> 125 KHz
+    SPCR = _BV(SPE) | _BV(MSTR) | _BV(SPR1) | _BV(SPR0);
+    SPSR = 0;
+  }
 }
 
-FORCE_INLINE void spi_enable_cs0(void) { PORTB &= ~SPI_SS_MASK; }
-FORCE_INLINE void spi_disable_cs0(void) { PORTB |= SPI_SS_MASK; }
-
-FORCE_INLINE void spi_enable_cs1(void) { SPI_SS1_PORT &= ~SPI_SS1_MASK; }
-FORCE_INLINE void spi_disable_cs1(void) { SPI_SS1_PORT |= SPI_SS1_MASK; }
-
-#endif // SPI_H

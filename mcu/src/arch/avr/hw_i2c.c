@@ -1,5 +1,5 @@
 /*
- * i2c.c - I2C setup
+ * hw_i2c.c - I2C setup
  *
  * Written by
  *  Christian Vogelgsang <chris@vogelgsang.org>
@@ -30,19 +30,19 @@
 #include "autoconf.h"
 #include "types.h"
 
-#include "i2c.h"
+#include "hw_i2c.h"
 
 // i2c freq
 #define F_SCL 100000UL
 #define PRE_SCALE 1
 #define TWI_CNT ((((F_CPU / F_SCL) / PRE_SCALE) - 16 ) / 2)
 
-void i2c_init(void)
+void hw_i2c_init(void)
 {
   TWBR = (u08)TWI_CNT;
 }
 
-u08 i2c_start(u08 addr, u08 write)
+u08 hw_i2c_start(u08 addr, u08 write)
 {
 	TWCR = 0;
 	// send start condition
@@ -66,13 +66,13 @@ u08 i2c_start(u08 addr, u08 write)
 	return 0;
 }
 
-void i2c_stop(void)
+void hw_i2c_stop(void)
 {
 	// transmit STOP condition
 	TWCR = (1<<TWINT) | (1<<TWEN) | (1<<TWSTO);
 }
 
-u08 i2c_write_byte(u08 data)
+u08 hw_i2c_write_byte(u08 data)
 {
 	// load data and transmit
 	TWDR = data;
@@ -85,7 +85,7 @@ u08 i2c_write_byte(u08 data)
 	return 0;
 }
 
-u08 i2c_read_byte(u08 ack, u08 *data)
+u08 hw_i2c_read_byte(u08 ack, u08 *data)
 {
 	// start read
 	u08 val = (1<<TWINT) | (1<<TWEN); 
@@ -98,38 +98,38 @@ u08 i2c_read_byte(u08 ack, u08 *data)
 	return 0;
 }
 
-u08 i2c_write(u08 addr, const u08 *data, u16 len)
+u08 hw_i2c_write(u08 addr, const u08 *data, u16 len)
 {
 	u08 res;
 
-	res = i2c_start(addr, 1);
+	res = hw_i2c_start(addr, 1);
 	if(res)
 		return res;
 
 	for(u16 i=0;i<len;i++) {
-		res = i2c_write_byte(data[i]);
+		res = hw_i2c_write_byte(data[i]);
 		if(res)
 			break;
 	}
 
-	i2c_stop();
+	hw_i2c_stop();
 	return res;
 }
 
-u08 i2c_read(u08 addr, u08 *data, u16 len)
+u08 hw_i2c_read(u08 addr, u08 *data, u16 len)
 {
 	u08 res;
 
-	res = i2c_start(addr, 0);
+	res = hw_i2c_start(addr, 0);
 	if(res)
 		return res;
 	
 	for(u16 i=len;i>=0;i--) {
-		res = i2c_read_byte(i!=0,&data[i]);
+		res = hw_i2c_read_byte(i!=0,&data[i]);
 		if(res)
 			break;
 	}
 
-	i2c_stop();
+	hw_i2c_stop();
 	return res;
 }

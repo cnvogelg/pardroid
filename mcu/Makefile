@@ -58,8 +58,9 @@ BOOTREXX_H = $(BUILD_DIR)/bootrexx.h
 BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
-BASE_SRCS = timer.c strobe.c spi.c crc.c led.c i2c.c $(BASE_ARCH_SRCS)
-BASE_SRCS += uart.c uartutil.c system.c pablo.c rominfo.c mem.c
+BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c
+BASE_SRCS += $(BASE_ARCH_SRCS)
+BASE_SRCS += strobe.c crc.c uartutil.c pablo.c rominfo.c mem.c
 
 # proto sources
 PROTO_ATOM_SRCS = $(PROTO_ATOM_ARCH_SRCS) proto_atom.c
@@ -209,7 +210,7 @@ endif
 #ifeq "$(FLAVOR)" "release"
 ifdef CONFIG_BOOTLOADER
 # bootloader
-BOOTLOADER_SRCS = uart.c system.c pablo.c uartutil.c
+BOOTLOADER_SRCS = hw_uart.c hw_system.c pablo.c uartutil.c
 BOOTLOADER_SRCS += bootbase.c bootloader.c flash.c
 BOOTLOADER_SRCS += $(PROTO_BOOT_SRCS) $(BOOTLOADER_ARCH_SRCS)
 $(eval $(call dist-hex,bootloader))
