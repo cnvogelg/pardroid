@@ -107,6 +107,12 @@ TEST_PROTO_BOOT_SRCS += proto-boot-testsuite.c
 $(eval $(call make-program,test-proto-boot,$(TEST_PROTO_BOOT_SRCS)))
 $(eval $(call dist-program,test-proto-boot))
 
+# test-pamela
+TEST_PAMELA_SRCS = test-pamela.c $(PAMELA_SRCS) $(TEST_SRCS)
+TEST_PAMELA_SRCS += pamela-testsuite.c
+$(eval $(call make-program,test-pamela,$(TEST_PAMELA_SRCS)))
+$(eval $(call dist-program,test-pamela))
+
 # ----- tools
 # pablo
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_BOOT_SRCS)
@@ -116,11 +122,6 @@ $(eval $(call dist-program,pablo))
 # disabled for now
 ifeq "a" "b"
 
-# pb-test-pamela
-PB_TEST_PAMELA_SRCS = pb-test-pamela.c $(PROTO_ENV_SRCS) $(PAMELA_SRCS) $(TEST_SRCS)
-PB_TEST_PAMELA_SRCS += pamela-testsuite.c
-$(eval $(call make-program,pb-test-pamela,$(PB_TEST_PAMELA_SRCS)))
-$(eval $(call dist-program,pb-test-pamela))
 
 # ----- bench
 # pb-bench-proto

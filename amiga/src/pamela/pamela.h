@@ -26,7 +26,7 @@ void pamela_exit(pamela_handle_t *ph);
 const char *pamela_perror(int res);
 
 /* fill in devinfo struct */
-int pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);
+void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);
 
 /* first get event mask and then update all affected channels  */
 int pamela_event_update(pamela_handle_t *ph);
@@ -39,8 +39,10 @@ int pamela_event_wait(pamela_handle_t *ph,
 pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error);
 /* close channel */
 int pamela_close(pamela_channel_t *pc);
-/* update channel state */
-int pamela_update(pamela_channel_t *pc, UWORD *status);
+/* update channel state by querying device */
+int pamela_update(pamela_channel_t *pc);
+/* return local channel status */
+UWORD pamela_status(pamela_channel_t *pc);
 
 /* ----- read ----- */
 /* post read request. give max size */

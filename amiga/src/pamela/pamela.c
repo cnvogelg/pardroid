@@ -123,10 +123,9 @@ void pamela_exit(pamela_handle_t *ph)
   FreeMem(ph, sizeof(pamela_handle_t));
 }
 
-int pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info)
+void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info)
 {
   CopyMem(&ph->devinfo, info, sizeof(pamela_devinfo_t));
-  return PAMELA_OK;
 }
 
 static int get_event_mask(pamela_handle_t *ph, UWORD *events)
@@ -150,8 +149,7 @@ int pamela_event_update(pamela_handle_t *ph)
   for(int i=0;i<PROTO_IO_NUM_CHANNELS;i++) {
     UWORD mask = 1 << i;
     if((events & mask) == mask) {
-      UWORD status;
-      res = pamela_update(&ph->channels[i], &status);
+      res = pamela_update(&ph->channels[i]);
       if(res != PAMELA_OK) {
         return res;
       }

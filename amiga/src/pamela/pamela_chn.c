@@ -16,15 +16,6 @@ void pamela_channels_init(pamela_handle_t *ph)
   }
 }
 
-static int update_channel_status(pamela_channel_t *ch)
-{
-  int res = proto_io_status(ch->pamela->proto, ch->channel_id, &ch->status);
-  if(res != PROTO_RET_OK) {
-    return pamela_map_proto_error(res);
-  }
-  return PAMELA_OK;
-}
-
 static pamela_channel_t *find_free_channel(pamela_handle_t *ph)
 {
   for(int i=0;i<PROTO_IO_NUM_CHANNELS;i++) {
@@ -61,7 +52,7 @@ pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error)
   }
 
   // update status
-  res = update_channel_status(ch);
+  res = pamela_update(ch);
   if(res != PAMELA_OK) {
     *error = res;
     return NULL;
@@ -99,15 +90,18 @@ int pamela_close(pamela_channel_t *ch)
 }
 
 /* get current status value */
-int pamela_update(pamela_channel_t *ch, UWORD *status)
+int pamela_update(pamela_channel_t *ch)
 {
-  int res = update_channel_status(ch);
-  if(res != PAMELA_OK) {
-    return res;
+  int res = proto_io_status(ch->pamela->proto, ch->channel_id, &ch->status);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
   }
-
-  *status = ch->status;
   return PAMELA_OK;
+}
+
+UWORD pamela_status(pamela_channel_t *ch)
+{
+  return ch->status;
 }
 
 static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_mask)

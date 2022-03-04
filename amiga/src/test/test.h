@@ -56,5 +56,11 @@ extern int test_main(test_t all_tests[], test_param_t *param);
     return 1; \
   }
 
+#define CHECK_NOT_NULL(ptr, sec) \
+  if(ptr == NULL) { \
+    p->error = "pointer is NULL"; \
+    p->section = sec; \
+    return 1; \
+  }
 
 #endif
