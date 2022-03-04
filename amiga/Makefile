@@ -37,6 +37,9 @@ PROTO_DEV_SRCS = $(PROTO_ATOM_SRCS) proto_dev.c
 PROTO_IO_SRCS = $(PROTO_DEV_SRCS) proto_io.c
 PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
 
+# pamela
+PAMELA_SRCS = $(PROTO_IO_SRCS) pamela.c pamela_err.c pamela_chn.c
+
 # test+bench
 TEST_SRCS = test.c test-buffer.c
 BENCH_SRCS = bench.c bench_main.c
@@ -73,6 +76,10 @@ $(eval $(call make-program,minitest-proto-io,$(MINITEST_PROTO_IO_SRCS)))
 # minitest-proto-boot
 MINITEST_PROTO_BOOT_SRCS = minitest-proto-boot.c $(PROTO_BOOT_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-proto-boot,$(MINITEST_PROTO_BOOT_SRCS)))
+
+# minitest-pamela
+MINITEST_PAMELA_SRCS = minitest-pamela.c $(PAMELA_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-pamela,$(MINITEST_PAMELA_SRCS)))
 
 # ----- tests
 # test-proto-atom

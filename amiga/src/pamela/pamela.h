@@ -3,59 +3,55 @@
 
 #include <exec/exec.h>
 
-#include "pario.h"
-#include "timer.h"
-#include "proto.h"
-#include "proto_shared.h"
+#include "pamela_defs.h"
 
-/* pamela init error codes */
-#define PAMELA_OK               0
-#define PAMELA_ERROR_PARIO      1
-#define PAMELA_ERROR_TIMER      2
-#define PAMELA_ERROR_PROTO      3
-#define PAMELA_ERROR_NO_SIGNAL  4
-#define PAMELA_ERROR_ACK_IRQ    5
-#define PAMELA_ERROR_TIMER_SIG  6
-#define PAMELA_ERROR_RESET      7
-#define PAMELA_ERROR_BOOTLOADER 8
-#define PAMELA_ERROR_MAGIC_READ 9
-#define PAMELA_ERROR_MAGIC_WRONG 10
+/* ----- Types ----- */
 
-/* init flags */
-#define PAMELA_INIT_NORMAL      0
-#define PAMELA_INIT_BOOT        1
-
+/* handle for pamela instance */
 struct pamela_handle;
 typedef struct pamela_handle pamela_handle_t;
 
-pamela_handle_t *pamela_init(struct Library *SysBase, int *res, int flags);
+/* pamela channel */
+struct pamela_channel;
+typedef struct pamela_channel pamela_channel_t;
+
+/* ----- API ----- */
+
+/* setup pamela */
+pamela_handle_t *pamela_init(struct Library *SysBase, int *error);
+/* shutdown pamela */
 void pamela_exit(pamela_handle_t *ph);
-
-proto_handle_t *pamela_get_proto(pamela_handle_t *ph);
-timer_handle_t *pamela_get_timer(pamela_handle_t *ph);
-
-int pamela_init_events(pamela_handle_t *ph);
-void pamela_exit_events(pamela_handle_t *ph);
-ULONG pamela_wait_event(pamela_handle_t *ph,
-                        ULONG timeout_s, ULONG timeout_us, ULONG extra_sigmask);
-ULONG pamela_get_trigger_sigmask(pamela_handle_t *ph);
-ULONG pamela_get_timer_sigmask(pamela_handle_t *ph);
-UWORD pamela_get_num_triggers(pamela_handle_t *ph);
-UWORD pamela_get_num_trigger_signals(pamela_handle_t *ph);
-
-int pamela_read_status(pamela_handle_t *ph, ULONG *status);
-
-/* get MTU cached - return PROTO errors! */
-int pamela_get_mtu(pamela_handle_t *ph, UBYTE chan, UWORD *mtu);
-int pamela_set_mtu(pamela_handle_t *ph, UBYTE chan, WORD mtu);
-
-/* message I/O with MTU checking - return PROTO errors! */
-extern int pamela_msg_write(pamela_handle_t *ph, UBYTE chn, UBYTE *buf);
-extern int pamela_msg_read(pamela_handle_t *ph, UBYTE chn, UBYTE *buf);
-extern int pamela_msg_write_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD num_words);
-extern int pamela_msg_read_single(pamela_handle_t *ph, UBYTE chn, UBYTE *buf, UWORD *num_words);
 
 /* error decoding */
 const char *pamela_perror(int res);
+
+/* fill in devinfo struct */
+int pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);
+
+/* first get event mask and then update all affected channels  */
+int pamela_event_update(pamela_handle_t *ph);
+/* wait for event, retrieve mask and update affected channels */
+int pamela_event_wait(pamela_handle_t *ph,
+                      ULONG timeout_s, ULONG timeout_us,
+                      ULONG *extra_sigmask);
+
+/* open channel to given service */
+pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error);
+/* close channel */
+int pamela_close(pamela_channel_t *pc);
+/* update channel state */
+int pamela_update(pamela_channel_t *pc, UWORD *status);
+
+/* ----- read ----- */
+/* post read request. give max size */
+int pamela_read_request(pamela_channel_t *pc, UWORD size);
+/* fetch data of read request. returns number of bytes actually read */
+int pamela_read_data(pamela_channel_t *pc, UBYTE *buf);
+
+/* ----- write ----- */
+/* post write requst. give max size */
+int pamela_write_request(pamela_channel_t *pc, UWORD size);
+/* write data and return number of bytes written */
+int pamela_write_data(pamela_channel_t *pc, UBYTE *buf);
 
 #endif /* PAMELA_H */
