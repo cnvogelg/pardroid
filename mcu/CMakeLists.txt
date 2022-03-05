@@ -6,6 +6,8 @@ project(amiparbox C CXX ASM)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_CXX_STANDARD 17)
 
+string(TOUPPER ${CMAKE_BUILD_TYPE} FLAVOR)
+
 # Initialize the SDK
 pico_sdk_init()
 
@@ -15,6 +17,7 @@ set(PB_PICO_LIBS
   hardware_watchdog
   hardware_gpio
   hardware_uart
+  hardware_sync
   pico_stdlib
 )
 
@@ -73,6 +76,7 @@ set(PROTO_BOOT_SRCS
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
+        FLAVOR_${FLAVOR}=1
 )
 
 include_directories(

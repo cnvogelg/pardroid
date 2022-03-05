@@ -35,7 +35,7 @@ static void buf_dump(void)
   for(u16 i=0;i<TEST_BUF_SIZE;i++) {
     uart_send_hex_byte(buf[i]);
     uart_send_spc();
-    if((i % 15)==15) {
+    if((i % 16)==15) {
       uart_send_crlf();
     }
   }
@@ -67,7 +67,8 @@ static void handle_cmd(u08 cmd)
     case TEST_READ_WORD:
       proto_atom_read_word(TEST_WORD);
 #ifdef FLAVOR_DEBUG
-      uart_send_pstring(PSTR("read word"));
+      uart_send_pstring(PSTR("read word: "));
+      uart_send_hex_word(TEST_WORD);
       uart_send_crlf();
 #endif
       break;
@@ -88,7 +89,8 @@ static void handle_cmd(u08 cmd)
     case TEST_READ_LONG:
       proto_atom_read_long(TEST_LONG);
 #ifdef FLAVOR_DEBUG
-      uart_send_pstring(PSTR("read long"));
+      uart_send_pstring(PSTR("read long: "));
+      uart_send_hex_long(TEST_LONG);
       uart_send_crlf();
 #endif
       break;
@@ -196,7 +198,9 @@ int main(void)
   while(1) {
       u08 cmd = proto_atom_get_cmd();
       if(cmd != PROTO_NO_CMD) {
+        hw_led_on();
         handle_cmd(cmd);
+        hw_led_off();
       }
 
       hw_system_wdt_reset();

@@ -2,10 +2,11 @@
 #define PARIO_PINS_H
 
 #include "pico/stdlib.h"
+#include "hardware/sync.h"
 #include "arch.h"
 
-#define irq_off()
-#define irq_on()
+#define irq_off()  int irq_status = save_and_disable_interrupts()
+#define irq_on()   restore_interrupts(irq_status)
 
 /* Parallel Port Setup
 
@@ -50,9 +51,10 @@ INLINE void pario_init(void)
   gpio_put(PAR_BUSY_PIN, false);
   gpio_set_dir(PAR_BUSY_PIN, GPIO_OUT);
 
-  // POUT in
+  // POUT out hi
   gpio_init(PAR_POUT_PIN);
-  gpio_set_dir(PAR_POUT_PIN, GPIO_IN);
+  gpio_put(PAR_POUT_PIN, true);
+  gpio_set_dir(PAR_POUT_PIN, GPIO_OUT);
 
   // SELECT in
   gpio_init(PAR_SELECT_PIN);
@@ -63,90 +65,41 @@ INLINE void pario_init(void)
   gpio_set_dir_in_masked(PAR_DATA_MASK);
 }
 
-INLINE void pario_busy_out(void)
-{
-  gpio_set_dir(PAR_BUSY_PIN, GPIO_OUT);
-}
+#define pario_busy_out() gpio_set_dir(PAR_BUSY_PIN, GPIO_OUT)
 
-INLINE void pario_busy_in(void)
-{
-  gpio_set_dir(PAR_BUSY_PIN, GPIO_IN);
-}
+#define pario_busy_in() gpio_set_dir(PAR_BUSY_PIN, GPIO_IN)
 
-FORCE_INLINE void pario_data_ddr_out(void)
-{
-  gpio_set_dir_out_masked(PAR_DATA_MASK);
-}
+#define pario_data_ddr_out() gpio_set_dir_out_masked(PAR_DATA_MASK)
 
-FORCE_INLINE void pario_data_ddr_in(void)
-{
-  gpio_set_dir_in_masked(PAR_DATA_MASK);
-}
+#define pario_data_ddr_in() gpio_set_dir_in_masked(PAR_DATA_MASK)
 
-FORCE_INLINE uint8_t pario_get_data(void)
-{
-  uint32_t val = gpio_get_all();
-  return (uint8_t)((val >> 2) & 0xff);
-}
+#define pario_get_data() (uint8_t)((gpio_get_all() >> 2) & 0xff)
 
-FORCE_INLINE void pario_set_data(uint8_t data)
-{
-  gpio_put_masked(PAR_DATA_MASK, data << 2);
-}
+#define pario_set_data(data) gpio_put_masked(PAR_DATA_MASK, data << 2);
 
 // input lines
 
-FORCE_INLINE int pario_get_pout(void)
-{
-  return gpio_get(PAR_POUT_PIN);
-}
+#define pario_get_pout() gpio_get(PAR_POUT_PIN)
 
-FORCE_INLINE int pario_get_select(void)
-{
-  return gpio_get(PAR_SELECT_PIN);
-}
+#define pario_get_select() gpio_get(PAR_SELECT_PIN)
 
-FORCE_INLINE int pario_get_strobe(void)
-{
-  return gpio_get(PAR_STROBE_PIN);
-}
+#define pario_get_strobe() gpio_get(PAR_STROBE_PIN)
 
 /* knok upload only */
-FORCE_INLINE int pario_get_busy(void)
-{
-  return gpio_get(PAR_BUSY_PIN);
-}
+#define pario_get_busy() gpio_get(PAR_BUSY_PIN)
 
 // output lines
 
-FORCE_INLINE void pario_busy_hi(void)
-{
-  gpio_put(PAR_BUSY_PIN, true);
-}
+#define pario_busy_hi() gpio_put(PAR_BUSY_PIN, true)
 
-FORCE_INLINE void pario_busy_lo(void)
-{
-  gpio_put(PAR_BUSY_PIN, false);
-}
+#define pario_busy_lo() gpio_put(PAR_BUSY_PIN, false)
 
-FORCE_INLINE void pario_pout_hi(void)
-{
-  gpio_put(PAR_POUT_PIN, true);
-}
+#define pario_pout_hi() gpio_put(PAR_POUT_PIN, true)
 
-FORCE_INLINE void pario_pout_lo(void)
-{
-  gpio_put(PAR_POUT_PIN, false);
-}
+#define pario_pout_lo() gpio_put(PAR_POUT_PIN, false)
 
-FORCE_INLINE void pario_ack_hi(void)
-{
-  gpio_put(PAR_ACK_PIN, true);
-}
+#define pario_ack_hi() gpio_put(PAR_ACK_PIN, true)
 
-FORCE_INLINE void pario_ack_lo(void)
-{
-  gpio_put(PAR_ACK_PIN, false);
-}
+#define pario_ack_lo() gpio_put(PAR_ACK_PIN, false)
 
 #endif
