@@ -63,7 +63,7 @@ static void test_timer_timeout(void)
 int main(void)
 {
   hw_system_init();
-  //led_init();
+  hw_led_init();
 
   hw_uart_init();
   uart_send_pstring(PSTR("parbox: test-base!"));
@@ -81,10 +81,13 @@ int main(void)
   test_timer_timeout();
 #endif
 
+  int on = 0;
   for(int i=0;i<100;i++) {
     hw_system_wdt_reset();
     uart_send('.');
     hw_timer_delay_ms(200);
+    hw_led_set(on);
+    on = !on;
   }
 
   uart_send_pstring(PSTR("reset..."));

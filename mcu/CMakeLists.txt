@@ -10,11 +10,12 @@ set(CMAKE_CXX_STANDARD 17)
 pico_sdk_init()
 
 set(PB_PICO_LIBS 
-  pico_stdlib
   hardware_spi
   hardware_i2c
   hardware_watchdog
   hardware_gpio
+  hardware_uart
+  pico_stdlib
 )
 
 # arch dirs for pico
@@ -88,8 +89,8 @@ include_directories(
 macro(make_fw name)
         add_executable(${name} ${ARGN})
         target_link_libraries(${name} ${PB_PICO_LIBS})
-        pico_enable_stdio_usb(${name} 0)
-        pico_enable_stdio_uart(${name} 1)
+#        pico_enable_stdio_usb(${name} 0)
+#        pico_enable_stdio_uart(${name} 1)
         pico_add_extra_outputs(${name})
 endmacro()
 
