@@ -48,18 +48,18 @@ u08 proto_low_get_cmd(void)
   return din();
 }
 
-void proto_low_action(void)
+void FAST_FUNC(proto_low_action)(void)
 {
   rak_lo();
 }
 
-void proto_low_end(void)
+void FAST_FUNC(proto_low_end)(void)
 {
   wait_clk_hi();
   rak_hi();
 }
 
-void proto_low_read_word(u16 v)
+void FAST_FUNC(proto_low_read_word)(u16 v)
 {
   u08 a = (u08)(v >> 8);
   u08 b = (u08)(v & 0xff);
@@ -81,7 +81,7 @@ void proto_low_read_word(u16 v)
   irq_on();
 }
 
-u16  proto_low_write_word(void)
+u16 FAST_FUNC(proto_low_write_word)(void)
 {
   irq_off();
 
@@ -96,7 +96,7 @@ u16  proto_low_write_word(void)
   return (a << 8) | b;
 }
 
-void proto_low_read_long(u32 v)
+void FAST_FUNC(proto_low_read_long)(u32 v)
 {
   u08 a = (u08)(v >> 24);
   u08 b = (u08)(v >> 16);
@@ -124,7 +124,7 @@ void proto_low_read_long(u32 v)
   irq_on();
 }
 
-u32  proto_low_write_long(void)
+u32 FAST_FUNC(proto_low_write_long)(void)
 {
   irq_off();
 
@@ -143,7 +143,7 @@ u32  proto_low_write_long(void)
   return (a << 24) | (b << 16) | (c << 8) | d;
 }
 
-void proto_low_write_block(u16 max_words, u08 *buffer)
+void FAST_FUNC(proto_low_write_block)(u16 max_words, u08 *buffer)
 {
   irq_off();
 
@@ -159,7 +159,7 @@ void proto_low_write_block(u16 max_words, u08 *buffer)
   irq_on();
 }
 
-void proto_low_read_block(u16 num_words, u08 *buffer)
+void FAST_FUNC(proto_low_read_block)(u16 num_words, u08 *buffer)
 {
   irq_off();
 
@@ -180,7 +180,7 @@ void proto_low_read_block(u16 num_words, u08 *buffer)
   irq_on();
 }
 
-void proto_low_write_block_spi(u16 max_words)
+void FAST_FUNC(proto_low_write_block_spi)(u16 max_words)
 {
   irq_off();
 
@@ -199,7 +199,7 @@ void proto_low_write_block_spi(u16 max_words)
   irq_on();
 }
 
-void proto_low_read_block_spi(u16 num_words)
+void FAST_FUNC(proto_low_read_block_spi)(u16 num_words)
 {
   irq_off();
 
