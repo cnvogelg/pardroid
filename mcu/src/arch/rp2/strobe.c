@@ -73,7 +73,7 @@ u08 strobe_get_key(u32 *key)
   // return with exit byte?
   u08 exit = 0;
 
-  //__disable_irq();
+  irq_off();
 
   if(state != 0) {
     *key = strobe_key;
@@ -81,7 +81,7 @@ u08 strobe_get_key(u32 *key)
     exit = 1;
   }
 
-  //__enable_irq();
+  irq_on();
 
   return exit;
 }
@@ -150,12 +150,12 @@ u08 strobe_read_flag(void)
   // read busy
   u08 res = pario_get_busy() ? STROBE_FLAG_IS_BUSY : STROBE_FLAG_NONE;
 
-  //__disable_irq();
+  irq_off();
 
   res |= state;
   state = STROBE_FLAG_NONE;
 
-  //__enable_irq();
+  irq_on();
 
   return res;
 }

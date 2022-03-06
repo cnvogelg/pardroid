@@ -210,6 +210,7 @@ void blink_hello(void)
     hw_timer_delay_ms(100);
     hw_led_off();
     hw_timer_delay_ms(100);
+    hw_system_wdt_reset();
   }
 }
 
