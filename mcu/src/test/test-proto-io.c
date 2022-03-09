@@ -99,7 +99,7 @@ extern void proto_io_api_reset(u08 chn)
   uart_send_hex_byte(chn);
   uart_send_crlf();
 
-  test_status = PROTO_IO_STATUS_RESET;
+  test_status = PROTO_IO_STATUS_OPEN;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -151,6 +151,10 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
   *buf = data_buf;
 }
 
+void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
+{
+}
+
 // write
 
 void proto_io_api_write_req(u08 chn, u16 size)
@@ -170,6 +174,10 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
 {
   *size = write_size;
   *buf = data_buf;
+}
+
+void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
+{
 }
 
 // ----- main -----

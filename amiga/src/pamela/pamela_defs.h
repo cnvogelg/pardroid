@@ -13,11 +13,10 @@
 #define PAMELA_ERROR_NO_FREE_CHANNEL     -8
 #define PAMELA_ERROR_DEV_OPEN_FAILED     -9
 #define PAMELA_ERROR_CHANNEL_NOT_OPEN    -10
-#define PAMELA_ERROR_CHANNEL_RESET       -11
-#define PAMELA_ERROR_CHANNEL_EOS         -12
-#define PAMELA_ERROR_CHANNEL_ERROR       -13
-#define PAMELA_ERROR_CHANNEL_STATE       -14
-#define PAMELA_ERROR_MSG_TOO_LARGE       -15
+#define PAMELA_ERROR_CHANNEL_EOS         -11
+#define PAMELA_ERROR_CHANNEL_ERROR       -12
+#define PAMELA_ERROR_CHANNEL_STATE       -13
+#define PAMELA_ERROR_MSG_TOO_LARGE       -14
 #define PAMELA_ERROR_UNKNOWN             -99
 
 /* wait event result */
@@ -28,12 +27,10 @@
 /* pamela channel status bits */
 // open: channel is open
 #define PAMELA_CHANNEL_OPEN        0x01
-// stream was reset
-#define PAMELA_CHANNEL_RESET       0x02
-// end of stream reached
-#define PAMELA_CHANNEL_EOS         0x04
-// stream has error
-#define PAMELA_CHANNEL_ERROR       0x08
+// end of stream reached and needs to be closed or reset
+#define PAMELA_CHANNEL_EOS         0x02
+// stream has error and needs to be closed or reset
+#define PAMELA_CHANNEL_ERROR       0x04
 
 // read pending: a read request is ready to be retrieved
 #define PAMELA_CHANNEL_READ_READY  0x10
@@ -41,8 +38,10 @@
 #define PAMELA_CHANNEL_READ_SIZE   0x20
 // read requested: a read request was posted
 #define PAMELA_CHANNEL_READ_REQ    0x40
+// read requested was aborted by device
+#define PAMELA_CHANNEL_READ_ERROR  0x80
 // mask for all read bits
-#define PAMELA_CHANNEL_READ_MASK   0x70
+#define PAMELA_CHANNEL_READ_MASK   0xF0
 
 // write pending: a write request is ready to be sent
 #define PAMELA_CHANNEL_WRITE_READY 0x100
@@ -50,8 +49,10 @@
 #define PAMELA_CHANNEL_WRITE_SIZE  0x200
 // write requested: a write request was posted
 #define PAMELA_CHANNEL_WRITE_REQ   0x400
+// read requested was aborted by device
+#define PAMELA_CHANNEL_WRITE_ERROR 0x800
 // mask for all write bits
-#define PAMELA_CHANNEL_WRITE_MASK  0x700
+#define PAMELA_CHANNEL_WRITE_MASK  0xF00
 
 /* check if read req is done */
 static inline int pamela_status_read_ready(UWORD status)

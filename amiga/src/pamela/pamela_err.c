@@ -45,10 +45,8 @@ const char *pamela_perror(int res)
       return "dev open failed";
     case PAMELA_ERROR_CHANNEL_NOT_OPEN:
       return "channel not open";
-    case PAMELA_ERROR_CHANNEL_RESET:
-      return "channel was reset";
     case PAMELA_ERROR_CHANNEL_EOS:
-      return "channel reached end";
+      return "channel reached end of stream";
     case PAMELA_ERROR_CHANNEL_ERROR:
       return "channel error";
     case PAMELA_ERROR_CHANNEL_STATE:

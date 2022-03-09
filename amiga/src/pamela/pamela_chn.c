@@ -117,11 +117,6 @@ static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_
     return PAMELA_ERROR_CHANNEL_ERROR;
   }
 
-  // was reset?
-  if((status & PAMELA_CHANNEL_RESET) != 0) {
-    return PAMELA_ERROR_CHANNEL_RESET;
-  }
-
   // was eos?
   if((status & PAMELA_CHANNEL_EOS) != 0) {
     return PAMELA_ERROR_CHANNEL_EOS;

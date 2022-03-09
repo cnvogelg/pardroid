@@ -30,6 +30,7 @@ set(BASE_DIR src/base)
 set(TEST_DIR src/test)
 set(COMMON_DIR ../common/src)
 set(PROTO_DIR src/proto)
+set(PAMELA_DIR src/pamela)
 
 # source lists
 set(BASE_SRCS
@@ -72,6 +73,11 @@ set(PROTO_BOOT_SRCS
         ${PROTO_DIR}/proto_boot.c
 )
 
+set(PAMELA_SRCS
+        ${PROTO_IO_SRCS}
+        ${PAMELA_DIR}/pamela.c
+        ${PAMELA_DIR}/pamela_io.c
+)
 
 add_compile_definitions(
         MACHTAG=${MACHTAG}
@@ -87,6 +93,7 @@ include_directories(
         ${BASE_DIR}
         ${PROTO_DIR}
         ${COMMON_DIR}
+        ${PAMELA_DIR}
         ${CMAKE_BINARY_DIR}
 )
 
@@ -104,3 +111,4 @@ make_fw(test-proto-atom ${BASE_SRCS} ${PROTO_ATOM_SRCS} ${TEST_DIR}/test-proto-a
 make_fw(test-proto-dev ${BASE_SRCS} ${PROTO_DEV_SRCS} ${TEST_DIR}/test-proto-dev.c)
 make_fw(test-proto-io ${BASE_SRCS} ${PROTO_IO_SRCS} ${TEST_DIR}/test-proto-io.c)
 make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-boot.c)
+make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)

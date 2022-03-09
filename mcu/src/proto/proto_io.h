@@ -22,9 +22,11 @@ extern u32  proto_io_api_tell(u08 chn);
 extern void proto_io_api_read_req(u08 chn, u16 size);
 extern u16  proto_io_api_read_res(u08 chn);
 extern void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf);
+extern void proto_io_api_read_done(u08 chn, u16 size, u08 *buf);
 
 extern void proto_io_api_write_req(u08 chn, u16 size);
 extern u16  proto_io_api_write_res(u08 chn);
 extern void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf);
+extern void proto_io_api_write_done(u08 chn, u16 size, u08 *buf);
 
 #endif

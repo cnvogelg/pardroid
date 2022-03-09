@@ -139,10 +139,10 @@ TEST_FUNC(test_reset)
   int res = proto_io_reset(proto, TEST_CHANNEL);
   CHECK_RES(res, "reset");
 
-  // check status
+  // check status: only open is set
   res = proto_io_status(proto, TEST_CHANNEL, &status);
   CHECK_RES(res, "status");
-  CHECK_EQUAL(status, PROTO_IO_STATUS_RESET, "reset bit set");
+  CHECK_EQUAL(status, PROTO_IO_STATUS_OPEN, "reset bit set");
 
   // clear event mask
   UWORD mask = 0;
