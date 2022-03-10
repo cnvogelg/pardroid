@@ -52,36 +52,6 @@
 /* write data */
 #define PROTO_IO_CMD_WBLOCK_WRITE_DATA    0xe0
 
-/* ----- status word ----- */
-// open: channel is open
-#define PROTO_IO_STATUS_OPEN        0x01
-// end of stream reached
-#define PROTO_IO_STATUS_EOS         0x02
-// stream has error
-#define PROTO_IO_STATUS_ERROR       0x04
-
-// read pending: a read request is ready to be retrieved
-#define PROTO_IO_STATUS_READ_PEND   0x10
-// read size: a read size != req size needs to be retrieved
-#define PROTO_IO_STATUS_READ_SIZE   0x20
-// read requested: a read request was posted
-#define PROTO_IO_STATUS_READ_REQ    0x40
-// read requested was aborted by device
-#define PROTO_IO_STATUS_READ_ERROR  0x80
-// mask for all read bits
-#define PROTO_IO_STATUS_READ_MASK   0xF0
-
-// write pending: a write request is ready to be sent
-#define PROTO_IO_STATUS_WRITE_PEND  0x100
-// write size: a write size != req size needs to be retrieved
-#define PROTO_IO_STATUS_WRITE_SIZE  0x200
-// write requested: a write request was posted
-#define PROTO_IO_STATUS_WRITE_REQ   0x400
-// write requested was aborted by device
-#define PROTO_IO_STATUS_WRITE_ERROR 0x800
-// mask for all read bits
-#define PROTO_IO_STATUS_WRITE_MASK  0xF00
-
 /* ----- error codes ----- */
 #define PROTO_IO_OK                 0
 #define PROTO_IO_ERROR_ALREADY_OPEN 1

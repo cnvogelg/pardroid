@@ -55,10 +55,10 @@ void proto_io_api_open(u08 chn, u16 port)
   pamela_service_t *srv = pamela_find_service(port);
   if(srv == NULL) {
     // error
-    pc->status = PROTO_IO_STATUS_ERROR;
+    pc->status = PAMELA_STATUS_ERROR;
   } else {
     // setup channel
-    pc->status = PROTO_IO_STATUS_OPEN;
+    pc->status = PAMELA_STATUS_OPEN;
     pc->service = srv;
     pc->port = port;
     pc->mtu = srv->handler->config.def_mtu;
@@ -66,7 +66,7 @@ void proto_io_api_open(u08 chn, u16 port)
     // handler open
     u08 status = srv->handler->open(chn, port);
     if(status != PAMELA_OK) {
-      pc->status |= PROTO_IO_STATUS_ERROR;
+      pc->status |= PAMELA_STATUS_ERROR;
     } else {
       // set service active
       srv->channels |= 1<<chn;
@@ -128,9 +128,9 @@ void proto_io_api_read_req(u08 chn, u16 size)
 
   u08 result = pc->service->handler->read_request(chn, size);
   if(result == PAMELA_OK) {
-    pc->status |= PROTO_IO_STATUS_READ_REQ;
+    pc->status |= PAMELA_STATUS_READ_REQ;
   } else {
-    pc->status |= PROTO_IO_STATUS_READ_ERROR;
+    pc->status |= PAMELA_STATUS_READ_ERROR;
   }
 
   proto_io_event_mask_add_chn(chn);
@@ -149,7 +149,7 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
   *buf = pc->rx_buf;
 
   // clear read status
-  pc->status &= ~PROTO_IO_STATUS_READ_MASK;
+  pc->status &= ~PAMELA_STATUS_READ_MASK;
 
   proto_io_event_mask_add_chn(chn);
 }
@@ -168,9 +168,9 @@ void proto_io_api_write_req(u08 chn, u16 size)
 
   u08 result = pc->service->handler->write_request(chn, size);
   if(result == PAMELA_OK) {
-    pc->status |= PROTO_IO_STATUS_WRITE_REQ;
+    pc->status |= PAMELA_STATUS_WRITE_REQ;
   } else {
-    pc->status |= PROTO_IO_STATUS_WRITE_ERROR;
+    pc->status |= PAMELA_STATUS_WRITE_ERROR;
   }
 
   proto_io_event_mask_add_chn(chn);
@@ -189,7 +189,7 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
   *buf = pc->rx_buf;
 
   // clear read status
-  pc->status &= ~PROTO_IO_STATUS_WRITE_MASK;
+  pc->status &= ~PAMELA_STATUS_WRITE_MASK;
 
   proto_io_event_mask_add_chn(chn);
 }

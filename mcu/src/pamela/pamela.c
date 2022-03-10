@@ -3,7 +3,6 @@
 #include "autoconf.h"
 
 #include "proto_io.h"
-#include "proto_io_shared.h"
 #include "pamela.h"
 #include "pamela_int.h"
 
@@ -97,11 +96,11 @@ void pamela_read_reply(u08 chn, u08 *buf, u16 size)
 
   // size is not mtu
   if(size != pc->mtu) {
-    pc->status |= PROTO_IO_STATUS_READ_SIZE;
+    pc->status |= PAMELA_STATUS_READ_SIZE;
   }
 
   // read is now pending
-  pc->status |= PROTO_IO_STATUS_READ_PEND;
+  pc->status |= PAMELA_STATUS_READ_READY;
   pc->rx_buf = buf;
   pc->rx_size = size;
 
@@ -112,7 +111,7 @@ void pamela_read_error(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  pc->status |= PROTO_IO_STATUS_READ_ERROR;
+  pc->status |= PAMELA_STATUS_READ_ERROR;
   pc->rx_buf = NULL;
   pc->rx_size = 0;
 
@@ -125,11 +124,11 @@ void pamela_write_reply(u08 chn, u08 *buf, u16 size)
 
   // size is not mtu
   if(size != pc->mtu) {
-    pc->status |= PROTO_IO_STATUS_WRITE_SIZE;
+    pc->status |= PAMELA_STATUS_WRITE_SIZE;
   }
 
   // read is now pending
-  pc->status |= PROTO_IO_STATUS_WRITE_PEND;
+  pc->status |= PAMELA_STATUS_WRITE_READY;
   pc->tx_buf = buf;
   pc->tx_size = size;
 
@@ -140,7 +139,7 @@ void pamela_write_error(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  pc->status |= PROTO_IO_STATUS_READ_ERROR;
+  pc->status |= PAMELA_STATUS_READ_ERROR;
   pc->rx_buf = NULL;
   pc->rx_size = 0;
 
@@ -152,9 +151,9 @@ void pamela_end_stream(u08 chn, u08 error)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   if(error)
-    pc->status |= PROTO_IO_STATUS_ERROR;
+    pc->status |= PAMELA_STATUS_ERROR;
   else
-    pc->status |= PROTO_IO_STATUS_EOS;
+    pc->status |= PAMELA_STATUS_EOS;
 
   proto_io_event_mask_add_chn(chn);
 }

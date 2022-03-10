@@ -83,7 +83,7 @@ TEST_FUNC(test_read)
 
   // check status
   UWORD status = pamela_status(chn);
-  UWORD exp = PAMELA_CHANNEL_OPEN | PAMELA_CHANNEL_READ_REQ | PAMELA_CHANNEL_READ_READY;
+  UWORD exp = PAMELA_STATUS_OPEN | PAMELA_STATUS_READ_REQ | PAMELA_STATUS_READ_READY;
   CHECK_EQUAL(status, exp, "channel status");
 
   // read data
@@ -148,7 +148,7 @@ TEST_FUNC(test_write)
 
   // check status
   UWORD status = pamela_status(chn);
-  UWORD exp = PAMELA_CHANNEL_OPEN | PAMELA_CHANNEL_WRITE_REQ | PAMELA_CHANNEL_WRITE_READY;
+  UWORD exp = PAMELA_STATUS_OPEN | PAMELA_STATUS_WRITE_REQ | PAMELA_STATUS_WRITE_READY;
   CHECK_EQUAL(status, exp, "channel status");
 
   // write data

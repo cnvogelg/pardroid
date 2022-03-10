@@ -108,17 +108,17 @@ static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_
 {
   UWORD status = ch->status;
   // is open?
-  if((status & PAMELA_CHANNEL_OPEN) == 0) {
+  if((status & PAMELA_STATUS_OPEN) == 0) {
     return PAMELA_ERROR_CHANNEL_NOT_OPEN;
   }
 
   // has error?
-  if((status & PAMELA_CHANNEL_ERROR) != 0) {
+  if((status & PAMELA_STATUS_ERROR) != 0) {
     return PAMELA_ERROR_CHANNEL_ERROR;
   }
 
   // was eos?
-  if((status & PAMELA_CHANNEL_EOS) != 0) {
+  if((status & PAMELA_STATUS_EOS) != 0) {
     return PAMELA_ERROR_CHANNEL_EOS;
   }
 
@@ -142,7 +142,7 @@ static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_
 int pamela_read_request(pamela_channel_t *ch, UWORD size)
 {
   // first make sure no request is pending
-  int res = check_channel_status(ch, 0, PAMELA_CHANNEL_READ_REQ);
+  int res = check_channel_status(ch, 0, PAMELA_STATUS_READ_REQ);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -163,7 +163,7 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
   }
 
   // update my state
-  ch->status |= PAMELA_CHANNEL_READ_REQ;
+  ch->status |= PAMELA_STATUS_READ_REQ;
   ch->read_bytes = size;
   return PAMELA_OK;
 }
@@ -171,7 +171,7 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
 int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
 {
   // first make sure a request is ready
-  int res = check_channel_status(ch, PAMELA_CHANNEL_READ_READY, 0);
+  int res = check_channel_status(ch, PAMELA_STATUS_READ_READY, 0);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -180,7 +180,7 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
 
   // do new need to retreive an updated size?
   UWORD size = ch->read_bytes;
-  if((ch->status & PAMELA_CHANNEL_READ_SIZE) != 0) {
+  if((ch->status & PAMELA_STATUS_READ_SIZE) != 0) {
     res = proto_io_read_result(proto, ch->channel_id, &size);
     if(res != PROTO_RET_OK) {
       return pamela_map_proto_error(res);
@@ -194,7 +194,7 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
   }
 
   // update state
-  ch->status &= ~PAMELA_CHANNEL_READ_MASK;
+  ch->status &= ~PAMELA_STATUS_READ_MASK;
   ch->read_bytes = 0;
 
   return size;
@@ -203,7 +203,7 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
 int pamela_write_request(pamela_channel_t *ch, UWORD size)
 {
   // first make sure no request is pending
-  int res = check_channel_status(ch, 0, PAMELA_CHANNEL_WRITE_REQ);
+  int res = check_channel_status(ch, 0, PAMELA_STATUS_WRITE_REQ);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -224,7 +224,7 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
   }
 
   // update my state
-  ch->status |= PAMELA_CHANNEL_WRITE_REQ;
+  ch->status |= PAMELA_STATUS_WRITE_REQ;
   ch->write_bytes = size;
   return PAMELA_OK;
 }
@@ -232,7 +232,7 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
 int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
 {
   // first make sure a request is ready
-  int res = check_channel_status(ch, PAMELA_CHANNEL_WRITE_READY, 0);
+  int res = check_channel_status(ch, PAMELA_STATUS_WRITE_READY, 0);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -241,7 +241,7 @@ int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
 
   // do new need to retreive an updated size?
   UWORD size = ch->read_bytes;
-  if((ch->status & PAMELA_CHANNEL_WRITE_SIZE) != 0) {
+  if((ch->status & PAMELA_STATUS_WRITE_SIZE) != 0) {
     res = proto_io_write_result(proto, ch->channel_id, &size);
     if(res != PROTO_RET_OK) {
       return pamela_map_proto_error(res);
@@ -255,7 +255,7 @@ int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
   }
 
   // update state
-  ch->status &= ~PAMELA_CHANNEL_WRITE_MASK;
+  ch->status &= ~PAMELA_STATUS_WRITE_MASK;
   ch->write_bytes = 0;
 
   return size;
