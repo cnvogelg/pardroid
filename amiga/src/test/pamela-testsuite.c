@@ -26,8 +26,16 @@
     return res; \
   }
 
+#define CHECK_PAM_RES_VAL(res, sec, val) \
+  if (res != val) \
+  { \
+    p->error = pamela_perror(res); \
+    p->section = sec; \
+    return res; \
+  }
+
 #define TEST_PORT  1234
-#define TEST_BUF_SIZE  1024
+#define TEST_BUF_SIZE  512
 #define TEST_BYTE_OFFSET 3
 
 TEST_FUNC(test_init_exit)
@@ -69,6 +77,11 @@ TEST_FUNC(test_read)
   CHECK_PAM_RES(res, "open");
   CHECK_NOT_NULL(chn, "open");
 
+  // set mtu
+  res = pamela_set_mtu(chn, TEST_BUF_SIZE);
+  CHECK_PAM_RES(res, "set_mtu");
+  CHECK_EQUAL(pamela_get_mtu(chn), TEST_BUF_SIZE, "mtu mismatch");
+
   // post read request
   res = pamela_read_request(chn, TEST_BUF_SIZE);
   CHECK_PAM_RES(res, "read_req");
@@ -78,7 +91,7 @@ TEST_FUNC(test_read)
   CHECK_EQUAL(res, PAMELA_WAIT_EVENT, "wait: no event");
 
   // update state
-  res = pamela_event_update(pam);
+  res = pamela_event_update(pam, NULL);
   CHECK_PAM_RES(res, "event_update");
 
   // check status
@@ -88,7 +101,7 @@ TEST_FUNC(test_read)
 
   // read data
   res = pamela_read_data(chn, buf);
-  CHECK_PAM_RES(res, "read_data");
+  CHECK_PAM_RES_VAL(res, "read_data", TEST_BUF_SIZE);
 
   // close channel
   res = pamela_close(chn);
@@ -134,6 +147,11 @@ TEST_FUNC(test_write)
   CHECK_PAM_RES(res, "open");
   CHECK_NOT_NULL(chn, "open");
 
+  // set mtu
+  res = pamela_set_mtu(chn, TEST_BUF_SIZE);
+  CHECK_PAM_RES(res, "set_mtu");
+  CHECK_EQUAL(pamela_get_mtu(chn), TEST_BUF_SIZE, "mtu mismatch");
+
   // post write request
   res = pamela_write_request(chn, TEST_BUF_SIZE);
   CHECK_PAM_RES(res, "write_req");
@@ -143,7 +161,7 @@ TEST_FUNC(test_write)
   CHECK_EQUAL(res, PAMELA_WAIT_EVENT, "wait: no event");
 
   // update state
-  res = pamela_event_update(pam);
+  res = pamela_event_update(pam, NULL);
   CHECK_PAM_RES(res, "event_update");
 
   // check status
@@ -153,7 +171,7 @@ TEST_FUNC(test_write)
 
   // write data
   res = pamela_write_data(chn, buf);
-  CHECK_PAM_RES(res, "write_data");
+  CHECK_PAM_RES_VAL(res, "write_data", TEST_BUF_SIZE);
 
   // close channel
   res = pamela_close(chn);

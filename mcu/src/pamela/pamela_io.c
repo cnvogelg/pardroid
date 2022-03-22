@@ -184,6 +184,8 @@ void proto_io_api_read_req(u08 chn, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
+  pc->rx_size = size;
+
   DS("[RR:"); DB(chn); DC(':'); DW(size);
   // pass call to handler
   hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_REQUEST(pc->service->handler);
@@ -195,7 +197,6 @@ void proto_io_api_read_req(u08 chn, u16 size)
 
   if(result == PAMELA_OK) {
     pc->status |= PAMELA_STATUS_READ_REQ;
-    pc->rx_size = size;
   } else {
     pc->status |= PAMELA_STATUS_READ_ERROR;
     pc->rx_size = 0;
@@ -243,6 +244,8 @@ void proto_io_api_write_req(u08 chn, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
+  pc->tx_size = size;
+
   DS("[WR:"); DB(chn); DC(':'); DW(size);
   // pass call to handler
   hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_REQUEST(pc->service->handler);
@@ -254,7 +257,6 @@ void proto_io_api_write_req(u08 chn, u16 size)
 
   if(result == PAMELA_OK) {
     pc->status |= PAMELA_STATUS_WRITE_REQ;
-    pc->tx_size = size;
   } else {
     pc->status |= PAMELA_STATUS_WRITE_ERROR;
     pc->tx_size = 0;

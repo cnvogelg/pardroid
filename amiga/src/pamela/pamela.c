@@ -74,6 +74,7 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
   // init events
   res = proto_env_init_events(ph->proto_env);
   if(res != PROTO_ENV_OK) {
+    proto_env_exit(ph->proto_env);
     FreeMem(ph, sizeof(pamela_handle_t));
     *error = PAMELA_ERROR_INIT_ENV;
     return NULL;
@@ -82,6 +83,8 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
   // open handle
   ph->proto = proto_io_init(ph->proto_env);
   if(ph->proto == NULL) {
+    proto_env_exit_events(ph->proto_env);
+    proto_env_exit(ph->proto_env);
     FreeMem(ph, sizeof(pamela_handle_t));
     *error = PAMELA_ERROR_INIT_PROTO;
     return NULL;
@@ -91,6 +94,9 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
   ph->token = 0xbabe;
   res = proto_dev_set_driver_token(ph->proto, ph->token);
   if(res != PROTO_RET_OK) {
+    proto_io_exit(ph->proto);
+    proto_env_exit_events(ph->proto_env);
+    proto_env_exit(ph->proto_env);
     FreeMem(ph, sizeof(pamela_handle_t));
     *error = pamela_map_proto_error(res);
     return NULL;
@@ -99,6 +105,9 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
   // get device info
   res = read_devinfo(ph);
   if(res != PROTO_RET_OK) {
+    proto_io_exit(ph->proto);
+    proto_env_exit_events(ph->proto_env);
+    proto_env_exit(ph->proto_env);
     FreeMem(ph, sizeof(pamela_handle_t));
     *error = pamela_map_proto_error(res);
     return NULL;

@@ -28,9 +28,11 @@ static u32 seek_pos = 0;
 
 static void my_work(u16 channel_mask)
 {
+#if 0
   uart_send_pstring(PSTR("[work]"));
   uart_send_hex_word(channel_mask);
   uart_send_crlf();
+#endif
 }
 
 static u08 my_open(u08 chn, u16 port)

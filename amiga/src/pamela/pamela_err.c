@@ -51,6 +51,8 @@ const char *pamela_perror(int res)
       return "channel error";
     case PAMELA_ERROR_CHANNEL_STATE:
       return "invalid channel state";
+    case PAMELA_ERROR_MSG_TOO_LARGE:
+      return "message too large";
     default:
       return "unkown";
   }

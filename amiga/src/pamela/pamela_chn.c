@@ -320,7 +320,7 @@ int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
   proto_handle_t *proto = ch->pamela->proto;
 
   // do new need to retreive an updated size?
-  UWORD size = ch->read_bytes;
+  UWORD size = ch->write_bytes;
   if((ch->status & PAMELA_STATUS_WRITE_SIZE) != 0) {
     res = proto_io_write_result(proto, ch->channel_id, &size);
     if(res != PROTO_RET_OK) {
