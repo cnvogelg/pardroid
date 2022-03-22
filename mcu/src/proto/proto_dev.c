@@ -6,6 +6,7 @@
 #include "arch.h"
 #include "debug.h"
 #include "hw_system.h"
+#include "hw_timer.h"
 
 #include "proto_atom.h"
 #include "proto_dev.h"
@@ -57,13 +58,15 @@ static void proto_dev_handle(u08 cmd)
       // to perform reset or enter bootloader:
       // immediate reset to reach proto_dev_init()/boot code again
       // and ack the action there
-      DC('!'); DB(cmd);
+      DC('!'); DB(cmd); DNL;
+      hw_timer_delay_ms(10);
       hw_system_sys_reset();
       break;
     case PROTO_DEV_CMD_ACTION_KNOK:
       // to enter knok mode: finish action and then resets
-      DC('!'); DC('K');
+      DC('!'); DC('K'); DNL;
       proto_atom_action();
+      hw_timer_delay_ms(10);
       hw_system_sys_reset();
       break;
     /* device constants */

@@ -82,14 +82,31 @@ int pamela_event_wait(pamela_handle_t *ph,
                       ULONG timeout_s, ULONG timeout_us,
                       ULONG *extra_sigmask);
 
+/* ----- open/close/reset ----- */
 /* open channel to given service */
 pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error);
 /* close channel */
 int pamela_close(pamela_channel_t *pc);
+/* reset current channel */
+int pamela_reset(pamela_channel_t *pc);
+
+/* ----- update/status ----- */
 /* update channel state by querying device */
 int pamela_update(pamela_channel_t *pc);
 /* return local channel status */
 UWORD pamela_status(pamela_channel_t *pc);
+
+/* ----- get_mtu/set_mtu ----- */
+/* return cached mtu value */
+UWORD pamela_get_mtu(pamela_channel_t *pc);
+/* try to set new mtu value in device */
+int pamela_set_mtu(pamela_channel_t *pc, UWORD mtu);
+
+/* ----- seek/tell ----- */
+/* seek to position */
+int pamela_seek(pamela_channel_t *pc, ULONG pos);
+/* get current position */
+int pamela_tell(pamela_channel_t *pc, ULONG *pos);
 
 /* ----- read ----- */
 /* post read request. give max size */

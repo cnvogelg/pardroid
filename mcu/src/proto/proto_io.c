@@ -26,12 +26,16 @@ void proto_io_init()
 void proto_io_event_mask_add_chn(u08 chn)
 {
   event_mask |= 1 << chn;
+  DC('{'); DW(event_mask);
 
   // trigger an irq
   if(!event_irq_pending) {
     proto_atom_pulse_irq();
     event_irq_pending = 1;
+    DC('!');
   }
+
+  DC('}');
 }
 
 // ----- global cmd -----
@@ -42,6 +46,7 @@ static void handle_global_cmd(u08 cmd)
     case PROTO_IO_CMD_RWORD_EVENT_MASK:
       proto_atom_read_word(event_mask);
       // clear on read
+      DS("[evmask:"); DW(event_mask); DC(']'); DNL;
       event_mask = 0;
       event_irq_pending = 0;
       break;

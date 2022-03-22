@@ -89,6 +89,26 @@ int pamela_close(pamela_channel_t *ch)
   return PAMELA_OK;
 }
 
+/* reset channel */
+int pamela_reset(pamela_channel_t *ch)
+{
+  pamela_handle_t *ph = ch->pamela;
+
+  /* you can only reset an open channel */
+  if(ch->flags != CHANNEL_FLAG_OPEN) {
+    return PAMELA_ERROR_CHANNEL_NOT_OPEN;
+  }
+
+  // reset channel on device
+  int res = proto_io_reset(ph->proto, ch->channel_id);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
+  }
+
+  // update status
+  return pamela_update(ch);
+}
+
 /* get current status value */
 int pamela_update(pamela_channel_t *ch)
 {
@@ -134,6 +154,66 @@ static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_
     if((status & clr_mask) != 0) {
       return PAMELA_ERROR_CHANNEL_STATE;
     }
+  }
+
+  return PAMELA_OK;
+}
+
+UWORD pamela_get_mtu(pamela_channel_t *ch)
+{
+  return ch->mtu;
+}
+
+int pamela_set_mtu(pamela_channel_t *ch, UWORD mtu)
+{
+  // first make sure no request is pending
+  int res = check_channel_status(ch, 0, 0);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  // try to set the new mtu
+  res = proto_io_set_channel_mtu(ch->pamela->proto, ch->channel_id, mtu);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
+  }
+
+  // read back effective value
+  res = proto_io_get_channel_mtu(ch->pamela->proto, ch->channel_id, &ch->mtu);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
+  }
+
+  return PAMELA_OK;
+}
+
+int pamela_seek(pamela_channel_t *ch, ULONG pos)
+{
+  // make sure channel is open and error free
+  int res = check_channel_status(ch, 0, 0);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = proto_io_seek(ch->pamela->proto, ch->channel_id, pos);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
+  }
+
+  return PAMELA_OK;
+}
+
+int pamela_tell(pamela_channel_t *ch, ULONG *pos)
+{
+  // make sure channel is open and error free
+  int res = check_channel_status(ch, 0, 0);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = proto_io_tell(ch->pamela->proto, ch->channel_id, pos);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
   }
 
   return PAMELA_OK;

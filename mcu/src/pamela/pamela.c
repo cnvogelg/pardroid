@@ -2,6 +2,9 @@
 #include "arch.h"
 #include "autoconf.h"
 
+#define DEBUG CONFIG_DEBUG_PAMELA
+
+#include "debug.h"
 #include "proto_io.h"
 #include "pamela.h"
 #include "pamela_int.h"
@@ -18,6 +21,7 @@ static u08 num_services;
 
 void pamela_init(void)
 {
+  DS("pam_init"); DNL;
   proto_io_init();
 
   active_channels = 0;
@@ -41,6 +45,8 @@ void pamela_init(void)
     srv->handler = NULL;
     srv->channels = 0;
   }
+
+  DS("pam_init done"); DNL;
 }
 
 u08 pamela_add_handler(pamela_handler_ptr_t handler)
@@ -66,7 +72,10 @@ void pamela_work(void)
   for(u08 i=0;i<num_services;i++) {
     pamela_service_t *srv = &pamela_services[i];
     if(srv->channels != 0) {
-      srv->handler->work(srv->channels);
+      hnd_work_func_t work_func = HANDLER_FUNC_WORK(srv->handler);
+      if(work_func != NULL) {
+        work_func(srv->channels);
+      }
     }
   }
 }
@@ -80,8 +89,9 @@ pamela_service_t *pamela_find_service(u16 port)
 {
   for(u08 i=0;i<num_services;i++) {
     pamela_service_t *srv = &pamela_services[i];
-    if((port >= srv->handler->config.port_begin) &&
-       (port <= srv->handler->config.port_end)) {
+    u16 port_begin = HANDLER_GET_PORT_BEGIN(srv->handler);
+    u16 port_end = HANDLER_GET_PORT_END(srv->handler);
+    if((port >= port_begin) && (port <= port_end)) {
       return srv;
     }
   }
@@ -94,16 +104,19 @@ void pamela_read_reply(u08 chn, u08 *buf, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  // size is not mtu
-  if(size != pc->mtu) {
+  // size is not the requested size
+  if(size != pc->rx_size) {
+    pc->rx_size = size;
     pc->status |= PAMELA_STATUS_READ_SIZE;
   }
 
   // read is now pending
   pc->status |= PAMELA_STATUS_READ_READY;
   pc->rx_buf = buf;
-  pc->rx_size = size;
 
+  DS("[rp:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
+
+  // notify host
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -115,6 +128,9 @@ void pamela_read_error(u08 chn)
   pc->rx_buf = NULL;
   pc->rx_size = 0;
 
+  DS("[re:"); DB(chn); DC(']'); DNL;
+
+  // notify host
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -122,16 +138,19 @@ void pamela_write_reply(u08 chn, u08 *buf, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  // size is not mtu
-  if(size != pc->mtu) {
+  // size is not the requested size
+  if(size != pc->tx_size) {
+    pc->tx_size = size;
     pc->status |= PAMELA_STATUS_WRITE_SIZE;
   }
 
   // read is now pending
   pc->status |= PAMELA_STATUS_WRITE_READY;
   pc->tx_buf = buf;
-  pc->tx_size = size;
 
+  DS("[wp:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
+
+  // notify host
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -143,6 +162,9 @@ void pamela_write_error(u08 chn)
   pc->rx_buf = NULL;
   pc->rx_size = 0;
 
+  DS("[we:"); DB(chn); DC(']'); DNL;
+
+  // notify host
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -155,5 +177,8 @@ void pamela_end_stream(u08 chn, u08 error)
   else
     pc->status |= PAMELA_STATUS_EOS;
 
+  DS("[eos:"); DB(chn); DC('='); DB(error); DC(']'); DNL;
+
+  // notify host
   proto_io_event_mask_add_chn(chn);
 }

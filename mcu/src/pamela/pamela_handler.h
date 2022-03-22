@@ -28,6 +28,12 @@ typedef void (*hnd_reset_func_t)(u08 chn);
 */
 typedef u16 (*hnd_set_mtu_func_t)(u08 chn, u16 mtu);
 
+/* ----- seek/tell ----- */
+/* seek to a given position */
+typedef void (*hnd_seek_func_t)(u08 chn, u32 pos);
+/* return current position */
+typedef u32 (*hnd_tell_func_t)(u08 chn);
+
 /* ----- read ----- */
 /* a read request arrived from the host with the
    desired max size to read.
@@ -84,6 +90,9 @@ struct pamela_handler {
   hnd_close_func_t              close;
   hnd_reset_func_t              reset;
 
+  hnd_seek_func_t               seek;
+  hnd_tell_func_t               tell;
+
   hnd_read_request_func_t       read_request;
   hnd_read_done_func_t          read_done;
 
@@ -112,10 +121,15 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 #define HANDLER_FUNC_CLOSE(hnd)       ((hnd_close_func_t)read_rom_rom_ptr(&hnd->close))
 #define HANDLER_FUNC_RESET(hnd)       ((hnd_reset_func_t)read_rom_rom_ptr(&hnd->reset))
 
-#define HANDLER_FUNC_READ_REQUST(hnd) ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_begin))
-#define HANDLER_FUNC_READ_DONE(hnd)   ((hnd_read_done_func_t)read_rom_rom_ptr(&hnd->read_end))
+#define HANDLER_FUNC_SEEK(hnd)        ((hnd_seek_func_t)read_rom_rom_ptr(&hnd->seek))
+#define HANDLER_FUNC_TELL(hnd)        ((hnd_tell_func_t)read_rom_rom_ptr(&hnd->tell))
 
-#define HANDLER_FUNC_WRITE_REQUEST(hnd) ((hnd_write_request_func_t)read_rom_rom_ptr(&hnd->write_begin))
-#define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_done_func_t)read_rom_rom_ptr(&hnd->write_end))
+#define HANDLER_FUNC_READ_REQUEST(hnd ) ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_request))
+#define HANDLER_FUNC_READ_DONE(hnd)     ((hnd_read_done_func_t)read_rom_rom_ptr(&hnd->read_done))
+
+#define HANDLER_FUNC_WRITE_REQUEST(hnd) ((hnd_write_request_func_t)read_rom_rom_ptr(&hnd->write_request))
+#define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_done_func_t)read_rom_rom_ptr(&hnd->write_done))
+
+#define HANDLER_FUNC_SET_MTU(hnd)       ((hnd_set_mtu_func_t)read_rom_rom_ptr(&hnd->set_mtu))
 
 #endif

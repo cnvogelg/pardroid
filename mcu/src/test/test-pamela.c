@@ -22,6 +22,7 @@ FW_INFO(FWID_TEST_PAMELA, VERSION_TAG)
 #define ERROR_CHANNEL   15
 
 static u08 read_buf[MAX_SIZE];
+static u32 seek_pos = 0;
 
 // ----- handler functions -----
 
@@ -39,7 +40,7 @@ static u08 my_open(u08 chn, u16 port)
   uart_send(':');
   uart_send_hex_word(port);
   uart_send_crlf();
-  return 0; // OK
+  return PAMELA_OK;
 }
 
 static void my_close(u08 chn)
@@ -54,6 +55,28 @@ static void my_reset(u08 chn)
   uart_send_pstring(PSTR("[reset]"));
   uart_send_hex_byte(chn);
   uart_send_crlf();
+}
+
+// ----- seek/tell -----
+
+void my_seek(u08 chn, u32 pos)
+{
+  uart_send_pstring(PSTR("[seek]"));
+  uart_send_hex_byte(chn);
+  uart_send(':');
+  uart_send_hex_long(pos);
+  uart_send_crlf();
+  seek_pos = pos;
+}
+
+u32 my_tell(u08 chn)
+{
+  uart_send_pstring(PSTR("[tell]"));
+  uart_send_hex_byte(chn);
+  uart_send(':');
+  uart_send_hex_long(seek_pos);
+  uart_send_crlf();
+  return seek_pos;
 }
 
 // ----- read -----
@@ -122,11 +145,19 @@ void my_write_done(u08 chn, u08 *buf, u16 size)
 
 u16 my_set_mtu(u08 chn, u16 new_mtu)
 {
+  u16 mtu;
   if(new_mtu < MAX_SIZE) {
-    return new_mtu;
+    mtu = new_mtu;
   } else {
-    return MAX_SIZE;
+    mtu = MAX_SIZE;
   }
+
+  uart_send_pstring(PSTR("[set_mtu]"));
+  uart_send_hex_byte(chn);
+  uart_send(':');
+  uart_send_hex_word(mtu);
+  uart_send_crlf();
+  return mtu;
 }
 
 // ----- define my handler -----
@@ -145,6 +176,9 @@ HANDLER_BEGIN(my_handler)
   .reset = my_reset,
 
   .set_mtu = my_set_mtu,
+
+  .seek = my_seek,
+  .tell = my_tell,
 
   .read_request = my_read_request,
   .read_done = my_read_done,
@@ -170,6 +204,7 @@ int main(void)
   while(1) {
     hw_system_wdt_reset();
     pamela_work();
+    uart_send('.');
  }
 
   return 0;
