@@ -72,9 +72,11 @@ const char *pamela_perror(int res);
 
 /* fill in devinfo struct */
 void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);
+/* return max channels */
+int  pamela_get_max_channels(pamela_handle_t *ph);
 
 /* first get event mask and then update all affected channels  */
-int pamela_event_update(pamela_handle_t *ph);
+int pamela_event_update(pamela_handle_t *ph, UWORD *event_mask);
 /* wait for event, retrieve mask and update affected channels */
 int pamela_event_wait(pamela_handle_t *ph,
                       ULONG timeout_s, ULONG timeout_us,

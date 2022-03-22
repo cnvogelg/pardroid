@@ -236,12 +236,6 @@ void timer_sig_exit(struct timer_handle *th)
   if(th->initFlags & 16) {
     th->initFlags &= ~16;
 
-    struct IORequest *req = (struct IORequest *)&th->sigTimerReq;
-    if(!CheckIO(req)) {
-      AbortIO(req);
-    }
-    WaitIO(req);
-
     DeleteMsgPort(th->sigTimerPort);
   }
 }

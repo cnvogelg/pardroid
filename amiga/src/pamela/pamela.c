@@ -60,6 +60,8 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
     return NULL;
   }
 
+  ph->sys_base = SysBase;
+
   // open env
   int res = 0;
   ph->proto_env = proto_env_init(SysBase, &res);
@@ -128,6 +130,11 @@ void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info)
   CopyMem(&ph->devinfo, info, sizeof(pamela_devinfo_t));
 }
 
+int pamela_get_max_channels(pamela_handle_t *ph)
+{
+  return ph->devinfo.max_channels;
+}
+
 static int get_event_mask(pamela_handle_t *ph, UWORD *events)
 {
   int res = proto_io_get_event_mask(ph->proto, events);
@@ -138,12 +145,16 @@ static int get_event_mask(pamela_handle_t *ph, UWORD *events)
 }
 
 /* update pamela status after an IRQ or by polling */
-int pamela_event_update(pamela_handle_t *ph)
+int pamela_event_update(pamela_handle_t *ph, UWORD *event_mask)
 {
   UWORD events;
   int res = get_event_mask(ph, &events);
   if(res != PAMELA_OK) {
     return res;
+  }
+
+  if(event_mask != NULL) {
+    *event_mask = events;
   }
 
   for(int i=0;i<PROTO_IO_NUM_CHANNELS;i++) {
