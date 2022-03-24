@@ -124,6 +124,11 @@ UWORD pamela_status(pamela_channel_t *ch)
   return ch->status;
 }
 
+UBYTE pamela_channel_id(pamela_channel_t *ch)
+{
+  return ch->channel_id;
+}
+
 static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_mask)
 {
   UWORD status = ch->status;

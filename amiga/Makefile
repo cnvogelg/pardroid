@@ -2,6 +2,7 @@ BASE_DIR=..
 # config
 DEFAULT_CONFIG=m68k-cia
 CONFIG?=configs/$(DEFAULT_CONFIG).config
+EXTRA_CONFIG=$(wildcard configs/$(FLAVOR).config)
 COMPILER?=vbcc
 include $(BASE_DIR)/scripts/gencfg.mk
 # common defs
@@ -39,6 +40,7 @@ PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
 
 # pamela
 PAMELA_SRCS = $(PROTO_IO_SRCS) pamela.c pamela_err.c pamela_chn.c
+PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c
 
 # test+bench
 TEST_SRCS = test.c test-buffer.c
@@ -80,6 +82,10 @@ $(eval $(call make-program,minitest-proto-boot,$(MINITEST_PROTO_BOOT_SRCS)))
 # minitest-pamela
 MINITEST_PAMELA_SRCS = minitest-pamela.c $(PAMELA_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-pamela,$(MINITEST_PAMELA_SRCS)))
+
+# minitest-pamela-engine
+MINITEST_PAMELA_ENGINE_SRCS = minitest-pamela-engine.c $(PAMELA_ENGINE_SRCS) $(BASE_SRCS)
+$(eval $(call make-program,minitest-pamela-engine,$(MINITEST_PAMELA_ENGINE_SRCS)))
 
 # ----- tests
 # test-proto-atom
@@ -158,16 +164,10 @@ $(eval $(call sfx-lha,boot.run,boot.lha))
 $(eval $(call dist-program,boot.run))
 
 # ----- devices
-# common sources
-PAMELA_DEV_SRCS = pamela_dev.c pamela_worker.c pam_engine.c
-# pambox.device
-PAMBOX_DEV_SRCS = pamela_boxdev.c pambox.c $(PAMELA_DEV_SRCS)
-$(eval $(call make-device,pambox.device,$(PAMBOX_DEV_SRCS)))
-$(eval $(call dist-device,pambox.device))
-# pammet.device
-PAMNET_DEV_SRCS = pamela_netdev.c pamnet.c $(PAMELA_DEV_SRCS)
-$(eval $(call make-device,pamnet.device,$(PAMNET_DEV_SRCS)))
-$(eval $(call dist-device,pamnet.device))
+# pamela.device
+PAMELA_DEV_SRCS = pamela_dev.c pamela_worker.c $(PAMELA_SRCS)
+$(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
+$(eval $(call dist-device,pamela.device))
 
 # pamela device test
 PAMDEV_TEST_SRCS = pamdev_test.c

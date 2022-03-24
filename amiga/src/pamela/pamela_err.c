@@ -53,6 +53,16 @@ const char *pamela_perror(int res)
       return "invalid channel state";
     case PAMELA_ERROR_MSG_TOO_LARGE:
       return "message too large";
+    case PAMELA_ERROR_CHANNEL_NOT_FOUND:
+      return "channel not found";
+    case PAMELA_ERROR_ALREADY_READING:
+      return "already reading";
+    case PAMELA_ERROR_ALREADY_WRITING:
+      return "already writing";
+    case PAMELA_ERROR_READ_FAILED:
+      return "read failed";
+    case PAMELA_ERROR_WRITE_FAILED:
+      return "write failed";
     default:
       return "unkown";
   }
