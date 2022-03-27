@@ -119,6 +119,12 @@ TEST_PAMELA_SRCS += pamela-testsuite.c
 $(eval $(call make-program,test-pamela,$(TEST_PAMELA_SRCS)))
 $(eval $(call dist-program,test-pamela))
 
+# test-pamela-engine
+TEST_PAMELA_ENGINE_SRCS = test-pamela-engine.c $(PAMELA_ENGINE_SRCS) $(TEST_SRCS)
+TEST_PAMELA_ENGINE_SRCS += pamela-engine-testsuite.c
+$(eval $(call make-program,test-pamela-engine,$(TEST_PAMELA_ENGINE_SRCS)))
+$(eval $(call dist-program,test-pamela-engine))
+
 # ----- tools
 # pablo
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_BOOT_SRCS)
