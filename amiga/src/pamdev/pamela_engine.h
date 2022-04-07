@@ -23,9 +23,14 @@ void pamela_engine_exit(pamela_engine_t *eng);
    will wait for signals.
    you can add your own sigmask to wait for them, too.
    returns your sigmask with triggered sigmask
-   otherwise stays in own processing loop and does not return
+   otherwise stays in own processing loop and does not return.
+   returns 0 if the quit signal was received.
 */
 ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask);
+
+/* send a quit signal to exit the engine running in a task
+*/
+void pamela_engine_quit(pamela_engine_t *eng);
 
 /* begin request
    setup a new request for a client
@@ -42,5 +47,10 @@ int pamela_engine_exit_request(pamela_engine_t *eng, pamela_req_t *req);
    return TRUE is quick return
 */
 BOOL pamela_engine_post_request(pamela_engine_t *eng, pamela_req_t *reg);
+
+/* if possible cancel the request
+   return TRUE if it was cancelled
+*/
+BOOL pamela_engine_cancel_request(pamela_engine_t *eng, pamela_req_t *reg);
 
 #endif

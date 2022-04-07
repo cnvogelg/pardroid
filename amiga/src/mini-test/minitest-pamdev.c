@@ -8,6 +8,8 @@
 #include "autoconf.h"
 #include "debug.h"
 
+#include <devices/pamela.h>
+
 typedef struct IORequest IOR;
 
 static const char *TEMPLATE = "D=DEVICE/K,U=UNIT/K/N";
@@ -20,7 +22,7 @@ static params_t params;
 int dosmain(void)
 {
     struct RDArgs *args;
-    char *device = "pambox.device";
+    char *device = "pamela.device";
     ULONG unit = 0;
 
     /* First parse args */
@@ -37,21 +39,35 @@ int dosmain(void)
     }
 
     int result = 0;
+    BYTE error;
     struct MsgPort *port = CreateMsgPort();
     if(port != NULL) {
-        struct IOStdReq *req = CreateStdIO(port);
+        struct IOPamReq *req = (struct IOPamReq *)CreateIORequest(port, sizeof(*req));
         if(req != NULL) {
             if (OpenDevice(device, unit, (IOR *)req, 0)) {
                 Printf("Unable to open '%s':%ld, error %ld %ld\n",
-                       (ULONG)device, unit, req->io_Error, req->io_Actual);
+                       (ULONG)device, unit, req->iopam_Req.io_Error, req->iopam_Req.io_Actual);
                 result = 3;
             } else {
                 PutStr("OK!\n");
 
+                PutStr("open channel\n");
+                req->iopam_Req.io_Command = PAMCMD_OPEN_CHANNEL;
+                req->iopam_Port = 1234;
+                error = DoIO((IOR *)req);
+                Printf("-> %ld\n", error);
+
+                PutStr("close channel\n");
+                req->iopam_Req.io_Command = PAMCMD_CLOSE_CHANNEL;
+                req->iopam_Port = 1234;
+                error = DoIO((IOR *)req);
+                Printf("-> %ld\n", error);
+
+                PutStr("close device\n");
                 CloseDevice((IOR *)req);
                 PutStr("done\n");
             }
-            DeleteStdIO(req);
+            DeleteIORequest(req);
         } else {
             PutStr("can't create IO req!\n");
             result = 2;

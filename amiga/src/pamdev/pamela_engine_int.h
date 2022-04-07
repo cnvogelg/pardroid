@@ -27,6 +27,9 @@ struct pamela_engine {
   /* all channels have an own socket */
   pamela_socket_t  *sockets;
   UWORD             num_sockets;
+  /* quit signal */
+  struct Task      *task;
+  BYTE              quit_signal;
 };
 
 void pamela_engine_shutdown_client(pamela_engine_t *eng, pamela_client_t *pc);

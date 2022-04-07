@@ -33,6 +33,7 @@ pamela_engine_t *pamela_engine_init(struct Library *SysBase, int *error)
     D(("no mem!\n"));
     return NULL;
   }
+  eng->quit_signal = -1;
 
   // setup pamela
   eng->pamela = pamela_init(SysBase, error);
@@ -69,6 +70,16 @@ pamela_engine_t *pamela_engine_init(struct Library *SysBase, int *error)
   }
   eng->port_sigmask = 1 << eng->req_port->mp_SigBit;
 
+  // alloc quit signal
+  eng->task = FindTask(NULL);
+  eng->quit_signal = AllocSignal(-1);
+  if(eng->quit_signal == -1) {
+    pamela_engine_exit(eng);
+    *error = PAMELA_ERROR_NO_MEM;
+    D(("no signal!\n"));
+    return NULL;
+  }
+
   // ok
   *error = PAMELA_OK;
   D(("ok!\n"));
@@ -93,6 +104,9 @@ void pamela_engine_exit(pamela_engine_t *eng)
   }
   if(eng->sockets != NULL) {
     FreeVec(eng->sockets);
+  }
+  if(eng->quit_signal != -1) {
+    FreeSignal(eng->quit_signal);
   }
 
   FreeMem(eng, sizeof(pamela_engine_t));
@@ -310,8 +324,9 @@ static void handle_event(pamela_engine_t *eng)
 
 ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
 {
+  ULONG quit_sigmask = 1 << eng->quit_signal;
   while(1) {
-    ULONG sigmask = extra_sigmask | eng->port_sigmask;
+    ULONG sigmask = extra_sigmask | eng->port_sigmask | quit_sigmask;
     // wait for pamela event, port or timeout
     D(("event wait: sigmask=%lx\n", sigmask));
     int res = pamela_event_wait(eng->pamela, TIMEOUT_S, TIMEOUT_US, &sigmask);
@@ -345,8 +360,18 @@ ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
         // leave function and report ext sig
         return other_sigmask;
       }
+      // quit?
+      if((sigmask & quit_sigmask) == quit_sigmask) {
+        D(("-> quit!\n"));
+        return 0;
+      }
     }
   }
+}
+
+void pamela_engine_quit(pamela_engine_t *eng)
+{
+  Signal(eng->task, 1 << eng->quit_signal);
 }
 
 int pamela_engine_init_request(pamela_engine_t *eng, pamela_req_t *req)
@@ -418,6 +443,13 @@ void pamela_engine_shutdown_client(pamela_engine_t *eng, pamela_client_t *pc)
   }
   pc->request = NULL;
   pc->channel_mask = 0;
+}
+
+BOOL pamela_engine_cancel_request(pamela_engine_t *eng, pamela_req_t *req)
+{
+  // TODO
+  req->iopam_Req.io_Error = IOERR_ABORTED;
+  return FALSE;
 }
 
 void pamela_engine_shutdown_socket(pamela_engine_t *eng, pamela_socket_t *sock)

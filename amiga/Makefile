@@ -21,11 +21,11 @@ INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src include
-INCLUDES+=src/device/shared src/device/pamela src/device/test
+INCLUDES+=src/device src/pamdev
 VPATH=$(INCLUDES)
 
 # base
-BASE_SRCS = debug.c
+BASE_SRCS = debug.c worker.c
 TIMER_SRCS = timer.c
 PARIO_SRCS = $(PARIO_$(CONFIG_MACH)_SRCS)
 PARIO_cia_SRCS = pario.c pario_irq.s
@@ -54,6 +54,10 @@ $(eval $(call make-program,minitest-pario,$(MINITEST_PARIO_SRCS)))
 # minitest-timer
 MINITEST_TIMER_SRCS = minitest-timer.c $(TIMER_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-timer,$(MINITEST_TIMER_SRCS)))
+
+# minitest-worker
+MINITEST_WORKER_SRCS = minitest-worker.c $(BASE_SRCS)
+$(eval $(call make-program,minitest-worker,$(MINITEST_WORKER_SRCS)))
 
 # minitest-udp
 MINITEST_UDP_SRCS = minitest-udp.c $(BASE_SRCS)
@@ -86,6 +90,10 @@ $(eval $(call make-program,minitest-pamela,$(MINITEST_PAMELA_SRCS)))
 # minitest-pamela-engine
 MINITEST_PAMELA_ENGINE_SRCS = minitest-pamela-engine.c $(PAMELA_ENGINE_SRCS) $(BASE_SRCS)
 $(eval $(call make-program,minitest-pamela-engine,$(MINITEST_PAMELA_ENGINE_SRCS)))
+
+# minitest-pamdev
+MINITEST_PAMDEV_SRCS = minitest-pamdev.c $(BASE_SRCS)
+$(eval $(call make-program,minitest-pamdev,$(MINITEST_PAMDEV_SRCS)))
 
 # ----- tests
 # test-proto-atom
@@ -131,6 +139,13 @@ PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_BOOT_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 $(eval $(call dist-program,pablo))
 
+# ----- devices
+# pamela.device
+PAMELA_DEV_SRCS = pamela_dev.c $(PAMELA_ENGINE_SRCS)
+$(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
+$(eval $(call dist-device,pamela.device))
+
+
 # disabled for now
 ifeq "a" "b"
 
@@ -169,11 +184,6 @@ $(eval $(call create-lha,boot.lha,$(BOOTRUN_FILES)))
 $(eval $(call sfx-lha,boot.run,boot.lha))
 $(eval $(call dist-program,boot.run))
 
-# ----- devices
-# pamela.device
-PAMELA_DEV_SRCS = pamela_dev.c pamela_worker.c $(PAMELA_SRCS)
-$(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
-$(eval $(call dist-device,pamela.device))
 
 # pamela device test
 PAMDEV_TEST_SRCS = pamdev_test.c

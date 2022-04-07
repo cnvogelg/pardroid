@@ -17,6 +17,6 @@ NET_INC ?= $(HOME)/projects/amidev/roadshow/netinclude
 ASFLAGS_ARCH = -Fhunk -quiet -phxass -m$(CONFIG_MCU) -I$(NDK_INC_ASM)
 
 PRG_SRCS = dosmain.c
-DEV_SRCS = device.c unit.c devworker.c xsysbase.s
+DEV_SRCS = device.c unit.c worker.c xsysbase.s
 
 LIBS = $(LIBS_ARCH) $(LIBS_$(FLAVOR))
