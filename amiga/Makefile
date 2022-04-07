@@ -145,16 +145,14 @@ PAMELA_DEV_SRCS = pamela_dev.c $(PAMELA_ENGINE_SRCS)
 $(eval $(call make-device,pamela.device,$(PAMELA_DEV_SRCS)))
 $(eval $(call dist-device,pamela.device))
 
+# ----- bench
+# bench-proto-io
+BENCH_PROTO_IO_SRCS = bench-proto-io.c $(PROTO_IO_SRCS) $(BENCH_SRCS)
+$(eval $(call make-program,bench-proto-io,$(BENCH_PROTO_IO_SRCS)))
+$(eval $(call dist-program,bench-proto-io))
 
 # disabled for now
 ifeq "a" "b"
-
-
-# ----- bench
-# pb-bench-proto
-PB_BENCH_PROTO_SRCS = pb-bench-proto.c $(PROTO_ENV_SRCS) $(BENCH_SRCS)
-$(eval $(call make-program,pb-bench-proto,$(PB_BENCH_PROTO_SRCS)))
-$(eval $(call dist-program,pb-bench-proto))
 
 # pario simulator
 ifeq "$(CONFIG_MACH)" "net"
@@ -183,12 +181,6 @@ BOOTRUN_FILES = pablo
 $(eval $(call create-lha,boot.lha,$(BOOTRUN_FILES)))
 $(eval $(call sfx-lha,boot.run,boot.lha))
 $(eval $(call dist-program,boot.run))
-
-
-# pamela device test
-PAMDEV_TEST_SRCS = pamdev_test.c
-$(eval $(call make-program,pamdev_test,$(PAMDEV_TEST_SRCS)))
-$(eval $(call dist-program,pamdev_test))
 
 endif
 

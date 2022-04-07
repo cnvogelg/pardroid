@@ -67,7 +67,7 @@ ULONG bench_get_num(void)
 ULONG bench_get_size(void)
 {
   if(params.size == NULL) {
-    return 1024;
+    return 512;
   } else {
     ULONG s = *params.size;
     if(s&1) {
