@@ -11,7 +11,7 @@ void pamela_channels_init(pamela_handle_t *ph)
   for(int i=0;i<PROTO_IO_NUM_CHANNELS;i++) {
     pamela_channel_t *ch = &ph->channels[i];
     ch->channel_id = i;
-    ch->flags = CHANNEL_FLAG_EMPTY;
+    ch->flags = CHANNEL_FLAG_INACTIVE;
     ch->pamela = ph;
   }
 }
@@ -20,7 +20,7 @@ static pamela_channel_t *find_free_channel(pamela_handle_t *ph)
 {
   for(int i=0;i<PROTO_IO_NUM_CHANNELS;i++) {
     pamela_channel_t *ch = &ph->channels[i];
-    if(ch->flags == CHANNEL_FLAG_EMPTY) {
+    if(ch->flags == CHANNEL_FLAG_INACTIVE) {
       return ch;
     }
   }
@@ -30,13 +30,6 @@ static pamela_channel_t *find_free_channel(pamela_handle_t *ph)
 /* open channel to given service */
 pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error)
 {
-  // too many channels?
-  if((ph->num_channels == PROTO_IO_NUM_CHANNELS) ||
-     (ph->num_channels == ph->devinfo.max_channels)) {
-    *error = PAMELA_ERROR_NO_FREE_CHANNEL;
-    return NULL;
-  }
-
   // find free channel
   pamela_channel_t *ch = find_free_channel(ph);
   if(ch == NULL) {
@@ -51,24 +44,14 @@ pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error)
     return NULL;
   }
 
-  // update status
+  // update state
+  ch->port = port;
+
   res = pamela_update(ch);
   if(res != PAMELA_OK) {
-    *error = res;
     return NULL;
   }
 
-  // get mtu
-  res = proto_io_get_channel_mtu(ph->proto, ch->channel_id, &ch->mtu);
-  if(res != PROTO_RET_OK) {
-    *error = pamela_map_proto_error(res);
-    return NULL;
-  }
-
-  // ok!
-  ch->flags = CHANNEL_FLAG_OPEN;
-  ch->port = port;
-  ph->num_channels ++;
   return ch;
 }
 
@@ -83,10 +66,10 @@ int pamela_close(pamela_channel_t *ch)
     return pamela_map_proto_error(res);
   }
 
-  ch->flags = CHANNEL_FLAG_EMPTY;
+  // update state
   ch->port = 0;
-  ph->num_channels --;
-  return PAMELA_OK;
+
+  return pamela_update(ch);
 }
 
 /* reset channel */
@@ -95,8 +78,8 @@ int pamela_reset(pamela_channel_t *ch)
   pamela_handle_t *ph = ch->pamela;
 
   /* you can only reset an open channel */
-  if(ch->flags != CHANNEL_FLAG_OPEN) {
-    return PAMELA_ERROR_CHANNEL_NOT_OPEN;
+  if(ch->flags != CHANNEL_FLAG_ACTIVE) {
+    return PAMELA_ERROR_CHANNEL_NOT_ACTIVE;
   }
 
   // reset channel on device
@@ -116,6 +99,23 @@ int pamela_update(pamela_channel_t *ch)
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
+
+  // update internal flag
+  UBYTE state = ch->status & PAMELA_STATUS_STATE_MASK;
+  UBYTE flag = 0;
+  switch(state) {
+    case PAMELA_STATUS_INACTIVE:
+      flag = CHANNEL_FLAG_INACTIVE;
+      break;
+    case PAMELA_STATUS_ACTIVE:
+      flag = CHANNEL_FLAG_ACTIVE;
+      break;
+    default:
+      flag = CHANNEL_FLAG_BUSY;
+      break;
+  }
+  ch->flags = flag;
+
   return PAMELA_OK;
 }
 
@@ -132,19 +132,11 @@ UBYTE pamela_channel_id(pamela_channel_t *ch)
 static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_mask)
 {
   UWORD status = ch->status;
-  // is open?
-  if((status & PAMELA_STATUS_OPEN) == 0) {
-    return PAMELA_ERROR_CHANNEL_NOT_OPEN;
-  }
 
-  // has error?
-  if((status & PAMELA_STATUS_ERROR) != 0) {
-    return PAMELA_ERROR_CHANNEL_ERROR;
-  }
-
-  // was eos?
-  if((status & PAMELA_STATUS_EOS) != 0) {
-    return PAMELA_ERROR_CHANNEL_EOS;
+  // make sure channel is active
+  UBYTE state = status & PAMELA_STATUS_STATE_MASK;
+  if(state != PAMELA_STATUS_ACTIVE) {
+    return PAMELA_ERROR_CHANNEL_NOT_ACTIVE;
   }
 
   // set mask?
@@ -164,14 +156,26 @@ static int check_channel_status(pamela_channel_t *ch, UWORD set_mask, UWORD clr_
   return PAMELA_OK;
 }
 
-UWORD pamela_get_mtu(pamela_channel_t *ch)
+int pamela_get_mtu(pamela_channel_t *ch, UWORD *mtu)
 {
-  return ch->mtu;
+  // make sure channel is active
+  int res = check_channel_status(ch, 0, 0);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  // read back effective value
+  res = proto_io_get_channel_mtu(ch->pamela->proto, ch->channel_id, mtu);
+  if(res != PROTO_RET_OK) {
+    return pamela_map_proto_error(res);
+  }
+
+  return PAMELA_OK;
 }
 
 int pamela_set_mtu(pamela_channel_t *ch, UWORD mtu)
 {
-  // first make sure no request is pending
+  // make sure channel is active
   int res = check_channel_status(ch, 0, 0);
   if(res != PAMELA_OK) {
     return res;
@@ -184,17 +188,22 @@ int pamela_set_mtu(pamela_channel_t *ch, UWORD mtu)
   }
 
   // read back effective value
-  res = proto_io_get_channel_mtu(ch->pamela->proto, ch->channel_id, &ch->mtu);
+  UWORD got_mtu;
+  res = proto_io_get_channel_mtu(ch->pamela->proto, ch->channel_id, &got_mtu);
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
 
-  return PAMELA_OK;
+  if(mtu != got_mtu) {
+    return PAMELA_ERROR_INVALID_MTU;
+  } else {
+    return PAMELA_OK;
+  }
 }
 
 int pamela_seek(pamela_channel_t *ch, ULONG pos)
 {
-  // make sure channel is open and error free
+  // make sure channel is active
   int res = check_channel_status(ch, 0, 0);
   if(res != PAMELA_OK) {
     return res;
@@ -210,7 +219,7 @@ int pamela_seek(pamela_channel_t *ch, ULONG pos)
 
 int pamela_tell(pamela_channel_t *ch, ULONG *pos)
 {
-  // make sure channel is open and error free
+  // make sure channel is active
   int res = check_channel_status(ch, 0, 0);
   if(res != PAMELA_OK) {
     return res;
@@ -232,10 +241,6 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
     return res;
   }
 
-  // check message size
-  if(size > ch->mtu) {
-    return PAMELA_ERROR_MSG_TOO_LARGE;
-  }
   // odd size?
   if((size & 1) != 0) {
     return PAMELA_ERROR_PROTO_ODD_SIZE;
@@ -293,10 +298,6 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
     return res;
   }
 
-  // check message size
-  if(size > ch->mtu) {
-    return PAMELA_ERROR_MSG_TOO_LARGE;
-  }
   // odd size?
   if((size & 1) != 0) {
     return PAMELA_ERROR_PROTO_ODD_SIZE;

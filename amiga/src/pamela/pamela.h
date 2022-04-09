@@ -82,8 +82,8 @@ UWORD pamela_status(pamela_channel_t *pc);
 UBYTE pamela_channel_id(pamela_channel_t *pc);
 
 /* ----- get_mtu/set_mtu ----- */
-/* return cached mtu value */
-UWORD pamela_get_mtu(pamela_channel_t *pc);
+/* read mtu value from device */
+int pamela_get_mtu(pamela_channel_t *pc, UWORD *mtu);
 /* try to set new mtu value in device */
 int pamela_set_mtu(pamela_channel_t *pc, UWORD mtu);
 

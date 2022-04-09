@@ -43,12 +43,8 @@ const char *pamela_perror(int res)
       return "no free channel";
     case PAMELA_ERROR_DEV_OPEN_FAILED:
       return "dev open failed";
-    case PAMELA_ERROR_CHANNEL_NOT_OPEN:
-      return "channel not open";
-    case PAMELA_ERROR_CHANNEL_EOS:
-      return "channel reached end of stream";
-    case PAMELA_ERROR_CHANNEL_ERROR:
-      return "channel error";
+    case PAMELA_ERROR_CHANNEL_NOT_ACTIVE:
+      return "channel not active";
     case PAMELA_ERROR_CHANNEL_STATE:
       return "invalid channel state";
     case PAMELA_ERROR_MSG_TOO_LARGE:
@@ -63,6 +59,8 @@ const char *pamela_perror(int res)
       return "read failed";
     case PAMELA_ERROR_WRITE_FAILED:
       return "write failed";
+    case PAMELA_ERROR_INVALID_MTU:
+      return "invalid mtu";
     default:
       return "unkown";
   }

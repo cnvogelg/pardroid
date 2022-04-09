@@ -35,14 +35,14 @@ static void my_work(u16 channel_mask)
 #endif
 }
 
-static u08 my_open(u08 chn, u16 port)
+static void my_open(u08 chn, u16 port)
 {
   uart_send_pstring(PSTR("[open]"));
   uart_send_hex_byte(chn);
   uart_send(':');
   uart_send_hex_word(port);
   uart_send_crlf();
-  return PAMELA_OK;
+  pamela_open_done(chn, PAMELA_OK);
 }
 
 static void my_close(u08 chn)
@@ -50,6 +50,7 @@ static void my_close(u08 chn)
   uart_send_pstring(PSTR("[close]"));
   uart_send_hex_byte(chn);
   uart_send_crlf();
+  pamela_close_done(chn, PAMELA_OK);
 }
 
 static void my_reset(u08 chn)
@@ -57,6 +58,7 @@ static void my_reset(u08 chn)
   uart_send_pstring(PSTR("[reset]"));
   uart_send_hex_byte(chn);
   uart_send_crlf();
+  pamela_reset_done(chn);
 }
 
 // ----- seek/tell -----

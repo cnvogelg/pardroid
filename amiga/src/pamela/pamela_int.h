@@ -3,8 +3,9 @@
 
 #include "proto_io_shared.h"
 
-#define CHANNEL_FLAG_EMPTY   0
-#define CHANNEL_FLAG_OPEN    1
+#define CHANNEL_FLAG_INACTIVE   0
+#define CHANNEL_FLAG_BUSY       1
+#define CHANNEL_FLAG_ACTIVE     2
 
 struct pamela_channel {
   pamela_handle_t    *pamela;
@@ -12,7 +13,6 @@ struct pamela_channel {
   UBYTE               channel_id;
   UWORD               status;
   UWORD               port;
-  UWORD               mtu;
   UWORD               read_bytes;
   UWORD               write_bytes;
 };
@@ -23,7 +23,6 @@ struct pamela_handle {
   struct Library     *sys_base;
   pamela_devinfo_t    devinfo;
   UWORD               token;
-  UWORD               num_channels;
 
   pamela_channel_t    channels[PROTO_IO_NUM_CHANNELS];
 };

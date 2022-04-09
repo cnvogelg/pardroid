@@ -35,4 +35,8 @@ extern pamela_channel_t *pamela_get_channel(u08 chn);
 
 extern pamela_service_t *pamela_find_service(u16 port);
 
+extern void pamela_set_status(pamela_channel_t *chn, u08 status);
+
+extern void pamela_set_error(pamela_channel_t *chn, u08 error);
+
 #endif

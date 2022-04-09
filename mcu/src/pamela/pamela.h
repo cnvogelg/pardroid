@@ -19,8 +19,8 @@
 #define PAMELA_DEFAULT_MTU              512
 #endif
 
-#define PAMELA_OK       0
-#define PAMELA_ERROR    1
+#define PAMELA_OK 0
+#define PAMELA_ERROR 1
 
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);
@@ -34,6 +34,21 @@ extern u08 pamela_add_handler(pamela_handler_ptr_t handler);
 extern void pamela_work(void);
 
 // ----- API functions for handlers to use -----
+
+/* the handler reports that the open operation is complete.
+   error=0 is open ok otherwise return to error state
+*/
+extern void pamela_open_done(u08 chn, u08 error);
+
+/* the handler reports that the close operation is complete.
+   error=0 is open ok otherwise return to error state
+*/
+extern void pamela_close_done(u08 chn, u08 error);
+
+/* the handler reports that the reset operation is complete.
+   error=0 is open ok otherwise return to error state
+*/
+extern void pamela_reset_done(u08 chn);
 
 /* the handler reports that the requested read operation
    is ready with the given parameters.

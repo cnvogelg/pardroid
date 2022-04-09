@@ -89,7 +89,7 @@ int dosmain(void)
         res = test_main(all_tests, &param);
       
       } else {
-        Printf("wrong firmware: %04x\n", fw_id);
+        Printf("wrong firmware: %04lx\n", fw_id);
       }
 
       proto_io_exit(ph);

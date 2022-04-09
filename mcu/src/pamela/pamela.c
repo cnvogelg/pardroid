@@ -98,7 +98,74 @@ pamela_service_t *pamela_find_service(u16 port)
   return NULL;
 }
 
+void pamela_set_status(pamela_channel_t *pc, u08 status)
+{
+  pc->status &= ~PAMELA_STATUS_STATE_MASK;
+  pc->status |= status;
+}
+
+void pamela_set_error(pamela_channel_t *pc, u08 error)
+{
+  pc->status &= ~(PAMELA_STATUS_STATE_MASK | PAMELA_STATUS_ERROR_MASK);
+  pc->status |= PAMELA_STATUS_ERROR;
+  pc->status |= error << PAMELA_STATUS_ERROR_SHIFT;
+}
+
 // ----- API functions for handlers to use -----
+
+void pamela_open_done(u08 chn, u08 error)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+
+  if(error == PAMELA_OK) {
+    pamela_set_status(pc, PAMELA_STATUS_ACTIVE);
+  } else {
+    pamela_set_error(pc, error);
+  }
+
+  // set service active
+  pc->service->channels |= 1<<chn;
+
+  DS("[od:"); DB(error); DC(']'); DNL;
+
+  // trigger event
+  proto_io_event_mask_add_chn(chn);
+}
+
+void pamela_close_done(u08 chn, u08 error)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+
+  if(error == PAMELA_OK) {
+    pamela_set_status(pc, PAMELA_STATUS_INACTIVE);
+  } else {
+    pamela_set_error(pc, error);
+  }
+
+  // clear channel
+  pc->service->channels &= ~(1<<chn);
+
+  pc->status = 0;
+  pc->service = 0;
+  pc->port = 0;
+
+  DS("[cd:"); DB(error); DC(']'); DNL;
+
+  // trigger event
+  proto_io_event_mask_add_chn(chn);
+}
+
+void pamela_reset_done(u08 chn)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+
+  pamela_set_status(pc, PAMELA_STATUS_ACTIVE);
+
+  DS("[rd]"); DNL;
+
+  // trigger event
+  proto_io_event_mask_add_chn(chn);
+}
 
 void pamela_read_reply(u08 chn, u08 *buf, u16 size)
 {
@@ -172,10 +239,11 @@ void pamela_end_stream(u08 chn, u08 error)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  if(error)
-    pc->status |= PAMELA_STATUS_ERROR;
-  else
-    pc->status |= PAMELA_STATUS_EOS;
+  if(error == PAMELA_OK) {
+    pamela_set_status(pc, PAMELA_STATUS_EOS);
+  } else {
+    pamela_set_error(pc, error);
+  }
 
   DS("[eos:"); DB(chn); DC('='); DB(error); DC(']'); DNL;
 

@@ -13,6 +13,8 @@ struct pamela_socket {
   pamela_client_t  *client;
   pamela_req_t     *read_req;
   pamela_req_t     *write_req;
+  pamela_req_t     *cmd_req;
+  UWORD             last_status;
 };
 typedef struct pamela_socket pamela_socket_t;
 

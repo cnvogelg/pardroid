@@ -45,6 +45,8 @@ int pamela_req_open(pamela_engine_t *eng, pamela_req_t *req)
   sock->client = client;
   sock->read_req = NULL;
   sock->write_req = NULL;
+  sock->cmd_req = req;
+  sock->last_status = PAMELA_STATUS_INACTIVE;
 
   // update channel client mask
   client->channel_mask |= 1 << channel_id;
@@ -67,8 +69,7 @@ int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
     return res;
   }
 
-  // cleanup socket
-  pamela_engine_shutdown_socket(eng, socket);
+  socket->cmd_req = req;
 
   // update channel mask
   client->channel_mask &= ~(1 << req->iopam_Channel);
@@ -89,6 +90,8 @@ int pamela_req_reset(pamela_engine_t *eng, pamela_req_t *req)
   if(res != PAMELA_OK) {
     return res;
   }
+
+  socket->cmd_req = req;
 
   // cancel all pending requests at socket
   pamela_engine_cancel_read_write(eng, socket);

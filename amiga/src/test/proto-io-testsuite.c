@@ -106,7 +106,7 @@ TEST_FUNC(test_open_close)
   UWORD status = 0;
   res = proto_io_status(proto, TEST_CHANNEL, &status);
   CHECK_RES(res, "status1");
-  CHECK_EQUAL(status, PAMELA_STATUS_OPEN, "open bit set");
+  CHECK_EQUAL(status, PAMELA_STATUS_ACTIVE, "status active");
 
   // check port
   UWORD port = 0;
@@ -143,7 +143,7 @@ TEST_FUNC(test_reset)
   // check status: only open is set
   res = proto_io_status(proto, TEST_CHANNEL, &status);
   CHECK_RES(res, "status");
-  CHECK_EQUAL(status, PAMELA_STATUS_OPEN, "reset bit set");
+  CHECK_EQUAL(status, PAMELA_STATUS_ACTIVE, "status active");
 
   // clear event mask
   UWORD mask = 0;

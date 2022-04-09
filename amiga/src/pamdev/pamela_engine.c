@@ -126,12 +126,21 @@ static void handle_req(pamela_engine_t *eng, pamela_req_t *req)
   switch(req->iopam_Req.io_Command) {
     case PAMCMD_OPEN_CHANNEL:
       error = pamela_req_open(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
       break;
     case PAMCMD_CLOSE_CHANNEL:
       error = pamela_req_close(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
       break;
     case PAMCMD_RESET_CHANNEL:
       error = pamela_req_reset(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
       break;
     case PAMCMD_READ:
       error = pamela_req_read(eng, req);
@@ -271,39 +280,69 @@ static void handle_socket_error(pamela_engine_t *eng, pamela_socket_t *sock)
 
 static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
 {
-    pamela_channel_t *channel = sock->channel;
+  pamela_channel_t *channel = sock->channel;
 
-    UWORD status = pamela_status(channel);
-    D(("sock #%ld: status=%04lx\n", pamela_channel_id(channel), status));
+  UWORD status = pamela_status(channel);
+  D(("sock #%ld: status=%04lx\n", pamela_channel_id(channel), status));
 
-    // the read request is ready to be performed
-    if((status & PAMELA_STATUS_READ_READY) == PAMELA_STATUS_READ_READY) {
-      handle_socket_read(eng, sock, TRUE);
-    }
-    // the read request failed
-    if((status & PAMELA_STATUS_READ_ERROR) == PAMELA_STATUS_READ_ERROR) {
-      handle_socket_read(eng, sock, FALSE);
-    }
+  // the read request is ready to be performed
+  if((status & PAMELA_STATUS_READ_READY) == PAMELA_STATUS_READ_READY) {
+    handle_socket_read(eng, sock, TRUE);
+  }
+  // the read request failed
+  if((status & PAMELA_STATUS_READ_ERROR) == PAMELA_STATUS_READ_ERROR) {
+    handle_socket_read(eng, sock, FALSE);
+  }
 
-    // the write request is ready to be performed
-    if((status & PAMELA_STATUS_WRITE_READY) == PAMELA_STATUS_WRITE_READY) {
-      handle_socket_write(eng, sock, TRUE);
-    }
+  // the write request is ready to be performed
+  if((status & PAMELA_STATUS_WRITE_READY) == PAMELA_STATUS_WRITE_READY) {
+    handle_socket_write(eng, sock, TRUE);
+  }
 
-    // the write request failed
-    if((status & PAMELA_STATUS_WRITE_ERROR) == PAMELA_STATUS_WRITE_ERROR) {
-      handle_socket_write(eng, sock, FALSE);
-    }
+  // the write request failed
+  if((status & PAMELA_STATUS_WRITE_ERROR) == PAMELA_STATUS_WRITE_ERROR) {
+    handle_socket_write(eng, sock, FALSE);
+  }
 
-    // end of stream
-    if((status & PAMELA_STATUS_EOS) == PAMELA_STATUS_EOS) {
-      handle_socket_eos(eng, sock);
+  // reply command requests like open/close/reset
+  UBYTE state = status & PAMELA_STATUS_STATE_MASK;
+  if(state == PAMELA_STATUS_ACTIVE) {
+    // open/reset cmd
+    if(sock->cmd_req != NULL) {
+      D(("  -> reply open/reset cmd req %lx\n", sock->cmd_req));
+      ReplyMsg((struct Message *)sock->cmd_req);
+      sock->cmd_req = NULL;
     }
+  }
+  else if(state == PAMELA_STATUS_INACTIVE) {
+    // close cmd
+    if(sock->cmd_req != NULL) {
+      D(("  -> reply close cmd req %lx\n", sock->cmd_req));
+      ReplyMsg((struct Message *)sock->cmd_req);
+      sock->cmd_req = NULL;
 
-    // channel error
-    if((status & PAMELA_STATUS_ERROR) == PAMELA_STATUS_ERROR) {
-      handle_socket_error(eng, sock);
+      // cleanup socket
+      pamela_engine_shutdown_socket(eng, sock);
     }
+  }
+
+  // get changed state
+  UBYTE old_state = sock->last_status & PAMELA_STATUS_STATE_MASK;
+  if(state != old_state) {
+    D((" -> new_state=%ld\n", state));
+    switch(state) {
+      case PAMELA_STATUS_EOS:
+        handle_socket_eos(eng, sock);
+        break;
+      case PAMELA_STATUS_ERROR:
+        handle_socket_error(eng, sock);
+        break;
+      default:
+        break;
+    }
+  }
+
+  sock->last_status = status;
 }
 
 static void handle_event(pamela_engine_t *eng)
@@ -348,7 +387,7 @@ ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
       // an ioreq was passed in
       if((sigmask & eng->port_sigmask) == eng->port_sigmask) {
         pamela_req_t *req = (pamela_req_t *)GetMsg(eng->req_port);
-        D(("-> got msg: %lx\n", req));
+        D(("-> got req: %lx\n", req));
         if(req != NULL) {
           handle_req(eng, req);
         }

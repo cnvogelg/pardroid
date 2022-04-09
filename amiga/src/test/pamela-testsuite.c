@@ -80,7 +80,9 @@ TEST_FUNC(test_read)
   // set mtu
   res = pamela_set_mtu(chn, TEST_BUF_SIZE);
   CHECK_PAM_RES(res, "set_mtu");
-  CHECK_EQUAL(pamela_get_mtu(chn), TEST_BUF_SIZE, "mtu mismatch");
+  UWORD mtu = 0;
+  res = pamela_get_mtu(chn, &mtu);
+  CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post read request
   res = pamela_read_request(chn, TEST_BUF_SIZE);
@@ -96,7 +98,7 @@ TEST_FUNC(test_read)
 
   // check status
   UWORD status = pamela_status(chn);
-  UWORD exp = PAMELA_STATUS_OPEN | PAMELA_STATUS_READ_REQ | PAMELA_STATUS_READ_READY;
+  UWORD exp = PAMELA_STATUS_ACTIVE| PAMELA_STATUS_READ_REQ | PAMELA_STATUS_READ_READY;
   CHECK_EQUAL(status, exp, "channel status");
 
   // read data
@@ -150,7 +152,9 @@ TEST_FUNC(test_write)
   // set mtu
   res = pamela_set_mtu(chn, TEST_BUF_SIZE);
   CHECK_PAM_RES(res, "set_mtu");
-  CHECK_EQUAL(pamela_get_mtu(chn), TEST_BUF_SIZE, "mtu mismatch");
+  UWORD mtu = 0;
+  res = pamela_get_mtu(chn, &mtu);
+  CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post write request
   res = pamela_write_request(chn, TEST_BUF_SIZE);
@@ -166,7 +170,7 @@ TEST_FUNC(test_write)
 
   // check status
   UWORD status = pamela_status(chn);
-  UWORD exp = PAMELA_STATUS_OPEN | PAMELA_STATUS_WRITE_REQ | PAMELA_STATUS_WRITE_READY;
+  UWORD exp = PAMELA_STATUS_ACTIVE | PAMELA_STATUS_WRITE_REQ | PAMELA_STATUS_WRITE_READY;
   CHECK_EQUAL(status, exp, "channel status");
 
   // write data

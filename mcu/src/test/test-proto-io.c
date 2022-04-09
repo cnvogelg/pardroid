@@ -80,7 +80,7 @@ void proto_io_api_open(u08 chn, u16 port)
 
   // we misuse the mtu to pass port num
   test_mtu = port;
-  test_status = PAMELA_STATUS_OPEN;
+  test_status = PAMELA_STATUS_ACTIVE;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -100,7 +100,7 @@ extern void proto_io_api_reset(u08 chn)
   uart_send_hex_byte(chn);
   uart_send_crlf();
 
-  test_status = PAMELA_STATUS_OPEN;
+  test_status = PAMELA_STATUS_ACTIVE;
   proto_io_event_mask_add_chn(chn);
 }
 

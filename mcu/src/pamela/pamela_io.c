@@ -71,10 +71,9 @@ void proto_io_api_open(u08 chn, u16 port)
   if(srv == NULL) {
     // error
     DS("no srv!"); DNL;
-    pc->status = PAMELA_STATUS_ERROR;
+    pamela_set_error(pc, PAMELA_DEV_ERR_NO_SERVICE);
   } else {
     // setup channel
-    pc->status = PAMELA_STATUS_OPEN;
     pc->service = srv;
     pc->port = port;
     pc->mtu = HANDLER_GET_DEF_MTU(srv->handler);
@@ -83,23 +82,14 @@ void proto_io_api_open(u08 chn, u16 port)
     // handler open
     DS(",hnd:");
     hnd_open_func_t open_func = HANDLER_FUNC_OPEN(srv->handler);
-    u08 status;
     if(open_func != NULL) {
-      status = open_func(chn, port);
+      pamela_set_status(pc, PAMELA_STATUS_OPENING);
+      open_func(chn, port);
     } else {
-      status = PAMELA_OK;
+      pamela_open_done(chn, PAMELA_OK);
     }
-    DB(status); DNL;
-    if(status != PAMELA_OK) {
-      pc->status |= PAMELA_STATUS_ERROR;
-    } else {
-      // set service active
-      srv->channels |= 1<<chn;
-    }
+    DNL;
   }
-
-  // no update required since host polls status
-  //proto_io_event_mask_add_chn(chn);
 }
 
 void proto_io_api_close(u08 chn)
@@ -111,37 +101,27 @@ void proto_io_api_close(u08 chn)
   DS("hnd:");
   hnd_close_func_t close_func = HANDLER_FUNC_CLOSE(pc->service->handler);
   if(close_func != NULL) {
+    pamela_set_status(pc, PAMELA_STATUS_CLOSING);
     close_func(chn);
+  } else {
+    pamela_close_done(chn, PAMELA_OK);
   }
   DNL;
-
-  // clear channel
-  pc->service->channels &= ~(1<<chn);
-
-  pc->status = 0;
-  pc->service = 0;
-  pc->port = 0;
-
-  // no update required since host polls status
-  //proto_io_event_mask_add_chn(chn);
 }
 
 void proto_io_api_reset(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  // reset status
-  pc->status &= PAMELA_STATUS_OPEN;
-
   DS("reset:"); DB(chn); DC(':');
   hnd_reset_func_t reset_func = HANDLER_FUNC_RESET(pc->service->handler);
   if(reset_func != NULL) {
+    pamela_set_status(pc, PAMELA_STATUS_RESETTING);
     reset_func(chn);
+  } else {
+    pamela_reset_done(chn);
   }
   DNL;
-
-  // no update required since host polls status
-  //proto_io_event_mask_add_chn(chn);
 }
 
 void proto_io_api_seek(u08 chn, u32 off)

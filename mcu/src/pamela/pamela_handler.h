@@ -13,7 +13,7 @@
 typedef void (*hnd_work_func_t)(u16 channel_mask);
 
 /* a channel was opened to the given port */
-typedef u08  (*hnd_open_func_t)(u08 chn, u16 port);
+typedef void (*hnd_open_func_t)(u08 chn, u16 port);
 /* close the channel */
 typedef void (*hnd_close_func_t)(u08 chn);
 /* reset the channel.
