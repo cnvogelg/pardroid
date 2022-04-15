@@ -47,11 +47,6 @@ pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error)
   // update state
   ch->port = port;
 
-  res = pamela_update(ch);
-  if(res != PAMELA_OK) {
-    return NULL;
-  }
-
   return ch;
 }
 
@@ -69,7 +64,7 @@ int pamela_close(pamela_channel_t *ch)
   // update state
   ch->port = 0;
 
-  return pamela_update(ch);
+  return PAMELA_OK;
 }
 
 /* reset channel */
@@ -89,7 +84,7 @@ int pamela_reset(pamela_channel_t *ch)
   }
 
   // update status
-  return pamela_update(ch);
+  return PAMELA_OK;
 }
 
 /* get current status value */

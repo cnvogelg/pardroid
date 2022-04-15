@@ -141,7 +141,7 @@ struct Task *worker_run(struct Library *SysBase, STRPTR task_name, ULONG stack_s
   }
 }
 
-void worker_join(struct Libray *SysBase, BYTE quit_signal)
+void worker_join(struct Library *SysBase, BYTE quit_signal)
 {
   D(("Worker: join\n"));
   ULONG mask = 1 << quit_signal;

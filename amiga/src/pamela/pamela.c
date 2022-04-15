@@ -71,15 +71,6 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
     return NULL;
   }
 
-  // init events
-  res = proto_env_init_events(ph->proto_env);
-  if(res != PROTO_ENV_OK) {
-    proto_env_exit(ph->proto_env);
-    FreeMem(ph, sizeof(pamela_handle_t));
-    *error = PAMELA_ERROR_INIT_ENV;
-    return NULL;
-  }
-
   // open handle
   ph->proto = proto_io_init(ph->proto_env);
   if(ph->proto == NULL) {
@@ -87,6 +78,15 @@ pamela_handle_t *pamela_init(struct Library *SysBase, int *error)
     proto_env_exit(ph->proto_env);
     FreeMem(ph, sizeof(pamela_handle_t));
     *error = PAMELA_ERROR_INIT_PROTO;
+    return NULL;
+  }
+
+  // init events (after reset of device)
+  res = proto_env_init_events(ph->proto_env);
+  if(res != PROTO_ENV_OK) {
+    proto_env_exit(ph->proto_env);
+    FreeMem(ph, sizeof(pamela_handle_t));
+    *error = PAMELA_ERROR_INIT_ENV;
     return NULL;
   }
 
@@ -127,8 +127,8 @@ void pamela_exit(pamela_handle_t *ph)
     return;
   }
 
-  proto_io_exit(ph->proto);
   proto_env_exit_events(ph->proto_env);
+  proto_io_exit(ph->proto);
   proto_env_exit(ph->proto_env);
 
   FreeMem(ph, sizeof(pamela_handle_t));

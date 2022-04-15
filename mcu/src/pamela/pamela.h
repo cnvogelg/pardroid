@@ -21,6 +21,7 @@
 
 #define PAMELA_OK 0
 #define PAMELA_ERROR 1
+#define PAMELA_BUSY 0xff
 
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);
@@ -34,44 +35,6 @@ extern u08 pamela_add_handler(pamela_handler_ptr_t handler);
 extern void pamela_work(void);
 
 // ----- API functions for handlers to use -----
-
-/* the handler reports that the open operation is complete.
-   error=0 is open ok otherwise return to error state
-*/
-extern void pamela_open_done(u08 chn, u08 error);
-
-/* the handler reports that the close operation is complete.
-   error=0 is open ok otherwise return to error state
-*/
-extern void pamela_close_done(u08 chn, u08 error);
-
-/* the handler reports that the reset operation is complete.
-   error=0 is open ok otherwise return to error state
-*/
-extern void pamela_reset_done(u08 chn);
-
-/* the handler reports that the requested read operation
-   is ready with the given parameters.
-   A null pointer in the buffer denotes an SPI transfer.
-
-   The buffer is filled with the data to be read by the host.
-*/
-extern void pamela_read_reply(u08 chn, u08 *buf, u16 size);
-
-/* terminate the pending read request with an error */
-extern void pamela_read_error(u08 chn);
-
-/* the handler reports that the requested read operation
-   is ready with the given parameters.
-   A null pointer in the buffer denotes an SPI transfer.
-
-   An empty buffer is passed that will be filled by the host.
-*/
-extern void pamela_write_reply(u08 chn, u08 *buf, u16 size);
-
-/* terinate the pending write request with an error */
-extern void pamela_write_error(u08 chn);
-
 /* end the stream by the handler.
    either with an error or with regular EOS
  */

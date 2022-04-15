@@ -71,24 +71,27 @@ void proto_io_api_open(u08 chn, u16 port)
   if(srv == NULL) {
     // error
     DS("no srv!"); DNL;
-    pamela_set_error(pc, PAMELA_DEV_ERR_NO_SERVICE);
+    pamela_set_open_error(pc, PAMELA_DEV_ERROR_NO_SERVICE);
   } else {
-    // setup channel
-    pc->service = srv;
-    pc->port = port;
-    pc->mtu = HANDLER_GET_DEF_MTU(srv->handler);
-    DW(pc->port); DC(','); DW(pc->mtu);
+    // try to find a slot in service for this new channel
+    u08 slot_id = pamela_find_slot(srv);
+    if(slot_id != PAMELA_EMPTY_SLOT) {
+      // setup channel
+      pc->service = srv;
+      pc->port = port;
+      pc->mtu = HANDLER_GET_DEF_MTU(srv->handler);
+      pc->slot_id = slot_id;
+      DC('@'); DB(slot_id); DC(','); DW(pc->port); DC(','); DW(pc->mtu); DC(',');
 
-    // handler open
-    DS(",hnd:");
-    hnd_open_func_t open_func = HANDLER_FUNC_OPEN(srv->handler);
-    if(open_func != NULL) {
-      pamela_set_status(pc, PAMELA_STATUS_OPENING);
-      open_func(chn, port);
+      // handler open
+      hnd_open_func_t open_func = HANDLER_FUNC_OPEN(srv->handler);
+      pamela_open_work(pc, open_func);
+
+      DNL;
     } else {
-      pamela_open_done(chn, PAMELA_OK);
+      DS("no slot!"); DNL;
+      pamela_set_open_error(pc, PAMELA_DEV_ERROR_NO_SLOT);
     }
-    DNL;
   }
 }
 
@@ -98,14 +101,9 @@ void proto_io_api_close(u08 chn)
   DS("close:"); DB(chn); DC(':');
 
   // call handler->close()
-  DS("hnd:");
   hnd_close_func_t close_func = HANDLER_FUNC_CLOSE(pc->service->handler);
-  if(close_func != NULL) {
-    pamela_set_status(pc, PAMELA_STATUS_CLOSING);
-    close_func(chn);
-  } else {
-    pamela_close_done(chn, PAMELA_OK);
-  }
+  pamela_close_work(pc, close_func);
+
   DNL;
 }
 
@@ -114,13 +112,10 @@ void proto_io_api_reset(u08 chn)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   DS("reset:"); DB(chn); DC(':');
+
   hnd_reset_func_t reset_func = HANDLER_FUNC_RESET(pc->service->handler);
-  if(reset_func != NULL) {
-    pamela_set_status(pc, PAMELA_STATUS_RESETTING);
-    reset_func(chn);
-  } else {
-    pamela_reset_done(chn);
-  }
+  pamela_reset_work(pc, reset_func);
+
   DNL;
 }
 
@@ -129,10 +124,12 @@ void proto_io_api_seek(u08 chn, u32 off)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   DS("seek:"); DB(chn); DC(':');
+
   hnd_seek_func_t seek_func = HANDLER_FUNC_SEEK(pc->service->handler);
   if(seek_func != NULL) {
     seek_func(chn, off);
   }
+
   DNL;
 }
 
@@ -141,11 +138,13 @@ u32 proto_io_api_tell(u08 chn)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   DS("tell:"); DB(chn); DC(':');
+
   hnd_tell_func_t tell_func = HANDLER_FUNC_TELL(pc->service->handler);
   u32 pos = 0;
   if(tell_func) {
     pos = tell_func(chn);
   }
+
   DL(pos); DNL;
   return pos;
 }
@@ -165,30 +164,22 @@ void proto_io_api_read_req(u08 chn, u16 size)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   pc->rx_size = size;
+  pc->rx_org_size = size;
+  pc->status |= PAMELA_STATUS_READ_REQ;
 
   DS("[RR:"); DB(chn); DC(':'); DW(size);
-  // pass call to handler
-  hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_REQUEST(pc->service->handler);
-  u08 result = PAMELA_ERROR;
-  if(read_req_func != NULL) {
-    result = read_req_func(chn, size);
-  }
-  DC('='); DB(result); DNL;
 
-  if(result == PAMELA_OK) {
-    pc->status |= PAMELA_STATUS_READ_REQ;
-  } else {
-    pc->status |= PAMELA_STATUS_READ_ERROR;
-    pc->rx_size = 0;
-    proto_io_event_mask_add_chn(chn);
-  }
+  hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_REQUEST(pc->service->handler);
+  pamela_read_work(pc, read_req_func);
+
+  DC(']'); DNL;
 }
 
 u16  proto_io_api_read_res(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
   u16 size = pc->rx_size;
-  DS("[RS:"); DB(chn); DC('='); DW(size); DNL;
+  DS("[RS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
   return size;
 }
 
@@ -198,7 +189,7 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
   *size = pc->rx_size;
   *buf = pc->rx_buf;
 
-  DS("[RB:"); DB(chn); DC('='); DW(*size); DNL;
+  DS("[RB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_READ_MASK;
@@ -215,7 +206,7 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
   if(read_done != NULL) {
     read_done(chn, buf, size);
   }
-  DNL;
+  DC(']'); DNL;
 }
 
 // write
@@ -225,30 +216,22 @@ void proto_io_api_write_req(u08 chn, u16 size)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   pc->tx_size = size;
+  pc->tx_org_size = size;
+  pc->status |= PAMELA_STATUS_WRITE_REQ;
 
   DS("[WR:"); DB(chn); DC(':'); DW(size);
-  // pass call to handler
-  hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_REQUEST(pc->service->handler);
-  u08 result = PAMELA_ERROR;
-  if(write_req_func != NULL) {
-    result = write_req_func(chn, size);
-  }
-  DC('='); DB(result); DNL;
 
-  if(result == PAMELA_OK) {
-    pc->status |= PAMELA_STATUS_WRITE_REQ;
-  } else {
-    pc->status |= PAMELA_STATUS_WRITE_ERROR;
-    pc->tx_size = 0;
-    proto_io_event_mask_add_chn(chn);
-  }
+  hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_REQUEST(pc->service->handler);
+  pamela_write_work(pc, write_req_func);
+
+  DC(']'); DNL;
 }
 
 u16  proto_io_api_write_res(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
   u16 size = pc->tx_size;
-  DS("[WS:"); DB(chn); DC('='); DW(size); DNL;
+  DS("[WS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
   return size;
 }
 
@@ -258,7 +241,7 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
   *size = pc->tx_size;
   *buf = pc->tx_buf;
 
-  DS("[WB:"); DB(chn); DC('='); DW(*size); DNL;
+  DS("[WB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_WRITE_MASK;
@@ -275,5 +258,5 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
   if(write_done != NULL) {
     write_done(chn, buf, size);
   }
-  DNL;
+  DC(']'); DNL;
 }
