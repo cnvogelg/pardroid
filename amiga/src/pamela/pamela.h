@@ -58,12 +58,15 @@ void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);
 /* return max channels */
 int  pamela_get_max_channels(pamela_handle_t *ph);
 
-/* first get event mask and then update all affected channels  */
-int pamela_event_update(pamela_handle_t *ph, UWORD *event_mask);
-/* wait for event, retrieve mask and update affected channels */
+/* wait for proto event, time out, or extra signals */
 int pamela_event_wait(pamela_handle_t *ph,
                       ULONG timeout_s, ULONG timeout_us,
                       ULONG *extra_sigmask);
+/* first retrieve (and clear) event mask from device
+   then update status of all affected channels.
+   see pamela_update().
+*/
+int pamela_event_update(pamela_handle_t *ph, UWORD *event_mask);
 
 /* ----- open/close/reset ----- */
 /* open channel to given service */

@@ -34,9 +34,38 @@
     return res; \
   }
 
-#define TEST_PORT  1234
+#define CHECK_WAIT_EVENT(ph, ch, sec) \
+  res = wait_event(ph, ch); \
+  if(res != PAMELA_OK) { \
+    p->error = pamela_perror(res); \
+    p->section = sec; \
+    sprintf(p->extra, "wait_event"); \
+    return res; \
+  }
+
+#define CHECK_CHANNEL_STATE(ch, sec, want) \
+  { UWORD state = pamela_status(ch); \
+    if(state != want) { \
+      p->error = "invalid state"; \
+      p->section = sec; \
+      sprintf(p->extra, "got %04x want %04x", state, want); \
+      return 1; \
+    } \
+  }
+
 #define TEST_BUF_SIZE  512
 #define TEST_BYTE_OFFSET 3
+
+static int wait_event(pamela_handle_t *ph, pamela_channel_t *ch)
+{
+  int wait = pamela_event_wait(ph, 10, 0, NULL);
+  if(wait == PAMELA_WAIT_EVENT) {
+    UWORD mask = 0;
+    return pamela_event_update(ph, &mask);
+  } else {
+    return PAMELA_ERROR_UNKNOWN;
+  }
+}
 
 TEST_FUNC(test_init_exit)
 {
@@ -50,12 +79,16 @@ TEST_FUNC(test_open_close)
   pamela_channel_t *chn = NULL;
   int res = 0;
 
-  chn = pamela_open(pam, TEST_PORT, &res);
+  chn = pamela_open(pam, p->port, &res);
   CHECK_PAM_RES(res, "open");
   CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
 
   res = pamela_close(chn);
   CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   return 0;
 }
@@ -73,9 +106,11 @@ TEST_FUNC(test_read)
   }
 
   // open channel
-  chn = pamela_open(pam, TEST_PORT, &res);
+  chn = pamela_open(pam, p->port, &res);
   CHECK_PAM_RES(res, "open");
   CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
 
   // set mtu
   res = pamela_set_mtu(chn, TEST_BUF_SIZE);
@@ -108,6 +143,8 @@ TEST_FUNC(test_read)
   // close channel
   res = pamela_close(chn);
   CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   // check buffer
   int errors = 0;
@@ -145,9 +182,11 @@ TEST_FUNC(test_write)
   }
 
   // open channel
-  chn = pamela_open(pam, TEST_PORT, &res);
+  chn = pamela_open(pam, p->port, &res);
   CHECK_PAM_RES(res, "open");
   CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
 
   // set mtu
   res = pamela_set_mtu(chn, TEST_BUF_SIZE);
@@ -180,6 +219,8 @@ TEST_FUNC(test_write)
   // close channel
   res = pamela_close(chn);
   CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   test_buffer_free(buf);
 

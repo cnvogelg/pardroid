@@ -9,6 +9,7 @@ typedef struct test_param {
   ULONG         delay;
   const char   *test_name;
   ULONG         verbose;
+  ULONG         port;
   /* state */
   ULONG         iter;
   const char   *error;
