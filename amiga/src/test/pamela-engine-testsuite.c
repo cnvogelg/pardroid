@@ -38,7 +38,6 @@
     return res; \
   }
 
-#define TEST_PORT  1234
 #define TEST_BUF_SIZE  128
 #define TEST_BYTE_OFFSET 3
 
@@ -89,7 +88,7 @@ TEST_FUNC(test_open_close)
 
   // open request
   req->iopam_Req.io_Command = PAMCMD_OPEN_CHANNEL;
-  req->iopam_Port = 1234;
+  req->iopam_Port = p->port;
   CHECK_PAM_REQ(res, pet, "open");
 
   // close request
@@ -113,7 +112,7 @@ TEST_FUNC(test_read)
 
   // open channel
   req->iopam_Req.io_Command = PAMCMD_OPEN_CHANNEL;
-  req->iopam_Port = TEST_PORT;
+  req->iopam_Port = p->port;
   CHECK_PAM_REQ(res, pet, "open");
 
   // read
@@ -163,7 +162,7 @@ TEST_FUNC(test_write)
 
   // open channel
   req->iopam_Req.io_Command = PAMCMD_OPEN_CHANNEL;
-  req->iopam_Port = TEST_PORT;
+  req->iopam_Port = p->port;
   CHECK_PAM_REQ(res, pet, "open");
 
   // write

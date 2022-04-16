@@ -18,13 +18,14 @@
 #include "test.h"
 #include "fwid.h"
 
-static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Verbose/S";
+static const char *TEMPLATE = "L=Loop/S,N=Num/K/N,Test/K,Delay/K/N,Verbose/S,Port/K/N";
 typedef struct {
   ULONG loop;
   ULONG *num;
   char *test;
   ULONG *delay;
   ULONG verbose;
+  ULONG *port;
 } params_t;
 static params_t params;
 
@@ -48,11 +49,16 @@ void setup_test_config(test_param_t *p)
   if(params.delay) {
     delay = *params.delay;
   }
+  ULONG port = 1000;
+  if(params.port) {
+    port = *params.port;
+  }
 
   p->num_iter = num;
   p->delay = delay;
   p->test_name = params.test;
   p->verbose = params.verbose;
+  p->port = port;
 }
 
 int dosmain(void)
