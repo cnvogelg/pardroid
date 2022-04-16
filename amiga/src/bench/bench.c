@@ -67,4 +67,27 @@ int bench_main(bench_def_t benches[], const char *name, void *user_data)
   return RETURN_OK;
 }
 
+void bench_time_start(timer_handle_t *timer, stopwatch_t *watch)
+{
+  watch->end = 0;
+  watch->delta = 0;
+  watch->us = 0;
+  watch->kbps = 0;
+  timer_eclock_get(timer, &watch->start);
+}
+
+ULONG bench_time_stop(timer_handle_t *timer, stopwatch_t *watch, ULONG data_size)
+{
+  /* stop timer */
+  timer_eclock_get(timer, &watch->end);
+  timer_eclock_delta(&watch->end, &watch->start, &watch->delta);
+
+  /* calc kbps */
+  watch->us = timer_eclock_to_us(timer, &watch->delta);
+  if(watch->us > 0) {
+    watch->kbps = (data_size * 1000UL) / watch->us;
+  }
+  return watch->kbps;
+}
+
 

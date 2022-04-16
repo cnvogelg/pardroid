@@ -39,10 +39,7 @@ static void proto_err(int res)
 typedef int (*loop_func_t)(bench_data_t *data, ULONG iter,
                            UBYTE *buffer, UWORD num_words);
 
-typedef int (*init_func_t)(bench_data_t *data, UWORD num_words);
-
 static ULONG run_kbps_loop(bench_data_t *data,
-                           init_func_t init_func,
                            loop_func_t loop_func,
                            ULONG size_mult)
 {
@@ -51,15 +48,6 @@ static ULONG run_kbps_loop(bench_data_t *data,
 
   ULONG num = bench_get_num();
   ULONG num_bytes = bench_get_size();
-
-  /* call init */
-  if(init_func != NULL) {
-    int status = init_func(data, num_bytes);
-    if(status != PROTO_RET_OK) {
-      PutStr("\nERROR: init failed!\n");
-      return 0;
-    }
-  }
 
   /* alloc buffer */
   UBYTE *buf = AllocVec(num_bytes, MEMF_PUBLIC);
@@ -71,8 +59,8 @@ static ULONG run_kbps_loop(bench_data_t *data,
   ULONG i;
 
   /* start timer */
-  time_stamp_t start, end;
-  timer_eclock_get(timer, &start);
+  stopwatch_t watch;
+  bench_time_start(timer, &watch);
 
   /* run loop */
   for(i=0;i<num;i++) {
@@ -85,21 +73,15 @@ static ULONG run_kbps_loop(bench_data_t *data,
   }
 
   /* stop timer */
-  timer_eclock_get(timer, &end);
-  time_stamp_t delta;
-  timer_eclock_delta(&end, &start, &delta);
-
-  /* calc kbps */
-  ULONG us = timer_eclock_to_us(timer, &delta);
-  ULONG kbps = (sum_size * 1000UL) / us;
+  bench_time_stop(timer, &watch, sum_size);
   if(bench_get_verbose()) {
-    Printf("\nResult #%04lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, us, kbps);
+    Printf("\nResult #%04lu: data=%lu us=%lu kbps=%lu\n", i, sum_size, watch.us, watch.kbps);
   }
 
   /* free buffer */
   FreeVec(buf);
 
-  return kbps;
+  return watch.kbps;
 }
 
 /* ----- bench functions ----- */
@@ -271,19 +253,19 @@ static ULONG bench_action_exit(bench_def_t *def, void *user_data)
 static ULONG bench_msg_write(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_write, 1);
+  return run_kbps_loop(data, loop_msg_write, 1);
 }
 
 static ULONG bench_msg_read(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_read, 1);
+  return run_kbps_loop(data, loop_msg_read, 1);
 }
 
 static ULONG bench_msg_write_read(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_write_read, 2);
+  return run_kbps_loop(data, loop_msg_write_read, 2);
 }
 
 // msg + seek
@@ -291,19 +273,19 @@ static ULONG bench_msg_write_read(bench_def_t *def, void *user_data)
 static ULONG bench_msg_write_seek(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_write_seek, 1);
+  return run_kbps_loop(data, loop_msg_write_seek, 1);
 }
 
 static ULONG bench_msg_read_seek(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_read_seek, 1);
+  return run_kbps_loop(data, loop_msg_read_seek, 1);
 }
 
 static ULONG bench_msg_write_read_seek(bench_def_t *def, void *user_data)
 {
   bench_data_t *data = (bench_data_t *)user_data;
-  return run_kbps_loop(data, NULL, loop_msg_write_read_seek, 2);
+  return run_kbps_loop(data, loop_msg_write_read_seek, 2);
 }
 
 /* benchmark table */
