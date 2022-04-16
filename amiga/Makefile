@@ -151,6 +151,11 @@ BENCH_PROTO_IO_SRCS = bench-proto-io.c $(PROTO_IO_SRCS) $(BENCH_SRCS)
 $(eval $(call make-program,bench-proto-io,$(BENCH_PROTO_IO_SRCS)))
 $(eval $(call dist-program,bench-proto-io))
 
+# bench-pamela
+BENCH_PAMELA_SRCS = bench-pamela.c $(PAMELA_SRCS) $(BENCH_SRCS)
+$(eval $(call make-program,bench-pamela,$(BENCH_PAMELA_SRCS)))
+$(eval $(call dist-program,bench-pamela))
+
 # disabled for now
 ifeq "a" "b"
 

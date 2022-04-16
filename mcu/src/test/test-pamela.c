@@ -2,8 +2,6 @@
 #include "types.h"
 #include "arch.h"
 
-#define DEBUG 1
-
 #include "debug.h"
 
 #include "hw_uart.h"
@@ -23,6 +21,10 @@ FW_INFO(FWID_TEST_PAMELA, VERSION_TAG)
 #define NUM_SLOTS       4
 #define ERROR_SLOT      3
 
+#ifdef FLAVOR_DEBUG
+#define VERBOSE
+#endif
+
 static u08 read_buf[MAX_SIZE];
 static u32 seek_pos = 0;
 
@@ -41,6 +43,7 @@ static u08 my_open(u08 slot, u08 chan, u16 port)
 {
   u16 delay = port % 1000;
 
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<open:"));
   uart_send_hex_byte(slot);
   uart_send('@');
@@ -50,6 +53,7 @@ static u08 my_open(u08 slot, u08 chan, u16 port)
   uart_send('+');
   uart_send_hex_word(delay);
   uart_send('>');
+#endif
 
   slots[slot].chan = chan;
   slots[slot].port = port;
@@ -65,9 +69,13 @@ static u08 my_open(u08 slot, u08 chan, u16 port)
 
 static u08 my_open_work(u08 slot, u08 chan, u16 port)
 {
+#ifdef VERBOSE
   uart_send('O');
+#endif
   if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
     uart_send('!');
+#endif
     return PAMELA_OK;
   } else {
     return PAMELA_BUSY;
@@ -76,9 +84,11 @@ static u08 my_open_work(u08 slot, u08 chan, u16 port)
 
 static u08 my_close(u08 slot)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<close:"));
   uart_send_hex_byte(slot);
   uart_send('>');
+#endif
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
@@ -90,9 +100,13 @@ static u08 my_close(u08 slot)
 
 static u08 my_close_work(u08 slot)
 {
+#ifdef VERBOSE
   uart_send('C');
+#endif
   if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
     uart_send('!');
+#endif
     return PAMELA_OK;
   } else {
     return PAMELA_BUSY;
@@ -101,9 +115,11 @@ static u08 my_close_work(u08 slot)
 
 static u08 my_reset(u08 slot)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<reset:"));
   uart_send_hex_byte(slot);
   uart_send('>');
+#endif
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
@@ -115,9 +131,13 @@ static u08 my_reset(u08 slot)
 
 static u08 my_reset_work(u08 slot)
 {
+#ifdef VERBOSE
   uart_send('R');
+#endif
   if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
     uart_send('!');
+#endif
     return PAMELA_OK;
   } else {
     return PAMELA_BUSY;
@@ -128,21 +148,25 @@ static u08 my_reset_work(u08 slot)
 
 void my_seek(u08 slot, u32 pos)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<seek:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_long(pos);
   uart_send('>');
+#endif
   seek_pos = pos;
 }
 
 u32 my_tell(u08 slot)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<tell:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_long(seek_pos);
   uart_send('>');
+#endif
   return seek_pos;
 }
 
@@ -150,11 +174,13 @@ u32 my_tell(u08 slot)
 
 u08 my_read_request(u08 slot, u08 **buf, u16 *size)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<rr:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_word(*size);
   uart_send('>');
+#endif
 
   // simulate read error on error channel
   if(slot == ERROR_SLOT) {
@@ -173,9 +199,13 @@ u08 my_read_request(u08 slot, u08 **buf, u16 *size)
 
 u08 my_read_work(u08 slot, u08 **buf, u16 *size)
 {
+#ifdef VERBOSE
   uart_send('X');
+#endif
   if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
     uart_send('!');
+#endif
     return PAMELA_OK;
   } else {
     return PAMELA_BUSY;
@@ -184,22 +214,26 @@ u08 my_read_work(u08 slot, u08 **buf, u16 *size)
 
 void my_read_done(u08 slot, u08 *buf, u16 size)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<rd:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_word(size);
   uart_send('>');
+#endif
 }
 
 // ----- write -----
 
 u08 my_write_request(u08 slot, u08 **buf, u16 *size)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<wr:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_word(*size);
   uart_send('>');
+#endif
 
   // simulate read error on error channel
   if(slot == ERROR_SLOT) {
@@ -218,9 +252,13 @@ u08 my_write_request(u08 slot, u08 **buf, u16 *size)
 
 u08 my_write_work(u08 slot, u08 **buf, u16 *size)
 {
+#ifdef VERBOSE
   uart_send('Y');
+#endif
   if(hw_timer_millis_timed_out(slots[slot].start_w, slots[slot].delay)) {
+#ifdef VERBOSE
     uart_send('!');
+#endif
     return PAMELA_OK;
   } else {
     return PAMELA_BUSY;
@@ -229,11 +267,13 @@ u08 my_write_work(u08 slot, u08 **buf, u16 *size)
 
 void my_write_done(u08 slot, u08 *buf, u16 size)
 {
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<wd:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_word(size);
   uart_send('>');
+#endif
 }
 
 u16 my_set_mtu(u08 slot, u16 new_mtu)
@@ -245,11 +285,13 @@ u16 my_set_mtu(u08 slot, u16 new_mtu)
     mtu = MAX_SIZE;
   }
 
+#ifdef VERBOSE
   uart_send_pstring(PSTR("<set_mtu:"));
   uart_send_hex_byte(slot);
   uart_send(':');
   uart_send_hex_word(mtu);
   uart_send('>');
+#endif
   return mtu;
 }
 
@@ -258,7 +300,7 @@ HANDLER_BEGIN(my_handler)
   // parameters
   .config.port_begin = 1000,
   .config.port_end = 1999,
-  .config.def_mtu = 128,
+  .config.def_mtu = MAX_SIZE,
   .config.max_mtu = MAX_SIZE,
   .config.max_slots = NUM_SLOTS,
 
@@ -300,7 +342,9 @@ int main(void)
   while(1) {
     hw_system_wdt_reset();
     pamela_work();
+#ifdef VERBOSE
     uart_send('.');
+#endif
  }
 
   return 0;

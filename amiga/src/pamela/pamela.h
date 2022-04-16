@@ -3,6 +3,7 @@
 
 #include <exec/exec.h>
 
+#include "timer.h"
 #include "pamela_shared.h"
 #include "pamela_err.h"
 
@@ -52,6 +53,9 @@ void pamela_exit(pamela_handle_t *ph);
 
 /* error decoding */
 const char *pamela_perror(int res);
+
+/* access timer */
+timer_handle_t *pamela_get_timer(pamela_handle_t *ph);
 
 /* fill in devinfo struct */
 void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info);

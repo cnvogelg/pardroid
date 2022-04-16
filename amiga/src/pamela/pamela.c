@@ -134,6 +134,14 @@ void pamela_exit(pamela_handle_t *ph)
   FreeMem(ph, sizeof(pamela_handle_t));
 }
 
+timer_handle_t *pamela_get_timer(pamela_handle_t *ph)
+{
+  if(ph->proto_env == NULL) {
+    return NULL;
+  }
+  return proto_env_get_timer(ph->proto_env);
+}
+
 void pamela_devinfo(pamela_handle_t *ph, pamela_devinfo_t *info)
 {
   CopyMem(&ph->devinfo, info, sizeof(pamela_devinfo_t));
