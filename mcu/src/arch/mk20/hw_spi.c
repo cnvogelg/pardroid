@@ -90,7 +90,7 @@ void hw_spi_init(void)
 void hw_spi_set_speed(u08 s)
 {
   uint32_t speed;
-  if(s == SPI_SPEED_MAX) {
+  if(s == HW_SPI_SPEED_MAX) {
     speed = SPI_CLOCK_FAST;
   } else {
     speed = SPI_CLOCK_SLOW;

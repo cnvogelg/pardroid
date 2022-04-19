@@ -31,6 +31,7 @@ set(TEST_DIR src/test)
 set(COMMON_DIR ../common/src)
 set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
+set(SDCARD_DIR src/driver/sdcard)
 
 # source lists
 set(BASE_SRCS
@@ -79,6 +80,12 @@ set(PAMELA_SRCS
         ${PAMELA_DIR}/pamela_io.c
 )
 
+set(SDCARD_SRCS
+      ${SDCARD_DIR}/sdcard.c
+      ${SDCARD_DIR}/sdcard.h
+      ${SDCARD_DIR}/sdcard_defs.h
+)
+
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
@@ -95,6 +102,7 @@ include_directories(
         ${COMMON_DIR}
         ${PAMELA_DIR}
         ${CMAKE_BINARY_DIR}
+        ${SDCARD_DIR}
 )
 
 macro(make_fw name)
@@ -112,3 +120,4 @@ make_fw(test-proto-dev ${BASE_SRCS} ${PROTO_DEV_SRCS} ${TEST_DIR}/test-proto-dev
 make_fw(test-proto-io ${BASE_SRCS} ${PROTO_IO_SRCS} ${TEST_DIR}/test-proto-io.c)
 make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-boot.c)
 make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
+make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)

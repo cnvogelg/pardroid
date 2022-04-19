@@ -197,7 +197,7 @@ int main(void)
   for(u08 i=0;i<20;i++) {
     system_wdt_reset();
     uart_send('.');
-    timer_delay(100);
+    timer_delay_ms(100);
   }
 
   eth_test(0);

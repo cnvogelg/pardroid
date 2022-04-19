@@ -35,8 +35,8 @@
 #include "types.h"
 #include "spi_pins.h"
 
-#define SPI_SPEED_MAX   0
-#define SPI_SPEED_SLOW  1
+#define HW_SPI_SPEED_MAX   0
+#define HW_SPI_SPEED_SLOW  1
 
 extern void hw_spi_init(void);
 extern void hw_spi_set_speed(u08 speed);

@@ -48,7 +48,7 @@ void hw_spi_init(void)
 
 void hw_spi_set_speed(u08 speed)
 {
-  if(speed == SPI_SPEED_MAX) {
+  if(speed == HW_SPI_SPEED_MAX) {
     SPCR = _BV(SPE) | _BV(MSTR); // 8 MHz @ 16 MHz FPU (clk/2)
     SPSR = _BV(SPI2X);
   } else {

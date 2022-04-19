@@ -33,7 +33,7 @@ void hw_spi_init(void)
   // setup pin mux
   hw_spi_pins_init();
 
-  spi_init(spi0, 400 * 1000);
+  spi_init(spi0, 100 * 1000);
 
   gpio_set_function(HW_SPI_MOSI_PIN, GPIO_FUNC_SPI);
   gpio_set_function(HW_SPI_MISO_PIN, GPIO_FUNC_SPI);
@@ -46,7 +46,7 @@ void hw_spi_set_speed(u08 s)
   if(s == HW_SPI_SPEED_MAX) {
     speed = 4000 * 1000;
   } else {
-    speed = 400 * 1000;
+    speed = 100 * 1000;
   }
   spi_set_baudrate(spi0, speed);
 }

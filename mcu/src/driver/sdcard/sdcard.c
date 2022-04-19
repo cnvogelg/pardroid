@@ -12,10 +12,10 @@
 
 #include "autoconf.h"
 #include "types.h"
-#include "timer.h"
-#include "spi.h"
+#include "hw_timer.h"
+#include "hw_spi.h"
 #include "crc.h"
-#include "system.h"
+#include "hw_system.h"
 
 #define DEBUG CONFIG_DEBUG_DRIVER_SDCARD
 
@@ -29,11 +29,11 @@
 #endif
 
 #if CONFIG_DRIVER_SDCARD_SPI_CS == 0
-#define spi_enable_cs()   spi_enable_cs0()
-#define spi_disable_cs()  spi_disable_cs0()
+#define spi_enable_cs()   hw_spi_enable_cs0()
+#define spi_disable_cs()  hw_spi_disable_cs0()
 #elif CONFIG_DRIVER_SDCARD_SPI_CS == 1
-#define spi_enable_cs()   spi_enable_cs1()
-#define spi_disable_cs()  spi_disable_cs1()
+#define spi_enable_cs()   hw_spi_enable_cs1()
+#define spi_disable_cs()  hw_spi_disable_cs1()
 #else
 #error invalid CONFIG_DRIVER_SDCARD_SPI_CS
 #endif
@@ -50,19 +50,19 @@ static u08 card_type = SDCARD_TYPE_NONE;
 static u32 read_u32(void)
 {
   u08 buf[4];
-  buf[3] = spi_in();
-  buf[2] = spi_in();
-  buf[1] = spi_in();
-  buf[0] = spi_in();
+  buf[3] = hw_spi_in();
+  buf[2] = hw_spi_in();
+  buf[1] = hw_spi_in();
+  buf[0] = hw_spi_in();
   return (u32)buf[3] << 24 | (u32)buf[2] << 16 | (u32)buf[1] << 8 | (u32)buf[0];
 }
 
 static void end_command(void)
 {
   spi_disable_cs();
-  spi_out(0xff);
-  spi_out(0xff);
-  spi_out(0xff);
+  hw_spi_out(0xff);
+  hw_spi_out(0xff);
+  hw_spi_out(0xff);
 }
 
 static u08 begin_command(u08 cmd, u32 arg)
@@ -84,20 +84,20 @@ static u08 begin_command(u08 cmd, u32 arg)
 
     DC('['); DB(cmd); DC('+'); DL(arg); DC('@'); DB(buf[5]);
     for(u08 i=0;i<6;i++) {
-      spi_out(buf[i]);
+      hw_spi_out(buf[i]);
     }
 
-    timer_ms_t t0 = timer_millis();
+    hw_timer_ms_t t0 = hw_timer_millis();
     while(1) {
-      res = spi_in();
+      res = hw_spi_in();
       DB(res); DC(',');
       if((res & 0x80) == 0) {
         break;
       }
-      if(timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
+      if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
         break;
       }
-      system_wdt_reset();
+      hw_system_wdt_reset();
     }
 
     if(res & STATUS_CRC_ERROR) {
@@ -119,7 +119,7 @@ static u08 enter_idle(void)
     DC('I');
     spi_disable_cs();
     for (uint8_t i = 0; i < 10; i++) {
-      spi_out(0XFF);
+      hw_spi_out(0XFF);
     }
 
     // command to go idle in SPI mode
@@ -154,7 +154,7 @@ static u08 send_if_cond(void)
 
 static u08 sd_send_op_cond(u08 *is_sd)
 {
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
     /* APP_CMD */
     u08 res = begin_command(CMD_APP, 0);
@@ -173,11 +173,11 @@ static u08 sd_send_op_cond(u08 *is_sd)
       DC('S');
       return SDCARD_RESULT_OK;
     }
-    if(timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
+    if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_SENDOP;
     }
     /* keep watchdog happy */
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 }
 
@@ -200,7 +200,7 @@ u08 detect_sdhc(u08 *sd_type)
 
 static u08 send_op_cond(void)
 {
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
     /* send CMD1_SEND_OP_COND */
     u08 res = begin_command(CMD1_SEND_OP_COND, 1UL<<30);
@@ -208,11 +208,11 @@ static u08 send_op_cond(void)
     if(res == 0) {
       return SDCARD_RESULT_OK;
     }
-    if(timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
+    if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_SENDOP;
     }
     /* keep watchdog happy */
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
 }
 
@@ -233,21 +233,24 @@ static u08 set_blocksize(void)
 
 u08 sdcard_init(void)
 {
-  spi_set_speed(SPI_SPEED_SLOW);
+  hw_spi_set_speed(HW_SPI_SPEED_SLOW);
 
   // 1. CMD0 enter idle state
+  DS("sd:idle"); DNL;
   u08 result = enter_idle();
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
 
   // 2. CMD8 (SEND IF COND)
+  DS("sd:if_cond"); DNL;
   result = send_if_cond();
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
 
   // 3. SD_SEND_OP_COND (init SD/HC)
+  DS("sd:op_cond"); DNL;
   u08 type;
   result = sd_send_op_cond(&type);
   if(result != SDCARD_RESULT_OK) {
@@ -255,6 +258,7 @@ u08 sdcard_init(void)
   }
 
   // 4. detect SDHC
+  DS("sd:sdhc"); DNL;
   if(type == SDCARD_TYPE_SD) {
     result = detect_sdhc(&type);
     if(result != SDCARD_RESULT_OK) {
@@ -263,6 +267,7 @@ u08 sdcard_init(void)
   }
 
   // 5. SEND_OP_COND (init MMC) (ignored by SD/HC)
+  DS("sd:op_cond"); DNL;
   result = send_op_cond();
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
@@ -275,22 +280,26 @@ u08 sdcard_init(void)
 #endif
 
   // 6. set CRC mode
+  DS("sd:crc"); DB(use_crc); DNL;
   result = set_crc_mode(use_crc);
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
 
   // 7. set blocklen
+  DS("sd:blklen"); DNL;
   result = set_blocksize();
   if(result != SDCARD_RESULT_OK) {
     goto init_fail;
   }
 
   // OK!
+  DS("sd:ok!"); DNL;
   result = SDCARD_RESULT_OK;
   card_type = type;
 init_fail:
-  spi_set_speed(SPI_SPEED_MAX);
+  DS("sd:FAIL"); DB(result); DNL;
+  hw_spi_set_speed(HW_SPI_SPEED_MAX);
 
   return result;
 }
@@ -329,20 +338,20 @@ static uint32_t get_bits(void *buffer, uint16_t start, int8_t bits)
 
 static u08 wait_data_token(void)
 {
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   DC('{');
   while(1) {
-    u08 res = spi_in();
+    u08 res = hw_spi_in();
     DB(res); DC(',');
     if(res == 0xfe) {
       break;
     }
     /* check timeout */
-    if(timer_millis_timed_out(t0, SD_TOKEN_TIMEOUT)) {
+    if(hw_timer_millis_timed_out(t0, SD_TOKEN_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_TOKEN;
     }
     /* keep watchdog happy */
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
   DC('}');
   return SDCARD_RESULT_OK;
@@ -350,20 +359,20 @@ static u08 wait_data_token(void)
 
 static u08 wait_busy(void)
 {
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   DC('<');
   while(1) {
-    u08 res = spi_in();
+    u08 res = hw_spi_in();
     DB(res); DC(',');
     if(res == 0xff) {
       break;
     }
     /* check timeout */
-    if(timer_millis_timed_out(t0, SD_BUSY_TIMEOUT)) {
+    if(hw_timer_millis_timed_out(t0, SD_BUSY_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_TOKEN;
     }
     /* keep watchdog happy */
-    system_wdt_reset();
+    hw_system_wdt_reset();
   }
   DC('>');
   return SDCARD_RESULT_OK;
@@ -386,7 +395,7 @@ u08 sdcard_get_capacity(u32 *num_blocks)
   // read result
   u08 buf[18];
   for(int i=0;i<18;i++) {
-    buf[i] = spi_in();
+    buf[i] = hw_spi_in();
   }
   end_command();
 
@@ -429,14 +438,14 @@ u08 sdcard_read(u32 block_no, u08 *data)
 
   // read data
   for(u16 i=0;i<512;i++) {
-    u08 d = spi_in();
+    u08 d = hw_spi_in();
     *data++ = d;
     crc = crc_xmodem_update(crc, d);
   }
 
   // read crc
-  u08 crc_hi = spi_in();
-  u08 crc_lo = spi_in();
+  u08 crc_hi = hw_spi_in();
+  u08 crc_lo = hw_spi_in();
   u16 got_crc = crc_hi << 8 | crc_lo;
   DC('C'); DW(crc); DC('='); DW(got_crc);
 
@@ -447,7 +456,7 @@ u08 sdcard_read(u32 block_no, u08 *data)
 #else
   // read data
   for(u16 i=0;i<512;i++) {
-    *data++ = spi_in();
+    *data++ = hw_spi_in();
   }
 #endif
 
@@ -469,7 +478,7 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   }
 
   // data token
-  spi_out(0xfe);
+  hw_spi_out(0xfe);
 
 #ifdef USE_CRC
   u16 crc = 0;
@@ -477,7 +486,7 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   // write data
   for(u16 i=0;i<512;i++) {
     u08 d = *data++;
-    spi_out(d);
+    hw_spi_out(d);
     crc = crc_xmodem_update(crc, d);
   }
 
@@ -486,21 +495,21 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   u08 crc_lo = (u08)(crc & 0xff);
 
   // crc
-  spi_out(crc_hi);
-  spi_out(crc_lo);
+  hw_spi_out(crc_hi);
+  hw_spi_out(crc_lo);
 #else
   // write data
   for(u16 i=0;i<512;i++) {
-    spi_out(*data++);
+    hw_spi_out(*data++);
   }
 
   // crc (dummy)
-  spi_out(0xff);
-  spi_out(0xff);
+  hw_spi_out(0xff);
+  hw_spi_out(0xff);
 #endif
 
   // read status
-  res = spi_in();
+  res = hw_spi_in();
   DC('*'); DB(res);
   if((res & 0x1f) != 5) {
     // TBD: retry

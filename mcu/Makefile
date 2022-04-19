@@ -136,6 +136,13 @@ TEST_PROTO_BOOT_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_BOOT_SRCS)
 TEST_PROTO_BOOT_SRCS += test-proto-boot.c
 $(eval $(call make-fw,test-proto-boot-fw,$(TEST_PROTO_BOOT_SRCS),$(CONFIG_MAX_ROM)))
 
+# test-sdcard
+ifdef CONFIG_DRIVER_SDCARD
+TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_SDCARD_SRCS += test-sdcard.c sdcard.c
+$(eval $(call make-firmware,test-sdcard-fw,$(TEST_SDCARD_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
 # disabled for now
 ifeq "a" "b"
 
@@ -149,13 +156,6 @@ ifdef CONFIG_DRIVER_ENC28J60
 TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
 $(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
-endif
-
-# test-sdcard
-ifdef CONFIG_DRIVER_SDCARD
-TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_SDCARD_SRCS += test-sdcard.c sdcard.c
-$(eval $(call make-firmware,test-sdcard-fw,$(TEST_SDCARD_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-wiznet
