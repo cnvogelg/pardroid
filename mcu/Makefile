@@ -58,7 +58,7 @@ BOOTREXX_H = $(BUILD_DIR)/bootrexx.h
 BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
-BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c
+BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c hw_dev.c
 BASE_SRCS += $(BASE_ARCH_SRCS)
 BASE_SRCS += strobe.c crc.c uartutil.c pablo.c rominfo.c #mem.c
 
@@ -90,7 +90,7 @@ DRIVER_SRCS += sdcard.c blk_sdraw.c
 DRIVER_INCLUDES += src/driver/sdcard
 endif
 ifdef CONFIG_DRIVER_WIZNET
-DRIVER_SRCS += wiznet_low.c wiznet.c wiz_io.c
+DRIVER_SRCS += wiznet.c wiz_io.c
 DRIVER_INCLUDES += src/driver/wiznet
 endif
 ifdef CONFIG_TOOL_UFAT
@@ -150,6 +150,13 @@ TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
 $(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
+# test-wiznet
+ifdef CONFIG_DRIVER_WIZNET
+TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiz_io.c
+$(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
 # disabled for now
 ifeq "a" "b"
 
@@ -157,13 +164,6 @@ ifeq "a" "b"
 TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
 $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
-
-# test-wiznet
-ifdef CONFIG_DRIVER_WIZNET
-TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiznet_low.c wiz_io.c
-$(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
-endif
 
 # test-display
 ifdef CONFIG_DRIVER_DISPLAY

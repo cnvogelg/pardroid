@@ -6,20 +6,25 @@
 
 #include "debug.h"
 
-#include "uart.h"
+#include "hw_uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+#include "hw_spi.h"
+#include "hw_dev.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
-
-#include "spi.h"
 #include "wiznet.h"
+#include "fwid.h"
+#include "fw_info.h"
 
 #define PACKET_SIZE 512
 
 //#define UDP_TEST
 #define ETH_TEST
+
+FW_INFO(FWID_TEST_WIZNET, VERSION_TAG)
 
 u08 buf[PACKET_SIZE];
 
@@ -67,17 +72,17 @@ static void udp_test(u08 partial)
     uart_send('.');
 
     // wait for packet
-    timer_ms_t t0 = timer_millis();
+    hw_timer_ms_t t0 = hw_timer_millis();
     u08 pending = 0;
     while(1) {
       pending = wiznet_udp_is_recv_pending(sock, 0);
       if(pending) {
         break;
       }
-      if(timer_millis_timed_out(t0, 200)) {
+      if(hw_timer_millis_timed_out(t0, 200)) {
         break;
       }
-      system_wdt_reset();
+      hw_system_wdt_reset();
     }
 
     // receive packet
@@ -158,17 +163,17 @@ static void eth_test(u08 partial)
     uart_send('+');
 
     // wait for packet
-    timer_ms_t t0 = timer_millis();
+    hw_timer_ms_t t0 = hw_timer_millis();
     u08 pending = 0;
     while(1) {
       pending = wiznet_eth_is_recv_pending();
       if(pending) {
         break;
       }
-      if(timer_millis_timed_out(t0, 200)) {
+      if(hw_timer_millis_timed_out(t0, 200)) {
         break;
       }
-      system_wdt_reset();
+      hw_system_wdt_reset();
     }
 
     // incoming?
@@ -208,16 +213,17 @@ static void eth_test(u08 partial)
 
 int main(void)
 {
-  system_init();
+  hw_system_init();
+  hw_uart_init();
+  hw_dev_init();
   //led_init();
 
-  uart_init();
   uart_send_pstring(PSTR("parbox: test-base!"));
   uart_send_crlf();
 
   rom_info();
 
-  spi_init();
+  hw_spi_init();
 
   uart_send_pstring(PSTR("wiznet: init: rev="));
   wiznet_reset();
@@ -241,7 +247,7 @@ int main(void)
 
   uart_send_pstring(PSTR("wait for link"));
   while(1) {
-    system_wdt_reset();
+    hw_system_wdt_reset();
     u08 up = wiznet_is_link_up();
     if(up) {
       uart_send('*');
@@ -249,7 +255,7 @@ int main(void)
     } else {
       uart_send('.');
     }
-    timer_delay(200);
+    hw_timer_delay_ms(200);
   }
   uart_send_crlf();
 
@@ -263,13 +269,13 @@ int main(void)
 #endif
 
   for(u08 i=0;i<20;i++) {
-    system_wdt_reset();
-    uart_send('.');
-    timer_delay(100);
+    hw_system_wdt_reset();
+    hw_uart_send('.');
+    hw_timer_delay_ms(100);
   }
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  system_sys_reset();
+  hw_system_sys_reset();
   return 0;
 }

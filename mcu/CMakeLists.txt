@@ -33,6 +33,7 @@ set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
 set(SDCARD_DIR src/driver/sdcard)
 set(ENC28J60_DIR src/driver/enc28j60)
+set(WIZNET_DIR src/driver/wiznet)
 
 # source lists
 set(BASE_SRCS
@@ -42,6 +43,7 @@ set(BASE_SRCS
         ${ARCH_DIR}/hw_spi.c
         ${ARCH_DIR}/hw_i2c.c
         ${ARCH_DIR}/hw_system.c
+        ${ARCH_DIR}/hw_dev.c
 
         ${ARCH_DIR}/pablo.c
         ${ARCH_DIR}/strobe.c
@@ -93,6 +95,14 @@ set(ENC28J60_SRCS
       ${ENC28J60_DIR}/enc28j60_regs.h
 )
 
+set(WIZNET_SRCS
+      ${WIZNET_DIR}/wiz_defs.h
+      ${WIZNET_DIR}/wiz_io.c
+      ${WIZNET_DIR}/wiz_io.h
+      ${WIZNET_DIR}/wiznet.c
+      ${WIZNET_DIR}/wiznet.h
+)
+
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
@@ -111,6 +121,7 @@ include_directories(
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}
         ${ENC28J60_DIR}
+        ${WIZNET_DIR}
 )
 
 macro(make_fw name)
@@ -130,3 +141,4 @@ make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-b
 make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
 make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
+make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)

@@ -4,7 +4,7 @@
 #define DEBUG 0
 #include "debug.h"
 
-#include "spi.h"
+#include "hw_spi.h"
 
 #include "wiz_io.h"
 #include "wiz_defs.h"
@@ -20,11 +20,11 @@
 
 
 #if CONFIG_DRIVER_WIZNET_SPI_CS == 0
-#define spi_enable_cs()   spi_enable_cs0()
-#define spi_disable_cs()  spi_disable_cs0()
+#define spi_enable_cs()   hw_spi_enable_cs0()
+#define spi_disable_cs()  hw_spi_disable_cs0()
 #elif CONFIG_DRIVER_WIZNET_SPI_CS == 1
-#define spi_enable_cs()   spi_enable_cs1()
-#define spi_disable_cs()  spi_disable_cs1()
+#define spi_enable_cs()   hw_spi_enable_cs1()
+#define spi_disable_cs()  hw_spi_disable_cs1()
 #else
 #error invalid CONFIG_DRIVER_WIZNET_SPI_CS
 #endif
@@ -33,22 +33,22 @@
 static void write(u16 addr, u08 data)
 {
   spi_enable_cs();
-  spi_out(addr >> 8);
-  spi_out(addr & 0xff);
-  spi_out(0x80);
-  spi_out(0x01);
-  spi_out(data);
+  hw_spi_out(addr >> 8);
+  hw_spi_out(addr & 0xff);
+  hw_spi_out(0x80);
+  hw_spi_out(0x01);
+  hw_spi_out(data);
   spi_disable_cs();
 }
 
 static u08 read(u16 addr)
 {
   spi_enable_cs();
-  spi_out(addr >> 8);
-  spi_out(addr & 0xff);
-  spi_out(0x00);
-  spi_out(0x01);
-  u08 data = spi_in();
+  hw_spi_out(addr >> 8);
+  hw_spi_out(addr & 0xff);
+  hw_spi_out(0x00);
+  hw_spi_out(0x01);
+  u08 data = hw_spi_in();
   spi_disable_cs();
   return data;
 }
@@ -56,12 +56,12 @@ static u08 read(u16 addr)
 static void write_buf(u16 addr, const u08 *buf, u16 len)
 {
   spi_enable_cs();
-  spi_out(addr >> 8);
-  spi_out(addr & 0xff);
-  spi_out(0x80 | ((len & 0x7f00) >> 8));
-  spi_out(len & 0xff);
+  hw_spi_out(addr >> 8);
+  hw_spi_out(addr & 0xff);
+  hw_spi_out(0x80 | ((len & 0x7f00) >> 8));
+  hw_spi_out(len & 0xff);
   for(u16 i=0;i<len;i++) {
-    spi_out(*buf++);
+    hw_spi_out(*buf++);
   }
   spi_disable_cs();
 }
@@ -69,12 +69,12 @@ static void write_buf(u16 addr, const u08 *buf, u16 len)
 static void read_buf(u16 addr, u08 *buf, u16 len)
 {
   spi_enable_cs();
-  spi_out(addr >> 8);
-  spi_out(addr & 0xff);
-  spi_out((len & 0x7f00) >> 8);
-  spi_out(len & 0xff);
+  hw_spi_out(addr >> 8);
+  hw_spi_out(addr & 0xff);
+  hw_spi_out((len & 0x7f00) >> 8);
+  hw_spi_out(len & 0xff);
   for(u16 i=0;i<len;i++) {
-    *buf++ = spi_in();
+    *buf++ = hw_spi_in();
   }
   spi_disable_cs();
 }

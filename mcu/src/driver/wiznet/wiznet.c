@@ -6,13 +6,14 @@
 #include "debug.h"
 
 #include "wiznet.h"
-#include "wiznet_low.h"
 #include "wiz_io.h"
 #include "wiz_defs.h"
 
-#include "timer.h"
+#include "hw_dev.h"
+#include "hw_timer.h"
+#include "hw_system.h"
+
 #include "uartutil.h"
-#include "system.h"
 
 // configure socket count
 #define NUM_SOCKETS  CONFIG_DRIVER_WIZNET_NUM_SOCKETS
@@ -68,10 +69,10 @@ u08 exec_cmd(u08 sock, u08 cmd)
   wiz_io_socket_reg_write(sock, WIZ_REG_SOCKET_CMD, cmd);
 
   // CMD reg is cleared if command was accepted
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_CMD)) {
-    system_wdt_reset();
-    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+    hw_system_wdt_reset();
+    if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_CMD_TIMEOUT;
     }
   }
@@ -80,14 +81,14 @@ u08 exec_cmd(u08 sock, u08 cmd)
 
 u08 wait_state(u08 sock, u08 state)
 {
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    system_wdt_reset();
+    hw_system_wdt_reset();
     u08 sr = read_status(sock);
     if(sr == state) {
       break;
     }
-    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+    if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_STATE_TIMEOUT;
     }
   }
@@ -107,8 +108,8 @@ u08 exec_cmd_state(u08 sock, u08 cmd, u08 state)
 
 void wiznet_reset(void)
 {
-  wiznet_low_reset();
-  timer_delay(200); // 150ms in data sheet WIZ820io
+  hw_dev_reset();
+  hw_timer_delay_ms(200); // 150ms in data sheet WIZ820io
 
   wiz_io_base_reg_write(WIZ_REG_BASE_MODE, WIZ_MASK_RESET);
 }
@@ -200,10 +201,10 @@ static u08 send_cmd(u08 sock)
     return res;
   }
 
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    system_wdt_reset();
-    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+    hw_system_wdt_reset();
+    if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_SEND_TIMEOUT;
     }
     u08 ir = read_ir(sock);
@@ -388,10 +389,10 @@ u08  wiznet_eth_send_begin(u16 len)
     return WIZNET_RESULT_NO_MEMORY;
   }
 
-  timer_ms_t t0 = timer_millis();
+  hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    system_wdt_reset();
-    if(timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
+    hw_system_wdt_reset();
+    if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_SIZE_TIMEOUT;
     }
 
