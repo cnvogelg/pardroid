@@ -12,6 +12,7 @@
 #define FWID_TEST_PROTO_BOOT      0x4005
 #define FWID_TEST_PAMELA          0x4006
 #define FWID_TEST_SDCARD          0x4007
+#define FWID_TEST_ENC28J60        0x4008
 
 extern void fwid_decode(u16 fw_id, rom_pchar *res);
 

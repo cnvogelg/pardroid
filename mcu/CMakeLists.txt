@@ -32,6 +32,7 @@ set(COMMON_DIR ../common/src)
 set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
 set(SDCARD_DIR src/driver/sdcard)
+set(ENC28J60_DIR src/driver/enc28j60)
 
 # source lists
 set(BASE_SRCS
@@ -86,6 +87,12 @@ set(SDCARD_SRCS
       ${SDCARD_DIR}/sdcard_defs.h
 )
 
+set(ENC28J60_SRCS
+      ${ENC28J60_DIR}/enc28j60.c
+      ${ENC28J60_DIR}/enc28j60.h
+      ${ENC28J60_DIR}/enc28j60_regs.h
+)
+
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
@@ -103,6 +110,7 @@ include_directories(
         ${PAMELA_DIR}
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}
+        ${ENC28J60_DIR}
 )
 
 macro(make_fw name)
@@ -121,3 +129,4 @@ make_fw(test-proto-io ${BASE_SRCS} ${PROTO_IO_SRCS} ${TEST_DIR}/test-proto-io.c)
 make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-boot.c)
 make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
 make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
+make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)

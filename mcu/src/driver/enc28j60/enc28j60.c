@@ -12,18 +12,19 @@
 
 #include "autoconf.h"
 #include "types.h"
-#include "timer.h"
-#include "spi.h"
+
+#include "hw_timer.h"
+#include "hw_spi.h"
 
 #include "enc28j60.h"
 #include "enc28j60_regs.h"
 
 #if CONFIG_DRIVER_ENC28J60_SPI_CS == 0
-#define spi_enable_eth()   spi_enable_cs0()
-#define spi_disable_eth()  spi_disable_cs0()
+#define spi_enable_eth()   hw_spi_enable_cs0()
+#define spi_disable_eth()  hw_spi_disable_cs0()
 #elif CONFIG_DRIVER_ENC28J60_SPI_CS == 1
-#define spi_enable_eth()   spi_enable_cs1()
-#define spi_disable_eth()  spi_disable_cs1()
+#define spi_enable_eth()   hw_spi_enable_cs1()
+#define spi_disable_eth()  hw_spi_disable_cs1()
 #else
 #error invalid CONFIG_DRIVER_ENC28J60_SPI_CS
 #endif
@@ -37,35 +38,35 @@ static u08 is_full_duplex;
 
 static uint8_t readOp (uint8_t op, uint8_t address) {
     spi_enable_eth();
-    spi_out(op | (address & ADDR_MASK));
+    hw_spi_out(op | (address & ADDR_MASK));
     if (address & 0x80)
-        spi_out(0x00);
-    uint8_t result = spi_in();
+        hw_spi_out(0x00);
+    uint8_t result = hw_spi_in();
     spi_disable_eth();
     return result;
 }
 
 static void writeOp (uint8_t op, uint8_t address, uint8_t data) {
     spi_enable_eth();
-    spi_out(op | (address & ADDR_MASK));
-    spi_out(data);
+    hw_spi_out(op | (address & ADDR_MASK));
+    hw_spi_out(data);
     spi_disable_eth();
 }
 
 static void readBuf(uint16_t len, uint8_t* data) {
     spi_enable_eth();
-    spi_out(ENC28J60_READ_BUF_MEM);
+    hw_spi_out(ENC28J60_READ_BUF_MEM);
     while (len--) {
-        *data++ = spi_in();
+        *data++ = hw_spi_in();
     }
     spi_disable_eth();
 }
 
 static void writeBuf(uint16_t len, const uint8_t *data) {
     spi_enable_eth(),
-    spi_out(ENC28J60_WRITE_BUF_MEM);
+    hw_spi_out(ENC28J60_WRITE_BUF_MEM);
     while(len--) {
-      spi_out(*data++);
+      hw_spi_out(*data++);
     }
     spi_disable_eth();
 }
@@ -137,7 +138,7 @@ u08 enc28j60_init(u08 *rev_ret)
 
   // soft reset cpu
   writeOp(ENC28J60_SOFT_RESET, 0, ENC28J60_SOFT_RESET);
-  timer_delay(2); // errata B7/2
+  hw_timer_delay_ms(2); // errata B7/2
 
   // wait or error
   u16 count = 0;
@@ -437,7 +438,7 @@ void enc28j60_test_begin_tx(void)
   writeReg(EWRPT, 0);
 
   spi_enable_eth();
-  spi_out(ENC28J60_WRITE_BUF_MEM);
+  hw_spi_out(ENC28J60_WRITE_BUF_MEM);
 }
 
 void enc28j60_test_end_tx(void)
@@ -451,7 +452,7 @@ void enc28j60_test_begin_rx(void)
   writeReg(ERDPT, 0);
 
   spi_enable_eth();
-  spi_out(ENC28J60_READ_BUF_MEM);
+  hw_spi_out(ENC28J60_READ_BUF_MEM);
 }
 
 void enc28j60_test_end_rx(void)

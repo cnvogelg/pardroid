@@ -276,8 +276,6 @@ static void pamela_open_done(pamela_channel_t *pc, u08 error)
 
 void pamela_open_work(pamela_channel_t *chn, hnd_open_func_t open_func)
 {
-  pamela_service_t *srv = chn->service;
-
   DS("[Ow:"); DB(chn->chan_id); DC(',');
   if(open_func != NULL) {
     pamela_set_status(chn, PAMELA_STATUS_OPENING);
