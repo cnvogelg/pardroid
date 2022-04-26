@@ -15,6 +15,7 @@
 
 #include "hw_timer.h"
 #include "hw_spi.h"
+#include "hw_system.h"
 
 #include "enc28j60.h"
 #include "enc28j60_regs.h"
@@ -147,6 +148,7 @@ u08 enc28j60_init(u08 *rev_ret)
     if(count == 0xfff) {
       return ENC28J60_RESULT_NOT_FOUND;
     }
+    hw_system_wdt_reset();
   }
 
   // return rev

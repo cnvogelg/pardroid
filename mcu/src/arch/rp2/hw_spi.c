@@ -33,7 +33,8 @@ void hw_spi_init(void)
   // setup pin mux
   hw_spi_pins_init();
 
-  spi_init(spi0, 100 * 1000);
+  // hi speed by default
+  spi_init(spi0, 4000 * 1000);
 
   gpio_set_function(HW_SPI_MOSI_PIN, GPIO_FUNC_SPI);
   gpio_set_function(HW_SPI_MISO_PIN, GPIO_FUNC_SPI);

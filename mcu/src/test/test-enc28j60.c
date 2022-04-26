@@ -16,6 +16,7 @@
 #include "hw_led.h"
 #include "hw_timer.h"
 #include "hw_spi.h"
+#include "hw_dev.h"
 
 #include "enc28j60.h"
 
@@ -83,6 +84,20 @@ static void eth_test(u08 partial)
   u08 ok = enc28j60_setup(mac, ENC28J60_FLAGS_BROADCAST);
   uart_send_hex_byte(ok);
   enc28j60_enable();
+  uart_send_crlf();
+
+  uart_send_pstring(PSTR("wait for link"));
+  for(u08 i=0;i<20;i++) {
+    hw_system_wdt_reset();
+    u08 up = enc28j60_is_link_up();
+    if(up) {
+      uart_send('*');
+      break;
+    } else {
+      uart_send('.');
+    }
+    hw_timer_delay_ms(200);
+  }
   uart_send_crlf();
 
   for(u16 i=0;i<PACKET_SIZE;i++) {
@@ -163,6 +178,8 @@ static void eth_test(u08 partial)
 int main(void)
 {
   hw_system_init();
+  hw_dev_init();
+  hw_spi_init();
   //led_init();
 
   hw_uart_init();
@@ -170,8 +187,6 @@ int main(void)
   uart_send_crlf();
 
   rom_info();
-
-  hw_spi_init();
 
   uart_send_pstring(PSTR("enc28j60: init rev="));
   u08 rev;
@@ -186,26 +201,6 @@ int main(void)
 
   for(u08 i=0;i<5;i++) {
     eth_ram_test();
-  }
-
-  uart_send_pstring(PSTR("wait for link"));
-  while(1) {
-    hw_system_wdt_reset();
-    u08 up = enc28j60_is_link_up();
-    if(up) {
-      uart_send('*');
-      break;
-    } else {
-      uart_send('.');
-    }
-    hw_timer_delay_ms(200);
-  }
-  uart_send_crlf();
-
-  for(u08 i=0;i<20;i++) {
-    hw_system_wdt_reset();
-    uart_send('.');
-    hw_timer_delay_ms(100);
   }
 
   eth_test(0);
