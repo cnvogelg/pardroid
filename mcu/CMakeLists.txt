@@ -34,6 +34,7 @@ set(PAMELA_DIR src/pamela)
 set(SDCARD_DIR src/driver/sdcard)
 set(ENC28J60_DIR src/driver/enc28j60)
 set(WIZNET_DIR src/driver/wiznet)
+set(DISPLAY_DIR src/driver/display)
 
 # source lists
 set(BASE_SRCS
@@ -103,6 +104,15 @@ set(WIZNET_SRCS
       ${WIZNET_DIR}/wiznet.h
 )
 
+set(DISPLAY_SRCS
+      ${DISPLAY_DIR}/ssd1306/ssd1306.c
+      ${DISPLAY_DIR}/ssd1306/ssd1306.h
+      ${DISPLAY_DIR}/display.c
+      ${DISPLAY_DIR}/display.h
+      ${DISPLAY_DIR}/font6x8.c
+      ${DISPLAY_DIR}/font6x8.h
+)
+
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
@@ -122,6 +132,8 @@ include_directories(
         ${SDCARD_DIR}
         ${ENC28J60_DIR}
         ${WIZNET_DIR}
+        ${DISPLAY_DIR}
+        ${DISPLAY_DIR}/ssd1306
 )
 
 macro(make_fw name)
@@ -142,3 +154,4 @@ make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
 make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
+make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)

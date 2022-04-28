@@ -5,24 +5,29 @@
 #define DEBUG 1
 
 #include "debug.h"
+#include "fwid.h"
+#include "fw_info.h"
 
-#include "uart.h"
+#include "hw_uart.h"
+#include "hw_system.h"
+#include "hw_led.h"
+#include "hw_timer.h"
+#include "hw_i2c.h"
+
 #include "uartutil.h"
 #include "rominfo.h"
-#include "system.h"
-#include "led.h"
-#include "timer.h"
-#include "i2c.h"
 
 #include "display.h"
 
+FW_INFO(FWID_TEST_DISPLAY, VERSION_TAG)
+
 int main(void)
 {
-  system_init();
-  led_init();
-  i2c_init();
+  hw_system_init();
+  hw_led_init();
+  hw_i2c_init();
+  hw_uart_init();
 
-  uart_init();
   uart_send_pstring(PSTR("parbox: test-display!"));
   uart_send_crlf();
 
@@ -54,18 +59,18 @@ int main(void)
 
   // blink a bit
   for(int i=0;i<10;i++) {
-    system_wdt_reset();
+    hw_system_wdt_reset();
     uart_send('.');
-    led_on();
-    timer_delay(200);
-    system_wdt_reset();
-    led_off();
-    timer_delay(200);
+    hw_led_on();
+    hw_timer_delay_ms(200);
+    hw_system_wdt_reset();
+    hw_led_off();
+    hw_timer_delay_ms(200);
   }
 
   // reset
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  system_sys_reset();
+  hw_system_sys_reset();
   return 0;
 }

@@ -21,7 +21,7 @@
 
 #define PACKET_SIZE 512
 
-//#define UDP_TEST
+#define UDP_TEST
 #define ETH_TEST
 
 FW_INFO(FWID_TEST_WIZNET, VERSION_TAG)

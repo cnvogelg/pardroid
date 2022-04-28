@@ -157,6 +157,13 @@ TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiz_io.c
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
+# test-display
+ifdef CONFIG_DRIVER_DISPLAY
+TEST_DISPLAY_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
+TEST_DISPLAY_SRCS += test-display.c ssd1306.c display.c font6x8.c
+$(eval $(call make-firmware,test-display-fw,$(TEST_DISPLAY_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
 # disabled for now
 ifeq "a" "b"
 
@@ -164,13 +171,6 @@ ifeq "a" "b"
 TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
 $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
-
-# test-display
-ifdef CONFIG_DRIVER_DISPLAY
-TEST_DISPLAY_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_DISPLAY_SRCS += test-display.c ssd1306.c display.c font6x8.c
-$(eval $(call make-firmware,test-display-fw,$(TEST_DISPLAY_SRCS),$(CONFIG_MAX_ROM)))
-endif
 
 # test-ufat
 ifdef CONFIG_TOOL_UFAT

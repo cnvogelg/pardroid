@@ -2,6 +2,7 @@
 #define DISPLAY_H
 
 #define DISPLAY_OK    0
+#define DISPLAY_ERROR 1
 #define DISPLAY_NONE  99
 
 extern u08 display_init(void);

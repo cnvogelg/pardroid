@@ -75,7 +75,7 @@ void hw_i2c_init(void)
   I2C0_C1 = I2C_C1_IICEN;
 }
 
-u08 hw_i2c_start(u08 addr, u08 write)
+static u08 i2c_start(u08 addr, u08 write)
 {
   // make sure bus is idle
   while(I2C0_S & I2C_S_BUSY);
@@ -108,13 +108,13 @@ u08 hw_i2c_start(u08 addr, u08 write)
   return 0;
 }
 
-void hw_i2c_stop(void)
+static void i2c_stop(void)
 {
   // remove MST to trigger stop condition
   I2C0_C1 = I2C_C1_IICEN;
 }
 
-u08 hw_i2c_write_byte(u08 data)
+static u08 i2c_write_byte(u08 data)
 {
   // write data
   I2C0_D = data;
@@ -127,7 +127,7 @@ u08 hw_i2c_write_byte(u08 data)
   return 0;
 }
 
-u08 hw_i2c_read_byte(u08 ack, u08 *data)
+static u08 i2c_read_byte(u08 ack, u08 *data)
 {
   // wait for completion
   while(!(I2C0_S & I2C_S_IICIF));
@@ -143,36 +143,41 @@ u08 hw_i2c_write(u08 addr, const u08 *data, u16 len)
 {
 	u08 res;
 
-	res = hw_i2c_start(addr, 1);
+	res = i2c_start(addr, 1);
 	if(res)
 		return res;
 
 	for(u16 i=0;i<len;i++) {
-		res = hw_i2c_write_byte(data[i]);
+		res = i2c_write_byte(data[i]);
     if(res != 0) {
       break;
     }
 	}
 
-	hw_i2c_stop();
+	i2c_stop();
 	return res;
 }
 
-u08 hw_i2c_read(u08 addr, u08 *data, u16 len)
+u08 hw_i2c_write_rom(u08 addr, rom_pchar data, u16 len)
+{
+  return hw_i2c_write(addr, (const u08 *)data, len);
+}
+
+u08 i2c_read(u08 addr, u08 *data, u16 len)
 {
 	u08 res;
 
-	res = hw_i2c_start(addr, 0);
+	res = i2c_start(addr, 0);
 	if(res)
 		return res;
 	
 	for(u16 i=len;i>=0;i--) {
-		res = hw_i2c_read_byte(i!=0, &data[i]);
+		res = i2c_read_byte(i!=0, &data[i]);
     if(res != 0) {
       break;
     }
 	}
 
-	hw_i2c_stop();
+	i2c_stop();
 	return res;
 }

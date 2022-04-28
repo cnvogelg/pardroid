@@ -14,6 +14,7 @@
 #define FWID_TEST_SDCARD          0x4007
 #define FWID_TEST_ENC28J60        0x4008
 #define FWID_TEST_WIZNET          0x4009
+#define FWID_TEST_DISPLAY         0x400a
 
 extern void fwid_decode(u16 fw_id, rom_pchar *res);
 

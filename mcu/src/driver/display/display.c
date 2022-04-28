@@ -2,7 +2,8 @@
 #include "arch.h"
 #include "types.h"
 
-#include "i2c.h"
+#include "hw_i2c.h"
+
 #include "ssd1306.h"
 #include "display.h"
 
@@ -54,15 +55,14 @@ u08 display_printp(rom_pchar str)
   }
 
   u08 res = ssd1306_begin_txt(ssd_id, xpos, ypos, len);
-  if(res) return res;
+  if(res != HW_I2C_OK) return DISPLAY_ERROR;
   ptr = str;
   u08 data;
   while((data=read_rom_char(ptr))!=0) {
-    res = ssd1306_write_char(data);
+    res = ssd1306_write_char(ssd_id, data);
     if(res) return res;
     ptr++;
   }
-  ssd1306_end_txt();
 
   xpos += len;
   return DISPLAY_OK;
@@ -87,11 +87,10 @@ u08 display_print(const char *str)
   ptr = str;
   u08 data;
   while((data=*ptr)!=0) {
-    res = ssd1306_write_char(data);
+    res = ssd1306_write_char(ssd_id, data);
     if(res) return res;
     ptr++;
   }
-  ssd1306_end_txt();
 
   xpos += len;
   return DISPLAY_OK;

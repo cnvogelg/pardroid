@@ -45,11 +45,26 @@ void hw_i2c_init(void)
 
 u08 hw_i2c_write(u08 addr, const u08 *data, u16 len)
 {
-  i2c_write_blocking(i2c0, addr, data, len, false);
+  int res = i2c_write_blocking(i2c0, addr, data, len, false);
+  if(res != len) {
+    return HW_I2C_ERROR;
+  } else {
+    return HW_I2C_OK;
+  }
+}
+
+u08 hw_i2c_write_rom(u08 addr, rom_pchar data, u16 len)
+{
+  return hw_i2c_write(addr, data, len);
 }
 
 u08 hw_i2c_read(u08 addr, u08 *data, u16 len)
 {
-  i2c_read_blocking(i2c0, addr, data, len, false);
+  int res = i2c_read_blocking(i2c0, addr, data, len, false);
+  if(res != len) {
+    return HW_I2C_ERROR;
+  } else {
+    return HW_I2C_OK;
+  }
 }
 
