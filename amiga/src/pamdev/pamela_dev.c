@@ -14,7 +14,7 @@
 #include "pamela_dev.h"
 #include "devices/pamela.h"
 #include "pamela_engine.h"
-#include "pamela_err.h"
+#include "pamela/error.h"
 
 DECLARE_DEVICE_VECTORS()
 DECLARE_DEVICE("pamela.device", 1, 0, "07.07.2019", struct PamelaDev)

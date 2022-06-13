@@ -1,5 +1,5 @@
-#ifndef PAMELA_ERR_H
-#define PAMELA_ERR_H
+#ifndef PAMELA_ERROR_H
+#define PAMELA_ERROR_H
 
 #define PAMELA_OK                        0
 #define PAMELA_ERROR_NO_MEM              -1
@@ -20,6 +20,7 @@
 #define PAMELA_ERROR_READ_FAILED         -17
 #define PAMELA_ERROR_WRITE_FAILED        -18
 #define PAMELA_ERROR_INVALID_MTU         -19
+#define PAMELA_ERROR_NO_HANDLE           -20
 #define PAMELA_ERROR_UNKNOWN             -99
 
 #endif

@@ -21,7 +21,7 @@ INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src include
-INCLUDES+=src/device src/pamdev
+INCLUDES+=src/device src/pamdev src/pamlib
 VPATH=$(INCLUDES)
 
 # base
@@ -41,6 +41,9 @@ PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
 # pamela
 PAMELA_SRCS = $(PROTO_IO_SRCS) pamela.c pamela_err.c pamela_chn.c
 PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c
+
+# pamlib
+PAMLIB_SRCS = pamlib.c pamela_err.c
 
 # test+bench
 TEST_SRCS = test.c test-buffer.c
@@ -95,6 +98,10 @@ $(eval $(call make-program,minitest-pamela-engine,$(MINITEST_PAMELA_ENGINE_SRCS)
 MINITEST_PAMDEV_SRCS = minitest-pamdev.c $(BASE_SRCS)
 $(eval $(call make-program,minitest-pamdev,$(MINITEST_PAMDEV_SRCS)))
 
+# minitest-pamlib
+MINITEST_PAMLIB_SRCS = minitest-pamlib.c $(BASE_SRCS) $(PAMLIB_SRCS)
+$(eval $(call make-program,minitest-pamlib,$(MINITEST_PAMLIB_SRCS)))
+
 # ----- tests
 # test-proto-atom
 TEST_PROTO_ATOM_SRCS = test-proto-atom.c $(PROTO_ATOM_SRCS) $(TEST_SRCS)
@@ -132,6 +139,12 @@ TEST_PAMELA_ENGINE_SRCS = test-pamela-engine.c $(PAMELA_ENGINE_SRCS) $(TEST_SRCS
 TEST_PAMELA_ENGINE_SRCS += pamela-engine-testsuite.c
 $(eval $(call make-program,test-pamela-engine,$(TEST_PAMELA_ENGINE_SRCS)))
 $(eval $(call dist-program,test-pamela-engine))
+
+# test-pamlib
+TEST_PAMLIB_SRCS = test-pamlib.c $(PAMLIB_SRCS) $(TEST_SRCS)
+TEST_PAMLIB_SRCS += pamlib-testsuite.c
+$(eval $(call make-program,test-pamlib,$(TEST_PAMLIB_SRCS)))
+$(eval $(call dist-program,test-pamlib))
 
 # ----- tools
 # pablo

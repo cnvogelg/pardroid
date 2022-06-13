@@ -5,7 +5,8 @@
 
 #include "timer.h"
 #include "pamela_shared.h"
-#include "pamela_err.h"
+#include "pamela/devinfo.h"
+#include "pamela/error.h"
 
 /* wait event result */
 #define PAMELA_WAIT_TIMEOUT              1
@@ -23,16 +24,6 @@ static inline int pamela_status_write_ready(UWORD status)
 {
   return (status & PAMELA_STATUS_WRITE_READY) == PAMELA_STATUS_WRITE_READY;
 }
-
-/* device information */
-struct pamela_devinfo {
-  UWORD     firmware_id;
-  UWORD     firmware_version;
-  UWORD     mach_tag;
-  UWORD     default_mtu;
-  UWORD     max_channels;
-};
-typedef struct pamela_devinfo pamela_devinfo_t;
 
 /* ----- Types ----- */
 
