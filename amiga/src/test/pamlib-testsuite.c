@@ -20,6 +20,7 @@
 
 #define TEST_BUF_SIZE  128
 #define TEST_BYTE_OFFSET 3
+#define TEST_SEEK       0xdeadbeefUL
 
 #define CHECK_PAMLIB_RES(res, sec) \
   if (res != 0) \
@@ -129,6 +130,39 @@ TEST_FUNC(test_write)
   CHECK_PAMLIB_RES(res, "close");
 
   test_buffer_free(buf);
+
+  return 0;
+}
+
+TEST_FUNC(test_seek_tell)
+{
+  pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamlib_channel_t *ch = pamlib_open(ph, p->port, &res);
+  CHECK_PAMLIB_RES(res, "open");
+
+  // seek
+  res = pamlib_seek(ch, TEST_SEEK);
+  CHECK_PAMLIB_RES(res, "seek");
+
+  // tell
+  ULONG pos = 0;
+  res = pamlib_tell(ch, &pos);
+  CHECK_PAMLIB_RES(res, "tell");
+
+  // check pos
+  if(pos != TEST_SEEK) {
+    p->error = "wrong seek pos";
+    p->section = "tell";
+    sprintf(p->extra, "want=%lu, got=%lu", TEST_SEEK, pos);
+    return 1;
+  }
+
+  // close channel
+  res = pamlib_close(ch);
+  CHECK_PAMLIB_RES(res, "close");
 
   return 0;
 }

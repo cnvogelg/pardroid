@@ -40,6 +40,7 @@
 
 #define TEST_BUF_SIZE  128
 #define TEST_BYTE_OFFSET 3
+#define TEST_SEEK       0xdeadbeefUL
 
 static int handle_req(pam_eng_test_data_t *pet)
 {
@@ -176,6 +177,45 @@ TEST_FUNC(test_write)
   CHECK_PAM_REQ(res, pet, "close");
 
   test_buffer_free(buf);
+
+  return 0;
+}
+
+TEST_FUNC(test_seek_tell)
+{
+  pam_eng_test_data_t *pet = (pam_eng_test_data_t *)p->user_data;
+  pamela_req_t *req = pet->req;
+  int res = 0;
+
+  // open channel
+  req->iopam_Req.io_Command = PAMCMD_OPEN_CHANNEL;
+  req->iopam_Port = p->port;
+  CHECK_PAM_REQ(res, pet, "open");
+
+  // seek
+  req->iopam_Req.io_Command = PAMCMD_SEEK;
+  req->iopam_Req.io_Offset = TEST_SEEK;
+  CHECK_PAM_REQ(res, pet, "seek");
+
+  // clear
+  req->iopam_Req.io_Offset = 0;
+
+  // tell
+  req->iopam_Req.io_Command = PAMCMD_TELL;
+  CHECK_PAM_REQ(res, pet, "tell");
+
+  // check pos
+  ULONG pos = req->iopam_Req.io_Offset;
+  if(pos != TEST_SEEK) {
+    p->error = "wrong seek pos";
+    p->section = "tell";
+    sprintf(p->extra, "want=%lu, got=%lu", TEST_SEEK, pos);
+    return 1;
+  }
+
+  // close channel
+  req->iopam_Req.io_Command = PAMCMD_CLOSE_CHANNEL;
+  CHECK_PAM_REQ(res, pet, "close");
 
   return 0;
 }
