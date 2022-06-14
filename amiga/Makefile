@@ -21,7 +21,7 @@ INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
 INCLUDES+=../common/src include
-INCLUDES+=src/device src/pamdev src/pamlib
+INCLUDES+=src/device src/pamdev src/pamlib src/tools
 VPATH=$(INCLUDES)
 
 # base
@@ -151,6 +151,11 @@ $(eval $(call dist-program,test-pamlib))
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_BOOT_SRCS)
 $(eval $(call make-program,pablo,$(PABLO_SRCS)))
 $(eval $(call dist-program,pablo))
+
+# pam-info
+PAM_INFO_SRCS = pam-info.c $(PAMLIB_SRCS)
+$(eval $(call make-program,pam-info,$(PAM_INFO_SRCS)))
+$(eval $(call dist-program,pam-info))
 
 # ----- devices
 # pamela.device
