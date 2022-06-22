@@ -23,5 +23,7 @@
 #define PAMELA_ERROR_NO_HANDLE           -20
 #define PAMELA_ERROR_UNKNOWN             -99
 
+#define PAMELA_ERROR_CUSTOM              -30
+
 #endif
 

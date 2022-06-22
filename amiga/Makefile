@@ -20,8 +20,8 @@ ALL_COMPILERS=vbcc gcc
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
-INCLUDES+=../common/src include
-INCLUDES+=src/device src/pamdev src/pamlib src/tools
+INCLUDES+=../common/src ../common/include include
+INCLUDES+=src/device src/pamdev src/pamlib src/tools src/paloma
 VPATH=$(INCLUDES)
 
 # base
@@ -44,6 +44,9 @@ PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c
 
 # pamlib
 PAMLIB_SRCS = pamlib.c pamela_err.c
+
+# paloma
+PALOMA_SRCS = paloma_lib.c
 
 # test+bench
 TEST_SRCS = test.c test-buffer.c
@@ -101,6 +104,10 @@ $(eval $(call make-program,minitest-pamdev,$(MINITEST_PAMDEV_SRCS)))
 # minitest-pamlib
 MINITEST_PAMLIB_SRCS = minitest-pamlib.c $(BASE_SRCS) $(PAMLIB_SRCS)
 $(eval $(call make-program,minitest-pamlib,$(MINITEST_PAMLIB_SRCS)))
+
+# minitest-paloma
+MINITEST_PALOMA_SRCS = minitest-paloma.c $(BASE_SRCS) $(PAMLIB_SRCS) $(PALOMA_SRCS)
+$(eval $(call make-program,minitest-paloma,$(MINITEST_PALOMA_SRCS)))
 
 # ----- tests
 # test-proto-atom

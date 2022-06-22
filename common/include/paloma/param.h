@@ -1,0 +1,20 @@
+#ifndef PALOMA_PARAM_H
+#define PALOMA_PARAM_H
+
+/* disk ids */
+#define PALOMA_PARAM_ID_BOOT_PATH   0
+#define PALOMA_PARAM_ID_DISK0_TYPE  1
+#define PALOMA_PARAM_ID_DISK0_PATH  2
+#define PALOMA_PARAM_ID_DISK1_TYPE  3
+#define PALOMA_PARAM_ID_DISK1_PATH  4
+
+/* net ids */
+#define PALOMA_PARAM_ID_MY_IP       10
+#define PALOMA_PARAM_ID_MY_NETMASK  11
+#define PALOMA_PARAM_ID_MY_GATEWAY  12
+#define PALOMA_PARAM_ID_MY_MAC      13
+
+#define PALOMA_PARAM_ID_SRV_IP      14
+#define PALOMA_PARAM_ID_SRV_PORT    15
+
+#endif

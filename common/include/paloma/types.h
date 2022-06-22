@@ -1,0 +1,15 @@
+#ifndef PALOMA_TYPES_H
+#define PALOMA_TYPES_H
+
+#define PALOMA_TYPE_UBYTE     0
+#define PALOMA_TYPE_UWORD     1
+#define PALOMA_TYPE_ULONG     2
+#define PALOMA_TYPE_STRING    3
+#define PALOMA_TYPE_IP_ADDR   4
+#define PALOMA_TYPE_MAC_ADDR  5
+
+// limits
+#define PALOMA_TYPE_MAX_NAME_SIZE 16
+#define PALOMA_TYPE_MAX_STRING_SIZE 64
+
+#endif
