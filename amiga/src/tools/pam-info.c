@@ -22,7 +22,7 @@ int pam_info(pamlib_handle_t *ph)
 
     int error = pamlib_devinfo(ph, &dev_info);
     if(error != PAMELA_OK) {
-        Printf("Failed to read devinfo: %ld %s\n", error, pamela_perror(error));
+        Printf("Failed to read devinfo: %ld %s\n", error, (LONG)pamela_perror(error));
         return RETURN_ERROR;
     }
 
@@ -61,7 +61,7 @@ int dosmain(void)
 
         pamlib_exit(ph);
     } else {
-        Printf("Can't Init pamlib: %ld %s\n", error, pamela_perror(error));
+        Printf("Can't Init pamlib: %ld %s\n", error, (LONG)pamela_perror(error));
         result = 1;
     }
 

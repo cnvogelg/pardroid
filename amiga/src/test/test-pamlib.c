@@ -98,12 +98,12 @@ int dosmain(void)
         Printf("wrong firmware: %04x\n", fw_id);
       }
     } else {
-      Printf("devinfo failed: %ld\n", init_res, pamela_perror(init_res));
+      Printf("devinfo failed: %ld\n", init_res, (LONG)pamela_perror(init_res));
     }
     
     pamlib_exit(pam);
   } else {
-    Printf("init ABORT: %ld %s!\n", init_res, pamela_perror(init_res));
+    Printf("init ABORT: %ld %s!\n", init_res, (LONG)pamela_perror(init_res));
   }
 
   /* Finally free args */

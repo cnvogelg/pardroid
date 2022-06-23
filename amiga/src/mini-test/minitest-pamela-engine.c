@@ -16,7 +16,7 @@
 static void handle_error(int error)
 {
   if(error != PAMELA_OK) {
-    Printf("pamela error: %ld %s\n", error, pamela_perror(error));
+    Printf("pamela error: %ld %s\n", error, (LONG)pamela_perror(error));
   } else {
     PutStr("OK\n");
   }
@@ -44,7 +44,7 @@ static int handle_req(pamela_engine_t *eng, struct IOPamReq *req, struct MsgPort
     // get request back
     struct IOPamReq *res_req = (struct IOPamReq *)GetMsg(port);
     if(res_req != req) {
-      Printf("  Returned wrong request! %08lx\n", res_req);
+      Printf("  Returned wrong request! %08lx\n", (ULONG)res_req);
       return -2;
     }
 

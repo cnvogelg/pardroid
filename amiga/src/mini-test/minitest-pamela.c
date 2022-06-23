@@ -17,7 +17,7 @@ static void handle_error(int error)
     Printf("GOT: %ld bytes\n", error);
   }
   else if(error != PAMELA_OK) {
-    Printf("pamela error: %ld %s\n", error, pamela_perror(error));
+    Printf("pamela error: %ld %s\n", error, (LONG)pamela_perror(error));
   } else {
     PutStr("OK\n");
   }

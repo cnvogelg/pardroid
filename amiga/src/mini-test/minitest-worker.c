@@ -2,7 +2,9 @@
 #include <proto/dos.h>
 #include <dos/dos.h>
 
+#ifdef CONFIG_DEBUG_WORKER
 #define KDEBUG
+#endif
 
 #include "autoconf.h"
 #include "debug.h"
@@ -41,7 +43,7 @@ int dosmain(void)
         work_main,
         &md, &quit_signal
     );
-    Printf("worker_run: task=%ld\n", task);
+    Printf("worker_run: task=%ld\n", (ULONG)task);
 
     if(task != NULL) {
         PutStr("waiting...\n");

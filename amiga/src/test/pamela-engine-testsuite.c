@@ -49,7 +49,7 @@ static int handle_req(pam_eng_test_data_t *pet)
     // check pamela error
     int error = pet->req->iopam_PamelaError;
     if(error < 0) {
-      Printf("  quick: Pamela error: %ld = %s\n", error, pamela_perror(error));
+      Printf("  quick: Pamela error: %ld = %s\n", error, (LONG)pamela_perror(error));
     }
     return error;
   } else {
@@ -63,13 +63,13 @@ static int handle_req(pam_eng_test_data_t *pet)
     // get request back
     struct IOPamReq *res_req = (struct IOPamReq *)GetMsg(pet->port);
     if(res_req != pet->req) {
-      Printf("  Returned wrong request! %08lx\n", res_req);
+      Printf("  Returned wrong request! %08lx\n", (LONG)res_req);
       return -99;
     }
     // check pamela error
     int error = pet->req->iopam_PamelaError;
     if(error < 0) {
-      Printf("  Pamela error: %ld = %s\n", error, pamela_perror(error));
+      Printf("  Pamela error: %ld = %s\n", error, (LONG)pamela_perror(error));
     }
     return error;
   }

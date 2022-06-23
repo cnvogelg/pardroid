@@ -50,14 +50,14 @@ int dosmain(void)
         /* close paloma */
         paloma_exit(pal);
       } else {
-        Printf("can't init paloma: %ld %s\n", error, pamela_perror(error));
+        Printf("can't init paloma: %ld %s\n", error, (LONG)pamela_perror(error));
         result = RETURN_ERROR;
       }
 
       /* close pamlib */
       pamlib_exit(pam);
     } else {
-        Printf("can't init pamlib: %ld %s\n", error, pamela_perror(error));
+        Printf("can't init pamlib: %ld %s\n", error, (LONG)pamela_perror(error));
         result = RETURN_ERROR;
     }
 

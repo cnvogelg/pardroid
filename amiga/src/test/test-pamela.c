@@ -98,7 +98,7 @@ int dosmain(void)
     
     pamela_exit(pam);
   } else {
-    Printf("%ld: %s -> ABORT!\n", init_res, pamela_perror(init_res));
+    Printf("%ld: %s -> ABORT!\n", init_res, (LONG)pamela_perror(init_res));
   }
 
   /* Finally free args */

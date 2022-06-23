@@ -104,7 +104,7 @@ int dosmain(void)
     }
     pamela_engine_exit(pet.engine);
   } else {
-    Printf("engine error %ld: %s -> ABORT!\n", init_res, pamela_perror(init_res));
+    Printf("engine error %ld: %s -> ABORT!\n", init_res, (LONG)pamela_perror(init_res));
   }
 
   /* Finally free args */
