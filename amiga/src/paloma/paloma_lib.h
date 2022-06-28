@@ -27,7 +27,7 @@ struct paloma_param_info {
   UBYTE   id; /* unique ID of parameter */
   UBYTE   type; /* type of parameter */
   UBYTE   max_bytes; /* max byte size of type */
-  UBYTE   max_varlen; /* if its varlen, tell max length */
+  UBYTE   pad;
   UBYTE   name[PALOMA_TYPE_MAX_NAME_SIZE];
 };
 typedef struct paloma_param_info paloma_param_info_t;
@@ -76,27 +76,33 @@ int paloma_param_get_value(paloma_handle_t *ph, UBYTE slot, UBYTE type, UBYTE *s
 /* set param value found in slot */
 int paloma_param_set_value(paloma_handle_t *ph, UBYTE slot, UBYTE type, UBYTE size, UBYTE *data);
 /* get param value found in slot */
-int paloma_param_get_default(paloma_handle_t *ph, UBYTE slot, UBYTE type, UBYTE *size, UBYTE *data);
+int paloma_param_default_value(paloma_handle_t *ph, UBYTE slot, UBYTE type, UBYTE *size, UBYTE *data);
 /* reset param to default value */
 int paloma_param_reset(paloma_handle_t *ph, UBYTE slot);
 
 /* helper */
-int paloma_param_get_ubyte_id(paloma_handle_t *ph, UBYTE id, UBYTE *data);
-int paloma_param_set_ubyte_id(paloma_handle_t *ph, UBYTE id, UBYTE data);
+int paloma_param_get_ubyte(paloma_handle_t *ph, UBYTE slot, UBYTE *data);
+int paloma_param_set_ubyte(paloma_handle_t *ph, UBYTE slot, UBYTE data);
+int paloma_param_default_ubyte(paloma_handle_t *ph, UBYTE slot, UBYTE *data);
 
-int paloma_param_get_uword_id(paloma_handle_t *ph, UBYTE id, UWORD *data);
-int paloma_param_set_uword_id(paloma_handle_t *ph, UBYTE id, UWORD data);
+int paloma_param_get_uword(paloma_handle_t *ph, UBYTE slot, UWORD *data);
+int paloma_param_set_uword(paloma_handle_t *ph, UBYTE slot, UWORD data);
+int paloma_param_default_uword(paloma_handle_t *ph, UBYTE slot, UWORD *data);
 
-int paloma_param_get_ulong_id(paloma_handle_t *ph, UBYTE id, ULONG *data);
-int paloma_param_set_ulong_id(paloma_handle_t *ph, UBYTE id, ULONG data);
+int paloma_param_get_ulong(paloma_handle_t *ph, UBYTE slot, ULONG *data);
+int paloma_param_set_ulong(paloma_handle_t *ph, UBYTE slot, ULONG data);
+int paloma_param_default_ulong(paloma_handle_t *ph, UBYTE slot, ULONG *data);
 
-int paloma_param_get_ip_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_ip_addr_t *data);
-int paloma_param_set_ip_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_ip_addr_t *data);
+int paloma_param_get_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
+int paloma_param_set_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
+int paloma_param_default_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
 
-int paloma_param_get_mac_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_mac_addr_t *data);
-int paloma_param_set_mac_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_mac_addr_t *data);
+int paloma_param_get_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
+int paloma_param_set_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
+int paloma_param_default_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
 
-int paloma_param_get_string_id(paloma_handle_t *ph, UBYTE id, paloma_param_string_t *data);
-int paloma_param_set_string_id(paloma_handle_t *ph, UBYTE id, paloma_param_string_t *data);
+int paloma_param_get_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
+int paloma_param_set_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
+int paloma_param_default_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
 
 #endif

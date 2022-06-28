@@ -47,6 +47,31 @@ int dosmain(void)
       if(pal != NULL) {
         PutStr("paloma OK\n");
 
+        /* reset, load, save param */
+        error = paloma_param_all_reset(pal);
+        Printf("reset all params: %ld\n", error);
+
+        error = paloma_param_all_load(pal);
+        Printf("load all params: %ld\n", error);
+
+        error = paloma_param_all_save(pal);
+        Printf("save all param: %ld\n", error);
+
+        /* get all slots */
+        UBYTE num_slots = 0;
+        error = paloma_param_get_total_slots(pal, &num_slots);
+        Printf("num slots: %ld, %ld\n", error, (LONG)num_slots);
+
+        /* get infos */
+        for(UBYTE i=0; i<num_slots;i++) {
+          paloma_param_info_t info;
+
+          error = paloma_param_get_info(pal, i, &info);
+          Printf("get info: %ld, %ld\n", (LONG)i, error);
+          Printf("id=%02lx type=%ld max=%ld\n", (LONG)info.id, (LONG)info.type, (LONG)info.max_bytes);
+          Printf("name=%s\n", &info.name);
+        }
+
         /* close paloma */
         paloma_exit(pal);
       } else {

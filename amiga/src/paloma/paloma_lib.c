@@ -228,8 +228,8 @@ int paloma_param_get_value(paloma_handle_t *ph, UBYTE slot, UBYTE type,
   return PALOMA_OK;
 }
 
-int paloma_param_get_default(paloma_handle_t *ph, UBYTE slot, UBYTE type,
-                             UBYTE *size, UBYTE *data)
+int paloma_param_default_value(paloma_handle_t *ph, UBYTE slot, UBYTE type,
+                               UBYTE *size, UBYTE *data)
 {
   UWORD rx_len = 0;
 
@@ -303,122 +303,104 @@ int paloma_param_reset(paloma_handle_t *ph, UBYTE slot)
   return PALOMA_OK;
 }
 
-int paloma_param_get_ubyte_id(paloma_handle_t *ph, UBYTE id, UBYTE *data)
+/* ubyte */
+
+int paloma_param_get_ubyte_id(paloma_handle_t *ph, UBYTE slot, UBYTE *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_UBYTE, NULL, data);
 }
 
-int paloma_param_set_ubyte_id(paloma_handle_t *ph, UBYTE id, UBYTE data)
+int paloma_param_set_ubyte_id(paloma_handle_t *ph, UBYTE slot, UBYTE data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_UBYTE, NULL, &data);
 }
 
-int paloma_param_get_uword_id(paloma_handle_t *ph, UBYTE id, UWORD *data)
+int paloma_param_default_ubyte_id(paloma_handle_t *ph, UBYTE slot, UBYTE *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_UBYTE, NULL, data);
+}
+
+/* uword */
+
+int paloma_param_get_uword_id(paloma_handle_t *ph, UBYTE slot, UWORD *data)
+{
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_UWORD, NULL, (UBYTE *)data);
 }
 
-int paloma_param_set_uword_id(paloma_handle_t *ph, UBYTE id, UWORD data)
+int paloma_param_set_uword_id(paloma_handle_t *ph, UBYTE slot, UWORD data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_UWORD, NULL, (UBYTE *)&data);
 }
 
-int paloma_param_get_ulong_id(paloma_handle_t *ph, UBYTE id, ULONG *data)
+int paloma_param_default_uword_id(paloma_handle_t *ph, UBYTE slot, UWORD *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_UWORD, NULL, (UBYTE *)data);
+}
+
+/* ulong */
+
+int paloma_param_get_ulong_id(paloma_handle_t *ph, UBYTE slot, ULONG *data)
+{
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_ULONG, NULL, (UBYTE *)data);
 }
 
-int paloma_param_set_ulong_id(paloma_handle_t *ph, UBYTE id, ULONG data)
+int paloma_param_set_ulong_id(paloma_handle_t *ph, UBYTE slot, ULONG data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_ULONG, NULL, (UBYTE *)&data);
 }
 
-int paloma_param_get_ip_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_ip_addr_t *data)
+int paloma_param_default_ulong_id(paloma_handle_t *ph, UBYTE slot, ULONG *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_ULONG, NULL, (UBYTE *)data);
+}
+
+/* ip_addr */
+
+int paloma_param_get_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
+{
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
 }
 
-int paloma_param_set_ip_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_ip_addr_t *data)
+int paloma_param_set_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
 }
 
-int paloma_param_get_mac_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_mac_addr_t *data)
+int paloma_param_default_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
+}
+
+/* mac_addr */
+
+int paloma_param_get_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
+{
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
 }
 
-int paloma_param_set_mac_addr_id(paloma_handle_t *ph, UBYTE id, paloma_param_mac_addr_t *data)
+int paloma_param_set_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
 }
 
-int paloma_param_get_string_id(paloma_handle_t *ph, UBYTE id, paloma_param_string_t *data)
+int paloma_param_default_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
+}
+
+/* string */
+
+int paloma_param_get_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
+{
   return paloma_param_get_value(ph, slot, PALOMA_TYPE_STRING, &data->length, data->data);
 }
 
-int paloma_param_set_string_id(paloma_handle_t *ph, UBYTE id, paloma_param_string_t *data)
+int paloma_param_set_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
 {
-  UBYTE slot;
-  int res = paloma_param_find_slot(ph, id, &slot);
-  if(res != PALOMA_OK) {
-    return res;
-  }
   return paloma_param_set_value(ph, slot, PALOMA_TYPE_STRING, data->length, data->data);
+}
+
+int paloma_param_default_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
+{
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_STRING, &data->length, data->data);
 }
