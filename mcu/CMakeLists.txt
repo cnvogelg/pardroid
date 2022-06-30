@@ -28,13 +28,15 @@ set(ARCH_MACH_DIR src/arch/rp2/mach-pico)
 set(ARCH_COMMON_DIR src/arch/common)
 set(BASE_DIR src/base)
 set(TEST_DIR src/test)
-set(COMMON_DIR ../common/src)
+set(COMMON_SRC_DIR ../common/src)
+set(COMMON_INC_DIR ../common/include)
 set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
 set(SDCARD_DIR src/driver/sdcard)
 set(ENC28J60_DIR src/driver/enc28j60)
 set(WIZNET_DIR src/driver/wiznet)
 set(DISPLAY_DIR src/driver/display)
+set(PALOMA_DIR src/paloma)
 
 # source lists
 set(BASE_SRCS
@@ -53,6 +55,7 @@ set(BASE_SRCS
 
         ${BASE_DIR}/uartutil.c
         ${BASE_DIR}/rominfo.c
+        ${BASE_DIR}/util.c
 #        ${BASE_DIR}/mem.c
 )
 
@@ -113,6 +116,15 @@ set(DISPLAY_SRCS
       ${DISPLAY_DIR}/font6x8.h
 )
 
+set(PALOMA_SRCS
+      ${PAMELA_SRCS}
+      ${PALOMA_DIR}/paloma.h
+      ${PALOMA_DIR}/paloma.c
+      ${PALOMA_DIR}/paloma_cmd.h
+      ${PALOMA_DIR}/paloma_cmd.c
+      ${PALOMA_DIR}/paloma_api.h
+)
+
 add_compile_definitions(
         MACHTAG=${MACHTAG}
         VERSION_TAG=${VERSION_TAG}
@@ -126,7 +138,8 @@ include_directories(
         ${ARCH_COMMON_DIR}
         ${BASE_DIR}
         ${PROTO_DIR}
-        ${COMMON_DIR}
+        ${COMMON_INC_DIR}
+        ${COMMON_SRC_DIR}
         ${PAMELA_DIR}
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}
@@ -134,6 +147,7 @@ include_directories(
         ${WIZNET_DIR}
         ${DISPLAY_DIR}
         ${DISPLAY_DIR}/ssd1306
+        ${PALOMA_DIR}
 )
 
 macro(make_fw name)
@@ -155,3 +169,4 @@ make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
 make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)
+make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)

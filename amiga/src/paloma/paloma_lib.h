@@ -23,31 +23,6 @@
 struct paloma_handle;
 typedef struct paloma_handle paloma_handle_t;
 
-struct paloma_param_info {
-  UBYTE   id; /* unique ID of parameter */
-  UBYTE   type; /* type of parameter */
-  UBYTE   max_bytes; /* max byte size of type */
-  UBYTE   pad;
-  UBYTE   name[PALOMA_TYPE_MAX_NAME_SIZE];
-};
-typedef struct paloma_param_info paloma_param_info_t;
-
-struct paloma_param_ip_addr {
-  UBYTE   addr[4];
-};
-typedef struct paloma_param_ip_addr paloma_param_ip_addr_t;
-
-struct paloma_param_mac_addr {
-  UBYTE   addr[6];
-};
-typedef struct paloma_param_mac_addr paloma_param_mac_addr_t;
-
-struct paloma_param_string {
-  UBYTE   length;
-  UBYTE   data[PALOMA_TYPE_MAX_STRING_SIZE];
-};
-typedef struct paloma_param_string paloma_param_string_t;
-
 /* --- API --- */
 
 /* setup paloma instance */
