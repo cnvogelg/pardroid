@@ -77,9 +77,12 @@ static int transfer_cmd(paloma_handle_t *ph, UBYTE cmd, UWORD tx_len, UWORD *rx_
   ph->data_buffer[3] = 0;
 
   UWORD pkt_len = tx_len + PALOMA_WIRE_HEADER_SIZE;
+  if((pkt_len & 1)==1) {
+    pkt_len++; // pad to word
+  }
 
   int res = pamlib_write(ph->channel, ph->data_buffer, pkt_len);
-  if(res != PAMELA_OK) {
+  if(res < pkt_len) {
     return res;
   }
 
@@ -98,6 +101,9 @@ static int transfer_cmd(paloma_handle_t *ph, UBYTE cmd, UWORD tx_len, UWORD *rx_
   }
   /* check len */
   pkt_len = ph->data_buffer[2] + PALOMA_WIRE_HEADER_SIZE;
+  if((pkt_len & 1)==1) {
+    pkt_len++; // pad to word
+  }
   if(pkt_len != res) {
     return PALOMA_ERROR_WRONG_LEN;
   }
@@ -354,53 +360,19 @@ int paloma_param_default_ulong_id(paloma_handle_t *ph, UBYTE slot, ULONG *data)
   return paloma_param_default_value(ph, slot, PALOMA_TYPE_ULONG, NULL, (UBYTE *)data);
 }
 
-/* ip_addr */
+/* buffer */
 
-int paloma_param_get_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
+int paloma_param_get_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE *size)
 {
-  return paloma_param_get_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
+  return paloma_param_get_value(ph, slot, PALOMA_TYPE_BUFFER, size, (UBYTE *)data);
 }
 
-int paloma_param_set_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
+int paloma_param_set_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE size)
 {
-  return paloma_param_set_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
+  return paloma_param_set_value(ph, slot, PALOMA_TYPE_BUFFER, size, (UBYTE *)data);
 }
 
-int paloma_param_default_ip_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data)
+int paloma_param_default_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE *size)
 {
-  return paloma_param_default_value(ph, slot, PALOMA_TYPE_IP_ADDR, NULL, (UBYTE *)data);
-}
-
-/* mac_addr */
-
-int paloma_param_get_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
-{
-  return paloma_param_get_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
-}
-
-int paloma_param_set_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
-{
-  return paloma_param_set_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
-}
-
-int paloma_param_default_mac_addr_id(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data)
-{
-  return paloma_param_default_value(ph, slot, PALOMA_TYPE_MAC_ADDR, NULL, (UBYTE *)data);
-}
-
-/* string */
-
-int paloma_param_get_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
-{
-  return paloma_param_get_value(ph, slot, PALOMA_TYPE_STRING, &data->length, data->data);
-}
-
-int paloma_param_set_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
-{
-  return paloma_param_set_value(ph, slot, PALOMA_TYPE_STRING, data->length, data->data);
-}
-
-int paloma_param_default_string_id(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data)
-{
-  return paloma_param_default_value(ph, slot, PALOMA_TYPE_STRING, &data->length, data->data);
+  return paloma_param_default_value(ph, slot, PALOMA_TYPE_BUFFER, size, (UBYTE *)data);
 }

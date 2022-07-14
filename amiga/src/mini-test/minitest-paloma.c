@@ -7,6 +7,7 @@
 
 #include "autoconf.h"
 #include "debug.h"
+#include "types.h"
 
 #include "pamlib.h"
 #include "paloma_lib.h"

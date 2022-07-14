@@ -2,6 +2,10 @@
 #include "arch.h"
 #include "autoconf.h"
 
+#define DEBUG CONFIG_DEBUG_PALOMA
+
+#include "debug.h"
+
 #include "util.h"
 #include "paloma_cmd.h"
 #include "paloma_api.h"
@@ -134,129 +138,155 @@ static u08 reset_value(u08 slot, u08 *payload)
   return set_value(slot, payload, size, &dummy);
 }
 
-void paloma_cmd_handle(u08 *buf, u08 size, u08 *ret_size)
+void paloma_cmd_handle(u08 *buf, u08 buf_size, u08 *ret_size)
 {
   u08 cmd = buf[0];
   u08 status = PALOMA_WIRE_STATUS_OK;
   u08 rsize = 0;
   u08 *payload = &buf[4];
+  u08 tsize = buf[2];
 
-  switch(cmd) {
-    case PALOMA_WIRE_CMD_PARAM_ALL_RESET:
-      if(size == 0) {
-        paloma_api_param_all_reset();
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+  u08 pkt_size = tsize + PALOMA_WIRE_HEADER_SIZE;
+  if((pkt_size & 1)==1) {
+    pkt_size++;
+  }
 
-    case PALOMA_WIRE_CMD_PARAM_ALL_LOAD:
-      if(size == 0) {
-        paloma_api_param_all_load();
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+  DNL; DS("paloma_cmd="); DB(cmd); DC('#'); DB(buf_size); DC('+'); DB(tsize);
+  DC('p'); DB(pkt_size); DC('{'); DNL;
 
-    case PALOMA_WIRE_CMD_PARAM_ALL_SAVE:
-      if(size == 0) {
-        paloma_api_param_all_save();
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
-
-    case PALOMA_WIRE_CMD_PARAM_GET_TOTAL_SLOTS:
-      if(size == 0) {
-        *payload = paloma_api_param_get_total_slots();
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
-
-    case PALOMA_WIRE_CMD_PARAM_GET_INFO:
-      if(size == 1) {
-        u08 slot = payload[0];
-        if(slot < paloma_api_param_get_total_slots()) {
-          paloma_param_info_t *info = (paloma_param_info_t *)payload;
-          paloma_api_param_get_info(slot, info);
+  // check size
+  if((buf_size < PALOMA_WIRE_HEADER_SIZE) || (buf_size != pkt_size)) {
+    status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+  }
+  else {
+    switch(cmd) {
+      case PALOMA_WIRE_CMD_PARAM_ALL_RESET:
+        if(tsize == 0) {
+          paloma_api_param_all_reset();
         } else {
-          status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
         }
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+        break;
 
-    case PALOMA_WIRE_CMD_PARAM_FIND_SLOT:
-      if(size == 1) {
-        u08 id = payload[0];
-        *payload = find_slot(id);
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
-
-    case PALOMA_WIRE_CMD_PARAM_GET_VALUE:
-      if(size == 1) {
-        u08 slot = payload[0];
-        if(slot < paloma_api_param_get_total_slots()) {
-          status = get_value(slot, payload, &rsize, 0);
+      case PALOMA_WIRE_CMD_PARAM_ALL_LOAD:
+        if(tsize == 0) {
+          paloma_api_param_all_load();
         } else {
-          status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
         }
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+        break;
 
-    case PALOMA_WIRE_CMD_PARAM_SET_VALUE:
-      if(size > 1) {
-        u08 slot = payload[0];
-        if(slot < paloma_api_param_get_total_slots()) {
-          status = set_value(slot, payload, size, &rsize);
+      case PALOMA_WIRE_CMD_PARAM_ALL_SAVE:
+        if(tsize == 0) {
+          paloma_api_param_all_save();
         } else {
-          status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
         }
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+        break;
 
-    case PALOMA_WIRE_CMD_PARAM_GET_DEFAULT:
-      if(size == 1) {
-        u08 slot = payload[0];
-        if(slot < paloma_api_param_get_total_slots()) {
-          status = get_value(slot, payload, &rsize, 1);
+      case PALOMA_WIRE_CMD_PARAM_GET_TOTAL_SLOTS:
+        if(tsize == 0) {
+          *payload = paloma_api_param_get_total_slots();
+          rsize = 1;
         } else {
-          status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
         }
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+        break;
 
-    case PALOMA_WIRE_CMD_PARAM_RESET:
-      if(size == 1) {
-        u08 slot = payload[0];
-        if(slot < paloma_api_param_get_total_slots()) {
-          status = reset_value(slot, payload);
+      case PALOMA_WIRE_CMD_PARAM_GET_INFO:
+        if(tsize == 1) {
+          u08 slot = payload[0];
+          if(slot < paloma_api_param_get_total_slots()) {
+            paloma_param_info_t *info = (paloma_param_info_t *)payload;
+            paloma_api_param_get_info(slot, info);
+            rsize = sizeof(paloma_param_info_t);
+          } else {
+            status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          }
         } else {
-          status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
         }
-      } else {
-        status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
-      }
-      break;
+        break;
 
-    default:
-      status = PALOMA_WIRE_STATUS_NO_CMD;
-      break;
+      case PALOMA_WIRE_CMD_PARAM_FIND_SLOT:
+        if(tsize == 1) {
+          u08 id = payload[0];
+          *payload = find_slot(id);
+          rsize = 1;
+        } else {
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+        }
+        break;
+
+      case PALOMA_WIRE_CMD_PARAM_GET_VALUE:
+        if(tsize == 1) {
+          u08 slot = payload[0];
+          if(slot < paloma_api_param_get_total_slots()) {
+            status = get_value(slot, payload, &rsize, 0);
+          } else {
+            status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          }
+        } else {
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+        }
+        break;
+
+      case PALOMA_WIRE_CMD_PARAM_SET_VALUE:
+        if(tsize > 1) {
+          u08 slot = payload[0];
+          if(slot < paloma_api_param_get_total_slots()) {
+            status = set_value(slot, payload, tsize, &rsize);
+          } else {
+            status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          }
+        } else {
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+        }
+        break;
+
+      case PALOMA_WIRE_CMD_PARAM_GET_DEFAULT:
+        if(tsize == 1) {
+          u08 slot = payload[0];
+          if(slot < paloma_api_param_get_total_slots()) {
+            status = get_value(slot, payload, &rsize, 1);
+          } else {
+            status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          }
+        } else {
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+        }
+        break;
+
+      case PALOMA_WIRE_CMD_PARAM_RESET:
+        if(tsize == 1) {
+          u08 slot = payload[0];
+          if(slot < paloma_api_param_get_total_slots()) {
+            status = reset_value(slot, payload);
+          } else {
+            status = PALOMA_WIRE_STATUS_WRONG_SLOT;
+          }
+        } else {
+          status = PALOMA_WIRE_STATUS_DATA_WRONG_SIZE;
+        }
+        break;
+
+      default:
+        status = PALOMA_WIRE_STATUS_NO_CMD;
+        break;
+    }
   }
 
   /* store status and return result packet size */
   buf[1] = status;
   buf[2] = rsize;
   buf[3] = 0;
-  *ret_size = rsize + 4;
+
+  // pad to word
+  if((rsize & 1)==1) {
+    rsize++;
+  }
+
+  *ret_size = rsize + PALOMA_WIRE_HEADER_SIZE;
+
+  DS("}:"); DB(status); DC('#'); DB(rsize); DNL;
 }

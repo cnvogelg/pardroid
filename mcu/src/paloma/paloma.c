@@ -2,6 +2,10 @@
 #include "arch.h"
 #include "autoconf.h"
 
+#define DEBUG CONFIG_DEBUG_PALOMA
+
+#include "debug.h"
+
 #include "pamela.h"
 #include "paloma.h"
 #include "parbox/ports.h"
@@ -31,11 +35,15 @@ static u08 paloma_open(u08 slot, u08 chan, u16 port)
   slot_data_t *data = &slots[slot];
   data->mode = PALOMA_MODE_IDLE;
 
+  DS("paloma open"); DNL;
+
   return PAMELA_OK;
 }
 
 static u08 paloma_close(u08 slot)
 {
+  DS("paloma close"); DNL;
+
   return PAMELA_OK;
 }
 
@@ -43,6 +51,8 @@ static u08 paloma_reset(u08 slot)
 {
   slot_data_t *data = &slots[slot];
   data->mode = PALOMA_MODE_IDLE;
+
+  DS("paloma reset"); DNL;
 
   return PAMELA_OK;
 }
@@ -59,6 +69,8 @@ static u08 paloma_read_request(u08 slot, u08 **buf, u16 *size)
   }
 
   data->mode = PALOMA_MODE_REPLY;
+
+  DNL; DS("paloma_reply:"); DB(data->reply_size); DNL;
 
   *buf = &data->buffer[0];
   *size = data->reply_size;

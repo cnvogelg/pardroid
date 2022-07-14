@@ -153,6 +153,12 @@ TEST_PAMLIB_SRCS += pamlib-testsuite.c
 $(eval $(call make-program,test-pamlib,$(TEST_PAMLIB_SRCS)))
 $(eval $(call dist-program,test-pamlib))
 
+# test-paloma
+TEST_PALOMA_SRCS = test-paloma.c $(PAMLIB_SRCS) $(PALOMA_SRCS) $(TEST_SRCS)
+TEST_PALOMA_SRCS += paloma-testsuite.c
+$(eval $(call make-program,test-paloma,$(TEST_PALOMA_SRCS)))
+$(eval $(call dist-program,test-paloma))
+
 # ----- tools
 # pablo
 PABLO_SRCS = pablo.c pblfile.c bootloader.c machtag.c fwid.c $(PROTO_BOOT_SRCS)

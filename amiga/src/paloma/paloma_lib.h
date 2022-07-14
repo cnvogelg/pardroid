@@ -68,16 +68,8 @@ int paloma_param_get_ulong(paloma_handle_t *ph, UBYTE slot, ULONG *data);
 int paloma_param_set_ulong(paloma_handle_t *ph, UBYTE slot, ULONG data);
 int paloma_param_default_ulong(paloma_handle_t *ph, UBYTE slot, ULONG *data);
 
-int paloma_param_get_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
-int paloma_param_set_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
-int paloma_param_default_ip_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_ip_addr_t *data);
-
-int paloma_param_get_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
-int paloma_param_set_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
-int paloma_param_default_mac_addr(paloma_handle_t *ph, UBYTE slot, paloma_param_mac_addr_t *data);
-
-int paloma_param_get_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
-int paloma_param_set_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
-int paloma_param_default_string(paloma_handle_t *ph, UBYTE slot, paloma_param_string_t *data);
+int paloma_param_get_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE *size);
+int paloma_param_set_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE size);
+int paloma_param_default_buffer(paloma_handle_t *ph, UBYTE slot, UBYTE *data, UBYTE *size);
 
 #endif
