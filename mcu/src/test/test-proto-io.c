@@ -13,8 +13,8 @@
 #include "rominfo.h"
 
 #include "proto_io.h"
-#include "proto_io_shared.h"
-#include "pamela_shared.h"
+#include "proto//wire_io.h"
+#include "pamela/wire.h"
 
 #include "fwid.h"
 #include "fw_info.h"

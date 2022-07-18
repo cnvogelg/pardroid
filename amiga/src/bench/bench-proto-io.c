@@ -13,7 +13,7 @@
 
 #include "proto_io.h"
 #include "proto_atom.h"
-#include "proto_dev_shared.h"
+#include "proto/wire_dev.h"
 
 #include "bench.h"
 #include "bench_main.h"

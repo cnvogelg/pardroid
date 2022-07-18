@@ -7,7 +7,7 @@
 #include "debug.h"
 
 #include "proto_io.h"
-#include "proto_io_shared.h"
+#include "proto/wire_io.h"
 #include "pamela.h"
 #include "pamela_int.h"
 

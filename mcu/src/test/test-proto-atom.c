@@ -14,7 +14,7 @@
 #include "rominfo.h"
 
 #include "proto_atom.h"
-#include "proto_atom_test_shared.h"
+#include "test/proto_atom.h"
 
 #include "fwid.h"
 #include "fw_info.h"

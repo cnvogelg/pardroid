@@ -10,7 +10,7 @@
 #include "proto_atom.h"
 #include "proto_dev.h"
 #include "proto_io.h"
-#include "proto_io_shared.h"
+#include "proto/wire_io.h"
 
 proto_handle_t *proto_io_init(proto_env_handle_t *penv)
 {

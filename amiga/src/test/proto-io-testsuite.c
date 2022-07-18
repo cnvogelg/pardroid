@@ -16,8 +16,8 @@
 #include "pario.h"
 #include "proto_io.h"
 #include "proto-io-testsuite.h"
-#include "proto_io_shared.h"
-#include "pamela_shared.h"
+#include "proto/wire_io.h"
+#include "pamela/wire.h"
 #include "test-buffer.h"
 
 #define TEST_CHANNEL    7

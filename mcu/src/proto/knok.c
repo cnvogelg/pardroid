@@ -13,7 +13,7 @@
 #include "hw_timer.h"
 #include "hw_led.h"
 #include "rominfo.h"
-#include "proto_dev_shared.h"
+#include "proto/wire_dev.h"
 
 #define SEND_OK                  0
 #define SEND_NOT_STARTED         1

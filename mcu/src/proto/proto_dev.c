@@ -10,7 +10,7 @@
 
 #include "proto_atom.h"
 #include "proto_dev.h"
-#include "proto_dev_shared.h"
+#include "proto/wire_dev.h"
 #include "knok.h"
 #include "fw_info.h"
 

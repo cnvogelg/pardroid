@@ -139,7 +139,6 @@ include_directories(
         ${BASE_DIR}
         ${PROTO_DIR}
         ${COMMON_INC_DIR}
-        ${COMMON_SRC_DIR}
         ${PAMELA_DIR}
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}

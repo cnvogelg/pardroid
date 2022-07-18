@@ -10,7 +10,7 @@
 #include "proto_atom.h"
 #include "proto_dev.h"
 #include "proto_boot.h"
-#include "proto_boot_shared.h"
+#include "proto/wire_boot.h"
 
 proto_handle_t *proto_boot_init(proto_env_handle_t *penv)
 {

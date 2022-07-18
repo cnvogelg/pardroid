@@ -2,7 +2,7 @@
 #define PAMELA_H
 
 #include "pamela_handler.h"
-#include "pamela_shared.h"
+#include "pamela/wire.h"
 
 /* number of channels used by pamela */
 #ifndef PAMELA_NUM_CHANNELS

@@ -106,7 +106,7 @@ INCLUDES += src/arch src/$(ARCH_DIR) src/$(ARCH_DIR)/bsp src/arch/common
 INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base src/proto
 INCLUDES += src/pamela src/paloma src/handler src/driver src/test src/param
-INCLUDES += ../common/src
+INCLUDES += ../common/include
 INCLUDES += $(DRIVER_INCLUDES) $(TOOL_INCLUDES)
 VPATH=$(INCLUDES) $(BUILD_DIR)
 

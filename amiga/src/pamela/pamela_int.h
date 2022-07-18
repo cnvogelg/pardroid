@@ -1,7 +1,7 @@
 #ifndef PAMELA_INT_H
 #define PAMELA_INT_H
 
-#include "proto_io_shared.h"
+#include "proto/wire_io.h"
 
 #define CHANNEL_FLAG_INACTIVE   0
 #define CHANNEL_FLAG_BUSY       1

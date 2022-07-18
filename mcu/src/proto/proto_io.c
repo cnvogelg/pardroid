@@ -9,7 +9,7 @@
 #include "proto_atom.h"
 #include "proto_dev.h"
 #include "proto_io.h"
-#include "proto_io_shared.h"
+#include "proto/wire_io.h"
 
 static u16 event_mask;
 static u08 event_irq_pending;

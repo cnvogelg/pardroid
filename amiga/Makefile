@@ -20,9 +20,9 @@ ALL_COMPILERS=vbcc gcc
 INCLUDES=src src/arch src/$(ARCH_DIR) src/$(MACH_DIR) src/base
 INCLUDES+=src/proto src/pamela src/pablo
 INCLUDES+=src/test src/mini-test src/bench
-INCLUDES+=../common/src ../common/include include
+INCLUDES+=../common/include include
 INCLUDES+=src/device src/pamdev src/pamlib src/tools src/paloma
-VPATH=$(INCLUDES)
+VPATH=$(INCLUDES) ../common/src
 
 # base
 BASE_SRCS = debug.c worker.c

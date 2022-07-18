@@ -4,7 +4,7 @@
 #include <exec/exec.h>
 
 #include "timer.h"
-#include "pamela_shared.h"
+#include "pamela/wire.h"
 #include "pamela/devinfo.h"
 #include "pamela/error.h"
 

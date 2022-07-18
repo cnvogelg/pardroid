@@ -9,7 +9,7 @@
 #include "timer.h"
 #include "proto_atom.h"
 #include "proto_dev.h"
-#include "proto_dev_shared.h"
+#include "proto/wire_dev.h"
 #include "proto_atom.h"
 
 proto_handle_t *proto_dev_init(proto_env_handle_t *penv)

@@ -16,7 +16,7 @@
 #include "pario.h"
 #include "proto_atom.h"
 #include "proto_env.h"
-#include "proto_atom_test_shared.h"
+#include "test/proto_atom.h"
 #include "proto-env-testsuite.h"
 #include "test-buffer.h"
 

@@ -16,8 +16,8 @@
 #include "pario.h"
 #include "proto_boot.h"
 #include "proto-boot-testsuite.h"
-#include "proto_boot_shared.h"
-#include "proto_boot_test_shared.h"
+#include "proto/wire_boot.h"
+#include "test/proto_boot.h"
 #include "test-buffer.h"
 
 #define TEST_BYTE_OFFSET 2

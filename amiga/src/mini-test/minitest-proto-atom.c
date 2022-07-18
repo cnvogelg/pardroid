@@ -7,7 +7,7 @@
 #include "debug.h"
 #include "proto_env.h"
 #include "proto_atom.h"
-#include "proto_atom_test_shared.h"
+#include "test/proto_atom.h"
 
 int dosmain(void)
 {

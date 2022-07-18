@@ -13,11 +13,11 @@
 #include "rominfo.h"
 
 #include "proto_boot.h"
-#include "proto_boot_shared.h"
-#include "proto_boot_test_shared.h"
+#include "test/proto_boot.h"
 #include "proto_dev.h"
-#include "proto_dev_shared.h"
 #include "proto_atom.h"
+#include "proto/wire_boot.h"
+#include "proto/wire_dev.h"
 
 #include "fwid.h"
 #include "fw_info.h"
