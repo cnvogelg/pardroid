@@ -161,7 +161,7 @@ int pamlib_reset(pamlib_channel_t *ch)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
-  // close channel via device
+  // reset channel via device
   pamlib_handle_t *ph = ch->handle;
   int error = PAMELA_OK;
   ph->req->iopam_Req.io_Command = PAMCMD_RESET_CHANNEL;
@@ -179,9 +179,8 @@ int pamlib_read(pamlib_channel_t *ch, UBYTE *data, UWORD size)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
-  // close channel via device
+  // read on channel via device
   pamlib_handle_t *ph = ch->handle;
-  int error = 0;
   ph->req->iopam_Req.io_Command = PAMCMD_READ;
   ph->req->iopam_Channel = ch->channel;
   ph->req->iopam_Req.io_Length = size;
@@ -199,9 +198,8 @@ int pamlib_write(pamlib_channel_t *ch, UBYTE *data, UWORD size)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
-  // close channel via device
+  // write to channel via device
   pamlib_handle_t *ph = ch->handle;
-  int error = 0;
   ph->req->iopam_Req.io_Command = PAMCMD_WRITE;
   ph->req->iopam_Channel = ch->channel;
   ph->req->iopam_Req.io_Length = size;
@@ -219,9 +217,8 @@ int pamlib_seek(pamlib_channel_t *ch, ULONG offset)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
-  // close channel via device
+  // seek in channel via device
   pamlib_handle_t *ph = ch->handle;
-  int error = 0;
   ph->req->iopam_Req.io_Command = PAMCMD_SEEK;
   ph->req->iopam_Channel = ch->channel;
   ph->req->iopam_Req.io_Offset = offset;
@@ -238,9 +235,8 @@ int pamlib_tell(pamlib_channel_t *ch, ULONG *offset)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
-  // close channel via device
+  // tell pos of channel via device
   pamlib_handle_t *ph = ch->handle;
-  int error = 0;
   ph->req->iopam_Req.io_Command = PAMCMD_TELL;
   ph->req->iopam_Channel = ch->channel;
   int res = DoIO((struct IORequest *)ph->req);
@@ -249,4 +245,50 @@ int pamlib_tell(pamlib_channel_t *ch, ULONG *offset)
   }
   *offset = ph->req->iopam_Req.io_Offset;
   return 0;
+}
+
+int pamlib_get_mtu(pamlib_channel_t *ch, UWORD *mtu)
+{
+  if(ch == NULL) {
+    return PAMELA_ERROR_CHANNEL_NOT_FOUND;
+  }
+
+  // get mtu of channel via device
+  pamlib_handle_t *ph = ch->handle;
+  ph->req->iopam_Req.io_Command = PAMCMD_GET_MTU;
+  ph->req->iopam_Channel = ch->channel;
+  int res = DoIO((struct IORequest *)ph->req);
+  if(res != 0) {
+    return ph->req->iopam_PamelaError;
+  }
+  *mtu = (UWORD)ph->req->iopam_Req.io_Actual;
+  return 0;
+}
+
+int pamlib_set_mtu(pamlib_channel_t *ch, UWORD mtu)
+{
+  if(ch == NULL) {
+    return PAMELA_ERROR_CHANNEL_NOT_FOUND;
+  }
+
+  // set mtu of channel via device
+  pamlib_handle_t *ph = ch->handle;
+  ph->req->iopam_Req.io_Command = PAMCMD_SET_MTU;
+  ph->req->iopam_Channel = ch->channel;
+  ph->req->iopam_Req.io_Length = mtu;
+  int res = DoIO((struct IORequest *)ph->req);
+  if(res != 0) {
+    return ph->req->iopam_PamelaError;
+  }
+  return 0;
+}
+
+pamlib_handle_t *pamlib_get_handle(pamlib_channel_t *pc)
+{
+  return pc->handle;
+}
+
+struct Library *pamlib_get_sysbase(pamlib_handle_t *ph)
+{
+  return ph->sys_base;
 }

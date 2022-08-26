@@ -47,4 +47,14 @@ int pamlib_seek(pamlib_channel_t *pc, ULONG pos);
 /* tell */
 int pamlib_tell(pamlib_channel_t *pc, ULONG *pos);
 
+/* read mtu value from device */
+int pamlib_get_mtu(pamlib_channel_t *pc, UWORD *mtu);
+/* try to set new mtu value in device */
+int pamlib_set_mtu(pamlib_channel_t *pc, UWORD mtu);
+
+/* return handle of channel */
+pamlib_handle_t *pamlib_get_handle(pamlib_channel_t *pc);
+/* access sys base */
+struct Library  *pamlib_get_sysbase(pamlib_handle_t *ph);
+
 #endif

@@ -3,6 +3,11 @@
 #include <clib/alib_protos.h>
 
 #include "autoconf.h"
+
+#ifdef CONFIG_DEBUG_PAMELA_ENGINE
+#define KDEBUG
+#endif
+
 #include "compiler.h"
 #include "debug.h"
 
@@ -51,6 +56,7 @@ int pamela_req_open(pamela_engine_t *eng, pamela_req_t *req)
   // update channel client mask
   client->channel_mask |= 1 << channel_id;
 
+  D(("[OPEN]\n"));
   return PAMELA_OK;
 }
 
@@ -74,6 +80,7 @@ int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
   // update channel mask
   client->channel_mask &= ~(1 << req->iopam_Channel);
 
+  D(("[CLOSE]\n"));
   return PAMELA_OK;
 }
 
@@ -204,6 +211,43 @@ int pamela_req_devinfo(pamela_engine_t *eng, pamela_req_t *req)
     pamela_devinfo(eng->pamela, ptr);
   } else {
     req->iopam_Req.io_Error = IOERR_BADLENGTH;
+  }
+  D(("[DEVINFO]\n"))
+  return PAMELA_OK;
+}
+
+int pamela_req_get_mtu(pamela_engine_t *eng, pamela_req_t *req)
+{
+  pamela_socket_t *socket = get_socket(eng, req);
+  if(socket == NULL) {
+    return PAMELA_OK; // error already stored
+  }
+
+  UWORD mtu = 0;
+  pamela_channel_t *channel = socket->channel;
+  int res = pamela_get_mtu(channel, &mtu);
+  D(("[GET_MTU=%ld:%ld]\n",(LONG)mtu,(LONG)res));
+  if(res != PAMELA_OK) {
+    req->iopam_Req.io_Actual = 0;
+    return res;
+  }
+  req->iopam_Req.io_Actual = mtu;
+  return PAMELA_OK;
+}
+
+int pamela_req_set_mtu(pamela_engine_t *eng, pamela_req_t *req)
+{
+  pamela_socket_t *socket = get_socket(eng, req);
+  if(socket == NULL) {
+    return PAMELA_OK; // error already stored
+  }
+
+  UWORD mtu = (UWORD)req->iopam_Req.io_Length;
+  pamela_channel_t *channel = socket->channel;
+  int res = pamela_set_mtu(channel, mtu);
+  D(("[SET_MTU=%ld:%ld]\n",(LONG)mtu,(LONG)res));
+  if(res != PAMELA_OK) {
+    return res;
   }
   return PAMELA_OK;
 }

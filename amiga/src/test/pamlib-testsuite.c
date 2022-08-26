@@ -18,6 +18,9 @@
 #include "pamlib.h"
 #include "pamlib-testsuite.h"
 
+#include "test/pamela.h"
+
+#define TEST_DEFAULT_
 #define TEST_BUF_SIZE  128
 #define TEST_BYTE_OFFSET 3
 #define TEST_SEEK       0xdeadbeefUL
@@ -157,6 +160,51 @@ TEST_FUNC(test_seek_tell)
     p->error = "wrong seek pos";
     p->section = "tell";
     sprintf(p->extra, "want=%lu, got=%lu", TEST_SEEK, pos);
+    return 1;
+  }
+
+  // close channel
+  res = pamlib_close(ch);
+  CHECK_PAMLIB_RES(res, "close");
+
+  return 0;
+}
+
+TEST_FUNC(test_get_set_mtu)
+{
+  pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamlib_channel_t *ch = pamlib_open(ph, p->port, &res);
+  CHECK_PAMLIB_RES(res, "open");
+
+  // get mtu
+  UWORD mtu = 0;
+  res = pamlib_get_mtu(ch, &mtu);
+  CHECK_PAMLIB_RES(res, "get_mtu");
+
+  if(mtu != TEST_DEFAULT_MTU) {
+    p->error = "wrong default MTU";
+    p->section = "get_mtu";
+    sprintf(p->extra, "want=%u, got=%u", TEST_DEFAULT_MTU, mtu);
+    return 1;
+  }
+
+  // set mtu
+  #define TEST_MTU  128
+  res = pamlib_set_mtu(ch, TEST_MTU);
+  CHECK_PAMLIB_RES(res, "set_mtu");
+
+  // get mtu
+  res = pamlib_get_mtu(ch, &mtu);
+  CHECK_PAMLIB_RES(res, "get_mtu");
+
+  // check new mtu
+  if(mtu != TEST_MTU) {
+    p->error = "wrong set MTU";
+    p->section = "set_mtu";
+    sprintf(p->extra, "want=%u, got=%u", TEST_MTU, mtu);
     return 1;
   }
 

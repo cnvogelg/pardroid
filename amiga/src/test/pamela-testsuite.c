@@ -18,6 +18,10 @@
 #include "pamela.h"
 #include "pamela-testsuite.h"
 
+#include "test/pamela.h"
+
+#define TEST_SEEK       0xdeadbeefUL
+
 #define CHECK_PAM_RES(res, sec) \
   if (res != 0) \
   { \
@@ -223,6 +227,90 @@ TEST_FUNC(test_write)
   CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   test_buffer_free(buf);
+
+  return 0;
+}
+
+TEST_FUNC(test_seek_tell)
+{
+  pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamela_channel_t *chn = pamela_open(pam, p->port, &res);
+  CHECK_PAM_RES(res, "open");
+  CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
+
+  // seek
+  res = pamela_seek(chn, TEST_SEEK);
+  CHECK_PAM_RES(res, "seek");
+
+  // tell
+  ULONG pos = 0;
+  res = pamela_tell(chn, &pos);
+  CHECK_PAM_RES(res, "tell");
+
+  // check pos
+  if(pos != TEST_SEEK) {
+    p->error = "wrong seek pos";
+    p->section = "tell";
+    sprintf(p->extra, "want=%lu, got=%lu", TEST_SEEK, pos);
+    return 1;
+  }
+
+  // close channel
+  res = pamela_close(chn);
+  CHECK_PAM_RES(res, "close");
+
+  return 0;
+}
+
+TEST_FUNC(test_get_set_mtu)
+{
+  pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamela_channel_t *chn = pamela_open(pam, p->port, &res);
+  CHECK_PAM_RES(res, "open");
+  CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
+
+  // get mtu
+  UWORD mtu = 0;
+  res = pamela_get_mtu(chn, &mtu);
+  CHECK_PAM_RES(res, "get_mtu");
+
+  if(mtu != TEST_DEFAULT_MTU) {
+    p->error = "wrong default MTU";
+    p->section = "get_mtu";
+    sprintf(p->extra, "want=%u, got=%u", TEST_DEFAULT_MTU, mtu);
+    return 1;
+  }
+
+  // set mtu
+  #define TEST_MTU  128
+  res = pamela_set_mtu(chn, TEST_MTU);
+  CHECK_PAM_RES(res, "set_mtu");
+
+  // get mtu
+  res = pamela_get_mtu(chn, &mtu);
+  CHECK_PAM_RES(res, "get_mtu");
+
+  // check new mtu
+  if(mtu != TEST_MTU) {
+    p->error = "wrong set MTU";
+    p->section = "set_mtu";
+    sprintf(p->extra, "want=%u, got=%u", TEST_MTU, mtu);
+    return 1;
+  }
+
+  // close channel
+  res = pamela_close(chn);
+  CHECK_PAM_RES(res, "close");
 
   return 0;
 }

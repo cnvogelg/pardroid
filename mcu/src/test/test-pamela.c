@@ -14,18 +14,15 @@
 #include "fw_info.h"
 
 #include "pamela.h"
+#include "test/pamela.h"
 
 FW_INFO(FWID_TEST_PAMELA, VERSION_TAG)
-
-#define MAX_SIZE        512
-#define NUM_SLOTS       4
-#define ERROR_SLOT      3
 
 #ifdef FLAVOR_DEBUG
 #define VERBOSE
 #endif
 
-static u08 read_buf[MAX_SIZE];
+static u08 read_buf[TEST_MAX_BUF_SIZE];
 static u32 seek_pos = 0;
 
 struct slot {
@@ -35,7 +32,7 @@ struct slot {
   hw_timer_ms_t start;
   hw_timer_ms_t start_w;
 };
-struct slot slots[NUM_SLOTS];
+struct slot slots[TEST_NUM_SLOTS];
 
 // ----- handler functions -----
 
@@ -183,7 +180,7 @@ u08 my_read_request(u08 slot, u08 **buf, u16 *size)
 #endif
 
   // simulate read error on error channel
-  if(slot == ERROR_SLOT) {
+  if(slot == TEST_ERROR_SLOT) {
     return PAMELA_ERROR;
   }
 
@@ -236,7 +233,7 @@ u08 my_write_request(u08 slot, u08 **buf, u16 *size)
 #endif
 
   // simulate read error on error channel
-  if(slot == ERROR_SLOT) {
+  if(slot == TEST_ERROR_SLOT) {
     return PAMELA_ERROR;
   }
 
@@ -279,10 +276,10 @@ void my_write_done(u08 slot, u08 *buf, u16 size)
 u16 my_set_mtu(u08 slot, u16 new_mtu)
 {
   u16 mtu;
-  if(new_mtu < MAX_SIZE) {
+  if(new_mtu < TEST_MAX_BUF_SIZE) {
     mtu = new_mtu;
   } else {
-    mtu = MAX_SIZE;
+    mtu = TEST_MAX_BUF_SIZE;
   }
 
 #ifdef VERBOSE
@@ -298,11 +295,11 @@ u16 my_set_mtu(u08 slot, u16 new_mtu)
 // ----- define my handler -----
 HANDLER_BEGIN(my_handler)
   // parameters
-  .config.port_begin = 1000,
-  .config.port_end = 1999,
-  .config.def_mtu = MAX_SIZE,
-  .config.max_mtu = MAX_SIZE,
-  .config.max_slots = NUM_SLOTS,
+  .config.port_begin = TEST_PORT_MIN,
+  .config.port_end = TEST_PORT_MAX,
+  .config.def_mtu = TEST_DEFAULT_MTU,
+  .config.max_mtu = TEST_MAX_BUF_SIZE,
+  .config.max_slots = TEST_NUM_SLOTS,
 
   .open = my_open,
   .open_work = my_open_work,

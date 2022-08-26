@@ -163,6 +163,12 @@ static void handle_req(pamela_engine_t *eng, pamela_req_t *req)
     case PAMCMD_DEVINFO:
       error = pamela_req_devinfo(eng, req);
       break;
+    case PAMCMD_GET_MTU:
+      error = pamela_req_get_mtu(eng, req);
+      break;
+    case PAMCMD_SET_MTU:
+      error = pamela_req_set_mtu(eng, req);
+      break;
     default:
       break;
   }
@@ -455,6 +461,8 @@ BOOL pamela_engine_post_request(pamela_engine_t *eng, pamela_req_t *req)
     case PAMCMD_SEEK:
     case PAMCMD_TELL:
     case PAMCMD_DEVINFO:
+    case PAMCMD_GET_MTU:
+    case PAMCMD_SET_MTU:
       /* forward msg */
       PutMsg(eng->req_port, (struct Message *)req);
       req->iopam_Req.io_Flags &= ~IOF_QUICK;
