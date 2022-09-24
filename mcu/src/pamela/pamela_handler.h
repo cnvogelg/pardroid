@@ -2,24 +2,27 @@
 #define PAMELA_HANDLER_H
 
 /* ----- open/close/reset ----- */
-typedef u08 (*hnd_open_func_t)(u08 slot, u08 chan, u16 port);
-typedef u08 (*hnd_close_func_t)(u08 slot);
-typedef u08 (*hnd_reset_func_t)(u08 slot);
+typedef u08 (*hnd_open_func_t)(u08 chn, u16 port);
+typedef u08 (*hnd_close_func_t)(u08 chn);
+typedef u08 (*hnd_reset_func_t)(u08 chn);
 
 /* ----- reconfig ----- */
-typedef u16 (*hnd_set_mtu_func_t)(u08 slot, u16 mtu);
+typedef u16 (*hnd_set_mtu_func_t)(u08 chn, u16 mtu);
 
 /* ----- seek/tell ----- */
-typedef void (*hnd_seek_func_t)(u08 slot, u32 pos);
-typedef u32 (*hnd_tell_func_t)(u08 slot);
+typedef void (*hnd_seek_func_t)(u08 chn, u32 pos);
+typedef u32 (*hnd_tell_func_t)(u08 chn);
 
 /* ----- read ----- */
-typedef u08 (*hnd_read_request_func_t)(u08 slot, u08 **buf, u16 *size);
-typedef void (*hnd_read_done_func_t)(u08 slot, u08 *buf, u16 size);
+typedef u08 (*hnd_read_request_func_t)(u08 chn, u08 **buf, u16 *size);
+typedef void (*hnd_read_done_func_t)(u08 chn, u08 *buf, u16 size);
 
 /* ----- write ----- */
-typedef u08 (*hnd_write_request_func_t)(u08 slot, u08 **buf, u16 *size);
-typedef void (*hnd_write_done_func_t)(u08 slot, u08 *buf, u16 size);
+typedef u08 (*hnd_write_request_func_t)(u08 chn, u08 **buf, u16 *size);
+typedef void (*hnd_write_done_func_t)(u08 chn, u08 *buf, u16 size);
+
+/* ----- worker ----- */
+typedef u08 (*hnd_work_func_t)(u08 chn);
 
 /* ----- handler's configuration ----- */
 struct pamela_handler_config {
@@ -142,7 +145,6 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 
 /* ----- macros to help create handlers ----- */
 
-#define HANDLER_DEFINE(name)         extern const pamela_handler_t name ROM_ATTR;
 #define HANDLER_BEGIN(name)          const pamela_handler_t name ROM_ATTR = {
 #define HANDLER_END                  };
 

@@ -8,6 +8,8 @@ struct pamela_service {
   pamela_handler_ptr_t handler;
   /* the associated channel mask */
   u16 channels;
+  /* service instance id */
+  u08 srv_id;
 };
 typedef struct pamela_service pamela_service_t;
 
@@ -33,7 +35,7 @@ struct pamela_channel {
 
   /* id */
   u08 chan_id; /* global channel no */
-  u08 slot_id; /* local slot id per handler */
+  u08 slot_id; /* local slot id per service */
 };
 typedef struct pamela_channel pamela_channel_t;
 

@@ -81,7 +81,8 @@ void proto_io_api_open(u08 chn, u16 port)
       pc->port = port;
       pc->mtu = HANDLER_GET_DEF_MTU(srv->handler);
       pc->slot_id = slot_id;
-      DC('@'); DB(slot_id); DC(','); DW(pc->port); DC(','); DW(pc->mtu); DC(',');
+      DC('@'); DB(slot_id); DC(',');
+      DW(pc->port); DC(','); DW(pc->mtu); DC(',');
 
       // handler open
       hnd_open_func_t open_func = HANDLER_FUNC_OPEN(srv->handler);

@@ -10,8 +10,8 @@
 #endif
 
 /* max number of handlers used by pamela */
-#ifndef PAMELA_NUM_HANDLERS
-#define PAMELA_NUM_HANDLERS             8
+#ifndef PAMELA_NUM_SERVICES
+#define PAMELA_NUM_SERVICES             8
 #endif
 
 /* default mtu */
@@ -23,11 +23,14 @@
 #define PAMELA_ERROR 1
 #define PAMELA_BUSY 0xff
 
+#define PAMELA_NO_SLOT       0xff
+#define PAMELA_NO_SERVICE_ID 0xff
+
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);
 
 /* add a handler to pamela
-   return PAMELA_OK or PAMELA_ERROR if too many handlers
+   return service instance id or PAMELA_NO_SERVICE_ID
 */
 extern u08 pamela_add_handler(pamela_handler_ptr_t handler);
 
@@ -35,6 +38,12 @@ extern u08 pamela_add_handler(pamela_handler_ptr_t handler);
 extern void pamela_work(void);
 
 // ----- API functions for handlers to use -----
+
+/* map a channel to a service slot */
+extern u08 pamela_get_slot(u08 chn);
+/* map a channel to a service instance */
+extern u08 pamela_get_srv_id(u08 chn);
+
 /* end the stream by the handler.
    either with an error or with regular EOS
  */

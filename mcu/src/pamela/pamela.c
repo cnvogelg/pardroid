@@ -15,7 +15,7 @@ static pamela_channel_t pamela_channels[PAMELA_NUM_CHANNELS];
 static u16 active_channels;
 
 // service list
-static pamela_service_t pamela_services[PAMELA_NUM_HANDLERS];
+static pamela_service_t pamela_services[PAMELA_NUM_SERVICES];
 // number of added services
 static u08 num_services;
 
@@ -42,7 +42,7 @@ void pamela_init(void)
   }
 
   // setup services
-  for(u08 i=0;i<PAMELA_NUM_HANDLERS;i++) {
+  for(u08 i=0;i<PAMELA_NUM_SERVICES;i++) {
     pamela_service_t *srv = &pamela_services[i];
     srv->handler = NULL;
     srv->channels = 0;
@@ -53,17 +53,19 @@ void pamela_init(void)
 
 u08 pamela_add_handler(pamela_handler_ptr_t handler)
 {
-  if(num_services == PAMELA_NUM_HANDLERS) {
-    return PAMELA_ERROR;
+  if(num_services == PAMELA_NUM_SERVICES) {
+    return PAMELA_NO_SERVICE_ID;
   }
 
   pamela_service_t *srv = &pamela_services[num_services];
   srv->handler = handler;
   srv->channels = 0;
 
+  u08 srv_id = num_services;
+  srv->srv_id = srv_id;
   num_services++;
 
-  return PAMELA_OK;
+  return srv_id;
 }
 
 static void pamela_channel_work(pamela_channel_t *chn);
@@ -190,7 +192,7 @@ void pamela_read_work(pamela_channel_t *chn,
   // pass call to handler
   u08 result = PAMELA_ERROR;
   if(read_req_func != NULL) {
-    result = read_req_func(chn->slot_id, &chn->rx_buf, &chn->rx_size);
+    result = read_req_func(chn->chan_id, &chn->rx_buf, &chn->rx_size);
   }
   DB(result);
 
@@ -242,7 +244,7 @@ void pamela_write_work(pamela_channel_t *chn,
 
   u08 result = PAMELA_ERROR;
   if(write_req_func != NULL) {
-    result = write_req_func(chn->slot_id, &chn->tx_buf, &chn->tx_size);
+    result = write_req_func(chn->chan_id, &chn->tx_buf, &chn->tx_size);
   }
   DB(result);
 
@@ -279,7 +281,7 @@ void pamela_open_work(pamela_channel_t *chn, hnd_open_func_t open_func)
   DS("[Ow:"); DB(chn->chan_id); DC(',');
   if(open_func != NULL) {
     pamela_set_status(chn, PAMELA_STATUS_OPENING);
-    u08 res = open_func(chn->slot_id, chn->chan_id, chn->port);
+    u08 res = open_func(chn->chan_id, chn->port);
     // if not PAMELA_BUSY then open is done
     if((res == PAMELA_OK) || (res != PAMELA_BUSY)) {
       pamela_open_done(chn, res);
@@ -316,7 +318,7 @@ void pamela_close_work(pamela_channel_t *chn, hnd_close_func_t close_func)
   DS("[Cw:"); DB(chn->chan_id); DC(',');
   if(close_func != NULL) {
     pamela_set_status(chn, PAMELA_STATUS_CLOSING);
-    u08 res = close_func(chn->slot_id);
+    u08 res = close_func(chn->chan_id);
     // if not PAMELA_BUSY then close is done
     if(res == PAMELA_OK) {
       pamela_close_done(chn);
@@ -345,7 +347,7 @@ void pamela_reset_work(pamela_channel_t *chn, hnd_reset_func_t reset_func)
   DS("[Rw:"); DB(chn->chan_id); DC(',');
   if(reset_func != NULL) {
     pamela_set_status(chn, PAMELA_STATUS_RESETTING);
-    u08 res = reset_func(chn->slot_id);
+    u08 res = reset_func(chn->chan_id);
     // if not PAMELA_BUSY then close is done
     if(res == PAMELA_OK) {
       pamela_reset_done(chn);
@@ -404,6 +406,18 @@ static void pamela_channel_work(pamela_channel_t *chn)
 }
 
 // ----- API functions  -----
+
+u08 pamela_get_slot(u08 chn)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+  return pc->slot_id;
+}
+
+u08 pamela_get_srv_id(u08 chn)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+  return pc->service->srv_id;
+}
 
 void pamela_end_stream(u08 chn, u08 error)
 {

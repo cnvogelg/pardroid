@@ -36,9 +36,10 @@ struct slot slots[TEST_NUM_SLOTS];
 
 // ----- handler functions -----
 
-static u08 my_open(u08 slot, u08 chan, u16 port)
+static u08 my_open(u08 chan, u16 port)
 {
   u16 delay = port % 1000;
+  u08 slot = pamela_get_slot(chan);
 
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<open:"));
@@ -64,8 +65,10 @@ static u08 my_open(u08 slot, u08 chan, u16 port)
   }
 }
 
-static u08 my_open_work(u08 slot, u08 chan, u16 port)
+static u08 my_open_work(u08 chan, u16 port)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send('O');
 #endif
@@ -79,11 +82,15 @@ static u08 my_open_work(u08 slot, u08 chan, u16 port)
   }
 }
 
-static u08 my_close(u08 slot)
+static u08 my_close(u08 chan)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<close:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send('>');
 #endif
 
@@ -95,8 +102,10 @@ static u08 my_close(u08 slot)
   }
 }
 
-static u08 my_close_work(u08 slot)
+static u08 my_close_work(u08 chan)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send('C');
 #endif
@@ -110,11 +119,15 @@ static u08 my_close_work(u08 slot)
   }
 }
 
-static u08 my_reset(u08 slot)
+static u08 my_reset(u08 chan)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<reset:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send('>');
 #endif
 
@@ -126,8 +139,10 @@ static u08 my_reset(u08 slot)
   }
 }
 
-static u08 my_reset_work(u08 slot)
+static u08 my_reset_work(u08 chan)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send('R');
 #endif
@@ -143,11 +158,15 @@ static u08 my_reset_work(u08 slot)
 
 // ----- seek/tell -----
 
-void my_seek(u08 slot, u32 pos)
+void my_seek(u08 chan, u32 pos)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<seek:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_long(pos);
   uart_send('>');
@@ -155,11 +174,15 @@ void my_seek(u08 slot, u32 pos)
   seek_pos = pos;
 }
 
-u32 my_tell(u08 slot)
+u32 my_tell(u08 chan)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<tell:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_long(seek_pos);
   uart_send('>');
@@ -169,11 +192,15 @@ u32 my_tell(u08 slot)
 
 // ----- read -----
 
-u08 my_read_request(u08 slot, u08 **buf, u16 *size)
+u08 my_read_request(u08 chan, u08 **buf, u16 *size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<rr:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(*size);
   uart_send('>');
@@ -194,8 +221,10 @@ u08 my_read_request(u08 slot, u08 **buf, u16 *size)
   }
 }
 
-u08 my_read_work(u08 slot, u08 **buf, u16 *size)
+u08 my_read_work(u08 chan, u08 **buf, u16 *size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send('X');
 #endif
@@ -209,11 +238,15 @@ u08 my_read_work(u08 slot, u08 **buf, u16 *size)
   }
 }
 
-void my_read_done(u08 slot, u08 *buf, u16 size)
+void my_read_done(u08 chan, u08 *buf, u16 size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<rd:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(size);
   uart_send('>');
@@ -222,11 +255,15 @@ void my_read_done(u08 slot, u08 *buf, u16 size)
 
 // ----- write -----
 
-u08 my_write_request(u08 slot, u08 **buf, u16 *size)
+u08 my_write_request(u08 chan, u08 **buf, u16 *size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<wr:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(*size);
   uart_send('>');
@@ -247,8 +284,10 @@ u08 my_write_request(u08 slot, u08 **buf, u16 *size)
   }
 }
 
-u08 my_write_work(u08 slot, u08 **buf, u16 *size)
+u08 my_write_work(u08 chan, u08 **buf, u16 *size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send('Y');
 #endif
@@ -262,19 +301,25 @@ u08 my_write_work(u08 slot, u08 **buf, u16 *size)
   }
 }
 
-void my_write_done(u08 slot, u08 *buf, u16 size)
+void my_write_done(u08 chan, u08 *buf, u16 size)
 {
+  u08 slot = pamela_get_slot(chan);
+
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<wd:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(size);
   uart_send('>');
 #endif
 }
 
-u16 my_set_mtu(u08 slot, u16 new_mtu)
+u16 my_set_mtu(u08 chan, u16 new_mtu)
 {
+  u08 slot = pamela_get_slot(chan);
+
   u16 mtu;
   if(new_mtu < TEST_MAX_BUF_SIZE) {
     mtu = new_mtu;
@@ -285,6 +330,8 @@ u16 my_set_mtu(u08 slot, u16 new_mtu)
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<set_mtu:"));
   uart_send_hex_byte(slot);
+  uart_send('@');
+  uart_send_hex_byte(chan);
   uart_send(':');
   uart_send_hex_word(mtu);
   uart_send('>');
