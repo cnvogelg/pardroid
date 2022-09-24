@@ -44,6 +44,7 @@ PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c
 
 # pamlib
 PAMLIB_SRCS = pamlib.c pamela_err.c
+PAMLIB_REQ_SRCS = $(PAMLIB_SRCS) pamlib_req.c
 
 # paloma
 PALOMA_SRCS = paloma_lib.c
@@ -104,6 +105,10 @@ $(eval $(call make-program,minitest-pamdev,$(MINITEST_PAMDEV_SRCS)))
 # minitest-pamlib
 MINITEST_PAMLIB_SRCS = minitest-pamlib.c $(BASE_SRCS) $(PAMLIB_SRCS)
 $(eval $(call make-program,minitest-pamlib,$(MINITEST_PAMLIB_SRCS)))
+
+# minitest-pamlib_req
+MINITEST_PAMLIB_REQ_SRCS = minitest-pamlib_req.c $(BASE_SRCS) $(PAMLIB_REQ_SRCS)
+$(eval $(call make-program,minitest-pamlib_req,$(MINITEST_PAMLIB_REQ_SRCS)))
 
 # minitest-paloma
 MINITEST_PALOMA_SRCS = minitest-paloma.c $(BASE_SRCS) $(PAMLIB_SRCS) $(PALOMA_SRCS)

@@ -9,7 +9,7 @@
 #include "debug.h"
 
 #include "pamlib.h"
-#include "pamcmd.h"
+#include "pamlib_req.h"
 
 static const char *TEMPLATE = "D=DEVICE/K";
 typedef struct {
@@ -39,17 +39,16 @@ int dosmain(void)
     if(ph != NULL) {
 
         PutStr("open cmd channel\n");
-        pamcmd_t *pc = pamcmd_open(ph, 1234, &error);
+        pamlib_req_t *pc = pamlib_req_open(ph, 1234, &error);
         Printf("-> %ld\n", error);
 
         // prepare command
-        pc->cmd_id = 0x42;
-        pc->tx_arg_size = 5;
-        error = pamcmd_transfer(pc);
-        Printf("-> %ld, size %ld\n", error, (ULONG)pc->rx_arg_size);
+        pc->tx_size = 6;
+        error = pamlib_req_transfer(pc);
+        Printf("-> %ld, size %ld\n", error, (ULONG)pc->rx_size);
 
         PutStr("close cmd channel\n");
-        error = pamcmd_close(pc);
+        error = pamlib_req_close(pc);
         Printf("-> %ld\n", error);
 
         PutStr("exit pamlib\n");
