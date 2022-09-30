@@ -187,7 +187,14 @@ u16  proto_io_api_read_res(u08 chn)
 void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
-  *size = pc->rx_size;
+
+  // make sure to pad size if odd
+  u16 transfer_size = pc->rx_size;
+  if((transfer_size & 1) != 0) {
+    transfer_size++;
+  }
+
+  *size = transfer_size;
   *buf = pc->rx_buf;
 
   DS("[RB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
@@ -239,7 +246,14 @@ u16  proto_io_api_write_res(u08 chn)
 void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
-  *size = pc->tx_size;
+
+  // make sure to pad size if odd
+  u16 transfer_size = pc->rx_size;
+  if((transfer_size & 1) != 0) {
+    transfer_size++;
+  }
+
+  *size = transfer_size;
   *buf = pc->tx_buf;
 
   DS("[WB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;

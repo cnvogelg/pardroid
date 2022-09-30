@@ -97,7 +97,7 @@ TEST_FUNC(test_open_close)
   return 0;
 }
 
-TEST_FUNC(test_read)
+static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
   pamela_channel_t *chn = NULL;
@@ -124,7 +124,7 @@ TEST_FUNC(test_read)
   CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post read request
-  res = pamela_read_request(chn, TEST_BUF_SIZE);
+  res = pamela_read_request(chn, read_size);
   CHECK_PAM_RES(res, "read_req");
 
   // wait for event
@@ -142,7 +142,7 @@ TEST_FUNC(test_read)
 
   // read data
   res = pamela_read_data(chn, buf);
-  CHECK_PAM_RES_VAL(res, "read_data", TEST_BUF_SIZE);
+  CHECK_PAM_RES_VAL(res, "read_data", read_size);
 
   // close channel
   res = pamela_close(chn);
@@ -168,7 +168,17 @@ TEST_FUNC(test_read)
   return 0;
 }
 
-TEST_FUNC(test_write)
+TEST_FUNC(test_read)
+{
+  return test_read_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_read_odd)
+{
+  return test_read_helper(p, TEST_BUF_SIZE - 1);
+}
+
+static int test_write_helper(test_param_t *p, UWORD write_size)
 {
   pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
   pamela_channel_t *chn = NULL;
@@ -200,7 +210,7 @@ TEST_FUNC(test_write)
   CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post write request
-  res = pamela_write_request(chn, TEST_BUF_SIZE);
+  res = pamela_write_request(chn, write_size);
   CHECK_PAM_RES(res, "write_req");
 
   // wait for event
@@ -218,7 +228,7 @@ TEST_FUNC(test_write)
 
   // write data
   res = pamela_write_data(chn, buf);
-  CHECK_PAM_RES_VAL(res, "write_data", TEST_BUF_SIZE);
+  CHECK_PAM_RES_VAL(res, "write_data", write_size);
 
   // close channel
   res = pamela_close(chn);
@@ -229,6 +239,16 @@ TEST_FUNC(test_write)
   test_buffer_free(buf);
 
   return 0;
+}
+
+TEST_FUNC(test_write)
+{
+  return test_write_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_write_odd)
+{
+  return test_write_helper(p, TEST_BUF_SIZE - 1);
 }
 
 TEST_FUNC(test_seek_tell)

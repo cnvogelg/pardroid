@@ -464,9 +464,9 @@ BOOL pamela_engine_post_request(pamela_engine_t *eng, pamela_req_t *req)
     case PAMCMD_GET_MTU:
     case PAMCMD_SET_MTU:
       /* forward msg */
-      PutMsg(eng->req_port, (struct Message *)req);
       req->iopam_Req.io_Flags &= ~IOF_QUICK;
       req->iopam_Req.io_Error = 0;
+      PutMsg(eng->req_port, (struct Message *)req);
       return FALSE;
     default:
       req->iopam_Req.io_Error = IOERR_NOCMD;

@@ -31,11 +31,18 @@
 
 #define CHECK_PAM_REQ_VAL(res, pet, sec, val) \
   res = handle_req(pet); \
-  if (res != val) \
+  if (res != PAMELA_OK) \
   { \
     p->error = pamela_perror(res); \
     p->section = sec; \
-    return res; \
+    return -1; \
+  } \
+  UWORD res_size = pet->req->iopam_Req.io_Actual; \
+  if(res_size != val) { \
+    p->error = "size mismatch"; \
+    p->section = sec; \
+    sprintf(p->extra, "want=%ld, got=%ld", (LONG)val, (LONG)res); \
+    return -1; \
   }
 
 #define TEST_BUF_SIZE  128
@@ -70,8 +77,9 @@ static int handle_req(pam_eng_test_data_t *pet)
     int error = pet->req->iopam_PamelaError;
     if(error < 0) {
       Printf("  Pamela error: %ld = %s\n", error, (LONG)pamela_perror(error));
+      return error;
     }
-    return error;
+    return PAMELA_OK;
   }
 }
 
@@ -99,7 +107,7 @@ TEST_FUNC(test_open_close)
   return 0;
 }
 
-TEST_FUNC(test_read)
+static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pam_eng_test_data_t *pet = (pam_eng_test_data_t *)p->user_data;
   pamela_req_t *req = pet->req;
@@ -118,9 +126,9 @@ TEST_FUNC(test_read)
 
   // read
   req->iopam_Req.io_Command = PAMCMD_READ;
-  req->iopam_Req.io_Length = TEST_BUF_SIZE;
+  req->iopam_Req.io_Length = read_size;
   req->iopam_Req.io_Data = buf;
-  CHECK_PAM_REQ_VAL(res, pet, "read", TEST_BUF_SIZE);
+  CHECK_PAM_REQ_VAL(res, pet, "read", read_size);
 
   // close channel
   req->iopam_Req.io_Command = PAMCMD_CLOSE_CHANNEL;
@@ -128,7 +136,7 @@ TEST_FUNC(test_read)
 
   // check buffer
   int errors = 0;
-  for(int i=0;i<TEST_BUF_SIZE;i++) {
+  for(int i=0;i<read_size;i++) {
     UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
     if (buf[i] != val)
     {
@@ -144,7 +152,17 @@ TEST_FUNC(test_read)
   return 0;
 }
 
-TEST_FUNC(test_write)
+TEST_FUNC(test_read)
+{
+  return test_read_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_read_odd)
+{
+  return test_read_helper(p, TEST_BUF_SIZE - 1);
+}
+
+static int test_write_helper(test_param_t *p, UWORD write_size)
 {
   pam_eng_test_data_t *pet = (pam_eng_test_data_t *)p->user_data;
   pamela_req_t *req = pet->req;
@@ -156,7 +174,7 @@ TEST_FUNC(test_write)
     return 1;
   }
 
-  for(int i=0;i<TEST_BUF_SIZE;i++) {
+  for(int i=0;i<write_size;i++) {
     UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
     buf[i] = val;
   }
@@ -168,9 +186,9 @@ TEST_FUNC(test_write)
 
   // write
   req->iopam_Req.io_Command = PAMCMD_WRITE;
-  req->iopam_Req.io_Length = TEST_BUF_SIZE;
+  req->iopam_Req.io_Length = write_size;
   req->iopam_Req.io_Data = buf;
-  CHECK_PAM_REQ_VAL(res, pet, "read", TEST_BUF_SIZE);
+  CHECK_PAM_REQ_VAL(res, pet, "read", write_size);
 
   // close channel
   req->iopam_Req.io_Command = PAMCMD_CLOSE_CHANNEL;
@@ -179,6 +197,16 @@ TEST_FUNC(test_write)
   test_buffer_free(buf);
 
   return 0;
+}
+
+TEST_FUNC(test_write)
+{
+  return test_write_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_write_odd)
+{
+  return test_write_helper(p, TEST_BUF_SIZE - 1);
 }
 
 TEST_FUNC(test_seek_tell)

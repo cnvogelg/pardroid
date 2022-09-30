@@ -63,7 +63,7 @@ TEST_FUNC(test_open_close)
   return 0;
 }
 
-TEST_FUNC(test_read)
+static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
   int res = 0;
@@ -79,8 +79,8 @@ TEST_FUNC(test_read)
   CHECK_PAMLIB_RES(res, "open");
 
   // read
-  res = pamlib_read(ch, buf, TEST_BUF_SIZE);
-  CHECK_PAMLIB_RES_VAL(res, "read", TEST_BUF_SIZE);
+  res = pamlib_read(ch, buf, read_size);
+  CHECK_PAMLIB_RES_VAL(res, "read", read_size);
 
   // close channel
   res = pamlib_close(ch);
@@ -88,7 +88,7 @@ TEST_FUNC(test_read)
 
   // check buffer
   int errors = 0;
-  for(int i=0;i<TEST_BUF_SIZE;i++) {
+  for(int i=0;i<read_size;i++) {
     UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
     if (buf[i] != val)
     {
@@ -104,7 +104,17 @@ TEST_FUNC(test_read)
   return 0;
 }
 
-TEST_FUNC(test_write)
+TEST_FUNC(test_read)
+{
+  return test_read_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_read_odd)
+{
+  return test_read_helper(p, TEST_BUF_SIZE - 1);
+}
+
+static int test_write_helper(test_param_t *p, UWORD write_size)
 {
   pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
   int res = 0;
@@ -115,7 +125,7 @@ TEST_FUNC(test_write)
     return 1;
   }
 
-  for(int i=0;i<TEST_BUF_SIZE;i++) {
+  for(int i=0;i<write_size;i++) {
     UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
     buf[i] = val;
   }
@@ -125,8 +135,8 @@ TEST_FUNC(test_write)
   CHECK_PAMLIB_RES(res, "open");
 
   // write
-  res = pamlib_write(ch, buf, TEST_BUF_SIZE);
-  CHECK_PAMLIB_RES_VAL(res, "write", TEST_BUF_SIZE);
+  res = pamlib_write(ch, buf, write_size);
+  CHECK_PAMLIB_RES_VAL(res, "write", write_size);
 
   // close channel
   res = pamlib_close(ch);
@@ -135,6 +145,16 @@ TEST_FUNC(test_write)
   test_buffer_free(buf);
 
   return 0;
+}
+
+TEST_FUNC(test_write)
+{
+  return test_write_helper(p, TEST_BUF_SIZE);
+}
+
+TEST_FUNC(test_write_odd)
+{
+  return test_write_helper(p, TEST_BUF_SIZE - 1);
 }
 
 TEST_FUNC(test_seek_tell)

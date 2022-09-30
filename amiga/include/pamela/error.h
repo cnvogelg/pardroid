@@ -20,7 +20,8 @@
 #define PAMELA_ERROR_READ_FAILED         -17
 #define PAMELA_ERROR_WRITE_FAILED        -18
 #define PAMELA_ERROR_INVALID_MTU         -19
-#define PAMELA_ERROR_NO_HANDLE           -20
+#define PAMELA_ERROR_ODD_MTU             -20
+#define PAMELA_ERROR_NO_HANDLE           -21
 #define PAMELA_ERROR_UNKNOWN             -99
 
 #define PAMELA_ERROR_CUSTOM              -30

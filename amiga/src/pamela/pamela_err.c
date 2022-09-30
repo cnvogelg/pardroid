@@ -61,6 +61,10 @@ const char *pamela_perror(int res)
       return "write failed";
     case PAMELA_ERROR_INVALID_MTU:
       return "invalid mtu";
+    case PAMELA_ERROR_ODD_MTU:
+      return "odd mtu";
+    case PAMELA_ERROR_NO_HANDLE:
+      return "no handle";
     default:
       return "unkown";
   }

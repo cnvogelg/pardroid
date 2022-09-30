@@ -170,6 +170,11 @@ int pamela_get_mtu(pamela_channel_t *ch, UWORD *mtu)
 
 int pamela_set_mtu(pamela_channel_t *ch, UWORD mtu)
 {
+  // make sure mtu is always even
+  if((mtu & 1) != 0) {
+    return PAMELA_ERROR_ODD_MTU;
+  }
+
   // make sure channel is active
   int res = check_channel_status(ch, 0, 0);
   if(res != PAMELA_OK) {
@@ -236,11 +241,6 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
     return res;
   }
 
-  // odd size?
-  if((size & 1) != 0) {
-    return PAMELA_ERROR_PROTO_ODD_SIZE;
-  }
-
   // send request to device
   res = proto_io_read_request(ch->pamela->proto, ch->channel_id, size);
   if(res != PROTO_RET_OK) {
@@ -272,8 +272,14 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
     }
   }
 
+  // if odd size is requested we have to pad to even
+  UWORD transfer_size = size;
+  if((size & 1) != 0) {
+    transfer_size++;
+  }
+
   // retrieve data
-  res = proto_io_read_data(proto, ch->channel_id, buf, size);
+  res = proto_io_read_data(proto, ch->channel_id, buf, transfer_size);
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
@@ -291,11 +297,6 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
   int res = check_channel_status(ch, 0, PAMELA_STATUS_WRITE_REQ);
   if(res != PAMELA_OK) {
     return res;
-  }
-
-  // odd size?
-  if((size & 1) != 0) {
-    return PAMELA_ERROR_PROTO_ODD_SIZE;
   }
 
   // send request to device
@@ -329,8 +330,14 @@ int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
     }
   }
 
+  // odd size? pad to even
+  UWORD transfer_size = size;
+  if((size & 1) != 0) {
+    transfer_size++;
+  }
+
   // write data
-  res = proto_io_write_data(proto, ch->channel_id, buf, size);
+  res = proto_io_write_data(proto, ch->channel_id, buf, transfer_size);
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }

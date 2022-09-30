@@ -65,6 +65,7 @@ int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
   pamela_client_t *client = pamela_req_get_client(req);
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
+    D(("CLOSE: no socket?\n"));
     return PAMELA_OK; // error already stored
   }
 
@@ -72,6 +73,7 @@ int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
   pamela_channel_t *channel = socket->channel;
   int res = pamela_close(channel);
   if(res != PAMELA_OK) {
+    D(("CLOSE: pam close failed?\n"));
     return res;
   }
 
