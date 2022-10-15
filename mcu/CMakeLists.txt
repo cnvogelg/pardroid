@@ -32,6 +32,7 @@ set(COMMON_SRC_DIR ../common/src)
 set(COMMON_INC_DIR ../common/include)
 set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
+set(PAMELA_REQ_DIR src/pamela_req)
 set(SDCARD_DIR src/driver/sdcard)
 set(ENC28J60_DIR src/driver/enc28j60)
 set(WIZNET_DIR src/driver/wiznet)
@@ -87,6 +88,12 @@ set(PAMELA_SRCS
         ${PAMELA_DIR}/pamela_io.c
 )
 
+set(PAMELA_REQ_SRCS
+        ${PROTO_IO_SRCS}
+        ${PAMELA_SRCS}
+        ${PAMELA_REQ_DIR}/pamela_req.c
+)
+
 set(SDCARD_SRCS
       ${SDCARD_DIR}/sdcard.c
       ${SDCARD_DIR}/sdcard.h
@@ -140,6 +147,7 @@ include_directories(
         ${PROTO_DIR}
         ${COMMON_INC_DIR}
         ${PAMELA_DIR}
+        ${PAMELA_REQ_DIR}
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}
         ${ENC28J60_DIR}
@@ -164,8 +172,9 @@ make_fw(test-proto-dev ${BASE_SRCS} ${PROTO_DEV_SRCS} ${TEST_DIR}/test-proto-dev
 make_fw(test-proto-io ${BASE_SRCS} ${PROTO_IO_SRCS} ${TEST_DIR}/test-proto-io.c)
 make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-boot.c)
 make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
+make_fw(test-pamela-req ${BASE_SRCS} ${PAMELA_REQ_SRCS} ${TEST_DIR}/test-pamela-req.c)
 make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
 make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)
-make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)
+#make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)
