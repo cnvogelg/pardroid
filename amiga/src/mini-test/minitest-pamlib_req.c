@@ -39,16 +39,21 @@ int dosmain(void)
     if(ph != NULL) {
 
         PutStr("open cmd channel\n");
-        pamlib_req_t *pc = pamlib_req_open(ph, 1234, &error);
+        pamlib_req_t *req = pamlib_req_open(ph, 1234, &error);
         Printf("-> %ld\n", error);
 
-        // prepare command
-        pc->tx_size = 6;
-        error = pamlib_req_transfer(pc);
-        Printf("-> %ld, size %ld\n", error, (ULONG)pc->rx_size);
+        UWORD mtu = pamlib_req_get_max_size(req);
+        UBYTE *buf = AllocVec(mtu, MEMF_CLEAR);
+
+        // handle request
+        UWORD rep_size;
+        error = pamlib_req_handle(req, buf, mtu, &rep_size);
+        Printf("-> %ld, size %ld\n", error, (ULONG)rep_size);
+
+        FreeVec(buf);
 
         PutStr("close cmd channel\n");
-        error = pamlib_req_close(pc);
+        error = pamlib_req_close(req);
         Printf("-> %ld\n", error);
 
         PutStr("exit pamlib\n");
