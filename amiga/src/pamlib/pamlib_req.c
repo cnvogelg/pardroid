@@ -61,9 +61,9 @@ int pamlib_req_close(pamlib_req_t *req)
   }
 
   pamlib_channel_t *ch = req->channel;
+  pamlib_handle_t *ph = pamlib_get_handle(ch);
   int res = pamlib_close(ch);
 
-  pamlib_handle_t *ph = pamlib_get_handle(ch);
   FreeVec(req);
 
   return res;

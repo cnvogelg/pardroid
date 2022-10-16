@@ -39,7 +39,7 @@ int dosmain(void)
     if(ph != NULL) {
 
         PutStr("open cmd channel\n");
-        pamlib_req_t *req = pamlib_req_open(ph, 1234, &error);
+        pamlib_req_t *req = pamlib_req_open(ph, 2000, &error);
         Printf("-> %ld\n", error);
 
         UWORD mtu = pamlib_req_get_max_size(req);

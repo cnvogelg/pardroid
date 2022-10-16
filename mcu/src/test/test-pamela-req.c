@@ -21,9 +21,9 @@
 
 FW_INFO(FWID_TEST_PAMELA_REQ, VERSION_TAG)
 
-#ifdef FLAVOR_DEBUG
-#define VERBOSE
-#endif
+//#ifdef FLAVOR_DEBUG
+//#define VERBOSE
+//#endif
 
 // buffers for each slot
 struct slot {

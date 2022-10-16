@@ -248,7 +248,7 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   // make sure to pad size if odd
-  u16 transfer_size = pc->rx_size;
+  u16 transfer_size = pc->tx_size;
   if((transfer_size & 1) != 0) {
     transfer_size++;
   }

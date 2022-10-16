@@ -2,7 +2,7 @@
 #include "arch.h"
 #include "autoconf.h"
 
-#define DEBUG CONFIG_DEBUG_PAMELA
+#define DEBUG CONFIG_DEBUG_PAMELA_REQ
 
 #include "debug.h"
 
