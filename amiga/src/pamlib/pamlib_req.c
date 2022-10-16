@@ -69,7 +69,7 @@ int pamlib_req_close(pamlib_req_t *req)
   return res;
 }
 
-int pamlib_req_handle(pamlib_req_t *req, UBYTE *buf, UWORD req_size, UWORD *rep_size)
+int pamlib_req_transfer(pamlib_req_t *req, UBYTE *buf, UWORD req_size)
 {
   // check parameter
   if(req == NULL) {
@@ -93,11 +93,5 @@ int pamlib_req_handle(pamlib_req_t *req, UBYTE *buf, UWORD req_size, UWORD *rep_
   }
 
   /* receive result */
-  res = pamlib_read(req->channel, buf, req->mtu);
-  if(res < 0) {
-    return res;
-  }
-
-  *rep_size = res;
-  return PAMELA_OK;
+  return pamlib_read(req->channel, buf, req->mtu);
 }

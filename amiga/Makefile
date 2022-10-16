@@ -158,6 +158,12 @@ TEST_PAMLIB_SRCS += pamlib-testsuite.c
 $(eval $(call make-program,test-pamlib,$(TEST_PAMLIB_SRCS)))
 $(eval $(call dist-program,test-pamlib))
 
+# test-pamlib_req
+TEST_PAMLIB_REQ_SRCS = test-pamlib_req.c $(PAMLIB_REQ_SRCS) $(TEST_SRCS)
+TEST_PAMLIB_REQ_SRCS += pamlib_req-testsuite.c
+$(eval $(call make-program,test-pamlib_req,$(TEST_PAMLIB_REQ_SRCS)))
+$(eval $(call dist-program,test-pamlib_req))
+
 # test-paloma
 TEST_PALOMA_SRCS = test-paloma.c $(PAMLIB_SRCS) $(PALOMA_SRCS) $(TEST_SRCS)
 TEST_PALOMA_SRCS += paloma-testsuite.c

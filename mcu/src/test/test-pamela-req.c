@@ -15,7 +15,7 @@
 
 #include "pamela_req.h"
 
-#define TEST_MAX_ARG_SIZE  32
+#define TEST_MAX_ARG_SIZE  128
 #define TEST_NUM_SLOTS     2
 #define TEST_PORT          2000
 

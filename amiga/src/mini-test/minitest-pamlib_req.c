@@ -46,8 +46,7 @@ int dosmain(void)
         UBYTE *buf = AllocVec(mtu, MEMF_CLEAR);
 
         // handle request
-        UWORD rep_size;
-        error = pamlib_req_handle(req, buf, mtu, &rep_size);
+        int rep_size = pamlib_req_transfer(req, buf, mtu);
         Printf("-> %ld, size %ld\n", error, (ULONG)rep_size);
 
         FreeVec(buf);

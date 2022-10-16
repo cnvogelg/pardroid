@@ -202,7 +202,6 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
   // clear read status
   pc->status &= ~PAMELA_STATUS_READ_MASK;
   pc->rx_buf = NULL;
-  pc->rx_size = 0;
 }
 
 void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
@@ -212,9 +211,10 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
   DS("[RD:"); DB(chn); DC('='); DW(size);
   hnd_read_done_func_t read_done = HANDLER_FUNC_READ_DONE(pc->service->handler);
   if(read_done != NULL) {
-    read_done(chn, buf, size);
+    read_done(chn, buf, pc->rx_size);
   }
   DC(']'); DNL;
+  pc->rx_size = 0;
 }
 
 // write
@@ -261,7 +261,6 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
   // clear read status
   pc->status &= ~PAMELA_STATUS_WRITE_MASK;
   pc->tx_buf = NULL;
-  pc->tx_size = 0;
 }
 
 void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
@@ -271,7 +270,8 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
   DS("[WD:"); DB(chn); DC('='); DW(size);
   hnd_write_done_func_t write_done = HANDLER_FUNC_WRITE_DONE(pc->service->handler);
   if(write_done != NULL) {
-    write_done(chn, buf, size);
+    write_done(chn, buf, pc->tx_size);
   }
   DC(']'); DNL;
+  pc->tx_size = 0;
 }
