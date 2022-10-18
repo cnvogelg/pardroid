@@ -11,7 +11,6 @@
 
 #include "hw_dev.h"
 #include "hw_timer.h"
-#include "hw_system.h"
 
 #include "uartutil.h"
 
@@ -71,7 +70,6 @@ u08 exec_cmd(u08 sock, u08 cmd)
   // CMD reg is cleared if command was accepted
   hw_timer_ms_t t0 = hw_timer_millis();
   while(wiz_io_socket_reg_read(sock, WIZ_REG_SOCKET_CMD)) {
-    hw_system_wdt_reset();
     if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_CMD_TIMEOUT;
     }
@@ -83,7 +81,6 @@ u08 wait_state(u08 sock, u08 state)
 {
   hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    hw_system_wdt_reset();
     u08 sr = read_status(sock);
     if(sr == state) {
       break;
@@ -203,7 +200,6 @@ static u08 send_cmd(u08 sock)
 
   hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    hw_system_wdt_reset();
     if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_SEND_TIMEOUT;
     }
@@ -391,7 +387,6 @@ u08  wiznet_eth_send_begin(u16 len)
 
   hw_timer_ms_t t0 = hw_timer_millis();
   while(1) {
-    hw_system_wdt_reset();
     if(hw_timer_millis_timed_out(t0, WIZ_CMD_TIMEOUT)) {
       return WIZNET_RESULT_SIZE_TIMEOUT;
     }

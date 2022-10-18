@@ -82,7 +82,6 @@ int main(void)
   REQ_HANDLER_ADD(my_handler);
 
   while(1) {
-    hw_system_wdt_reset();
     pamela_work();
 #ifdef VERBOSE
     uart_send('.');

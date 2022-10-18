@@ -148,7 +148,6 @@ u08 enc28j60_init(u08 *rev_ret)
     if(count == 0xfff) {
       return ENC28J60_RESULT_NOT_FOUND;
     }
-    hw_system_wdt_reset();
   }
 
   // return rev

@@ -170,9 +170,6 @@ int main(void)
   while(1) {
     // handle all proto io commands
     proto_boot_handle_cmd();
-
-    // keep watchdog happy
-    hw_system_wdt_reset();
   }
 
   return 0;

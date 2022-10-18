@@ -6,7 +6,6 @@
 #include "arch.h"
 #include "debug.h"
 
-#include "hw_system.h"
 #include "hw_timer.h"
 #include "hw_uart.h"
 
@@ -56,7 +55,6 @@ void proto_boot_wait(void)
     // wait for some new state
     hw_uart_send('.');
     hw_timer_delay_ms(200);
-    hw_system_wdt_reset();
   }
 }
 

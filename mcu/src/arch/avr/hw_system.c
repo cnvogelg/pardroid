@@ -14,22 +14,11 @@ void hw_system_init(void)
   CPU_PRESCALE(CPU_16MHz);
 #endif
 
-  // default watchdog: 500ms
-  cli();
-  wdt_enable(WDTO_500MS);
-  sei();
-
   hw_timer_init();
 }
 
-void hw_system_sys_reset(void)
+void hw_system_reset(void)
 {
   wdt_enable(WDTO_15MS);
   while(1) { /* wait for the end */ }
 }
-
-void hw_system_wdt_reset(void)
-{
-  wdt_reset();
-}
-

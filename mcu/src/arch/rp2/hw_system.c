@@ -5,18 +5,11 @@
 
 void hw_system_init(void)
 {
-  // 500ms 
-  watchdog_enable(500, true);
 }
 
-void hw_system_sys_reset(void)
+void hw_system_reset(void)
 {
   watchdog_enable(1, true);
   // wait for my death
   while(1) {}
-}
-
-void hw_system_wdt_reset(void)
-{
-  watchdog_update();
 }

@@ -47,12 +47,12 @@ void mem_check(void)
 {
   if(*guard_ptr != 0x42) {
     uart_send_pstring(PSTR("mem_check: GUARD FAILED!!\n"));
-    hw_system_sys_reset();
+    hw_system_reset();
   }
 
   if(stack_pointer() <= guard_ptr) {
     uart_send_pstring(PSTR("mem_check: SP FAILED!!\n"));
-    hw_system_sys_reset();
+    hw_system_reset();
   }
 }
 

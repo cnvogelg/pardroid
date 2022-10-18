@@ -35,7 +35,7 @@ void proto_dev_init()
   u08 cmd = proto_atom_get_cmd();
   if(cmd != PROTO_DEV_CMD_ACTION_RESET && cmd != PROTO_DEV_CMD_ACTION_BOOTLOADER) {
     DC('?'); DB(cmd); DNL;
-    hw_system_sys_reset();
+    hw_system_reset();
   }
 
   // handle RESET or BOOTLOADER action
@@ -60,14 +60,14 @@ static void proto_dev_handle(u08 cmd)
       // and ack the action there
       DC('!'); DB(cmd); DNL;
       hw_timer_delay_ms(10);
-      hw_system_sys_reset();
+      hw_system_reset();
       break;
     case PROTO_DEV_CMD_ACTION_KNOK:
       // to enter knok mode: finish action and then resets
       DC('!'); DC('K'); DNL;
       proto_atom_action();
       hw_timer_delay_ms(10);
-      hw_system_sys_reset();
+      hw_system_reset();
       break;
     /* device constants */
     case PROTO_DEV_CMD_RWORD_FW_ID:

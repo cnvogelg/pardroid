@@ -99,8 +99,6 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
 
       t0 = hw_timer_millis();
     }
-    // keep wd happy
-    hw_system_wdt_reset();
   }
 
   hw_led_on();
@@ -139,8 +137,6 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
 
       t0 = hw_timer_millis();
     }
-    // keep wd happy
-    hw_system_wdt_reset();
   }
 
   uart_send('}');
@@ -189,8 +185,6 @@ static u08 knok_upload(u16 size, knok_api_upload_byte_func_t byte_func, rom_pcha
       // new flag for next timer trigger
       flag = strobe_read_flag();
     }
-    // keep wd happy
-    hw_system_wdt_reset();
   }
 
 end_upload:
@@ -210,7 +204,6 @@ void blink_hello(void)
     hw_timer_delay_ms(100);
     hw_led_off();
     hw_timer_delay_ms(100);
-    hw_system_wdt_reset();
   }
 }
 
@@ -249,7 +242,7 @@ void knok_main(void)
     if(data == PROTO_DEV_CMD_ACTION_RESET || data == PROTO_DEV_CMD_ACTION_BOOTLOADER) {
       uart_send_pstring(PSTR("bail"));
       uart_send_crlf();
-      hw_system_sys_reset();
+      hw_system_reset();
       break;
     }
 
@@ -294,9 +287,6 @@ void knok_main(void)
       hw_led_set(led);
       led_interval = led ? 2000 : 100;
     }
-
-    // keep wd happy
-    hw_system_wdt_reset();
   }
 
   strobe_exit();

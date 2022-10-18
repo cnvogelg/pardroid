@@ -41,7 +41,7 @@ static void test_sys_reset(void)
 {
   uart_send_pstring(PSTR("reset!"));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
 }
 #endif
 
@@ -53,7 +53,6 @@ static void test_timer_timeout(void)
   uart_send_hex_word(t1);
   uart_send_crlf();
   while(!hw_timer_millis_timed_out(t1, 10000)) {
-    hw_system_wdt_reset();
   }
   uart_send_pstring(PSTR("done"));
   uart_send_crlf();
@@ -83,7 +82,6 @@ int main(void)
 
   int on = 0;
   for(int i=0;i<100;i++) {
-    hw_system_wdt_reset();
     uart_send('.');
     hw_timer_delay_ms(200);
     hw_led_set(on);
@@ -92,6 +90,6 @@ int main(void)
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
   return 0;
 }

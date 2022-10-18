@@ -82,7 +82,6 @@ static void udp_test(u08 partial)
       if(hw_timer_millis_timed_out(t0, 200)) {
         break;
       }
-      hw_system_wdt_reset();
     }
 
     // receive packet
@@ -173,7 +172,6 @@ static void eth_test(u08 partial)
       if(hw_timer_millis_timed_out(t0, 200)) {
         break;
       }
-      hw_system_wdt_reset();
     }
 
     // incoming?
@@ -247,7 +245,6 @@ int main(void)
 
   uart_send_pstring(PSTR("wait for link"));
   while(1) {
-    hw_system_wdt_reset();
     u08 up = wiznet_is_link_up();
     if(up) {
       uart_send('*');
@@ -269,13 +266,12 @@ int main(void)
 #endif
 
   for(u08 i=0;i<20;i++) {
-    hw_system_wdt_reset();
     hw_uart_send('.');
     hw_timer_delay_ms(100);
   }
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
   return 0;
 }

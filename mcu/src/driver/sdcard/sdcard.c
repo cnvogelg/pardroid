@@ -15,7 +15,6 @@
 #include "hw_timer.h"
 #include "hw_spi.h"
 #include "crc.h"
-#include "hw_system.h"
 
 #define DEBUG CONFIG_DEBUG_DRIVER_SDCARD
 
@@ -97,7 +96,6 @@ static u08 begin_command(u08 cmd, u32 arg)
       if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
         break;
       }
-      hw_system_wdt_reset();
     }
 
     if(res & STATUS_CRC_ERROR) {
@@ -176,8 +174,6 @@ static u08 sd_send_op_cond(u08 *is_sd)
     if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_SENDOP;
     }
-    /* keep watchdog happy */
-    hw_system_wdt_reset();
   }
 }
 
@@ -211,8 +207,6 @@ static u08 send_op_cond(void)
     if(hw_timer_millis_timed_out(t0, SD_WRITE_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_SENDOP;
     }
-    /* keep watchdog happy */
-    hw_system_wdt_reset();
   }
 }
 
@@ -350,8 +344,6 @@ static u08 wait_data_token(void)
     if(hw_timer_millis_timed_out(t0, SD_TOKEN_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_TOKEN;
     }
-    /* keep watchdog happy */
-    hw_system_wdt_reset();
   }
   DC('}');
   return SDCARD_RESULT_OK;
@@ -371,8 +363,6 @@ static u08 wait_busy(void)
     if(hw_timer_millis_timed_out(t0, SD_BUSY_TIMEOUT)) {
       return SDCARD_RESULT_FAILED_TOKEN;
     }
-    /* keep watchdog happy */
-    hw_system_wdt_reset();
   }
   DC('>');
   return SDCARD_RESULT_OK;

@@ -302,7 +302,6 @@ int main(void)
   paloma_init();
 
   while(1) {
-    hw_system_wdt_reset();
     pamela_work();
 #ifdef VERBOSE
     uart_send('.');

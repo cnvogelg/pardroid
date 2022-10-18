@@ -113,13 +113,12 @@ int main(void)
   test_sdcard();
 
   for(int i=0;i<100;i++) {
-    hw_system_wdt_reset();
     uart_send('.');
     hw_timer_delay_ms(200);
   }
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
   return 0;
 }

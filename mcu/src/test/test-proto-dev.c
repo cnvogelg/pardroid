@@ -43,9 +43,6 @@ int main(void)
         uart_send_hex_byte(cmd);
         uart_send_crlf();
       }
-
-      // keep watchdog happy
-      hw_system_wdt_reset();
   }
 
   return 0;

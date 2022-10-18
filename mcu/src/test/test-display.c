@@ -59,11 +59,9 @@ int main(void)
 
   // blink a bit
   for(int i=0;i<10;i++) {
-    hw_system_wdt_reset();
     uart_send('.');
     hw_led_on();
     hw_timer_delay_ms(200);
-    hw_system_wdt_reset();
     hw_led_off();
     hw_timer_delay_ms(200);
   }
@@ -71,6 +69,6 @@ int main(void)
   // reset
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
   return 0;
 }

@@ -88,7 +88,6 @@ static void eth_test(u08 partial)
 
   uart_send_pstring(PSTR("wait for link"));
   for(u08 i=0;i<20;i++) {
-    hw_system_wdt_reset();
     u08 up = enc28j60_is_link_up();
     if(up) {
       uart_send('*');
@@ -137,7 +136,6 @@ static void eth_test(u08 partial)
       if(hw_timer_millis_timed_out(t0, 200)) {
         break;
       }
-      hw_system_wdt_reset();
     }
 
     // incoming?
@@ -207,13 +205,12 @@ int main(void)
 
 end:
   for(u08 i=0;i<100;i++) {
-    hw_system_wdt_reset();
     uart_send('.');
     hw_timer_delay_ms(100);
   }
 
   uart_send_pstring(PSTR("reset..."));
   uart_send_crlf();
-  hw_system_sys_reset();
+  hw_system_reset();
   return 0;
 }

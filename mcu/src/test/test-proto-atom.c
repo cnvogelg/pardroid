@@ -202,8 +202,6 @@ int main(void)
         handle_cmd(cmd);
         hw_led_off();
       }
-
-      hw_system_wdt_reset();
   }
 
   return 0;
