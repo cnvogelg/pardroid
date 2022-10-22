@@ -182,14 +182,6 @@ TEST_PARAM_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(PROTO_ARCH_SRCS) $(PARAM_SRCS)
 TEST_PARAM_SRCS += test-param.c
 $(eval $(call make-firmware,test-param-fw,$(TEST_PARAM_SRCS),$(CONFIG_MAX_ROM)))
 
-# test-ufat
-ifdef CONFIG_TOOL_UFAT
-TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
-$(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
-endif
-
-
 # test-net
 #TEST_NET_SRCS = $(PAMELA_SRCS) $(PARAM_SRCS)
 #TEST_NET_SRCS += test-net.c driver.c

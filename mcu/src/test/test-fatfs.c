@@ -21,16 +21,16 @@
 
 FW_INFO(FWID_TEST_FATFS, VERSION_TAG)
 
-static FATFS fatfs;
-static FIL file;
-static DIR dir;
-
-#define BUF_SIZE 2048
+#define BUF_SIZE 1024
 
 static u08 buf[BUF_SIZE];
 
 static void test_fatfs(void)
 {
+  FATFS fatfs;
+  FIL file;
+  DIR dir;
+
   // acquire sd card
   uart_send_pstring(PSTR("sd card..."));
   u08 sd_res = sdcard_acquire(CONFIG_DRIVER_SDCARD_SPI_CS);
