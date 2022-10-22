@@ -50,6 +50,11 @@ void uart_send_hex_word(u16 data);
 // send a hex word
 void uart_send_hex_long(u32 data);
 
+// send a hex dump
+void uart_send_hex_dump(u32 offset, const u08 *data, u16 size);
+void uart_send_hex_line(u32 offset, const u08 *data, u08 size);
+
+
 #if CONFIG_PTR_BITS == 16
 #define uart_send_hex_ptr(x)  uart_send_hex_word((u16)x)
 #elif CONFIG_PTR_BITS == 32

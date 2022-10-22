@@ -24,12 +24,10 @@ static u08 sdbuf[512];
 
 static void test_sdcard(void)
 {
-  hw_spi_init();
-
   // init card
   uart_send_pstring(PSTR("sdcard: "));
   u32 start = hw_timer_millis();
-  u08 res = sdcard_init();
+  u08 res = sdcard_acquire(CONFIG_DRIVER_SDCARD_SPI_CS);
   u32 end = hw_timer_millis();
   uart_send_hex_long(end - start);
   uart_send_pstring(PSTR(" -> "));
@@ -98,6 +96,7 @@ static void test_sdcard(void)
     }
     uart_send_crlf();
   }
+  sdcard_release();
 }
 
 int main(void)

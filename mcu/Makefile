@@ -58,7 +58,8 @@ BOOTREXX_H = $(BUILD_DIR)/bootrexx.h
 BOOTREXX_C = $(BUILD_DIR)/bootrexx.c
 
 # base sources
-BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c hw_dev.c
+BASE_SRCS = hw_system.c hw_timer.c hw_uart.c hw_i2c.c hw_spi.c hw_spi_common.c
+BASE_SRCS += hw_dev.c
 BASE_SRCS += $(BASE_ARCH_SRCS)
 BASE_SRCS += strobe.c crc.c uartutil.c pablo.c rominfo.c #mem.c
 
@@ -80,25 +81,27 @@ PALOMA_SRCS += paloma.c
 HANDLER_SRCS += hnd_echo.c hnd_null.c handler_list.c
 
 # drivers
-DRIVER_SRCS = driver.c blk_null.c driver_list.c
+#DRIVER_SRCS = driver.c blk_null.c driver_list.c
 ifdef CONFIG_DRIVER_ENC28J60
-DRIVER_SRCS += enc28j60.c eth_enc.c
+DRIVER_ENC28J60_SRCS += enc28j60.c #eth_enc.c
 DRIVER_INCLUDES += src/driver/enc28j60
 endif
 ifdef CONFIG_DRIVER_SDCARD
-DRIVER_SRCS += sdcard.c blk_sdraw.c
+DRIVER_SDCARD_SRCS += sdcard.c #blk_sdraw.c
 DRIVER_INCLUDES += src/driver/sdcard
 endif
+ifdef CONFIG_DRIVER_FATFS
+DRIVER_FATFS_SRCS += fatfs_diskio.c ff.c ffunicode.c
+DRIVER_INCLUDES += src/contrib/fatfs src/driver/fatfs
+endif
 ifdef CONFIG_DRIVER_WIZNET
-DRIVER_SRCS += wiznet.c wiz_io.c
+DRIVER_WIZNET_SRCS += wiznet.c wiz_io.c
 DRIVER_INCLUDES += src/driver/wiznet
 endif
-ifdef CONFIG_TOOL_UFAT
-TOOL_SRCS += ufat.c
-TOOL_INCLUDES += src/tools/ufat
-endif
-DRIVER_SRCS += ssd1306.c display.c font8x16.c
+ifdef CONFIG_DRIVER_DISPLAY
+DRIVER_DISPLAY_SRCS += ssd1306.c display.c font6x8.c
 DRIVER_INCLUDES += src/driver/display src/driver/display/ssd1306
+endif
 
 # common includes
 INCLUDES := src
@@ -107,7 +110,7 @@ INCLUDES += src/$(MACH_DIR)
 INCLUDES += src/base src/proto
 INCLUDES += src/pamela src/paloma src/handler src/driver src/test src/param
 INCLUDES += ../common/include
-INCLUDES += $(DRIVER_INCLUDES) $(TOOL_INCLUDES)
+INCLUDES += $(DRIVER_INCLUDES)
 VPATH=$(INCLUDES) $(BUILD_DIR)
 
 # ----- test firmware images -----
@@ -138,29 +141,36 @@ $(eval $(call make-fw,test-proto-boot-fw,$(TEST_PROTO_BOOT_SRCS),$(CONFIG_MAX_RO
 
 # test-sdcard
 ifdef CONFIG_DRIVER_SDCARD
-TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_SDCARD_SRCS += test-sdcard.c sdcard.c
+TEST_SDCARD_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(DRIVER_SDCARD_SRCS)
+TEST_SDCARD_SRCS += test-sdcard.c
 $(eval $(call make-firmware,test-sdcard-fw,$(TEST_SDCARD_SRCS),$(CONFIG_MAX_ROM)))
+endif
+
+# test-fatfs
+ifdef CONFIG_DRIVER_FATFS
+TEST_FATFS_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(DRIVER_SDCARD_SRCS) $(DRIVER_FATFS_SRCS)
+TEST_FATFS_SRCS += test-fatfs.c
+$(eval $(call make-firmware,test-fatfs-fw,$(TEST_FATFS_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-enc28j60
 ifdef CONFIG_DRIVER_ENC28J60
-TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_ENC28J60_SRCS += test-enc28j60.c enc28j60.c
+TEST_ENC28J60_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(DRIVER_ENC28J60_SRCS)
+TEST_ENC28J60_SRCS += test-enc28j60.c
 $(eval $(call make-firmware,test-enc28j60-fw,$(TEST_ENC28J60_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-wiznet
 ifdef CONFIG_DRIVER_WIZNET
-TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_WIZNET_SRCS += test-wiznet.c wiznet.c wiz_io.c
+TEST_WIZNET_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(DRIVER_WIZNET_SRCS)
+TEST_WIZNET_SRCS += test-wiznet.c
 $(eval $(call make-firmware,test-wiznet-fw,$(TEST_WIZNET_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
 # test-display
 ifdef CONFIG_DRIVER_DISPLAY
-TEST_DISPLAY_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
-TEST_DISPLAY_SRCS += test-display.c ssd1306.c display.c font6x8.c
+TEST_DISPLAY_SRCS = $(COMMON_SRCS) $(BASE_SRCS) $(DRIVER_DISPLAY_SRCS)
+TEST_DISPLAY_SRCS += test-display.c
 $(eval $(call make-firmware,test-display-fw,$(TEST_DISPLAY_SRCS),$(CONFIG_MAX_ROM)))
 endif
 
@@ -178,6 +188,7 @@ TEST_UFAT_SRCS = $(COMMON_SRCS) $(BASE_SRCS)
 TEST_UFAT_SRCS += test-ufat.c ufat.c sdcard.c
 $(eval $(call make-firmware,test-ufat-fw,$(TEST_UFAT_SRCS),$(CONFIG_MAX_ROM)))
 endif
+
 
 # test-net
 #TEST_NET_SRCS = $(PAMELA_SRCS) $(PARAM_SRCS)

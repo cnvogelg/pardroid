@@ -17,6 +17,7 @@
 #define FWID_TEST_DISPLAY         0x400a
 #define FWID_TEST_PALOMA          0x400b
 #define FWID_TEST_PAMELA_REQ      0x400c
+#define FWID_TEST_FATFS           0x400d
 
 extern void fwid_decode(u16 fw_id, rom_pchar *res);
 

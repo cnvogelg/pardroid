@@ -27,16 +27,6 @@
 #define USE_CRC
 #endif
 
-#if CONFIG_DRIVER_SDCARD_SPI_CS == 0
-#define spi_enable_cs()   hw_spi_enable_cs0()
-#define spi_disable_cs()  hw_spi_disable_cs0()
-#elif CONFIG_DRIVER_SDCARD_SPI_CS == 1
-#define spi_enable_cs()   hw_spi_enable_cs1()
-#define spi_disable_cs()  hw_spi_disable_cs1()
-#else
-#error invalid CONFIG_DRIVER_SDCARD_SPI_CS
-#endif
-
 #define SD_INIT_TIMEOUT     2000
 #define SD_WRITE_TIMEOUT    600
 #define SD_TOKEN_TIMEOUT    100
@@ -45,6 +35,8 @@
 #define SD_INIT_RETRIES     3
 
 static u08 card_type = SDCARD_TYPE_NONE;
+static u08 card_spi_cs = 0;
+static u08 status = SDCARD_RESULT_FAILED_NO_INIT;
 
 static u32 read_u32(void)
 {
@@ -58,7 +50,7 @@ static u32 read_u32(void)
 
 static void end_command(void)
 {
-  spi_disable_cs();
+  hw_spi_disable_cs(card_spi_cs);
   hw_spi_out(0xff);
   hw_spi_out(0xff);
   hw_spi_out(0xff);
@@ -79,7 +71,7 @@ static u08 begin_command(u08 cmd, u32 arg)
   u08 errors = 0;
   u08 res;
   while(errors < SD_AUTO_RETRIES) {
-    spi_enable_cs();
+    hw_spi_enable_cs(card_spi_cs);
 
     DC('['); DB(cmd); DC('+'); DL(arg); DC('@'); DB(buf[5]);
     for(u08 i=0;i<6;i++) {
@@ -115,7 +107,7 @@ static u08 enter_idle(void)
   for(u08 retries=0;retries<SD_INIT_RETRIES;retries++) {
     // must supply min of 74 clock cycles with CS high.
     DC('I');
-    spi_disable_cs();
+    hw_spi_disable_cs(card_spi_cs);
     for (uint8_t i = 0; i < 10; i++) {
       hw_spi_out(0XFF);
     }
@@ -225,8 +217,11 @@ static u08 set_blocksize(void)
   return (res != 0) ? SDCARD_RESULT_FAILED_BLOCKLEN : SDCARD_RESULT_OK;
 }
 
-u08 sdcard_init(void)
+u08 sdcard_init(u08 spi_cs)
 {
+  // keep my spi_cs
+  card_spi_cs = spi_cs;
+
   hw_spi_set_speed(HW_SPI_SPEED_SLOW);
 
   // 1. CMD0 enter idle state
@@ -295,7 +290,43 @@ init_fail:
   DS("sd:FAIL"); DB(result); DNL;
   hw_spi_set_speed(HW_SPI_SPEED_MAX);
 
+  // keep result
+  status = result;
+
   return result;
+}
+
+u08 sdcard_get_status(void)
+{
+  return status;
+}
+
+u08 sdcard_acquire(u08 spi_cs)
+{
+  status = SDCARD_RESULT_FAILED_NO_INIT;
+
+  // try to acquire spi
+  u08 res = hw_spi_acquire(spi_cs);
+  if(res != HW_SPI_OK) {
+    return SDCARD_RESULT_FAILED_SPI_IN_USE;
+  }
+
+  // try to init card
+  res = sdcard_init(spi_cs);
+  if(res != SDCARD_RESULT_OK) {
+    // if failed release spi
+    hw_spi_release(spi_cs);
+    return res;
+  }
+
+  return SDCARD_RESULT_OK;
+}
+
+void sdcard_release(void)
+{
+  hw_spi_release(card_spi_cs);
+
+  status = SDCARD_RESULT_FAILED_NO_INIT;
 }
 
 u08 sdcard_get_type(void)
@@ -414,12 +445,14 @@ u08 sdcard_read(u32 block_no, u08 *data)
   u08 res = begin_command(CMD_READ_BLOCK, block_no);
   if(res != 0) {
     end_command();
+    status = SDCARD_RESULT_FAILED_READ;
     return SDCARD_RESULT_FAILED_READ;
   }
 
   res = wait_data_token();
   if(res != SDCARD_RESULT_OK) {
     end_command();
+    status = res;
     return res;
   }
 
@@ -441,6 +474,7 @@ u08 sdcard_read(u32 block_no, u08 *data)
 
   if(got_crc != crc) {
     end_command();
+    status = SDCARD_RESULT_FAILED_CRC;
     return SDCARD_RESULT_FAILED_CRC;
   }
 #else
@@ -451,6 +485,7 @@ u08 sdcard_read(u32 block_no, u08 *data)
 #endif
 
   end_command();
+  status = SDCARD_RESULT_OK;
   return SDCARD_RESULT_OK;
 }
 
@@ -464,6 +499,7 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   u08 res = begin_command(CMD_WRITE_BLOCK, block_no);
   if(res != 0) {
     end_command();
+    status = SDCARD_RESULT_FAILED_WRITE;
     return SDCARD_RESULT_FAILED_WRITE;
   }
 
@@ -504,11 +540,47 @@ u08 sdcard_write(u32 block_no, const u08 *data)
   if((res & 0x1f) != 5) {
     // TBD: retry
     end_command();
+    status = SDCARD_RESULT_FAILED_WRITE;
     return SDCARD_RESULT_FAILED_WRITE;
   }
 
   res = wait_busy();
   end_command();
 
+  status = res;
   return res;
+}
+
+u08 sdcard_read_multi(u32 block_no, u08 *data, u32 num)
+{
+  for(u32 i=0;i<num;i++) {
+    u08 res = sdcard_read(block_no, data);
+    if(res != SDCARD_RESULT_OK) {
+      return res;
+    }
+    if (card_type != SDCARD_TYPE_SDHC) {
+      block_no += 512;
+    } else {
+      block_no ++;
+    }
+    data += 512;
+  }
+  return SDCARD_RESULT_OK;
+}
+
+u08 sdcard_write_multi(u32 block_no, const u08 *data, u32 num)
+{
+  for(u32 i=0;i<num;i++) {
+    u08 res = sdcard_write(block_no, data);
+    if(res != SDCARD_RESULT_OK) {
+      return res;
+    }
+    if (card_type != SDCARD_TYPE_SDHC) {
+      block_no += 512;
+    } else {
+      block_no ++;
+    }
+    data += 512;
+  }
+  return SDCARD_RESULT_OK;
 }

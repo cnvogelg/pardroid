@@ -34,6 +34,8 @@ set(PROTO_DIR src/proto)
 set(PAMELA_DIR src/pamela)
 set(PAMELA_REQ_DIR src/pamela_req)
 set(SDCARD_DIR src/driver/sdcard)
+set(FATFS_DIR src/driver/fatfs)
+set(FATFS_CONTRIB_DIR src/contrib/fatfs)
 set(ENC28J60_DIR src/driver/enc28j60)
 set(WIZNET_DIR src/driver/wiznet)
 set(DISPLAY_DIR src/driver/display)
@@ -53,6 +55,7 @@ set(BASE_SRCS
         ${ARCH_DIR}/strobe.c
 
         ${ARCH_COMMON_DIR}/crc.c
+        ${ARCH_COMMON_DIR}/hw_spi_common.c
 
         ${BASE_DIR}/uartutil.c
         ${BASE_DIR}/rominfo.c
@@ -98,6 +101,14 @@ set(SDCARD_SRCS
       ${SDCARD_DIR}/sdcard.c
       ${SDCARD_DIR}/sdcard.h
       ${SDCARD_DIR}/sdcard_defs.h
+)
+
+set(FATFS_SRCS
+      ${FATFS_DIR}/fatfs_diskio.c
+      ${FATFS_DIR}/ffconf.h
+      ${FATFS_CONTRIB_DIR}/ff.c
+      ${FATFS_CONTRIB_DIR}/ff.h
+      ${FATFS_CONTRIB_DIR}/ffunicode.c
 )
 
 set(ENC28J60_SRCS
@@ -150,6 +161,8 @@ include_directories(
         ${PAMELA_REQ_DIR}
         ${CMAKE_BINARY_DIR}
         ${SDCARD_DIR}
+        ${FATFS_DIR}
+        ${FATFS_CONTRIB_DIR}
         ${ENC28J60_DIR}
         ${WIZNET_DIR}
         ${DISPLAY_DIR}
@@ -174,6 +187,7 @@ make_fw(test-proto-boot ${BASE_SRCS} ${PROTO_BOOT_SRCS} ${TEST_DIR}/test-proto-b
 make_fw(test-pamela ${BASE_SRCS} ${PAMELA_SRCS} ${TEST_DIR}/test-pamela.c)
 make_fw(test-pamela-req ${BASE_SRCS} ${PAMELA_REQ_SRCS} ${TEST_DIR}/test-pamela-req.c)
 make_fw(test-sdcard ${BASE_SRCS} ${SDCARD_SRCS} ${TEST_DIR}/test-sdcard.c)
+make_fw(test-fatfs ${BASE_SRCS} ${SDCARD_SRCS} ${FATFS_SRCS} ${TEST_DIR}/test-fatfs.c)
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
 make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)
