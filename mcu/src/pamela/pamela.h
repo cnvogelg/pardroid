@@ -2,16 +2,12 @@
 #define PAMELA_H
 
 #include "pamela_handler.h"
+#include "pamela_int.h"
 #include "pamela/wire.h"
 
 /* number of channels used by pamela */
 #ifndef PAMELA_NUM_CHANNELS
 #define PAMELA_NUM_CHANNELS             16
-#endif
-
-/* max number of handlers used by pamela */
-#ifndef PAMELA_NUM_SERVICES
-#define PAMELA_NUM_SERVICES             8
 #endif
 
 /* default mtu */
@@ -28,12 +24,6 @@
 
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);
-
-/* add a handler to pamela
-   return service instance id or PAMELA_NO_SERVICE_ID
-*/
-extern u08 pamela_add_handler(pamela_handler_ptr_t handler);
-
 /* regular call in main loop to perform pamela's tasks */
 extern void pamela_work(void);
 
@@ -43,6 +33,8 @@ extern void pamela_work(void);
 extern u08 pamela_get_slot(u08 chn);
 /* map a channel to a service instance */
 extern u08 pamela_get_srv_id(u08 chn);
+/* map a channel to a handler */
+extern pamela_handler_ptr_t pamela_get_handler(u08 chn);
 
 /* end the stream by the handler.
    either with an error or with regular EOS

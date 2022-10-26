@@ -176,4 +176,21 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 
 #define HANDLER_FUNC_SET_MTU(hnd)       ((hnd_set_mtu_func_t)read_rom_rom_ptr(&hnd->set_mtu))
 
+/* ----- macros to create the handler table ----- */
+
+#define HANDLER_TABLE_DECLARE \
+  extern const pamela_handler_ptr_t handler_table[] ROM_ATTR; \
+  extern const u08 handler_table_size ROM_ATTR; \
+  extern pamela_service_t pamela_services[];
+
+#define HANDLER_TABLE_BEGIN   const pamela_handler_ptr_t handler_table[] ROM_ATTR = {
+
+#define HANDLER_TABLE_END     }; \
+  const u08 handler_table_size ROM_ATTR = sizeof(handler_table) / sizeof(pamela_handler_ptr_t); \
+  pamela_service_t pamela_services[sizeof(handler_table) / sizeof(pamela_handler_ptr_t)];
+
+#define HANDLER_TABLE_GET_SIZE()   read_rom_char(&handler_table_size)
+
+#define HANDLER_TABLE_GET_ENTRY(x) (pamela_handler_ptr_t)read_rom_rom_ptr(&handler_table[x]);
+
 #endif

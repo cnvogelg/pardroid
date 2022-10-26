@@ -369,6 +369,9 @@ HANDLER_BEGIN(my_handler)
   .write_done = my_write_done,
 HANDLER_END
 
+HANDLER_TABLE_BEGIN
+  &my_handler
+HANDLER_TABLE_END
 
 int main(void)
 {
@@ -381,7 +384,6 @@ int main(void)
   rom_info();
 
   pamela_init();
-  pamela_add_handler(&my_handler);
 
   while(1) {
     pamela_work();

@@ -3,11 +3,7 @@
 
 #include "pamela.h"
 #include "pamela_req_handler.h"
-
-// total number of command handlers
-#ifndef PAMELA_REQ_NUM_HANDLERS
-#define PAMELA_REQ_NUM_HANDLERS   4
-#endif
+#include "pamela_req_int.h"
 
 #define PAMELA_REQ_NO_SERVICE_ID 0xff
 

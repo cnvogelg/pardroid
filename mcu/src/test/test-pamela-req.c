@@ -67,6 +67,13 @@ REQ_HANDLER_BEGIN(my_handler, TEST_PORT, TEST_NUM_SLOTS, TEST_MAX_ARG_SIZE)
   .end = my_end
 REQ_HANDLER_END
 
+REQ_HANDLER_TABLE_BEGIN
+  &my_handler
+REQ_HANDLER_TABLE_END
+
+HANDLER_TABLE_BEGIN
+  ADD_REQ_HANDLER(my_handler)
+HANDLER_TABLE_END
 
 int main(void)
 {
@@ -79,7 +86,6 @@ int main(void)
   rom_info();
 
   pamela_init();
-  REQ_HANDLER_ADD(my_handler);
 
   while(1) {
     pamela_work();

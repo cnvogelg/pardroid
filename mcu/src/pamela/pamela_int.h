@@ -4,8 +4,6 @@
 #include "pamela.h"
 
 struct pamela_service {
-  /* the associated handler */
-  pamela_handler_ptr_t handler;
   /* the associated channel mask */
   u16 channels;
   /* service instance id */
