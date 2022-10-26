@@ -49,40 +49,40 @@ struct pamela_handler {
      either process the open immediately and
      return either PAMELA_OK or an error.
 
-     if PAMELA_BUSY is returned then the
+     if PAMELA_POLL is returned then the
      open operation takes some time and
      is continued with open_work_func.
   */
   hnd_open_func_t               open;
   /* continue opening port
      return PAMELA_OK or error to finish the open
-     operation. use PAMELA_BUSY to continue
+     operation. use PAMELA_POLL to continue
      getting calls.
 
-     only required if open returns PAMELA_BUSY
+     only required if open returns PAMELA_POLL
   */
-  hnd_open_func_t               open_work;
+  hnd_open_func_t               open_poll;
 
   /* close the channel. similar to open
-     return PAMELA_OK or PAMELA_BUSY
+     return PAMELA_OK or PAMELA_POLL
   */
   hnd_close_func_t              close;
   /* close cont.
-     return PAMELA_OK or PAMELA_BUSY
+     return PAMELA_OK or PAMELA_POLL
   */
-  hnd_close_func_t              close_work;
+  hnd_close_func_t              close_poll;
 
   /* reset the channel.
      this keeps the channel open but all
      pending reads/writes are cancelled
      and any error flags are reset.
-     return PAMELA_OK or PAMELA_BUSY
+     return PAMELA_OK or PAMELA_POLL
   */
   hnd_reset_func_t              reset;
   /* cont. reset
-     return PAMELA_OK or PAMELA_BUSY
+     return PAMELA_OK or PAMELA_POLL
   */
-  hnd_reset_func_t              reset_work;
+  hnd_reset_func_t              reset_poll;
 
   /* seek to a given position */
   hnd_seek_func_t               seek;
@@ -98,15 +98,15 @@ struct pamela_handler {
      data in *buf and return PAMELA_OK.
      or return a read ERROR
 
-     otherwise return PAMELA_BUSY and get
-     additional calls in read_work()
+     otherwise return PAMELA_POLL and get
+     additional calls in read_poll()
   */
   hnd_read_request_func_t       read_request;
   /* continue read operation
      return PAMELA_OK when done, an error or BUSY
      to continue
   */
-  hnd_read_request_func_t       read_work;
+  hnd_read_request_func_t       read_poll;
   /* a read operation that was reported ready is now
      finally retrieved from the host and this
      callback notifies the handler that the associated
@@ -120,14 +120,14 @@ struct pamela_handler {
      the handler will process the read operation and
      answer with pamela_write_ready()
 
-     return PAMELA_OK or error or PAMELA_BUSY
+     return PAMELA_OK or error or PAMELA_POLL
   */
   hnd_write_request_func_t      write_request;
   /* continue WRITE operation
      return PAMELA_OK when done, an error or BUSY
      to continue
   */
-  hnd_write_request_func_t      write_work;
+  hnd_write_request_func_t      write_poll;
   /* a write operation was reported ready is now
      finally retrieved from the host and this
      callback notifies the handler that the associated
@@ -157,21 +157,21 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 #define HANDLER_FUNC_WORK(hnd)        ((hnd_work_func_t)read_rom_rom_ptr(&hnd->work))
 
 #define HANDLER_FUNC_OPEN(hnd)        ((hnd_open_func_t)read_rom_rom_ptr(&hnd->open))
-#define HANDLER_FUNC_OPEN_WORK(hnd)   ((hnd_open_func_t)read_rom_rom_ptr(&hnd->open_work))
+#define HANDLER_FUNC_OPEN_POLL(hnd)   ((hnd_open_func_t)read_rom_rom_ptr(&hnd->open_poll))
 #define HANDLER_FUNC_CLOSE(hnd)       ((hnd_close_func_t)read_rom_rom_ptr(&hnd->close))
-#define HANDLER_FUNC_CLOSE_WORK(hnd)  ((hnd_close_func_t)read_rom_rom_ptr(&hnd->close_work))
+#define HANDLER_FUNC_CLOSE_POLL(hnd)  ((hnd_close_func_t)read_rom_rom_ptr(&hnd->close_poll))
 #define HANDLER_FUNC_RESET(hnd)       ((hnd_reset_func_t)read_rom_rom_ptr(&hnd->reset))
-#define HANDLER_FUNC_RESET_WORK(hnd)  ((hnd_reset_func_t)read_rom_rom_ptr(&hnd->reset_work))
+#define HANDLER_FUNC_RESET_POLL(hnd)  ((hnd_reset_func_t)read_rom_rom_ptr(&hnd->reset_poll))
 
 #define HANDLER_FUNC_SEEK(hnd)        ((hnd_seek_func_t)read_rom_rom_ptr(&hnd->seek))
 #define HANDLER_FUNC_TELL(hnd)        ((hnd_tell_func_t)read_rom_rom_ptr(&hnd->tell))
 
 #define HANDLER_FUNC_READ_REQUEST(hnd ) ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_request))
-#define HANDLER_FUNC_READ_WORK(hnd )    ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_work))
+#define HANDLER_FUNC_READ_POLL(hnd )    ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_poll))
 #define HANDLER_FUNC_READ_DONE(hnd)     ((hnd_read_done_func_t)read_rom_rom_ptr(&hnd->read_done))
 
 #define HANDLER_FUNC_WRITE_REQUEST(hnd) ((hnd_write_request_func_t)read_rom_rom_ptr(&hnd->write_request))
-#define HANDLER_FUNC_WRITE_WORK(hnd )   ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->write_work))
+#define HANDLER_FUNC_WRITE_POLL(hnd )   ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->write_poll))
 #define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_done_func_t)read_rom_rom_ptr(&hnd->write_done))
 
 #define HANDLER_FUNC_SET_MTU(hnd)       ((hnd_set_mtu_func_t)read_rom_rom_ptr(&hnd->set_mtu))

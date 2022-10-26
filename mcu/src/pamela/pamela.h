@@ -17,7 +17,7 @@
 
 #define PAMELA_OK 0
 #define PAMELA_ERROR 1
-#define PAMELA_BUSY 0xff
+#define PAMELA_POLL 0xff
 
 #define PAMELA_NO_SLOT       0xff
 #define PAMELA_NO_SERVICE_ID 0xff

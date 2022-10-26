@@ -31,7 +31,7 @@ struct pamela_req_handler {
      You may use the same buffer for request and response.
      Then simply return the req_buf as rep_buf as well.
 
-     If processing takes more time then return PAMELA_BUSY and you will
+     If processing takes more time then return PAMELA_POLL and you will
      be triggered with handle_work() untiel PAMELA_OK or PAMELA_ERROR
      is returned. */
   hnd_req_handle_func_t    handle;

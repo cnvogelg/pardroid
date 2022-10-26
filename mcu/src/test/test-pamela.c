@@ -59,13 +59,13 @@ static u08 my_open(u08 chan, u16 port)
   slots[slot].start = hw_timer_millis();
 
   if(delay > 0) {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   } else {
     return PAMELA_OK;
   }
 }
 
-static u08 my_open_work(u08 chan, u16 port)
+static u08 my_open_poll(u08 chan, u16 port)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -78,7 +78,7 @@ static u08 my_open_work(u08 chan, u16 port)
 #endif
     return PAMELA_OK;
   } else {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   }
 }
 
@@ -96,13 +96,13 @@ static u08 my_close(u08 chan)
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   } else {
     return PAMELA_OK;
   }
 }
 
-static u08 my_close_work(u08 chan)
+static u08 my_close_poll(u08 chan)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -115,7 +115,7 @@ static u08 my_close_work(u08 chan)
 #endif
     return PAMELA_OK;
   } else {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   }
 }
 
@@ -133,13 +133,13 @@ static u08 my_reset(u08 chan)
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   } else {
     return PAMELA_OK;
   }
 }
 
-static u08 my_reset_work(u08 chan)
+static u08 my_reset_poll(u08 chan)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -152,7 +152,7 @@ static u08 my_reset_work(u08 chan)
 #endif
     return PAMELA_OK;
   } else {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   }
 }
 
@@ -215,13 +215,13 @@ u08 my_read_request(u08 chan, u08 **buf, u16 *size)
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   } else {
     return PAMELA_OK;
   }
 }
 
-u08 my_read_work(u08 chan, u08 **buf, u16 *size)
+u08 my_read_poll(u08 chan, u08 **buf, u16 *size)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -234,7 +234,7 @@ u08 my_read_work(u08 chan, u08 **buf, u16 *size)
 #endif
     return PAMELA_OK;
   } else {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   }
 }
 
@@ -278,13 +278,13 @@ u08 my_write_request(u08 chan, u08 **buf, u16 *size)
 
   slots[slot].start_w = hw_timer_millis();
   if(slots[slot].delay > 0) {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   } else {
     return PAMELA_OK;
   }
 }
 
-u08 my_write_work(u08 chan, u08 **buf, u16 *size)
+u08 my_write_poll(u08 chan, u08 **buf, u16 *size)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -297,7 +297,7 @@ u08 my_write_work(u08 chan, u08 **buf, u16 *size)
 #endif
     return PAMELA_OK;
   } else {
-    return PAMELA_BUSY;
+    return PAMELA_POLL;
   }
 }
 
@@ -349,11 +349,11 @@ HANDLER_BEGIN(my_handler)
   .config.max_slots = TEST_NUM_SLOTS,
 
   .open = my_open,
-  .open_work = my_open_work,
+  .open_poll = my_open_poll,
   .close = my_close,
-  .close_work = my_close_work,
+  .close_poll = my_close_poll,
   .reset = my_reset,
-  .reset_work = my_reset_work,
+  .reset_poll = my_reset_poll,
 
   .set_mtu = my_set_mtu,
 
@@ -361,11 +361,11 @@ HANDLER_BEGIN(my_handler)
   .tell = my_tell,
 
   .read_request = my_read_request,
-  .read_work = my_read_work,
+  .read_poll = my_read_poll,
   .read_done = my_read_done,
 
   .write_request = my_write_request,
-  .write_work = my_write_work,
+  .write_poll = my_write_poll,
   .write_done = my_write_done,
 HANDLER_END
 
