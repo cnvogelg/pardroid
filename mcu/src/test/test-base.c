@@ -15,6 +15,8 @@
 #include "fwid.h"
 #include "fw_info.h"
 
+#include <stdlib.h>
+
 FW_INFO(FWID_TEST_BASE, VERSION_TAG)
 
 // define the tests you want
@@ -79,6 +81,14 @@ int main(void)
 #ifdef TEST_TIMER_TIMEOUT
   test_timer_timeout();
 #endif
+
+  /* malloc test */
+  u08 *buf = (u08 *)malloc(512);
+  uart_send_pstring(PSTR("malloc: "));
+  uart_send_hex_ptr(buf);
+  free(buf);
+  uart_send_pstring(PSTR(" ... free"));
+  uart_send_crlf();
 
   int on = 0;
   for(int i=0;i<100;i++) {
