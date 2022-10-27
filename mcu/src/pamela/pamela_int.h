@@ -3,9 +3,13 @@
 
 #include "pamela.h"
 
+#define PAMELA_CHANNEL_FLAG_TASK      1
+
 struct pamela_service {
   /* the associated channel mask */
   u16 channels;
+  /* flags */
+  u08 flags;
   /* service instance id */
   u08 srv_id;
 };
@@ -34,6 +38,7 @@ struct pamela_channel {
   /* id */
   u08 chan_id; /* global channel no */
   u08 slot_id; /* local slot id per service */
+  u08 flags;
 };
 typedef struct pamela_channel pamela_channel_t;
 

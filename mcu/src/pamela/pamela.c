@@ -35,6 +35,7 @@ void pamela_init(void)
     chn->port = 0;
     chn->chan_id = i;
     chn->slot_id = PAMELA_EMPTY_SLOT;
+    chn->flags = 0;
   }
 
   // setup services
@@ -59,6 +60,24 @@ void pamela_work(void)
     u08 active = chn->status & PAMELA_STATUS_ACTIVE_MASK;
     if(active != 0) {
       pamela_channel_work(chn);
+    }
+
+    // channel task is active?
+    if((chn->flags & PAMELA_CHANNEL_FLAG_TASK) != 0) {
+      pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(chn->service->srv_id);
+      hnd_channel_task_func_t func = HANDLER_FUNC_CHANNEL_TASK(handler);
+      DS("ch task:"); DB(i); DNL;
+      func(i);
+    }
+  }
+
+  // process service tasks
+  for(u08 i=0;i<HANDLER_TABLE_GET_SIZE();i++) {
+    pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(i);
+    hnd_service_task_func_t func = HANDLER_FUNC_SERVICE_TASK(handler);
+    if(func != NULL) {
+      DS("srv task"); DB(i); DNL;
+      func(i);
     }
   }
 }
@@ -422,4 +441,16 @@ void pamela_end_stream(u08 chn, u08 error)
 
   // notify host
   proto_io_event_mask_add_chn(chn);
+}
+
+void pamela_channel_task_control(u08 chn, u08 on)
+{
+  pamela_channel_t *pc = pamela_get_channel(chn);
+  if(on) {
+    DS("[task:on:"); DB(chn); DC(']'); DNL;
+    pc->flags |= PAMELA_CHANNEL_FLAG_TASK;
+  } else {
+    DS("[task:off:"); DB(chn); DC(']'); DNL;
+    pc->flags &= ~PAMELA_CHANNEL_FLAG_TASK;
+  }
 }

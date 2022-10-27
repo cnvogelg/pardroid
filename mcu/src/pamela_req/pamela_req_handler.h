@@ -5,13 +5,14 @@
 
 /* ----- handler functions ----- */
 
-typedef u08 (*hnd_req_begin_func_t)(u08 chan, u08 **req_buf, u16 req_size);
+/* begin request */
+typedef u08 (*hnd_req_begin_func_t)(u08 chan, u08 **buf_in, u16 size_in);
 
-/* process the request and return the filled reply buffer and size */
-typedef u08 (*hnd_req_handle_func_t)(u08 chan, u08 *req_buf, u16 req_size, u08 **rep_buf, u16 *rep_size);
+/* process the request */
+typedef u08 (*hnd_req_handle_func_t)(u08 chan, u08 **buf_io, u16 *size_io);
 
 /* the request is done  */
-typedef void (*hnd_req_end_func_t)(u08 chan, u08 *rep_buf, u16 rep_size);
+typedef void (*hnd_req_end_func_t)(u08 chan, u08 *buf_out, u16 size_out);
 
 // ROM handler of command
 struct pamela_req_handler {
@@ -22,22 +23,24 @@ struct pamela_req_handler {
 
   /* begin a request and prepare the request buffer for the incoming request
      and return it. pamela will fill the request buffer and continue
-     with process(). */
+     with handle(). */
   hnd_req_begin_func_t     begin;
 
-  /* the request buffer is filled and you have to process the request and
-     prepare a reply for it. Fill and return the reply buffer.
+  /* the request buffer is filled now and passed via buf_io/size_io.
 
-     You may use the same buffer for request and response.
-     Then simply return the req_buf as rep_buf as well.
+     You could now either keep the input buffer and write the reply on
+     top of it. adjust only the size if necessary.
+
+     Or you switch the buffer and adjust the pointer and the size if
+     necessary.
 
      If processing takes more time then return PAMELA_POLL and you will
-     be triggered with handle_work() untiel PAMELA_OK or PAMELA_ERROR
+     be triggered with handle_poll() again until PAMELA_OK or PAMELA_ERROR
      is returned. */
   hnd_req_handle_func_t    handle;
 
-  /* for long running operations call the handle_work() */
-  hnd_req_handle_func_t    handle_work;
+  /* for long running operations call the handle_poll() */
+  hnd_req_handle_func_t    handle_poll;
 
   /* finally a request is completed when the response was sent and the
      response buffer is free to be used again. */
@@ -62,6 +65,7 @@ typedef const pamela_req_handler_t *pamela_req_handler_ptr_t;
       .read_done = pamela_req_read_done, \
       .write_request = pamela_req_write_request, \
       .write_done = pamela_req_write_done, \
+      .channel_task = pamela_req_channel_task, \
     }; \
     pamela_req_slot_t name ## _slots[num_slots]; \
     const pamela_req_handler_t name ROM_ATTR = { \
@@ -75,7 +79,7 @@ typedef const pamela_req_handler_t *pamela_req_handler_ptr_t;
 
 #define REQ_HANDLER_FUNC_BEGIN(hnd)       ((hnd_req_begin_func_t)read_rom_rom_ptr(&hnd->begin))
 #define REQ_HANDLER_FUNC_HANDLE(hnd)      ((hnd_req_handle_func_t)read_rom_rom_ptr(&hnd->handle))
-#define REQ_HANDLER_FUNC_HANDLE_WORK(hnd) ((hnd_req_handle_func_t)read_rom_rom_ptr(&hnd->handle_work))
+#define REQ_HANDLER_FUNC_HANDLE_POLL(hnd) ((hnd_req_handle_func_t)read_rom_rom_ptr(&hnd->handle_poll))
 #define REQ_HANDLER_FUNC_END(hnd)         ((hnd_req_end_func_t)read_rom_rom_ptr(&hnd->end))
 
 /* ----- macros for req handler table ----- */

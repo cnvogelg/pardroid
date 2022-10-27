@@ -28,6 +28,7 @@ FW_INFO(FWID_TEST_PAMELA_REQ, VERSION_TAG)
 // buffers for each slot
 struct slot {
   u08 buf[TEST_MAX_ARG_SIZE];
+  u08 poll_count;
 };
 
 
@@ -35,35 +36,56 @@ static struct slot slots[TEST_NUM_SLOTS];
 
 // ----- req handler functions -----
 
-static u08 my_begin(u08 chan, u08 **req_buf, u16 req_size)
+static u08 my_begin(u08 chan, u08 **buf_in, u16 size_in)
 {
-  u08 slot = pamela_get_slot(chan);
-  *req_buf = slots[slot].buf;
+  u08 slot_id = pamela_get_slot(chan);
+  *buf_in = slots[slot_id].buf;
+  uart_send('<');
   return PAMELA_OK;
 }
 
-static u08 my_handle(u08 chan, u08 *req_buf, u16 req_size, u08 **rep_buf, u16 *rep_size)
+static u08 my_handle(u08 chan, u08 **buf_io, u16 *size_io)
 {
-  // increment each byte
-  for(int i=0;i<req_size;i++) {
-    req_buf[i] += 1;
+  u08 slot_id = pamela_get_slot(chan);
+  slots[slot_id].poll_count = 0;
+
+  uart_send('#');
+
+  u08 *buf = *buf_io;
+  u16 size = *size_io;
+  for(u16 i=0;i<size;i++) {
+    buf[i] ++;
   }
 
-  // simply return request buf as reply
-  *rep_buf = req_buf;
-  *rep_size = req_size;
-  return PAMELA_OK;
+  return PAMELA_POLL;
 }
 
-static void my_end(u08 chan, u08 *rep_buf, u16 rep_size)
+static u08 my_handle_poll(u08 chan, u08 **buf_io, u16 *size_io)
+{
+  u08 slot_id = pamela_get_slot(chan);
+  slots[slot_id].poll_count++;
+
+  if(slots[slot_id].poll_count == 10) {
+    uart_send('!');
+    return PAMELA_OK;
+  } else {
+    uart_send('*');
+    return PAMELA_POLL;
+  }
+}
+
+static void my_end(u08 chan, u08 *buf_out, u16 size_out)
 {
   // nop - no buffer free needed
+  uart_send('>');
+  uart_send_crlf();
 }
 
 // ----- define my req handler -----
 REQ_HANDLER_BEGIN(my_handler, TEST_PORT, TEST_NUM_SLOTS, TEST_MAX_ARG_SIZE)
   .begin = my_begin,
   .handle = my_handle,
+  .handle_poll = my_handle_poll,
   .end = my_end
 REQ_HANDLER_END
 

@@ -21,8 +21,9 @@ typedef void (*hnd_read_done_func_t)(u08 chn, u08 *buf, u16 size);
 typedef u08 (*hnd_write_request_func_t)(u08 chn, u08 **buf, u16 *size);
 typedef void (*hnd_write_done_func_t)(u08 chn, u08 *buf, u16 size);
 
-/* ----- worker ----- */
-typedef u08 (*hnd_work_func_t)(u08 chn);
+/* ----- tasks ----- */
+typedef void (*hnd_service_task_func_t)(u08 srv_id);
+typedef void (*hnd_channel_task_func_t)(u08 chn);
 
 /* ----- handler's configuration ----- */
 struct pamela_handler_config {
@@ -139,6 +140,12 @@ struct pamela_handler {
      return accepted value
   */
   hnd_set_mtu_func_t            set_mtu;
+
+  /* ----- tasks ----- */
+  /* an optional task function that will be called for the service */
+  hnd_service_task_func_t       service_task;
+  /* an optional task function that will be called for an active channel */
+  hnd_channel_task_func_t       channel_task;
 };
 typedef struct pamela_handler pamela_handler_t;
 typedef const pamela_handler_t *pamela_handler_ptr_t;
@@ -175,6 +182,9 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 #define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_done_func_t)read_rom_rom_ptr(&hnd->write_done))
 
 #define HANDLER_FUNC_SET_MTU(hnd)       ((hnd_set_mtu_func_t)read_rom_rom_ptr(&hnd->set_mtu))
+
+#define HANDLER_FUNC_SERVICE_TASK(hnd)  ((hnd_service_task_func_t)read_rom_rom_ptr(&hnd->service_task))
+#define HANDLER_FUNC_CHANNEL_TASK(hnd)  ((hnd_channel_task_func_t)read_rom_rom_ptr(&hnd->channel_task))
 
 /* ----- macros to create the handler table ----- */
 

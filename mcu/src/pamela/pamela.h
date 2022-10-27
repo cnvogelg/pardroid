@@ -22,6 +22,9 @@
 #define PAMELA_NO_SLOT       0xff
 #define PAMELA_NO_SERVICE_ID 0xff
 
+#define PAMELA_ON 1
+#define PAMELA_OFF 0
+
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);
 /* regular call in main loop to perform pamela's tasks */
@@ -40,5 +43,9 @@ extern pamela_handler_ptr_t pamela_get_handler(u08 chn);
    either with an error or with regular EOS
  */
 extern void pamela_end_stream(u08 chn, u08 error);
+
+/* ----- tasks ----- */
+/* toggle channel task PAMELA_ON or PAMELA_OFF */
+extern void pamela_channel_task_control(u08 chn, u08 on);
 
 #endif

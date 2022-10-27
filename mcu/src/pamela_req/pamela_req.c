@@ -138,11 +138,15 @@ void pamela_req_write_done(u08 chan, u08 *buf, u16 size)
     return;
   }
 
+  // store req buf/size as a default for the reply
+  slot->buf_io = buf;
+  slot->size_io = size;
+
   // call req handler handle()
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE(req_handler);
-  u08 result = handle_func(chan, buf, size, &slot->reply_buf, &slot->reply_size);
-  DS("handle: "); DW(size); DS(" -> "); DW(slot->reply_size); DNL;
+  u08 result = handle_func(chan, &slot->buf_io, &slot->size_io);
+  DS("handle: "); DW(size); DS(" -> "); DW(slot->size_io); DNL;
 
   if(result == PAMELA_OK) {
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
@@ -150,8 +154,9 @@ void pamela_req_write_done(u08 chan, u08 *buf, u16 size)
     // error needs reset of channel
     pamela_end_stream(chan, PAMELA_ERROR);
   } else {
-    // TODO: start worker for handle_work()
-    slot->state = PAMELA_REQ_STATE_BUSY;
+    // enable channel task for polling handler
+    slot->state = PAMELA_REQ_STATE_POLLING;
+    pamela_channel_task_control(chan, PAMELA_ON);
   }
 }
 
@@ -175,10 +180,10 @@ u08 pamela_req_read_request(u08 chan, u08 **buf, u16 *size)
   // enter state IN_READ
   slot->state = PAMELA_REQ_STATE_IN_READ;
 
-  DS(" size:"); DB(slot->reply_size); DNL;
+  DS(" size:"); DB(slot->size_io); DNL;
 
-  *buf = slot->reply_buf;
-  *size = slot->reply_size;
+  *buf = slot->buf_io;
+  *size = slot->size_io;
 
   return PAMELA_OK;
 }
@@ -195,9 +200,43 @@ void pamela_req_read_done(u08 chan, u08 *buf, u16 size)
   // call handler end()
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_end_func_t end_func = REQ_HANDLER_FUNC_END(req_handler);
-  end_func(chan, slot->reply_buf, slot->reply_size);
-  DS("end: "); DW(slot->reply_size); DNL;
+  end_func(chan, slot->buf_io, slot->size_io);
+  DS("end: "); DW(slot->size_io); DNL;
 
   slot->state = PAMELA_REQ_STATE_IDLE;
 }
 
+// ----- channel task -----
+
+void pamela_req_channel_task(u08 chan)
+{
+  pamela_req_slot_t *slot = find_slot(chan);
+  if(slot == NULL) {
+    return;
+  }
+
+  DS("#req: task: "); DB(chan);
+
+  // check state: must be in write
+  if(slot->state != PAMELA_REQ_STATE_POLLING) {
+    DS(" wrong state!"); DNL;
+    return;
+  }
+
+  // call req handler handle_poll()
+  pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
+  hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE_POLL(req_handler);
+  u08 result = handle_func(chan, &slot->buf_io, &slot->size_io);
+  DS("handle_poll: "); DW(slot->size_io); DNL;
+
+  if(result == PAMELA_OK) {
+    // stop task
+    pamela_channel_task_control(chan, PAMELA_OFF);
+    slot->state = PAMELA_REQ_STATE_READ_WAIT;
+  } else if(result == PAMELA_ERROR) {
+    // stop task
+    pamela_channel_task_control(chan, PAMELA_OFF);
+    // error needs reset of channel
+    pamela_end_stream(chan, PAMELA_ERROR);
+  }
+}
