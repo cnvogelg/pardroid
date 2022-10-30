@@ -27,10 +27,10 @@ void pamela_init(void)
   for(u08 i=0;i<PAMELA_NUM_CHANNELS;i++) {
     pamela_channel_t *chn = &pamela_channels[i];
     chn->status = 0;
-    chn->rx_size = 0;
-    chn->rx_buf = 0;
-    chn->tx_size = 0;
-    chn->tx_buf = 0;
+    chn->rx_buf.size = 0;
+    chn->rx_buf.data = NULL;
+    chn->tx_buf.size = 0;
+    chn->tx_buf.data = NULL;
     chn->service = NULL;
     chn->port = 0;
     chn->chan_id = i;
@@ -156,7 +156,7 @@ void pamela_set_open_error(pamela_channel_t *pc, u08 error)
 static void pamela_read_reply(pamela_channel_t *pc)
 {
   // size is not the requested size
-  if(pc->rx_org_size != pc->rx_size) {
+  if(pc->rx_org_size != pc->rx_buf.size) {
     pc->status |= PAMELA_STATUS_READ_SIZE;
   }
 
@@ -164,7 +164,7 @@ static void pamela_read_reply(pamela_channel_t *pc)
   pc->status |= PAMELA_STATUS_READ_READY;
   pc->status &= ~PAMELA_STATUS_READ_REQ;
 
-  DS("[rp:"); DB(pc->chan_id); DC('='); DW(pc->rx_size); DC(']');
+  DS("[rp:"); DB(pc->chan_id); DC('='); DW(pc->rx_buf.size); DC(']');
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);
@@ -174,8 +174,8 @@ static void pamela_read_error(pamela_channel_t *pc)
 {
   pc->status |= PAMELA_STATUS_READ_ERROR;
   pc->status &= ~PAMELA_STATUS_READ_REQ;
-  pc->rx_buf = NULL;
-  pc->rx_size = 0;
+  pc->rx_buf.data = NULL;
+  pc->rx_buf.size = 0;
 
   DS("[RE:"); DB(pc->chan_id); DC(']'); DNL;
 
@@ -191,7 +191,7 @@ void pamela_read_work(pamela_channel_t *chn,
   // pass call to handler
   u08 result = PAMELA_ERROR;
   if(read_req_func != NULL) {
-    result = read_req_func(chn->chan_id, &chn->rx_buf, &chn->rx_size);
+    result = read_req_func(chn->chan_id, &chn->rx_buf);
   }
   DB(result);
 
@@ -209,7 +209,7 @@ void pamela_read_work(pamela_channel_t *chn,
 static void pamela_write_reply(pamela_channel_t *pc)
 {
   // size is not the requested size
-  if(pc->tx_org_size != pc->tx_size) {
+  if(pc->tx_org_size != pc->tx_buf.size) {
     pc->status |= PAMELA_STATUS_WRITE_SIZE;
   }
 
@@ -217,7 +217,7 @@ static void pamela_write_reply(pamela_channel_t *pc)
   pc->status |= PAMELA_STATUS_WRITE_READY;
   pc->status &= ~PAMELA_STATUS_WRITE_REQ;
 
-  DS("[wp:"); DB(pc->chan_id); DC('='); DW(pc->tx_size); DC(']');
+  DS("[wp:"); DB(pc->chan_id); DC('='); DW(pc->tx_buf.size); DC(']');
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);
@@ -227,8 +227,8 @@ static void pamela_write_error(pamela_channel_t *pc)
 {
   pc->status |= PAMELA_STATUS_WRITE_ERROR;
   pc->status &= ~PAMELA_STATUS_WRITE_REQ;
-  pc->tx_buf = NULL;
-  pc->tx_size = 0;
+  pc->tx_buf.data = NULL;
+  pc->tx_buf.size = 0;
 
   DS("[WE:"); DB(pc->chan_id); DC(']'); DNL;
 
@@ -243,7 +243,7 @@ void pamela_write_work(pamela_channel_t *chn,
 
   u08 result = PAMELA_ERROR;
   if(write_req_func != NULL) {
-    result = write_req_func(chn->chan_id, &chn->tx_buf, &chn->tx_size);
+    result = write_req_func(chn->chan_id, &chn->tx_buf);
   }
   DB(result);
 

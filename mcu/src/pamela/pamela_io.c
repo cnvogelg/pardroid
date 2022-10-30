@@ -173,7 +173,7 @@ void proto_io_api_read_req(u08 chn, u16 size)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  pc->rx_size = size;
+  pc->rx_buf.size = size;
   pc->rx_org_size = size;
   pc->status |= PAMELA_STATUS_READ_REQ;
 
@@ -188,7 +188,7 @@ void proto_io_api_read_req(u08 chn, u16 size)
 u16  proto_io_api_read_res(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
-  u16 size = pc->rx_size;
+  u16 size = pc->rx_buf.size;
   DS("[RS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
   return size;
 }
@@ -198,19 +198,18 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   // make sure to pad size if odd
-  u16 transfer_size = pc->rx_size;
+  u16 transfer_size = pc->rx_buf.size;
   if((transfer_size & 1) != 0) {
     transfer_size++;
   }
 
   *size = transfer_size;
-  *buf = pc->rx_buf;
+  *buf = pc->rx_buf.data;
 
   DS("[RB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_READ_MASK;
-  pc->rx_buf = NULL;
 }
 
 void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
@@ -218,13 +217,14 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  DS("[RD:"); DB(chn); DC('='); DW(size);
+  DS("[RD:"); DB(chn); DC('='); DW(pc->rx_buf.size);
   hnd_read_done_func_t read_done = HANDLER_FUNC_READ_DONE(handler);
   if(read_done != NULL) {
-    read_done(chn, buf, pc->rx_size);
+    read_done(chn, &pc->rx_buf);
   }
   DC(']'); DNL;
-  pc->rx_size = 0;
+  pc->rx_buf.size = 0;
+  pc->rx_buf.data = NULL;
 }
 
 // write
@@ -234,7 +234,7 @@ void proto_io_api_write_req(u08 chn, u16 size)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  pc->tx_size = size;
+  pc->tx_buf.size = size;
   pc->tx_org_size = size;
   pc->status |= PAMELA_STATUS_WRITE_REQ;
 
@@ -249,7 +249,7 @@ void proto_io_api_write_req(u08 chn, u16 size)
 u16  proto_io_api_write_res(u08 chn)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
-  u16 size = pc->tx_size;
+  u16 size = pc->tx_buf.size;
   DS("[WS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
   return size;
 }
@@ -259,19 +259,18 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
 
   // make sure to pad size if odd
-  u16 transfer_size = pc->tx_size;
+  u16 transfer_size = pc->tx_buf.size;
   if((transfer_size & 1) != 0) {
     transfer_size++;
   }
 
   *size = transfer_size;
-  *buf = pc->tx_buf;
+  *buf = pc->tx_buf.data;
 
   DS("[WB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_WRITE_MASK;
-  pc->tx_buf = NULL;
 }
 
 void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
@@ -279,11 +278,12 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  DS("[WD:"); DB(chn); DC('='); DW(size);
+  DS("[WD:"); DB(chn); DC('='); DW(pc->tx_buf.size);
   hnd_write_done_func_t write_done = HANDLER_FUNC_WRITE_DONE(handler);
   if(write_done != NULL) {
-    write_done(chn, buf, pc->tx_size);
+    write_done(chn, &pc->tx_buf);
   }
   DC(']'); DNL;
-  pc->tx_size = 0;
+  pc->tx_buf.size = 0;
+  pc->tx_buf.data = NULL;
 }

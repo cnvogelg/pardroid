@@ -36,36 +36,36 @@ static struct slot slots[TEST_NUM_SLOTS];
 
 // ----- req handler functions -----
 
-static u08 my_begin(u08 chan, u08 **buf_in, u16 size_in)
+static u08 my_begin(u08 chan, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
-  *buf_in = slots[slot_id].buf;
+  buf->data = slots[slot_id].buf;
   uart_send('<');
   return PAMELA_OK;
 }
 
-static u08 my_handle(u08 chan, u08 **buf_io, u16 *size_io)
+static u08 my_handle(u08 chan, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
   slots[slot_id].poll_count = 0;
 
   uart_send('#');
 
-  u08 *buf = *buf_io;
-  u16 size = *size_io;
+  u08 *data = buf->data;
+  u16 size = buf->size;
   for(u16 i=0;i<size;i++) {
-    buf[i] ++;
+    data[i] ++;
   }
 
   return PAMELA_POLL;
 }
 
-static u08 my_handle_poll(u08 chan, u08 **buf_io, u16 *size_io)
+static u08 my_handle_poll(u08 chan, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
   slots[slot_id].poll_count++;
 
-  if(slots[slot_id].poll_count == 10) {
+  if(slots[slot_id].poll_count == 3) {
     uart_send('!');
     return PAMELA_OK;
   } else {
@@ -74,7 +74,7 @@ static u08 my_handle_poll(u08 chan, u08 **buf_io, u16 *size_io)
   }
 }
 
-static void my_end(u08 chan, u08 *buf_out, u16 size_out)
+static void my_end(u08 chan, pamela_buf_t *buf)
 {
   // nop - no buffer free needed
   uart_send('>');

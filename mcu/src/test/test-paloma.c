@@ -288,6 +288,14 @@ void paloma_api_param_set_buffer(u08 slot, u08 *data, u08 size)
 
 // ----- main -----
 
+REQ_HANDLER_TABLE_BEGIN
+  &paloma
+REQ_HANDLER_TABLE_END
+
+HANDLER_TABLE_BEGIN
+  ADD_REQ_HANDLER(paloma)
+HANDLER_TABLE_END
+
 int main(void)
 {
   hw_system_init();
@@ -299,7 +307,6 @@ int main(void)
   rom_info();
 
   pamela_init();
-  paloma_init();
 
   while(1) {
     pamela_work();

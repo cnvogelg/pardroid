@@ -135,7 +135,7 @@ set(DISPLAY_SRCS
 )
 
 set(PALOMA_SRCS
-      ${PAMELA_SRCS}
+      ${PAMELA_REQ_SRCS}
       ${PALOMA_DIR}/paloma.h
       ${PALOMA_DIR}/paloma.c
       ${PALOMA_DIR}/paloma_cmd.h
@@ -191,4 +191,4 @@ make_fw(test-fatfs ${BASE_SRCS} ${SDCARD_SRCS} ${FATFS_SRCS} ${TEST_DIR}/test-fa
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
 make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)
-#make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)
+make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)

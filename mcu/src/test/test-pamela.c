@@ -192,7 +192,7 @@ u32 my_tell(u08 chan)
 
 // ----- read -----
 
-u08 my_read_request(u08 chan, u08 **buf, u16 *size)
+u08 my_read_request(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -202,7 +202,7 @@ u08 my_read_request(u08 chan, u08 **buf, u16 *size)
   uart_send('@');
   uart_send_hex_byte(chan);
   uart_send(':');
-  uart_send_hex_word(*size);
+  uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
 
@@ -211,7 +211,8 @@ u08 my_read_request(u08 chan, u08 **buf, u16 *size)
     return PAMELA_ERROR;
   }
 
-  *buf = read_buf;
+  // set read buffer
+  buf->data = read_buf;
 
   slots[slot].start = hw_timer_millis();
   if(slots[slot].delay > 0) {
@@ -221,7 +222,7 @@ u08 my_read_request(u08 chan, u08 **buf, u16 *size)
   }
 }
 
-u08 my_read_poll(u08 chan, u08 **buf, u16 *size)
+u08 my_read_poll(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -238,7 +239,7 @@ u08 my_read_poll(u08 chan, u08 **buf, u16 *size)
   }
 }
 
-void my_read_done(u08 chan, u08 *buf, u16 size)
+void my_read_done(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -248,14 +249,14 @@ void my_read_done(u08 chan, u08 *buf, u16 size)
   uart_send('@');
   uart_send_hex_byte(chan);
   uart_send(':');
-  uart_send_hex_word(size);
+  uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
 }
 
 // ----- write -----
 
-u08 my_write_request(u08 chan, u08 **buf, u16 *size)
+u08 my_write_request(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -265,7 +266,7 @@ u08 my_write_request(u08 chan, u08 **buf, u16 *size)
   uart_send('@');
   uart_send_hex_byte(chan);
   uart_send(':');
-  uart_send_hex_word(*size);
+  uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
 
@@ -274,7 +275,8 @@ u08 my_write_request(u08 chan, u08 **buf, u16 *size)
     return PAMELA_ERROR;
   }
 
-  *buf = read_buf;
+  // set write buffer
+  buf->data = read_buf;
 
   slots[slot].start_w = hw_timer_millis();
   if(slots[slot].delay > 0) {
@@ -284,7 +286,7 @@ u08 my_write_request(u08 chan, u08 **buf, u16 *size)
   }
 }
 
-u08 my_write_poll(u08 chan, u08 **buf, u16 *size)
+u08 my_write_poll(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -301,7 +303,7 @@ u08 my_write_poll(u08 chan, u08 **buf, u16 *size)
   }
 }
 
-void my_write_done(u08 chan, u08 *buf, u16 size)
+void my_write_done(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
@@ -311,7 +313,7 @@ void my_write_done(u08 chan, u08 *buf, u16 size)
   uart_send('@');
   uart_send_hex_byte(chan);
   uart_send(':');
-  uart_send_hex_word(size);
+  uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
 }

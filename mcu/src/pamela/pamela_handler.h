@@ -1,6 +1,13 @@
 #ifndef PAMELA_HANDLER_H
 #define PAMELA_HANDLER_H
 
+/* data buffer used in pamela */
+struct pamela_buf {
+  u08  *data;
+  u16   size;
+};
+typedef struct pamela_buf pamela_buf_t;
+
 /* ----- open/close/reset ----- */
 typedef u08 (*hnd_open_func_t)(u08 chn, u16 port);
 typedef u08 (*hnd_close_func_t)(u08 chn);
@@ -14,12 +21,12 @@ typedef void (*hnd_seek_func_t)(u08 chn, u32 pos);
 typedef u32 (*hnd_tell_func_t)(u08 chn);
 
 /* ----- read ----- */
-typedef u08 (*hnd_read_request_func_t)(u08 chn, u08 **buf, u16 *size);
-typedef void (*hnd_read_done_func_t)(u08 chn, u08 *buf, u16 size);
+typedef u08 (*hnd_read_request_func_t)(u08 chn, pamela_buf_t *buf);
+typedef void (*hnd_read_done_func_t)(u08 chn, pamela_buf_t *buf);
 
 /* ----- write ----- */
-typedef u08 (*hnd_write_request_func_t)(u08 chn, u08 **buf, u16 *size);
-typedef void (*hnd_write_done_func_t)(u08 chn, u08 *buf, u16 size);
+typedef u08 (*hnd_write_request_func_t)(u08 chn, pamela_buf_t *buf);
+typedef void (*hnd_write_done_func_t)(u08 chn, pamela_buf_t *buf);
 
 /* ----- tasks ----- */
 typedef void (*hnd_service_task_func_t)(u08 srv_id);
@@ -92,19 +99,26 @@ struct pamela_handler {
 
   /* ----- read ----- */
   /* a read request arrived from the host with the
-     desired max size to read (*size).
+     desired max size to read in buf->size.
 
-     either directly process the request and return
-     the final size in (*size) and the buffer with
-     data in *buf and return PAMELA_OK.
-     or return a read ERROR
+     you have to either accept the size or reduce
+     it to the available data size.
 
-     otherwise return PAMELA_POLL and get
-     additional calls in read_poll()
+     additionally, you have to fill the buffer
+     pointer in buf->data.
+
+     if data and size is in place then return
+     PAMELA_OK. if you need to wait for incoming
+     data to be read then return PAMELA_POLL.
+     it will call read_poll() until PAMELA_OK
+     is returned.
+
+     if reading is not possible then return
+     PAMELA_ERROR.
   */
   hnd_read_request_func_t       read_request;
   /* continue read operation
-     return PAMELA_OK when done, an error or BUSY
+     return PAMELA_OK when done, an error or PAMELA_POLL
      to continue
   */
   hnd_read_request_func_t       read_poll;
@@ -118,10 +132,17 @@ struct pamela_handler {
   /* ----- write ----- */
   /* a write request arrived from the host with the
      desired size to read.
-     the handler will process the read operation and
-     answer with pamela_write_ready()
 
-     return PAMELA_OK or error or PAMELA_POLL
+     either accept the size of reduce it if needed.
+     additionally, set the buffer to be used for
+     retrieval.
+
+     return PAMELA_OK to start writing or
+     use PAMELA_POLL to delay the request.
+     it will call write_poll() until PAMELA_OK is
+     returned.
+
+     return PAMELA_ERROR if writing is not possible.
   */
   hnd_write_request_func_t      write_request;
   /* continue WRITE operation

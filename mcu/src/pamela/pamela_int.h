@@ -27,13 +27,11 @@ struct pamela_channel {
   u16 status;
 
   /* pending rx request */
-  u16 rx_size;
   u16 rx_org_size;
-  u08 *rx_buf;
+  pamela_buf_t rx_buf;
   /* pending tx request */
-  u16 tx_size;
   u16 tx_org_size;
-  u08 *tx_buf;
+  pamela_buf_t tx_buf;
 
   /* id */
   u08 chan_id; /* global channel no */
