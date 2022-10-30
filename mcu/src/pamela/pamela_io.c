@@ -197,13 +197,7 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  // make sure to pad size if odd
-  u16 transfer_size = pc->rx_buf.size;
-  if((transfer_size & 1) != 0) {
-    transfer_size++;
-  }
-
-  *size = transfer_size;
+  *size = pc->rx_buf.size;
   *buf = pc->rx_buf.data;
 
   DS("[RB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
@@ -258,13 +252,7 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  // make sure to pad size if odd
-  u16 transfer_size = pc->tx_buf.size;
-  if((transfer_size & 1) != 0) {
-    transfer_size++;
-  }
-
-  *size = transfer_size;
+  *size = pc->tx_buf.size;
   *buf = pc->tx_buf.data;
 
   DS("[WB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;

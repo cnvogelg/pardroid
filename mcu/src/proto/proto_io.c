@@ -143,7 +143,16 @@ static void handle_read_blk(u08 chn)
   u16 size = 0;
   u08 *buf = NULL;
   proto_io_api_read_blk(chn, &size, &buf);
-  proto_atom_read_block(buf, size);
+
+  /* odd size handling: read next even block.
+     buf should be always large enough to keep the even size!
+  */
+  u16 transfer_size = size;
+  if((transfer_size & 1) != 0) {
+    transfer_size++;
+  }
+  proto_atom_read_block(buf, transfer_size);
+
   proto_io_api_read_done(chn, size, buf);
 }
 
@@ -166,7 +175,16 @@ static void handle_write_blk(u08 chn)
   u16 size = 0;
   u08 *buf = NULL;
   proto_io_api_write_blk(chn, &size, &buf);
+
+  /* odd size handling: read next even block.
+     buf should be always large enough to keep the even size!
+  */
+  u16 transfer_size = size;
+  if((transfer_size & 1) != 0) {
+    transfer_size++;
+  }
   proto_atom_write_block(buf, size);
+
   proto_io_api_write_done(chn, size, buf);
 }
 
