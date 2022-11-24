@@ -40,6 +40,7 @@ set(ENC28J60_DIR src/driver/enc28j60)
 set(WIZNET_DIR src/driver/wiznet)
 set(DISPLAY_DIR src/driver/display)
 set(PALOMA_DIR src/paloma)
+set(DISK_DIR src/disk)
 
 # source lists
 set(BASE_SRCS
@@ -135,12 +136,22 @@ set(DISPLAY_SRCS
 )
 
 set(PALOMA_SRCS
-      ${PAMELA_REQ_SRCS}
       ${PALOMA_DIR}/paloma.h
       ${PALOMA_DIR}/paloma.c
       ${PALOMA_DIR}/paloma_cmd.h
       ${PALOMA_DIR}/paloma_cmd.c
       ${PALOMA_DIR}/paloma_api.h
+)
+
+set(DISK_SRCS
+      ${DISK_DIR}/disk.h
+      ${DISK_DIR}/disk.c
+      ${DISK_DIR}/disk_map.h
+      ${DISK_DIR}/disk_map.c
+      ${DISK_DIR}/disk_cmd.h
+      ${DISK_DIR}/disk_cmd.c
+      ${DISK_DIR}/disk_svc.h
+      ${DISK_DIR}/disk_svc.c
 )
 
 add_compile_definitions(
@@ -168,6 +179,7 @@ include_directories(
         ${DISPLAY_DIR}
         ${DISPLAY_DIR}/ssd1306
         ${PALOMA_DIR}
+        ${DISK_DIR}
 )
 
 macro(make_fw name)
@@ -191,4 +203,5 @@ make_fw(test-fatfs ${BASE_SRCS} ${SDCARD_SRCS} ${FATFS_SRCS} ${TEST_DIR}/test-fa
 make_fw(test-enc28j60 ${BASE_SRCS} ${ENC28J60_SRCS} ${TEST_DIR}/test-enc28j60.c)
 make_fw(test-wiznet ${BASE_SRCS} ${WIZNET_SRCS} ${TEST_DIR}/test-wiznet.c)
 make_fw(test-display ${BASE_SRCS} ${DISPLAY_SRCS} ${TEST_DIR}/test-display.c)
-make_fw(test-paloma ${BASE_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)
+make_fw(test-paloma ${BASE_SRCS} ${PAMELA_REQ_SRCS} ${PALOMA_SRCS} ${TEST_DIR}/test-paloma.c)
+make_fw(test-disk ${BASE_SRCS} ${PAMELA_REQ_SRCS} ${DISK_SRCS} ${TEST_DIR}/test-disk.c)

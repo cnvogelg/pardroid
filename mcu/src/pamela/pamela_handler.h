@@ -173,6 +173,9 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 
 /* ----- macros to help create handlers ----- */
 
+#define HANDLER_DECLARE(name) \
+  extern const pamela_handler_t name ROM_ATTR;
+
 #define HANDLER_BEGIN(name)          const pamela_handler_t name ROM_ATTR = {
 #define HANDLER_END                  };
 
