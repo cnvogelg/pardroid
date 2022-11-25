@@ -54,7 +54,7 @@ u08 pamela_req_open(u08 chan, u16 port)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: open "); DB(chan); DC(':'); DW(port); DNL;
@@ -82,7 +82,7 @@ u08 pamela_req_close(u08 chan)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: close "); DB(chan); DNL;
@@ -103,7 +103,7 @@ u08 pamela_req_reset(u08 chan)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: reset: "); DB(chan); DNL;
@@ -131,7 +131,7 @@ u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: wr: "); DB(chan);
@@ -139,7 +139,7 @@ u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
   // check state: must be idle
   if(slot->state != PAMELA_REQ_STATE_IDLE) {
     DS(" wrong state!"); DNL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_WRONG_STATE;
   }
 
   // by default use global buffer (but keep requested size)
@@ -195,15 +195,15 @@ void pamela_req_write_done(u08 chan, pamela_buf_t *buf)
   if(result == PAMELA_OK) {
     DS(" -> "); DW(slot->buf.size); DNL;
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
-  } else if(result == PAMELA_ERROR) {
+  } else if(result != PAMELA_POLL) {
     DS("ERR!"); DNL;
     // error needs reset of channel
-    pamela_end_stream(chan, PAMELA_ERROR);
+    pamela_end_stream(chan, result);
   } else {
     DS("..."); DNL;
     // enable channel task for polling handler
     slot->state = PAMELA_REQ_STATE_POLLING;
-    pamela_channel_task_control(chan, PAMELA_ON);
+    pamela_channel_task_control(chan, PAMELA_TASK_ON);
   }
 }
 
@@ -213,7 +213,7 @@ u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: rr: "); DB(chan);
@@ -221,7 +221,7 @@ u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf)
   // check state: must be READ_WAIT
   if(slot->state != PAMELA_REQ_STATE_READ_WAIT) {
     DS(" wrong state!"); DNL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_WRONG_STATE;
   }
 
   // enter state IN_READ
@@ -283,14 +283,14 @@ void pamela_req_channel_task(u08 chan)
   if(result == PAMELA_OK) {
     // stop task
     DS(" -> "); DW(slot->buf.size); DNL;
-    pamela_channel_task_control(chan, PAMELA_OFF);
+    pamela_channel_task_control(chan, PAMELA_TASK_OFF);
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
-  } else if(result == PAMELA_ERROR) {
+  } else if(result != PAMELA_POLL) {
     DS("ERR!"); DNL;
     // stop task
-    pamela_channel_task_control(chan, PAMELA_OFF);
+    pamela_channel_task_control(chan, PAMELA_TASK_OFF);
     // error needs reset of channel
-    pamela_end_stream(chan, PAMELA_ERROR);
+    pamela_end_stream(chan, result);
   }
   DS("..."); DNL;
 }
@@ -306,7 +306,7 @@ u08 pamela_req_open_malloc(u08 chan, pamela_buf_t *buf)
   buf->data = (u08 *)malloc(mtu);
   if(buf->data == NULL) {
     DS("no mem!"); DNL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_MEM;
   }
   DNL;
   return PAMELA_OK;

@@ -13,6 +13,7 @@ struct IOPamReq {
     struct IOStdReq     iopam_Req;
     UBYTE               iopam_Channel; /* channel or channel mask */
     BYTE                iopam_PamelaError; /* detailed error code */
+    UWORD               iopam_WireError; /* remote error */
     UWORD               iopam_Port; /* port of service to connect */
     APTR                iopam_Internal; /* internal do not use and alter */
 };

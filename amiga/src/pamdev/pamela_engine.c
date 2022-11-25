@@ -209,7 +209,8 @@ static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL
   // already error?
   if(!ok) {
     req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = PAMELA_ERROR_READ_FAILED;
+    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
+    req->iopam_WireError = pamela_error(sock->channel);
   }
   else {
     // try to process buffer
@@ -252,7 +253,8 @@ static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOO
   // already error?
   if(!ok) {
     req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = PAMELA_ERROR_WRITE_FAILED;
+    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
+    req->iopam_WireError = pamela_error(sock->channel);
   }
   else {
     // try to process buffer
@@ -282,6 +284,36 @@ static void handle_socket_eos(pamela_engine_t *eng, pamela_socket_t *sock)
 static void handle_socket_error(pamela_engine_t *eng, pamela_socket_t *sock)
 {
   D(("sock error\n"));
+
+  // pending read request?
+  if(sock->read_req != NULL) {
+    handle_socket_read(eng, sock, FALSE);
+  }
+  // pending write request?
+  if(sock->write_req != NULL) {
+    handle_socket_write(eng, sock, FALSE);
+  }
+}
+
+static void handle_cmd_req(pamela_engine_t *eng, pamela_socket_t *sock, int ok)
+{
+  pamela_req_t *req = sock->cmd_req;
+  if(req != NULL) {
+    D(("  -> reply cmd req %lx (ok=%ld, cmd=%lx)\n", req, (LONG)ok, (ULONG)req->iopam_Req.io_Command));
+
+    if(ok) {
+      req->iopam_Req.io_Error = 0;
+      req->iopam_PamelaError = 0;
+      req->iopam_WireError = 0;
+    } else {
+      req->iopam_Req.io_Error = IOERR_PAMELA;
+      req->iopam_PamelaError = PAMELA_ERROR_WIRE;
+      req->iopam_WireError = pamela_error(sock->channel);
+    }
+
+    ReplyMsg((struct Message *)req);
+    sock->cmd_req = NULL;
+  }
 }
 
 static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
@@ -295,44 +327,14 @@ static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
   if((status & PAMELA_STATUS_READ_READY) == PAMELA_STATUS_READ_READY) {
     handle_socket_read(eng, sock, TRUE);
   }
-  // the read request failed
-  if((status & PAMELA_STATUS_READ_ERROR) == PAMELA_STATUS_READ_ERROR) {
-    handle_socket_read(eng, sock, FALSE);
-  }
 
   // the write request is ready to be performed
   if((status & PAMELA_STATUS_WRITE_READY) == PAMELA_STATUS_WRITE_READY) {
     handle_socket_write(eng, sock, TRUE);
   }
 
-  // the write request failed
-  if((status & PAMELA_STATUS_WRITE_ERROR) == PAMELA_STATUS_WRITE_ERROR) {
-    handle_socket_write(eng, sock, FALSE);
-  }
-
-  // reply command requests like open/close/reset
-  UBYTE state = status & PAMELA_STATUS_STATE_MASK;
-  if(state == PAMELA_STATUS_ACTIVE) {
-    // open/reset cmd
-    if(sock->cmd_req != NULL) {
-      D(("  -> reply open/reset cmd req %lx\n", sock->cmd_req));
-      ReplyMsg((struct Message *)sock->cmd_req);
-      sock->cmd_req = NULL;
-    }
-  }
-  else if(state == PAMELA_STATUS_INACTIVE) {
-    // close cmd
-    if(sock->cmd_req != NULL) {
-      D(("  -> reply close cmd req %lx\n", sock->cmd_req));
-      ReplyMsg((struct Message *)sock->cmd_req);
-      sock->cmd_req = NULL;
-
-      // cleanup socket
-      pamela_engine_shutdown_socket(eng, sock);
-    }
-  }
-
   // get changed state
+  UBYTE state = status & PAMELA_STATUS_STATE_MASK;
   UBYTE old_state = sock->last_status & PAMELA_STATUS_STATE_MASK;
   if(state != old_state) {
     D((" -> new_state=%ld\n", state));
@@ -347,8 +349,23 @@ static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
         break;
     }
   }
-
   sock->last_status = status;
+
+  // reply command requests like open/close/reset
+  if(state == PAMELA_STATUS_ACTIVE) {
+    handle_cmd_req(eng, sock, TRUE);
+  }
+  else if(state == PAMELA_STATUS_INACTIVE) {
+    handle_cmd_req(eng, sock, TRUE);
+    // cleanup socket
+    pamela_engine_shutdown_socket(eng, sock);
+  }
+  else if(state == PAMELA_STATUS_OPEN_ERROR) {
+    // open failed...
+    handle_cmd_req(eng, sock, FALSE);
+    // cleanup socket
+    pamela_engine_shutdown_socket(eng, sock);
+  }
 }
 
 static void handle_event(pamela_engine_t *eng)

@@ -22,6 +22,8 @@
 #define PAMELA_ERROR_INVALID_MTU         -19
 #define PAMELA_ERROR_ODD_MTU             -20
 #define PAMELA_ERROR_NO_HANDLE           -21
+#define PAMELA_ERROR_WIRE                -22
+
 #define PAMELA_ERROR_UNKNOWN             -99
 
 #define PAMELA_ERROR_CUSTOM              -30
