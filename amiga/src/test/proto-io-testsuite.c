@@ -17,7 +17,6 @@
 #include "proto_io.h"
 #include "proto-io-testsuite.h"
 #include "proto/wire_io.h"
-#include "pamela/wire.h"
 #include "test-buffer.h"
 #include "test/proto_io.h"
 
@@ -113,7 +112,7 @@ TEST_FUNC(test_open_close)
   UWORD status = 0;
   res = proto_io_status(proto, TEST_CHANNEL, &status);
   CHECK_RES(res, "status1");
-  CHECK_EQUAL(status, PAMELA_STATUS_ACTIVE, "status active");
+  CHECK_EQUAL(status, TEST_STATUS_ACTIVE, "status active");
 
   // check port
   UWORD port = 0;
@@ -150,7 +149,7 @@ TEST_FUNC(test_reset)
   // check status: only open is set
   res = proto_io_status(proto, TEST_CHANNEL, &status);
   CHECK_RES(res, "status");
-  CHECK_EQUAL(status, PAMELA_STATUS_ACTIVE, "status active");
+  CHECK_EQUAL(status, TEST_STATUS_ACTIVE, "status active");
 
   // clear event mask
   UWORD mask = 0;

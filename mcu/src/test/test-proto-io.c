@@ -14,7 +14,6 @@
 
 #include "proto_io.h"
 #include "proto//wire_io.h"
-#include "pamela/wire.h"
 #include "test/proto_io.h"
 
 #include "fwid.h"
@@ -90,7 +89,7 @@ void proto_io_api_open(u08 chn, u16 port)
 
   // we misuse the mtu to pass port num
   test_mtu = port;
-  test_status = PAMELA_STATUS_ACTIVE;
+  test_status = TEST_STATUS_ACTIVE;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -110,7 +109,7 @@ extern void proto_io_api_reset(u08 chn)
   uart_send_hex_byte(chn);
   uart_send_crlf();
 
-  test_status = PAMELA_STATUS_ACTIVE;
+  test_status = TEST_STATUS_ACTIVE;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -147,7 +146,7 @@ void proto_io_api_read_req(u08 chn, u16 size)
 {
   read_size = size;
 
-  test_status |= PAMELA_STATUS_READ_REQ;
+  test_status |= TEST_STATUS_READ_BUSY;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -164,6 +163,8 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
 
 void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
 {
+  test_status &= ~TEST_STATUS_READ_BUSY;
+  proto_io_event_mask_add_chn(chn);
 }
 
 // write
@@ -172,7 +173,7 @@ void proto_io_api_write_req(u08 chn, u16 size)
 {
   write_size = size;
 
-  test_status |= PAMELA_STATUS_WRITE_REQ;
+  test_status |= TEST_STATUS_WRITE_BUSY;
   proto_io_event_mask_add_chn(chn);
 }
 
@@ -189,6 +190,8 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
 
 void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
 {
+  test_status &= ~TEST_STATUS_WRITE_BUSY;
+  proto_io_event_mask_add_chn(chn);
 }
 
 // ----- main -----

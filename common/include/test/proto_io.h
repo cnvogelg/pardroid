@@ -13,4 +13,8 @@
 #define TEST_DEFAULT_MTU 0x1234
 #define TEST_MTU         0x4321
 
+#define TEST_STATUS_ACTIVE      0x01
+#define TEST_STATUS_READ_BUSY   0x02
+#define TEST_STATUS_WRITE_BUSY  0x04
+
 #endif
