@@ -134,9 +134,10 @@ static u08 disk_data_read_request(u08 chn, pamela_buf_t *buf)
   return PAMELA_OK;
 }
 
-static void disk_data_read_done(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_read_done(u08 chn, pamela_buf_t *buf)
 {
   // n/a
+  return PAMELA_OK;
 }
 
 static u08 disk_data_write_request(u08 chn, pamela_buf_t *buf)
@@ -152,7 +153,7 @@ static u08 disk_data_write_request(u08 chn, pamela_buf_t *buf)
   return PAMELA_OK;
 }
 
-static void disk_data_write_done(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_write_done(u08 chn, pamela_buf_t *buf)
 {
   u08 pam_slot = pamela_get_slot(chn);
   disk_data_slot_t *slot = &slot_data[pam_slot];
@@ -164,7 +165,10 @@ static void disk_data_write_done(u08 chn, pamela_buf_t *buf)
   u08 result = disk_write(handle, slot->lba, 1, slot->buffer);
   if(result != DISK_OK) {
     DS("disk_data_write:error:"); DB(result); DNL;
+    return PAMELA_WIRE_ERROR_READ;
   }
+
+  return PAMELA_OK;
 }
 
 static void disk_data_seek(u08 chn, u32 pos)

@@ -165,11 +165,11 @@ u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
   return PAMELA_OK;
 }
 
-void pamela_req_write_done(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_write_done(u08 chan, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: wd: "); DB(chan);
@@ -177,7 +177,7 @@ void pamela_req_write_done(u08 chan, pamela_buf_t *buf)
   // check state: must be in write
   if(slot->state != PAMELA_REQ_STATE_IN_WRITE) {
     DS(" wrong state!"); DNL;
-    return;
+    return PAMELA_WIRE_ERROR_WRONG_STATE;;
   }
 
   // copy (request) buf to slot (reply)
@@ -186,7 +186,7 @@ void pamela_req_write_done(u08 chan, pamela_buf_t *buf)
 
   // call req handler handle()
   // it will consume the request and prepare the reply
-  // buf->size will be resizee accordingly.
+  // buf->size will be resized accordingly.
   // even buf->data could change if a new reply buffer is used
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE(req_handler);
@@ -197,14 +197,14 @@ void pamela_req_write_done(u08 chan, pamela_buf_t *buf)
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
   } else if(result != PAMELA_POLL) {
     DS("ERR!"); DNL;
-    // error needs reset of channel
-    pamela_end_stream(chan, result);
+    return result;
   } else {
     DS("..."); DNL;
     // enable channel task for polling handler
     slot->state = PAMELA_REQ_STATE_POLLING;
     pamela_channel_task_control(chan, PAMELA_TASK_ON);
   }
+  return PAMELA_OK;
 }
 
 // ----- read -----
@@ -236,11 +236,11 @@ u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf)
   return PAMELA_OK;
 }
 
-void pamela_req_read_done(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_read_done(u08 chan, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
-    return;
+    return PAMELA_WIRE_ERROR_NO_SLOT;
   }
 
   DS("#req: rd: "); DB(chan); DNL;
@@ -255,6 +255,7 @@ void pamela_req_read_done(u08 chan, pamela_buf_t *buf)
   DNL;
 
   slot->state = PAMELA_REQ_STATE_IDLE;
+  return PAMELA_OK;
 }
 
 // ----- channel task -----
