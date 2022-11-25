@@ -80,6 +80,12 @@ static void handle_global_cmd(u08 cmd)
         proto_io_api_set_channel_mtu(channel_no, mtu);
         break;
       }
+    case PROTO_IO_CMD_RWORD_CHANNEL_ERROR:
+      {
+        u16 error = proto_io_api_get_channel_error(channel_no);
+        proto_atom_read_word(error);
+        break;
+      }
     default:
       DC('!'); DC('C'); DB(cmd); DNL;
       break;

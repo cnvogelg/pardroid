@@ -12,6 +12,8 @@ extern u16  proto_io_api_get_max_channels(void);
 extern u16  proto_io_api_get_channel_mtu(u08 chn);
 extern void proto_io_api_set_channel_mtu(u08 chn, u16 mtu);
 
+extern u16  proto_io_api_get_channel_error(u08 chn);
+
 extern void proto_io_api_open(u08 chn, u16 port);
 extern void proto_io_api_close(u08 chn);
 extern u16  proto_io_api_status(u08 chn);

@@ -19,6 +19,7 @@ extern int proto_io_get_max_channels(proto_handle_t *ph, UWORD *channels);
 /* per channel config */
 extern int proto_io_get_channel_mtu(proto_handle_t *ph, channel_t ch, UWORD *mtu);
 extern int proto_io_set_channel_mtu(proto_handle_t *ph, channel_t ch, UWORD mtu);
+extern int proto_io_get_channel_error(proto_handle_t *ph, channel_t chn, UWORD *error);
 
 /* channel commands */
 extern int proto_io_open(proto_handle_t *ph, channel_t ch, UWORD port);

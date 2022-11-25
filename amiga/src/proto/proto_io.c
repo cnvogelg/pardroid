@@ -61,6 +61,16 @@ int proto_io_set_channel_mtu(proto_handle_t *ph, channel_t ch, UWORD mtu)
   return proto_atom_write_word(ph, PROTO_IO_CMD_WWORD_CHANNEL_MTU, mtu);
 }
 
+int proto_io_get_channel_error(proto_handle_t *ph, channel_t ch, UWORD *error)
+{
+  // set current channel
+  int res = proto_atom_write_word(ph, PROTO_IO_CMD_WWORD_CHANNEL_NO, ch);
+  if(res != PROTO_RET_OK) {
+    return res;
+  }
+  return proto_atom_read_word(ph, PROTO_IO_CMD_RWORD_CHANNEL_ERROR, error);
+}
+
 /* channel commands */
 int proto_io_open(proto_handle_t *ph, channel_t ch, UWORD port)
 {

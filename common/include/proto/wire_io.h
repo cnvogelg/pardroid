@@ -23,6 +23,8 @@
 #define PROTO_IO_CMD_RWORD_CHANNEL_MTU    0x28
 /* channel: try to set mtu */
 #define PROTO_IO_CMD_WWORD_CHANNEL_MTU    0x29
+/* channel: return channel error (if any) */
+#define PROTO_IO_CMD_RWORD_CHANNEL_ERROR  0x2a
 
 /* ----- channel commands (lower nybble is channel no) ----- */
 /* open a channel and pass port number */

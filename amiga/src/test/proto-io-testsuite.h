@@ -5,6 +5,7 @@
 
 TEST_FUNC(test_event_mask);
 TEST_FUNC(test_mtu);
+TEST_FUNC(test_error);
 TEST_FUNC(test_max_channels);
 TEST_FUNC(test_open_close);
 TEST_FUNC(test_reset);
@@ -16,6 +17,7 @@ TEST_FUNC(test_rw_data);
 #define TESTS_PROTO_IO \
   { test_event_mask, "em", "event mask"}, \
   { test_mtu, "mtu", "test mtu config"}, \
+  { test_error, "e", "test error value"}, \
   { test_max_channels, "mc", "max channels"}, \
   { test_open_close, "oc", "open/close"}, \
   { test_reset, "rst", "reset"}, \

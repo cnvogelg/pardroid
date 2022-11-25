@@ -15,20 +15,19 @@
 #include "proto_io.h"
 #include "proto//wire_io.h"
 #include "pamela/wire.h"
+#include "test/proto_io.h"
 
 #include "fwid.h"
 #include "fw_info.h"
 
 FW_INFO(FWID_TEST_PROTO_IO, VERSION_TAG)
 
-#define BUF_SIZE    512
-
 static u32 test_offset;
 static u16 test_status;
 static u16 test_mtu;
 static u16 read_size;
 static u16 write_size;
-static u08 data_buf[BUF_SIZE];
+static u08 data_buf[TEST_BUF_SIZE];
 
 // API
 
@@ -37,7 +36,7 @@ u16  proto_io_api_get_default_mtu(void)
   uart_send_pstring(PSTR("default mtu"));
   uart_send_crlf();
 
-  return 0x1234;
+  return TEST_DEFAULT_MTU;
 }
 
 u16 proto_io_api_get_max_channels(void)
@@ -68,6 +67,17 @@ void proto_io_api_set_channel_mtu(u08 chn, u16 mtu)
   uart_send_crlf();
 
   test_mtu = mtu;
+}
+
+u16 proto_io_api_get_channel_error(u08 chn)
+{
+  uart_send_pstring(PSTR("get_error:#"));
+  uart_send_hex_byte(chn);
+  uart_send(',');
+  uart_send_hex_word(0xbabe);
+  uart_send_crlf();
+
+  return TEST_ERROR;
 }
 
 void proto_io_api_open(u08 chn, u16 port)

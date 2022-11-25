@@ -19,13 +19,7 @@
 #include "proto/wire_io.h"
 #include "pamela/wire.h"
 #include "test-buffer.h"
-
-#define TEST_CHANNEL    7
-#define TEST_PORT       54321
-#define TEST_SEEK       0xdeadbeefUL
-#define TEST_SIZE       4096
-#define TEST_BUF_SIZE   512
-#define TEST_BYTE_OFFSET 3
+#include "test/proto_io.h"
 
 // ----- global config -----
 
@@ -67,16 +61,29 @@ TEST_FUNC(test_mtu)
   // get default mtu
   int res = proto_io_get_default_mtu(proto, &mtu);
   CHECK_RES(res, "get_default_mtu");
-  CHECK_EQUAL(mtu, 0x1234, "default mtu");
+  CHECK_EQUAL(mtu, TEST_DEFAULT_MTU, "default mtu");
 
   // set channel mtu
-  res = proto_io_set_channel_mtu(proto, TEST_CHANNEL, 0x2244);
+  res = proto_io_set_channel_mtu(proto, TEST_CHANNEL, TEST_MTU);
   CHECK_RES(res, "set_channel_mtu");
 
   // get channel mtu
   res = proto_io_get_channel_mtu(proto, TEST_CHANNEL, &mtu);
   CHECK_RES(res, "get_channel_mtu");
-  CHECK_EQUAL(mtu, 0x2244, "channel mtu");
+  CHECK_EQUAL(mtu, TEST_MTU, "channel mtu");
+
+  return 0;
+}
+
+TEST_FUNC(test_error)
+{
+  proto_handle_t *proto = (proto_handle_t *)p->user_data;
+  UWORD error = 0;
+
+  // get channel error
+  int res = proto_io_get_channel_error(proto, TEST_CHANNEL, &error);
+  CHECK_RES(res, "get_channel_error");
+  CHECK_EQUAL(error, TEST_ERROR, "channel error");
 
   return 0;
 }
