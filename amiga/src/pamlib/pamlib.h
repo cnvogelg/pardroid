@@ -5,6 +5,7 @@
 
 #include "pamela/devinfo.h"
 #include "pamela/error.h"
+#include "pamela/wire.h"
 
 /* ----- Types ----- */
 

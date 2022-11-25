@@ -63,6 +63,30 @@ TEST_FUNC(test_open_close)
   return 0;
 }
 
+TEST_FUNC(test_open_port_error)
+{
+  pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamlib_channel_t *ch = pamlib_open(ph, TEST_INVALID_PORT, &res);
+  CHECK_PAMLIB_RES_VAL(res, "open", PAMELA_WIRE_ERROR_NO_SERVICE);
+
+  return 0;
+}
+
+TEST_FUNC(test_open_own_error)
+{
+  pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;
+  int res = 0;
+
+  // open channel
+  pamlib_channel_t *ch = pamlib_open(ph, TEST_OPEN_ERROR_PORT, &res);
+  CHECK_PAMLIB_RES_VAL(res, "open", PAMELA_WIRE_ERROR_OPEN);
+
+  return 0;
+}
+
 static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pamlib_handle_t *ph = (pamlib_handle_t *)p->user_data;

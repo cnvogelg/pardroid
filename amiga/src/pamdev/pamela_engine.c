@@ -120,6 +120,7 @@ static void handle_req(pamela_engine_t *eng, pamela_req_t *req)
 
   // clear error state
   req->iopam_PamelaError = PAMELA_OK;
+  req->iopam_WireError = 0;
   req->iopam_Req.io_Error = 0;
 
   D(("handle_req { cmd=%ld\n", req->iopam_Req.io_Command));
@@ -295,22 +296,22 @@ static void handle_socket_error(pamela_engine_t *eng, pamela_socket_t *sock)
   }
 }
 
-static void handle_cmd_req(pamela_engine_t *eng, pamela_socket_t *sock, int ok)
+static void set_wire_error(pamela_socket_t *sock, UWORD wire_error)
 {
   pamela_req_t *req = sock->cmd_req;
   if(req != NULL) {
-    D(("  -> reply cmd req %lx (ok=%ld, cmd=%lx)\n", req, (LONG)ok, (ULONG)req->iopam_Req.io_Command));
+    D(("set cmd req=%lx wire error %ld\n", req, (ULONG)wire_error));
+    req->iopam_Req.io_Error = IOERR_PAMELA;
+    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
+    req->iopam_WireError = wire_error;
+  }
+}
 
-    if(ok) {
-      req->iopam_Req.io_Error = 0;
-      req->iopam_PamelaError = 0;
-      req->iopam_WireError = 0;
-    } else {
-      req->iopam_Req.io_Error = IOERR_PAMELA;
-      req->iopam_PamelaError = PAMELA_ERROR_WIRE;
-      req->iopam_WireError = pamela_error(sock->channel);
-    }
-
+static void reply_cmd_req(pamela_engine_t *eng, pamela_socket_t *sock)
+{
+  pamela_req_t *req = sock->cmd_req;
+  if(req != NULL) {
+    D(("  -> reply cmd req=%lx\n", req));
     ReplyMsg((struct Message *)req);
     sock->cmd_req = NULL;
   }
@@ -349,24 +350,25 @@ static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
         break;
     }
   }
-  sock->last_status = status;
 
   // reply command requests like open/close/reset
   if(state == PAMELA_STATUS_ACTIVE) {
-    handle_cmd_req(eng, sock, TRUE);
+    reply_cmd_req(eng, sock);
   }
   else if(state == PAMELA_STATUS_INACTIVE) {
-    handle_cmd_req(eng, sock, TRUE);
     // cleanup socket
     pamela_engine_shutdown_socket(eng, sock);
+    // answer req
+    reply_cmd_req(eng, sock);
   }
   else if(state == PAMELA_STATUS_OPEN_ERROR) {
-    // open failed...
-    handle_cmd_req(eng, sock, FALSE);
-    // cleanup socket
+    // set wire error in cmd_req
+    set_wire_error(sock, pamela_error(sock->channel));
+    // close channel... cmd req reply and cleanup will be done in inactive state
     pamela_close(sock->channel);
-    pamela_engine_shutdown_socket(eng, sock);
   }
+
+  sock->last_status = status;
 }
 
 static void handle_event(pamela_engine_t *eng)
@@ -444,6 +446,7 @@ int pamela_engine_init_request(pamela_engine_t *eng, pamela_req_t *req)
     return PAMELA_ERROR_NO_MEM;
   }
 
+  D(("init_request: req=%lx -> client=%lx\n", req, pc));
   AddTail((struct List *)&eng->clients, (struct Node *)pc);
 
   pc->request = req;
@@ -451,6 +454,7 @@ int pamela_engine_init_request(pamela_engine_t *eng, pamela_req_t *req)
 
   req->iopam_Internal = pc;
 
+  D(("init_request: done\n"));
   return PAMELA_OK;
 }
 
@@ -461,10 +465,14 @@ int pamela_engine_exit_request(pamela_engine_t *eng, pamela_req_t *req)
     return PAMELA_ERROR_CHANNEL_NOT_FOUND;
   }
 
+  D(("exit_request: req=%lx -> client=%lx\n", req, pc));
   pamela_engine_shutdown_client(eng, pc);
 
-  Remove((struct Node *)pc->request);
+  Remove((struct Node *)pc);
 
+  FreeMem(pc, sizeof(pamela_client_t));
+
+  D(("exit_request: done\n"));
   return PAMELA_OK;
 }
 
@@ -501,6 +509,7 @@ void pamela_engine_shutdown_client(pamela_engine_t *eng, pamela_client_t *pc)
     /* channel was opened by client/req */
     if((channel_mask & mask) == mask) {
       pamela_socket_t *sock = &eng->sockets[i];
+      D(("shutdown_client: sock=%lx\n", sock));
       pamela_close(sock->channel);
       pamela_engine_shutdown_socket(eng, sock);
     }
@@ -519,6 +528,11 @@ BOOL pamela_engine_cancel_request(pamela_engine_t *eng, pamela_req_t *req)
 
 void pamela_engine_shutdown_socket(pamela_engine_t *eng, pamela_socket_t *sock)
 {
+  D(("shutdown_socket: sock=%lx\n", sock));
+
+  // remove channel from mask
+  sock->client->channel_mask &= ~(1 << pamela_channel_id(sock->channel));
+
   sock->client = NULL;
   sock->channel = NULL;
 
@@ -529,6 +543,7 @@ void pamela_engine_cancel_read_write(pamela_engine_t *eng, pamela_socket_t *sock
 {
   // abort read socket
   if(sock->read_req != NULL) {
+    D(("cancel_read: req=%lx\n", sock->read_req));
     sock->read_req->iopam_Req.io_Error = IOERR_ABORTED;
     ReplyMsg((struct Message *)sock->read_req);
     sock->read_req = NULL;
@@ -536,6 +551,7 @@ void pamela_engine_cancel_read_write(pamela_engine_t *eng, pamela_socket_t *sock
 
   // abort write socket
   if(sock->write_req != NULL) {
+    D(("cancel_write: req=%lx\n", sock->write_req));
     sock->write_req->iopam_Req.io_Error = IOERR_ABORTED;
     ReplyMsg((struct Message *)sock->write_req);
     sock->write_req = NULL;

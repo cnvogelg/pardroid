@@ -124,6 +124,9 @@ pamlib_channel_t *pamlib_open(pamlib_handle_t *ph, UWORD port, int *error)
   if(res != 0) {
     FreeMem(ch, sizeof(*ch));
     *error = ph->req->iopam_PamelaError;
+    if(*error == PAMELA_ERROR_WIRE) {
+      *error = ph->req->iopam_WireError;
+    }
     return NULL;
   }
 

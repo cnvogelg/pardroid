@@ -435,10 +435,17 @@ int main(void)
 
   pamela_init();
 
+#ifdef VERBOSE
+  hw_timer_ms_t time = hw_timer_millis();
+#endif
+
   while(1) {
     pamela_work();
 #ifdef VERBOSE
-    uart_send('.');
+    if(hw_timer_millis_timed_out(time, 1000)) {
+      uart_send('.');
+      time = hw_timer_millis();
+    }
 #endif
  }
 
