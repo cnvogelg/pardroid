@@ -170,9 +170,9 @@ static void pamela_read_reply(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-static void pamela_read_error(pamela_channel_t *pc)
+void pamela_read_error(pamela_channel_t *pc, u08 error)
 {
-  pamela_set_error(pc, PAMELA_WIRE_ERROR_READ);
+  pamela_set_error(pc, error);
   pc->status &= ~PAMELA_STATUS_READ_BUSY;
   pc->rx_buf.data = NULL;
   pc->rx_buf.size = 0;
@@ -184,7 +184,7 @@ static void pamela_read_error(pamela_channel_t *pc)
 }
 
 void pamela_read_work(pamela_channel_t *chn,
-  hnd_read_request_func_t read_req_func)
+  hnd_read_func_t read_req_func)
 {
   DS("[rw:");
 
@@ -198,7 +198,7 @@ void pamela_read_work(pamela_channel_t *chn,
   if(result == PAMELA_OK) {
     pamela_read_reply(chn);
   } else if(result != PAMELA_POLL) {
-    pamela_read_error(chn);
+    pamela_read_error(chn, result);
   }
 
   DC(']');
@@ -223,9 +223,9 @@ static void pamela_write_reply(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-static void pamela_write_error(pamela_channel_t *pc)
+void pamela_write_error(pamela_channel_t *pc, u08 error)
 {
-  pamela_set_error(pc, PAMELA_WIRE_ERROR_WRITE);
+  pamela_set_error(pc, error);
   pc->status &= ~PAMELA_STATUS_WRITE_BUSY;
   pc->tx_buf.data = NULL;
   pc->tx_buf.size = 0;
@@ -237,7 +237,7 @@ static void pamela_write_error(pamela_channel_t *pc)
 }
 
 void pamela_write_work(pamela_channel_t *chn,
-  hnd_write_request_func_t write_req_func)
+  hnd_write_func_t write_req_func)
 {
   DS("[ww:");
 
@@ -250,7 +250,7 @@ void pamela_write_work(pamela_channel_t *chn,
   if(result == PAMELA_OK) {
     pamela_write_reply(chn);
   } else if(result != PAMELA_POLL) {
-    pamela_write_error(chn);
+    pamela_write_error(chn, result);
   }
 
   DC(']');
@@ -365,11 +365,11 @@ static void pamela_active_work(pamela_channel_t *chn)
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(chn->service->srv_id);
 
   if(chn->status & PAMELA_STATUS_READ_BUSY) {
-    hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_POLL(handler);
+    hnd_read_func_t read_req_func = HANDLER_FUNC_READ_POLL(handler);
     pamela_read_work(chn, read_req_func);
   }
   if(chn->status & PAMELA_STATUS_WRITE_BUSY) {
-    hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_POLL(handler);
+    hnd_write_func_t write_req_func = HANDLER_FUNC_WRITE_POLL(handler);
     pamela_write_work(chn, write_req_func);
   }
 }

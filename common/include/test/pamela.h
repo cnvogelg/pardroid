@@ -4,6 +4,13 @@
 #define TEST_MAX_BUF_SIZE    512
 #define TEST_DEFAULT_MTU     512
 
+#define TEST_ERROR_REQ_SIZE   113
+#define TEST_ERROR_POLL_SIZE  114
+#define TEST_ERROR_DONE_SIZE  115
+
+#define TEST_ERROR_READ      0x88
+#define TEST_ERROR_WRITE     0x99
+
 #define TEST_NUM_SLOTS       4
 #define TEST_ERROR_SLOT      3
 

@@ -197,7 +197,7 @@ void proto_io_api_read_req(u08 chn, u16 size)
 
   DS("[RR:"); DB(chn); DC(':'); DW(size);
 
-  hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_REQUEST(handler);
+  hnd_read_func_t read_req_func = HANDLER_FUNC_READ_REQUEST(handler);
   pamela_read_work(pc, read_req_func);
 
   DC(']'); DNL;
@@ -227,9 +227,10 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
   DS("[RD:"); DB(chn); DC('='); DW(pc->rx_buf.size);
-  hnd_read_done_func_t read_done = HANDLER_FUNC_READ_DONE(handler);
+  hnd_read_func_t read_done = HANDLER_FUNC_READ_DONE(handler);
+  u08 result = PAMELA_OK;
   if(read_done != NULL) {
-    read_done(chn, &pc->rx_buf);
+    result = read_done(chn, &pc->rx_buf);
   }
   DC(']'); DNL;
   pc->rx_buf.size = 0;
@@ -237,6 +238,10 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_READ_MASK;
+
+  if(result != PAMELA_OK) {
+    pamela_read_error(pc, result);
+  }
 }
 
 // write
@@ -252,7 +257,7 @@ void proto_io_api_write_req(u08 chn, u16 size)
 
   DS("[WR:"); DB(chn); DC(':'); DW(size);
 
-  hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_REQUEST(handler);
+  hnd_write_func_t write_req_func = HANDLER_FUNC_WRITE_REQUEST(handler);
   pamela_write_work(pc, write_req_func);
 
   DC(']'); DNL;
@@ -282,9 +287,10 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
   DS("[WD:"); DB(chn); DC('='); DW(pc->tx_buf.size);
-  hnd_write_done_func_t write_done = HANDLER_FUNC_WRITE_DONE(handler);
+  hnd_write_func_t write_done = HANDLER_FUNC_WRITE_DONE(handler);
+  u08 result = PAMELA_OK;
   if(write_done != NULL) {
-    write_done(chn, &pc->tx_buf);
+    result = write_done(chn, &pc->tx_buf);
   }
   DC(']'); DNL;
   pc->tx_buf.size = 0;
@@ -292,4 +298,8 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
 
   // clear read status
   pc->status &= ~PAMELA_STATUS_WRITE_MASK;
+
+  if(result != PAMELA_OK) {
+    pamela_write_error(pc, result);
+  }
 }

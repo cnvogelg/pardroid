@@ -211,15 +211,18 @@ u08 my_read_request(u08 chan, pamela_buf_t *buf)
 #endif
 
   // simulate read error on error channel
-  if(slot == TEST_ERROR_SLOT) {
-    return PAMELA_WIRE_ERROR_READ;
+  if(buf->size == TEST_ERROR_REQ_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_REQ!"));
+#endif
+    return TEST_ERROR_READ;
   }
 
   // set read buffer
   buf->data = read_buf;
 
   slots[slot].start = hw_timer_millis();
-  if(slots[slot].delay > 0) {
+  if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
     return PAMELA_POLL;
   } else {
     return PAMELA_OK;
@@ -233,6 +236,15 @@ u08 my_read_poll(u08 chan, pamela_buf_t *buf)
 #ifdef VERBOSE
   uart_send('X');
 #endif
+
+  // simulate read error on error channel
+  if(buf->size == TEST_ERROR_POLL_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_POLL!"));
+#endif
+    return TEST_ERROR_READ;
+  }
+
   if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
 #ifdef VERBOSE
     uart_send('!');
@@ -243,9 +255,17 @@ u08 my_read_poll(u08 chan, pamela_buf_t *buf)
   }
 }
 
-void my_read_done(u08 chan, pamela_buf_t *buf)
+u08 my_read_done(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
+
+  // simulate read error on error channel
+  if(buf->size == TEST_ERROR_DONE_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_DONE!"));
+#endif
+    return TEST_ERROR_READ;
+  }
 
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<rd:"));
@@ -256,6 +276,8 @@ void my_read_done(u08 chan, pamela_buf_t *buf)
   uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
+
+  return PAMELA_OK;
 }
 
 // ----- write -----
@@ -274,16 +296,19 @@ u08 my_write_request(u08 chan, pamela_buf_t *buf)
   uart_send('>');
 #endif
 
-  // simulate read error on error channel
-  if(slot == TEST_ERROR_SLOT) {
-    return PAMELA_WIRE_ERROR_WRITE;
+  // simulate write error on error channel
+  if(buf->size == TEST_ERROR_REQ_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_REQ!"));
+#endif
+    return TEST_ERROR_WRITE;
   }
 
   // set write buffer
   buf->data = read_buf;
 
   slots[slot].start_w = hw_timer_millis();
-  if(slots[slot].delay > 0) {
+  if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
     return PAMELA_POLL;
   } else {
     return PAMELA_OK;
@@ -297,6 +322,15 @@ u08 my_write_poll(u08 chan, pamela_buf_t *buf)
 #ifdef VERBOSE
   uart_send('Y');
 #endif
+
+  // simulate read error on error channel
+  if(buf->size == TEST_ERROR_POLL_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_POLL!"));
+#endif
+    return TEST_ERROR_WRITE;
+  }
+
   if(hw_timer_millis_timed_out(slots[slot].start_w, slots[slot].delay)) {
 #ifdef VERBOSE
     uart_send('!');
@@ -307,9 +341,17 @@ u08 my_write_poll(u08 chan, pamela_buf_t *buf)
   }
 }
 
-void my_write_done(u08 chan, pamela_buf_t *buf)
+u08 my_write_done(u08 chan, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
+
+  // simulate read error on error channel
+  if(buf->size == TEST_ERROR_DONE_SIZE) {
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("ERR_DONE!"));
+#endif
+    return TEST_ERROR_WRITE;
+  }
 
 #ifdef VERBOSE
   uart_send_pstring(PSTR("<wd:"));
@@ -320,6 +362,8 @@ void my_write_done(u08 chan, pamela_buf_t *buf)
   uart_send_hex_word(buf->size);
   uart_send('>');
 #endif
+
+  return PAMELA_OK;
 }
 
 u16 my_set_mtu(u08 chan, u16 new_mtu)

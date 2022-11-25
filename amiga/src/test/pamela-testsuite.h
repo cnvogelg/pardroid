@@ -11,6 +11,12 @@ TEST_FUNC(test_write);
 TEST_FUNC(test_read);
 TEST_FUNC(test_write_odd);
 TEST_FUNC(test_read_odd);
+TEST_FUNC(test_write_error_req);
+TEST_FUNC(test_read_error_req);
+TEST_FUNC(test_write_error_poll);
+TEST_FUNC(test_read_error_poll);
+TEST_FUNC(test_write_error_done);
+TEST_FUNC(test_read_error_done);
 TEST_FUNC(test_seek_tell);
 TEST_FUNC(test_get_set_mtu);
 
@@ -23,6 +29,12 @@ TEST_FUNC(test_get_set_mtu);
   { test_read, "r", "read message from channel" }, \
   { test_write_odd, "wo", "write odd sized message on channel" }, \
   { test_read_odd, "ro", "read odd sized message from channel" }, \
+  { test_write_error_req, "wer", "write req error on channel" }, \
+  { test_read_error_req, "rer", "read req error on channel" }, \
+  { test_write_error_poll, "wep", "write poll error on channel" }, \
+  { test_read_error_poll, "rep", "read poll error on channel" }, \
+  { test_write_error_done, "wed", "write done error on channel" }, \
+  { test_read_error_done, "red", "read done error on channel" }, \
   { test_seek_tell, "st", "seek/tell" }, \
   { test_get_set_mtu, "gsm", "get/set mtu" }, \
  

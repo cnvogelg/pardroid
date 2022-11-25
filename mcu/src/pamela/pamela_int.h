@@ -62,8 +62,12 @@ extern void pamela_close_work(pamela_channel_t *chn, hnd_close_func_t func);
 
 extern void pamela_reset_work(pamela_channel_t *chn, hnd_reset_func_t func);
 
-extern void pamela_read_work(pamela_channel_t *chn, hnd_read_request_func_t read_req_func);
+extern void pamela_read_work(pamela_channel_t *chn, hnd_read_func_t read_req_func);
 
-extern void pamela_write_work(pamela_channel_t *chn, hnd_read_request_func_t read_req_func);
+extern void pamela_read_error(pamela_channel_t *chn, u08 error);
+
+extern void pamela_write_work(pamela_channel_t *chn, hnd_read_func_t read_req_func);
+
+extern void pamela_write_error(pamela_channel_t *pc, u08 error);
 
 #endif

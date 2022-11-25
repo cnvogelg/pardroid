@@ -20,13 +20,9 @@ typedef u16 (*hnd_set_mtu_func_t)(u08 chn, u16 mtu);
 typedef void (*hnd_seek_func_t)(u08 chn, u32 pos);
 typedef u32 (*hnd_tell_func_t)(u08 chn);
 
-/* ----- read ----- */
-typedef u08 (*hnd_read_request_func_t)(u08 chn, pamela_buf_t *buf);
-typedef void (*hnd_read_done_func_t)(u08 chn, pamela_buf_t *buf);
-
-/* ----- write ----- */
-typedef u08 (*hnd_write_request_func_t)(u08 chn, pamela_buf_t *buf);
-typedef void (*hnd_write_done_func_t)(u08 chn, pamela_buf_t *buf);
+/* ----- read/write ----- */
+typedef u08 (*hnd_read_func_t)(u08 chn, pamela_buf_t *buf);
+typedef u08 (*hnd_write_func_t)(u08 chn, pamela_buf_t *buf);
 
 /* ----- tasks ----- */
 typedef void (*hnd_service_task_func_t)(u08 srv_id);
@@ -116,18 +112,18 @@ struct pamela_handler {
      if reading is not possible then return
      PAMELA_ERROR.
   */
-  hnd_read_request_func_t       read_request;
+  hnd_read_func_t       read_request;
   /* continue read operation
      return PAMELA_OK when done, an error or PAMELA_POLL
      to continue
   */
-  hnd_read_request_func_t       read_poll;
+  hnd_read_func_t       read_poll;
   /* a read operation that was reported ready is now
      finally retrieved from the host and this
      callback notifies the handler that the associated
      buffer/SPI is free again.
   */
-  hnd_read_done_func_t          read_done;
+  hnd_read_func_t          read_done;
 
   /* ----- write ----- */
   /* a write request arrived from the host with the
@@ -144,18 +140,18 @@ struct pamela_handler {
 
      return PAMELA_ERROR if writing is not possible.
   */
-  hnd_write_request_func_t      write_request;
+  hnd_write_func_t      write_request;
   /* continue WRITE operation
      return PAMELA_OK when done, an error or BUSY
      to continue
   */
-  hnd_write_request_func_t      write_poll;
+  hnd_write_func_t      write_poll;
   /* a write operation was reported ready is now
      finally retrieved from the host and this
      callback notifies the handler that the associated
      buffer/SPI is free again.
   */
-  hnd_write_done_func_t         write_done;
+  hnd_write_func_t         write_done;
 
   /* a new mtu was set by the host.
      return accepted value
@@ -197,13 +193,13 @@ typedef const pamela_handler_t *pamela_handler_ptr_t;
 #define HANDLER_FUNC_SEEK(hnd)        ((hnd_seek_func_t)read_rom_rom_ptr(&hnd->seek))
 #define HANDLER_FUNC_TELL(hnd)        ((hnd_tell_func_t)read_rom_rom_ptr(&hnd->tell))
 
-#define HANDLER_FUNC_READ_REQUEST(hnd ) ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_request))
-#define HANDLER_FUNC_READ_POLL(hnd )    ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->read_poll))
-#define HANDLER_FUNC_READ_DONE(hnd)     ((hnd_read_done_func_t)read_rom_rom_ptr(&hnd->read_done))
+#define HANDLER_FUNC_READ_REQUEST(hnd ) ((hnd_read_func_t)read_rom_rom_ptr(&hnd->read_request))
+#define HANDLER_FUNC_READ_POLL(hnd )    ((hnd_read_func_t)read_rom_rom_ptr(&hnd->read_poll))
+#define HANDLER_FUNC_READ_DONE(hnd)     ((hnd_read_func_t)read_rom_rom_ptr(&hnd->read_done))
 
-#define HANDLER_FUNC_WRITE_REQUEST(hnd) ((hnd_write_request_func_t)read_rom_rom_ptr(&hnd->write_request))
-#define HANDLER_FUNC_WRITE_POLL(hnd )   ((hnd_read_request_func_t)read_rom_rom_ptr(&hnd->write_poll))
-#define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_done_func_t)read_rom_rom_ptr(&hnd->write_done))
+#define HANDLER_FUNC_WRITE_REQUEST(hnd) ((hnd_write_func_t)read_rom_rom_ptr(&hnd->write_request))
+#define HANDLER_FUNC_WRITE_POLL(hnd )   ((hnd_write_func_t)read_rom_rom_ptr(&hnd->write_poll))
+#define HANDLER_FUNC_WRITE_DONE(hnd)    ((hnd_write_func_t)read_rom_rom_ptr(&hnd->write_done))
 
 #define HANDLER_FUNC_SET_MTU(hnd)       ((hnd_set_mtu_func_t)read_rom_rom_ptr(&hnd->set_mtu))
 
