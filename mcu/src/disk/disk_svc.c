@@ -70,7 +70,7 @@ static u08 disk_data_open(u08 chn, u16 port)
   slot->buffer = malloc(DISK_MTU);
   if(slot->buffer == NULL) {
     DS("no mem!"); DNL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_NO_MEM;
   }
 
   // try to open disk map slot
@@ -79,7 +79,7 @@ static u08 disk_data_open(u08 chn, u16 port)
   if(result != DISK_OK) {
     free(slot->buffer);
     slot->buffer = NULL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_OBJ_NOT_FOUND;
   }
 
   return PAMELA_OK;
@@ -106,13 +106,13 @@ static u08 disk_data_close(u08 chn)
 static u08 disk_data_reset(u08 chn)
 {
   // no reset for now
-  return PAMELA_ERROR;
+  return PAMELA_WIRE_ERROR_NOT_SUPPORTED;
 }
 
 static u08 disk_data_read_request(u08 chn, pamela_buf_t *buf)
 {
   if(buf->size != DISK_MTU) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_WRONG_SIZE;
   }
 
   u08 pam_slot = pamela_get_slot(chn);
@@ -128,7 +128,7 @@ static u08 disk_data_read_request(u08 chn, pamela_buf_t *buf)
   u08 result = disk_read(handle, slot->lba, 1, slot->buffer);
   if(result != DISK_OK) {
     DS("disk_data_read:error:"); DB(result); DNL;
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_READ;
   }
 
   return PAMELA_OK;
@@ -142,7 +142,7 @@ static void disk_data_read_done(u08 chn, pamela_buf_t *buf)
 static u08 disk_data_write_request(u08 chn, pamela_buf_t *buf)
 {
   if(buf->size != DISK_MTU) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_WRONG_SIZE;
   }
 
   u08 pam_slot = pamela_get_slot(chn);
