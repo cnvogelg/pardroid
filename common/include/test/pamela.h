@@ -10,4 +10,7 @@
 #define TEST_PORT_MIN        1000
 #define TEST_PORT_MAX        1999
 
+#define TEST_INVALID_PORT    2000
+#define TEST_OPEN_ERROR_PORT 1999
+
 #endif

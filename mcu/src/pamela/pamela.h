@@ -15,15 +15,19 @@
 #define PAMELA_DEFAULT_MTU              512
 #endif
 
+/* handler result values
+   if its another value it is assumed to be an error code
+   typically a PAMELA_WIRE_ERROR_*
+*/
 #define PAMELA_OK 0
-#define PAMELA_ERROR 1
 #define PAMELA_POLL 0xff
 
 #define PAMELA_NO_SLOT       0xff
 #define PAMELA_NO_SERVICE_ID 0xff
 
-#define PAMELA_ON 1
-#define PAMELA_OFF 0
+/* task control flags */
+#define PAMELA_TASK_ON 1
+#define PAMELA_TASK_OFF 0
 
 /* first time setup of pamela and all lower layers */
 extern void pamela_init(void);

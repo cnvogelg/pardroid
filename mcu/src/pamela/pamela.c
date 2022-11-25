@@ -139,16 +139,16 @@ void pamela_set_status(pamela_channel_t *pc, u08 status)
 
 void pamela_set_error(pamela_channel_t *pc, u08 error)
 {
-  pc->status &= ~(PAMELA_STATUS_STATE_MASK | PAMELA_STATUS_ERROR_MASK);
+  pc->status &= ~PAMELA_STATUS_STATE_MASK;
   pc->status |= PAMELA_STATUS_ERROR;
-  pc->status |= error << PAMELA_STATUS_ERROR_SHIFT;
+  pc->error = error;
 }
 
 void pamela_set_open_error(pamela_channel_t *pc, u08 error)
 {
-  pc->status &= ~(PAMELA_STATUS_STATE_MASK | PAMELA_STATUS_ERROR_MASK);
+  pc->status &= ~PAMELA_STATUS_STATE_MASK;
   pc->status |= PAMELA_STATUS_OPEN_ERROR;
-  pc->status |= error << PAMELA_STATUS_ERROR_SHIFT;
+  pc->error = error;
 }
 
 // ----- read -----
@@ -162,7 +162,7 @@ static void pamela_read_reply(pamela_channel_t *pc)
 
   // read is now pending
   pc->status |= PAMELA_STATUS_READ_READY;
-  pc->status &= ~PAMELA_STATUS_READ_REQ;
+  pc->status &= ~PAMELA_STATUS_READ_BUSY;
 
   DS("[rp:"); DB(pc->chan_id); DC('='); DW(pc->rx_buf.size); DC(']');
 
@@ -172,8 +172,8 @@ static void pamela_read_reply(pamela_channel_t *pc)
 
 static void pamela_read_error(pamela_channel_t *pc)
 {
-  pc->status |= PAMELA_STATUS_READ_ERROR;
-  pc->status &= ~PAMELA_STATUS_READ_REQ;
+  pamela_set_error(pc, PAMELA_WIRE_ERROR_READ);
+  pc->status &= ~PAMELA_STATUS_READ_BUSY;
   pc->rx_buf.data = NULL;
   pc->rx_buf.size = 0;
 
@@ -189,7 +189,7 @@ void pamela_read_work(pamela_channel_t *chn,
   DS("[rw:");
 
   // pass call to handler
-  u08 result = PAMELA_ERROR;
+  u08 result = PAMELA_OK;
   if(read_req_func != NULL) {
     result = read_req_func(chn->chan_id, &chn->rx_buf);
   }
@@ -215,7 +215,7 @@ static void pamela_write_reply(pamela_channel_t *pc)
 
   // write is now pending
   pc->status |= PAMELA_STATUS_WRITE_READY;
-  pc->status &= ~PAMELA_STATUS_WRITE_REQ;
+  pc->status &= ~PAMELA_STATUS_WRITE_BUSY;
 
   DS("[wp:"); DB(pc->chan_id); DC('='); DW(pc->tx_buf.size); DC(']');
 
@@ -225,8 +225,8 @@ static void pamela_write_reply(pamela_channel_t *pc)
 
 static void pamela_write_error(pamela_channel_t *pc)
 {
-  pc->status |= PAMELA_STATUS_WRITE_ERROR;
-  pc->status &= ~PAMELA_STATUS_WRITE_REQ;
+  pamela_set_error(pc, PAMELA_WIRE_ERROR_WRITE);
+  pc->status &= ~PAMELA_STATUS_WRITE_BUSY;
   pc->tx_buf.data = NULL;
   pc->tx_buf.size = 0;
 
@@ -241,7 +241,7 @@ void pamela_write_work(pamela_channel_t *chn,
 {
   DS("[ww:");
 
-  u08 result = PAMELA_ERROR;
+  u08 result = PAMELA_OK;
   if(write_req_func != NULL) {
     result = write_req_func(chn->chan_id, &chn->tx_buf);
   }
@@ -263,7 +263,7 @@ static void pamela_open_done(pamela_channel_t *pc, u08 error)
   if(error == PAMELA_OK) {
     pamela_set_status(pc, PAMELA_STATUS_ACTIVE);
   } else {
-    pamela_set_error(pc, error);
+    pamela_set_open_error(pc, error);
   }
 
   // set service active
@@ -294,7 +294,7 @@ void pamela_open_work(pamela_channel_t *chn, hnd_open_func_t open_func)
 
 // ----- close -----
 
-static void pamela_close_done(pamela_channel_t *pc)
+void pamela_close_done(pamela_channel_t *pc)
 {
   pamela_set_status(pc, PAMELA_STATUS_INACTIVE);
 
@@ -364,11 +364,11 @@ static void pamela_active_work(pamela_channel_t *chn)
   //DS("{act:"); DB(chn->chan_id); DC(':'); DW(chn->status); DC('}');
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(chn->service->srv_id);
 
-  if(chn->status & PAMELA_STATUS_READ_REQ) {
+  if(chn->status & PAMELA_STATUS_READ_BUSY) {
     hnd_read_request_func_t read_req_func = HANDLER_FUNC_READ_POLL(handler);
     pamela_read_work(chn, read_req_func);
   }
-  if(chn->status & PAMELA_STATUS_WRITE_REQ) {
+  if(chn->status & PAMELA_STATUS_WRITE_BUSY) {
     hnd_write_request_func_t write_req_func = HANDLER_FUNC_WRITE_POLL(handler);
     pamela_write_work(chn, write_req_func);
   }

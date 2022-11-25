@@ -12,6 +12,7 @@ struct pamela_channel {
   UBYTE               flags;
   UBYTE               channel_id;
   UWORD               status;
+  UWORD               error;
   UWORD               port;
   UWORD               read_bytes;
   UWORD               write_bytes;

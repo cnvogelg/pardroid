@@ -72,10 +72,12 @@ int pamela_close(pamela_channel_t *pc);
 int pamela_reset(pamela_channel_t *pc);
 
 /* ----- update/status ----- */
-/* update channel state by querying device */
+/* update channel state (and error if necessary) by querying device */
 int pamela_update(pamela_channel_t *pc);
 /* return local channel status */
 UWORD pamela_status(pamela_channel_t *pc);
+/* return error code of channel */
+UWORD pamela_error(pamela_channel_t *pc);
 /* return id 0..n of channel */
 UBYTE pamela_channel_id(pamela_channel_t *pc);
 

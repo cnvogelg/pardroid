@@ -53,6 +53,10 @@ static u08 my_open(u08 chan, u16 port)
   uart_send('>');
 #endif
 
+  if(port == TEST_OPEN_ERROR_PORT) {
+    return PAMELA_WIRE_ERROR_OPEN;
+  }
+
   slots[slot].chan = chan;
   slots[slot].port = port;
   slots[slot].delay = delay;
@@ -208,7 +212,7 @@ u08 my_read_request(u08 chan, pamela_buf_t *buf)
 
   // simulate read error on error channel
   if(slot == TEST_ERROR_SLOT) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_READ;
   }
 
   // set read buffer
@@ -272,7 +276,7 @@ u08 my_write_request(u08 chan, pamela_buf_t *buf)
 
   // simulate read error on error channel
   if(slot == TEST_ERROR_SLOT) {
-    return PAMELA_ERROR;
+    return PAMELA_WIRE_ERROR_WRITE;
   }
 
   // set write buffer

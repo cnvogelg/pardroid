@@ -97,6 +97,52 @@ TEST_FUNC(test_open_close)
   return 0;
 }
 
+TEST_FUNC(test_open_port_error)
+{
+  pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
+  pamela_channel_t *chn = NULL;
+  int res = 0;
+
+  chn = pamela_open(pam, TEST_INVALID_PORT, &res);
+  CHECK_PAM_RES(res, "open");
+  CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_OPEN_ERROR);
+
+  UWORD error = pamela_error(chn);
+  CHECK_PAM_RES_VAL(error, "wire_error", PAMELA_WIRE_ERROR_NO_SERVICE);
+
+  res = pamela_close(chn);
+  CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
+
+  return 0;
+}
+
+TEST_FUNC(test_open_own_error)
+{
+  pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
+  pamela_channel_t *chn = NULL;
+  int res = 0;
+
+  chn = pamela_open(pam, TEST_OPEN_ERROR_PORT, &res);
+  CHECK_PAM_RES(res, "open");
+  CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_OPEN_ERROR);
+
+  UWORD error = pamela_error(chn);
+  CHECK_PAM_RES_VAL(error, "wire_error", PAMELA_WIRE_ERROR_OPEN);
+
+  res = pamela_close(chn);
+  CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
+
+  return 0;
+}
+
 static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pamela_handle_t *pam = (pamela_handle_t *)p->user_data;

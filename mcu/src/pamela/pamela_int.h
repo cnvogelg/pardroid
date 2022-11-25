@@ -25,6 +25,7 @@ struct pamela_channel {
 
   /* current status. */
   u16 status;
+  u16 error;
 
   /* pending rx request */
   u16 rx_org_size;
