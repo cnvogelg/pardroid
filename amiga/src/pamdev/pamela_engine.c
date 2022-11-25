@@ -364,6 +364,7 @@ static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
     // open failed...
     handle_cmd_req(eng, sock, FALSE);
     // cleanup socket
+    pamela_close(sock->channel);
     pamela_engine_shutdown_socket(eng, sock);
   }
 }
