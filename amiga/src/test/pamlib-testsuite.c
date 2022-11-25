@@ -41,6 +41,19 @@
     return res; \
   }
 
+#define CHECK_PAMLIB_RES_WIRE_ERROR(res, sec, wire_error) \
+  if (res != PAMELA_ERROR_WIRE) \
+  { \
+    p->error = pamela_perror(res); \
+    p->section = sec; \
+    return res; \
+  } \
+  if(pamlib_wire_error(ph) != wire_error) { \
+    p->error = "wire error mismatch"; \
+    p->section = sec; \
+    return res; \
+  }
+
 TEST_FUNC(test_init_exit)
 {
   // nothing to do. init/exit is done in all tests.
@@ -104,22 +117,32 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
 
   // read
   res = pamlib_read(ch, buf, read_size);
-  CHECK_PAMLIB_RES_VAL(res, "read", read_size);
+
+  // error during req
+  int check = 1;
+  if((read_size == TEST_ERROR_REQ_SIZE) || (read_size == TEST_ERROR_POLL_SIZE)) {
+    CHECK_PAMLIB_RES_WIRE_ERROR(res, "read", TEST_ERROR_READ);
+    check = 0;
+  } else {
+    CHECK_PAMLIB_RES_VAL(res, "read", read_size);
+  }
 
   // close channel
   res = pamlib_close(ch);
   CHECK_PAMLIB_RES(res, "close");
 
   // check buffer
-  int errors = 0;
-  for(int i=0;i<read_size;i++) {
-    UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
-    if (buf[i] != val)
-    {
-      p->error = "value mismatch";
-      p->section = "compare";
-      sprintf(p->extra, "@%ld: w=%04lx r=%04lx (errors=%d)", (LONG)i, (ULONG)val, (ULONG)buf[i], errors);
-      errors ++;
+  if(check) {
+    int errors = 0;
+    for(int i=0;i<read_size;i++) {
+      UBYTE val = (UBYTE)((i + TEST_BYTE_OFFSET) & 0xff);
+      if (buf[i] != val)
+      {
+        p->error = "value mismatch";
+        p->section = "compare";
+        sprintf(p->extra, "@%ld: w=%04lx r=%04lx (errors=%d)", (LONG)i, (ULONG)val, (ULONG)buf[i], errors);
+        errors ++;
+      }
     }
   }
 
@@ -136,6 +159,21 @@ TEST_FUNC(test_read)
 TEST_FUNC(test_read_odd)
 {
   return test_read_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_read_error_req)
+{
+  return test_read_helper(p, TEST_ERROR_REQ_SIZE);
+}
+
+TEST_FUNC(test_read_error_poll)
+{
+  return test_read_helper(p, TEST_ERROR_POLL_SIZE);
+}
+
+TEST_FUNC(test_read_error_done)
+{
+  return test_read_helper(p, TEST_ERROR_DONE_SIZE);
 }
 
 static int test_write_helper(test_param_t *p, UWORD write_size)
@@ -160,7 +198,13 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
 
   // write
   res = pamlib_write(ch, buf, write_size);
-  CHECK_PAMLIB_RES_VAL(res, "write", write_size);
+
+  // error during req
+  if((write_size == TEST_ERROR_REQ_SIZE) || (write_size == TEST_ERROR_POLL_SIZE)) {
+    CHECK_PAMLIB_RES_WIRE_ERROR(res, "write", TEST_ERROR_WRITE);
+  } else {
+    CHECK_PAMLIB_RES_VAL(res, "write", write_size);
+  }
 
   // close channel
   res = pamlib_close(ch);
@@ -179,6 +223,21 @@ TEST_FUNC(test_write)
 TEST_FUNC(test_write_odd)
 {
   return test_write_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_write_error_req)
+{
+  return test_write_helper(p, TEST_ERROR_REQ_SIZE);
+}
+
+TEST_FUNC(test_write_error_poll)
+{
+  return test_write_helper(p, TEST_ERROR_POLL_SIZE);
+}
+
+TEST_FUNC(test_write_error_done)
+{
+  return test_write_helper(p, TEST_ERROR_DONE_SIZE);
 }
 
 TEST_FUNC(test_seek_tell)

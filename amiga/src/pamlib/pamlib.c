@@ -108,6 +108,11 @@ int pamlib_devinfo(pamlib_handle_t *ph, pamela_devinfo_t *di)
   return 0;
 }
 
+UWORD pamlib_wire_error(pamlib_handle_t *ph)
+{
+  return ph->req->iopam_WireError;
+}
+
 pamlib_channel_t *pamlib_open(pamlib_handle_t *ph, UWORD port, int *error)
 {
   // create channel handle

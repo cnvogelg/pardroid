@@ -28,6 +28,9 @@ void pamlib_exit(pamlib_handle_t *ph);
 /* clone handle to work with it in another task */
 pamlib_handle_t *pamlib_clone(pamlib_handle_t *ph);
 
+/* get last wire error */
+UWORD pamlib_wire_error(pamlib_handle_t *ph);
+
 /* fill devinfo */
 int pamlib_devinfo(pamlib_handle_t *ph, pamela_devinfo_t *di);
 
