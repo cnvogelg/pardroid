@@ -162,7 +162,7 @@ static void pamela_read_reply(pamela_channel_t *pc)
 
   // read is now pending
   pc->status |= PAMELA_STATUS_READ_READY;
-  pc->status &= ~PAMELA_STATUS_READ_BUSY;
+  pc->status &= ~PAMELA_STATUS_READ_PRE;
 
   DS("[rp:"); DB(pc->chan_id); DC('='); DW(pc->rx_buf.size); DC(']');
 
@@ -170,35 +170,64 @@ static void pamela_read_reply(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_read_error(pamela_channel_t *pc, u08 error)
+static void pamela_read_done(pamela_channel_t *pc)
 {
-  pamela_set_error(pc, error);
-  pc->status &= ~PAMELA_STATUS_READ_BUSY;
+  pc->status &= ~PAMELA_STATUS_READ_MASK;
   pc->rx_buf.data = NULL;
   pc->rx_buf.size = 0;
 
-  DS("[RE:"); DB(pc->chan_id); DC(']'); DNL;
+  DS("[rd:"); DB(pc->chan_id); DC(']'); DNL;
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_read_work(pamela_channel_t *chn,
-  hnd_read_func_t read_req_func)
+void pamela_read_pre_work(pamela_channel_t *chn, pamela_handler_ptr_t handler,
+  u08 state)
 {
-  DS("[rw:");
+  DS("[rew:");
 
-  // pass call to handler
-  u08 result = PAMELA_OK;
-  if(read_req_func != NULL) {
-    result = read_req_func(chn->chan_id, &chn->rx_buf);
+  // call read_pre()
+  u08 result = PAMELA_HANDLER_OK;
+  if(handler != NULL) {
+    hnd_read_func_t read_pre_func = HANDLER_FUNC_READ_PRE(handler);
+    if(read_pre_func != NULL) {
+      result = read_pre_func(chn->chan_id, state, &chn->rx_buf);
+    }
   }
   DB(result);
 
-  if(result == PAMELA_OK) {
+  if(result == PAMELA_HANDLER_OK) {
     pamela_read_reply(chn);
-  } else if(result != PAMELA_POLL) {
-    pamela_read_error(chn, result);
+  } else if(result != PAMELA_HANDLER_POLL) {
+    pamela_set_error(chn, result);
+    pamela_read_done(chn);
+  }
+
+  DC(']');
+}
+
+void pamela_read_post_work(pamela_channel_t *chn, pamela_handler_ptr_t handler,
+  u08 state)
+{
+  DS("[row:");
+
+  // call read_post()
+  u08 result = PAMELA_HANDLER_OK;
+  if(handler != NULL) {
+    hnd_read_func_t read_post_func = HANDLER_FUNC_READ_POST(handler);
+    if(read_post_func != NULL) {
+      result = read_post_func(chn->chan_id, state, &chn->rx_buf);
+    }
+  }
+  DB(result);
+
+  // read is done
+  if(result == PAMELA_HANDLER_OK) {
+    pamela_read_done(chn);
+  } else if(result != PAMELA_HANDLER_POLL) {
+    pamela_set_error(chn, result);
+    pamela_read_done(chn);
   }
 
   DC(']');
@@ -215,7 +244,7 @@ static void pamela_write_reply(pamela_channel_t *pc)
 
   // write is now pending
   pc->status |= PAMELA_STATUS_WRITE_READY;
-  pc->status &= ~PAMELA_STATUS_WRITE_BUSY;
+  pc->status &= ~PAMELA_STATUS_WRITE_PRE;
 
   DS("[wp:"); DB(pc->chan_id); DC('='); DW(pc->tx_buf.size); DC(']');
 
@@ -223,34 +252,61 @@ static void pamela_write_reply(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_write_error(pamela_channel_t *pc, u08 error)
+static void pamela_write_done(pamela_channel_t *pc)
 {
-  pamela_set_error(pc, error);
-  pc->status &= ~PAMELA_STATUS_WRITE_BUSY;
+  pc->status &= ~PAMELA_STATUS_WRITE_MASK;
   pc->tx_buf.data = NULL;
   pc->tx_buf.size = 0;
 
-  DS("[WE:"); DB(pc->chan_id); DC(']'); DNL;
+  DS("[wd:"); DB(pc->chan_id); DC(']'); DNL;
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_write_work(pamela_channel_t *chn,
-  hnd_write_func_t write_req_func)
+void pamela_write_pre_work(pamela_channel_t *chn, pamela_handler_ptr_t handler,
+  u08 state)
 {
-  DS("[ww:");
+  DS("[wew:");
 
-  u08 result = PAMELA_OK;
-  if(write_req_func != NULL) {
-    result = write_req_func(chn->chan_id, &chn->tx_buf);
+  u08 result = PAMELA_HANDLER_OK;
+  if(handler != NULL) {
+    hnd_write_func_t write_pre_func = HANDLER_FUNC_WRITE_PRE(handler);
+    if(write_pre_func != NULL) {
+      result = write_pre_func(chn->chan_id, state, &chn->tx_buf);
+    }
   }
   DB(result);
 
-  if(result == PAMELA_OK) {
+  if(result == PAMELA_HANDLER_OK) {
     pamela_write_reply(chn);
-  } else if(result != PAMELA_POLL) {
-    pamela_write_error(chn, result);
+  } else if(result != PAMELA_HANDLER_POLL) {
+    pamela_set_error(chn, result);
+    pamela_write_done(chn);
+  }
+
+  DC(']');
+}
+
+void pamela_write_post_work(pamela_channel_t *chn, pamela_handler_ptr_t handler,
+  u08 state)
+{
+  DS("[wow:");
+
+  u08 result = PAMELA_HANDLER_OK;
+  if(handler != NULL) {
+    hnd_write_func_t write_post_func = HANDLER_FUNC_WRITE_POST(handler);
+    if(write_post_func != NULL) {
+      result = write_post_func(chn->chan_id, state, &chn->tx_buf);
+    }
+  }
+  DB(result);
+
+  if(result == PAMELA_HANDLER_OK) {
+    pamela_write_done(chn);
+  } else if(result != PAMELA_HANDLER_POLL) {
+    pamela_set_error(chn, result);
+    pamela_write_done(chn);
   }
 
   DC(']');
@@ -260,7 +316,7 @@ void pamela_write_work(pamela_channel_t *chn,
 
 static void pamela_open_done(pamela_channel_t *pc, u08 error)
 {
-  if(error == PAMELA_OK) {
+  if(error == PAMELA_HANDLER_OK) {
     pamela_set_status(pc, PAMELA_STATUS_ACTIVE);
   } else {
     pamela_set_open_error(pc, error);
@@ -275,26 +331,32 @@ static void pamela_open_done(pamela_channel_t *pc, u08 error)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_open_work(pamela_channel_t *chn, hnd_open_func_t open_func)
+void pamela_open_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state)
 {
   DS("[Ow:"); DB(chn->chan_id); DC(',');
-  if(open_func != NULL) {
-    pamela_set_status(chn, PAMELA_STATUS_OPENING);
-    u08 res = open_func(chn->chan_id, chn->port);
-    // if not PAMELA_POLL then open is done
-    if((res == PAMELA_OK) || (res != PAMELA_POLL)) {
-      pamela_open_done(chn, res);
+  if(handler != NULL) {
+    hnd_open_func_t open_func = HANDLER_FUNC_OPEN(handler);
+    if(open_func != NULL) {
+      pamela_set_status(chn, PAMELA_STATUS_OPENING);
+      u08 res = open_func(chn->chan_id, state, chn->port);
+      // if not PAMELA_HANDLER_POLL then open is done
+      if((res == PAMELA_HANDLER_OK) || (res != PAMELA_HANDLER_POLL)) {
+        pamela_open_done(chn, res);
+      }
+    } else {
+      // quick open
+      pamela_open_done(chn, PAMELA_HANDLER_OK);
     }
   } else {
     // quick open
-    pamela_open_done(chn, PAMELA_OK);
+    pamela_open_done(chn, PAMELA_HANDLER_OK);
   }
   DC(']');
 }
 
 // ----- close -----
 
-void pamela_close_done(pamela_channel_t *pc)
+static void pamela_close_done(pamela_channel_t *pc)
 {
   pamela_set_status(pc, PAMELA_STATUS_INACTIVE);
 
@@ -312,14 +374,20 @@ void pamela_close_done(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_close_work(pamela_channel_t *chn, hnd_close_func_t close_func)
+void pamela_close_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state)
 {
   DS("[Cw:"); DB(chn->chan_id); DC(',');
-  if(close_func != NULL) {
-    pamela_set_status(chn, PAMELA_STATUS_CLOSING);
-    u08 res = close_func(chn->chan_id);
-    // if not PAMELA_POLL then close is done
-    if(res == PAMELA_OK) {
+  if(handler != NULL) {
+    hnd_close_func_t close_func = HANDLER_FUNC_CLOSE(handler);
+    if(close_func != NULL) {
+      pamela_set_status(chn, PAMELA_STATUS_CLOSING);
+      u08 res = close_func(chn->chan_id, state);
+      // if not PAMELA_HANDLER_POLL then close is done
+      if(res == PAMELA_HANDLER_OK) {
+        pamela_close_done(chn);
+      }
+    } else {
+      // quick close without handler func
       pamela_close_done(chn);
     }
   } else {
@@ -341,14 +409,19 @@ static void pamela_reset_done(pamela_channel_t *pc)
   proto_io_event_mask_add_chn(pc->chan_id);
 }
 
-void pamela_reset_work(pamela_channel_t *chn, hnd_reset_func_t reset_func)
+void pamela_reset_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state)
 {
   DS("[Rw:"); DB(chn->chan_id); DC(',');
-  if(reset_func != NULL) {
-    pamela_set_status(chn, PAMELA_STATUS_RESETTING);
-    u08 res = reset_func(chn->chan_id);
-    // if not PAMELA_POLL then close is done
-    if(res == PAMELA_OK) {
+  if(handler != NULL) {
+    hnd_reset_func_t reset_func = HANDLER_FUNC_RESET(handler);
+    if(reset_func != NULL) {
+      pamela_set_status(chn, PAMELA_STATUS_RESETTING);
+      u08 res = reset_func(chn->chan_id, state);
+      // if not PAMELA_HANDLER_POLL then close is done
+      if(res == PAMELA_HANDLER_OK) {
+        pamela_reset_done(chn);
+      }
+    } else {
       pamela_reset_done(chn);
     }
   } else {
@@ -364,13 +437,18 @@ static void pamela_active_work(pamela_channel_t *chn)
   //DS("{act:"); DB(chn->chan_id); DC(':'); DW(chn->status); DC('}');
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(chn->service->srv_id);
 
-  if(chn->status & PAMELA_STATUS_READ_BUSY) {
-    hnd_read_func_t read_req_func = HANDLER_FUNC_READ_POLL(handler);
-    pamela_read_work(chn, read_req_func);
+  if(chn->status & PAMELA_STATUS_READ_PRE) {
+    pamela_read_pre_work(chn, handler, PAMELA_CALL_NEXT);
   }
-  if(chn->status & PAMELA_STATUS_WRITE_BUSY) {
-    hnd_write_func_t write_req_func = HANDLER_FUNC_WRITE_POLL(handler);
-    pamela_write_work(chn, write_req_func);
+  if(chn->status & PAMELA_STATUS_READ_POST) {
+    pamela_read_post_work(chn, handler, PAMELA_CALL_NEXT);
+  }
+
+  if(chn->status & PAMELA_STATUS_WRITE_PRE) {
+    pamela_write_pre_work(chn, handler, PAMELA_CALL_NEXT);
+  }
+  if(chn->status & PAMELA_STATUS_WRITE_POST) {
+    pamela_write_post_work(chn, handler, PAMELA_CALL_NEXT);
   }
 }
 
@@ -381,22 +459,13 @@ static void pamela_channel_work(pamela_channel_t *chn)
 
   switch(chn->status & PAMELA_STATUS_STATE_MASK) {
     case PAMELA_STATUS_OPENING:
-      {
-        hnd_open_func_t open_func = HANDLER_FUNC_OPEN_POLL(handler);
-        pamela_open_work(chn, open_func);
-      }
+      pamela_open_work(chn, handler, PAMELA_CALL_NEXT);
       break;
     case PAMELA_STATUS_CLOSING:
-      {
-        hnd_close_func_t close_func = HANDLER_FUNC_CLOSE_POLL(handler);
-        pamela_close_work(chn, close_func);
-      }
+      pamela_close_work(chn, handler, PAMELA_CALL_NEXT);
       break;
     case PAMELA_STATUS_RESETTING:
-      {
-        hnd_reset_func_t reset_func = HANDLER_FUNC_RESET_POLL(handler);
-        pamela_reset_work(chn, reset_func);
-      }
+      pamela_reset_work(chn, handler, PAMELA_CALL_NEXT);
       break;
     case PAMELA_STATUS_ACTIVE:
       pamela_active_work(chn);
@@ -431,7 +500,7 @@ void pamela_end_stream(u08 chn, u08 error)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
 
-  if(error == PAMELA_OK) {
+  if(error == PAMELA_HANDLER_OK) {
     pamela_set_status(pc, PAMELA_STATUS_EOS);
   } else {
     pamela_set_error(pc, error);

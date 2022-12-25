@@ -56,18 +56,18 @@ extern void pamela_set_error(pamela_channel_t *chn, u08 error);
 
 extern void pamela_set_open_error(pamela_channel_t *chn, u08 error);
 
-extern void pamela_open_work(pamela_channel_t *chn, hnd_open_func_t func);
+extern void pamela_open_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_close_work(pamela_channel_t *chn, hnd_close_func_t func);
+extern void pamela_close_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_reset_work(pamela_channel_t *chn, hnd_reset_func_t func);
+extern void pamela_reset_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_read_work(pamela_channel_t *chn, hnd_read_func_t read_req_func);
+extern void pamela_read_pre_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_read_error(pamela_channel_t *chn, u08 error);
+extern void pamela_read_post_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_write_work(pamela_channel_t *chn, hnd_read_func_t read_req_func);
+extern void pamela_write_pre_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
-extern void pamela_write_error(pamela_channel_t *pc, u08 error);
+extern void pamela_write_post_work(pamela_channel_t *chn, pamela_handler_ptr_t handler, u08 state);
 
 #endif

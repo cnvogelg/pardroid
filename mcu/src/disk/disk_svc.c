@@ -40,7 +40,7 @@ static disk_data_slot_t slot_data[NUM_DATA_SLOTS];
 
 // ----- disk control service -----
 
-static u08 disk_ctl_handle(u08 chan, pamela_buf_t *buf)
+static u08 disk_ctl_handle(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
 
@@ -54,7 +54,7 @@ static u08 disk_ctl_handle(u08 chan, pamela_buf_t *buf)
 
 // ----- disk data service -----
 
-static u08 disk_data_open(u08 chn, u16 port)
+static u08 disk_data_open(u08 chn, u08 state, u16 port)
 {
   u08 pam_slot = pamela_get_slot(chn);
   disk_data_slot_t *slot = &slot_data[pam_slot];
@@ -82,10 +82,10 @@ static u08 disk_data_open(u08 chn, u16 port)
     return PAMELA_WIRE_ERROR_OBJ_NOT_FOUND;
   }
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 disk_data_close(u08 chn)
+static u08 disk_data_close(u08 chn, u08 state)
 {
   u08 pam_slot = pamela_get_slot(chn);
   disk_data_slot_t *slot = &slot_data[pam_slot];
@@ -100,16 +100,16 @@ static u08 disk_data_close(u08 chn)
 
   slot->disk_map_slot = DISK_MAP_INVALID_SLOT;
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 disk_data_reset(u08 chn)
+static u08 disk_data_reset(u08 chn, u08 state)
 {
   // no reset for now
   return PAMELA_WIRE_ERROR_NOT_SUPPORTED;
 }
 
-static u08 disk_data_read_request(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_read_pre(u08 chn, u08 state, pamela_buf_t *buf)
 {
   if(buf->size != DISK_MTU) {
     return PAMELA_WIRE_ERROR_WRONG_SIZE;
@@ -131,16 +131,16 @@ static u08 disk_data_read_request(u08 chn, pamela_buf_t *buf)
     return PAMELA_WIRE_ERROR_READ;
   }
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 disk_data_read_done(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_read_post(u08 chn, u08 state, pamela_buf_t *buf)
 {
   // n/a
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 disk_data_write_request(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_write_pre(u08 chn, u08 state, pamela_buf_t *buf)
 {
   if(buf->size != DISK_MTU) {
     return PAMELA_WIRE_ERROR_WRONG_SIZE;
@@ -150,10 +150,10 @@ static u08 disk_data_write_request(u08 chn, pamela_buf_t *buf)
   disk_data_slot_t *slot = &slot_data[pam_slot];
   buf->data = slot->buffer;
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 disk_data_write_done(u08 chn, pamela_buf_t *buf)
+static u08 disk_data_write_post(u08 chn, u08 state, pamela_buf_t *buf)
 {
   u08 pam_slot = pamela_get_slot(chn);
   disk_data_slot_t *slot = &slot_data[pam_slot];
@@ -168,7 +168,7 @@ static u08 disk_data_write_done(u08 chn, pamela_buf_t *buf)
     return PAMELA_WIRE_ERROR_READ;
   }
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 static void disk_data_seek(u08 chn, u32 pos)
@@ -208,9 +208,9 @@ HANDLER_BEGIN(disk_svc_data)
   .seek = disk_data_seek,
   .tell = disk_data_tell,
 
-  .read_request = disk_data_read_request,
-  .read_done = disk_data_read_done,
+  .read_pre = disk_data_read_pre,
+  .read_post = disk_data_read_post,
 
-  .write_request = disk_data_write_request,
-  .write_done = disk_data_write_done,
+  .write_pre = disk_data_write_pre,
+  .write_post = disk_data_write_post,
 HANDLER_END

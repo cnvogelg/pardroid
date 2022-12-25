@@ -18,7 +18,7 @@
 
 // ----- paloma service -----
 
-static u08 paloma_handle(u08 chan, pamela_buf_t *buf)
+static u08 paloma_handle(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
 
@@ -27,7 +27,7 @@ static u08 paloma_handle(u08 chan, pamela_buf_t *buf)
   paloma_cmd_handle(buf->data, buf->size, &ret_size);
   buf->size = ret_size;
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 // ----- define paloma handler -----

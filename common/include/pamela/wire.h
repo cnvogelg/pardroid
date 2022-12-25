@@ -34,9 +34,11 @@
 // read size differs from request and has to be read first
 #define PAMELA_STATUS_READ_SIZE   0x20
 // read requested: a read request was posted and is now being processed
-#define PAMELA_STATUS_READ_BUSY   0x40
+#define PAMELA_STATUS_READ_PRE    0x40
+// read was done and is post processed
+#define PAMELA_STATUS_READ_POST   0x80
 // mask for all read bits
-#define PAMELA_STATUS_READ_MASK   0x70
+#define PAMELA_STATUS_READ_MASK   0xf0
 
 // -- extra bits for write in active
 // write pending: a write request is ready to be sent
@@ -44,9 +46,11 @@
 // write size differs from request and has to be read first
 #define PAMELA_STATUS_WRITE_SIZE  0x200
 // write requested: a write request was posted and is now being processed
-#define PAMELA_STATUS_WRITE_BUSY  0x400
+#define PAMELA_STATUS_WRITE_PRE   0x400
+// write was done and is post processed
+#define PAMELA_STATUS_WRITE_POST  0x800
 // mask for all write bits
-#define PAMELA_STATUS_WRITE_MASK  0x700
+#define PAMELA_STATUS_WRITE_MASK  0xf00
 
 // ----- error -----
 // error tags allow to distinguish error sources (e.g. pamela or application)

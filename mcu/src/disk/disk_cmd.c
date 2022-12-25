@@ -15,5 +15,5 @@
 
 u08 disk_cmd_handle(u08 *buf, u16 size, u16 *ret_size)
 {
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }

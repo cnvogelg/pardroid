@@ -252,7 +252,7 @@ int pamela_tell(pamela_channel_t *ch, ULONG *pos)
 int pamela_read_request(pamela_channel_t *ch, UWORD size)
 {
   // first make sure no request is pending
-  int res = check_channel_status(ch, 0, PAMELA_STATUS_READ_BUSY);
+  int res = check_channel_status(ch, 0, PAMELA_STATUS_READ_MASK);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -264,7 +264,7 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
   }
 
   // update my state
-  ch->status |= PAMELA_STATUS_READ_BUSY;
+  ch->status |= PAMELA_STATUS_READ_PRE;
   ch->read_bytes = size;
   return PAMELA_OK;
 }
@@ -310,7 +310,7 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
 int pamela_write_request(pamela_channel_t *ch, UWORD size)
 {
   // first make sure no request is pending
-  int res = check_channel_status(ch, 0, PAMELA_STATUS_WRITE_BUSY);
+  int res = check_channel_status(ch, 0, PAMELA_STATUS_WRITE_MASK);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -322,7 +322,7 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
   }
 
   // update my state
-  ch->status |= PAMELA_STATUS_WRITE_BUSY;
+  ch->status |= PAMELA_STATUS_WRITE_PRE;
   ch->write_bytes = size;
   return PAMELA_OK;
 }

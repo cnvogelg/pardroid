@@ -41,36 +41,35 @@ static u08 my_begin(u08 chan, pamela_buf_t *buf)
   u08 slot_id = pamela_get_slot(chan);
   buf->data = slots[slot_id].buf;
   uart_send('<');
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-static u08 my_handle(u08 chan, pamela_buf_t *buf)
+static u08 my_handle(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot_id = pamela_get_slot(chan);
-  slots[slot_id].poll_count = 0;
 
-  uart_send('#');
+  if(state == PAMELA_CALL_FIRST) {
+    slots[slot_id].poll_count = 0;
 
-  u08 *data = buf->data;
-  u16 size = buf->size;
-  for(u16 i=0;i<size;i++) {
-    data[i] ++;
-  }
+    uart_send('#');
 
-  return PAMELA_POLL;
-}
+    u08 *data = buf->data;
+    u16 size = buf->size;
+    for(u16 i=0;i<size;i++) {
+      data[i] ++;
+    }
 
-static u08 my_handle_poll(u08 chan, pamela_buf_t *buf)
-{
-  u08 slot_id = pamela_get_slot(chan);
-  slots[slot_id].poll_count++;
-
-  if(slots[slot_id].poll_count == 3) {
-    uart_send('!');
-    return PAMELA_OK;
+    return PAMELA_HANDLER_POLL;
   } else {
-    uart_send('*');
-    return PAMELA_POLL;
+    slots[slot_id].poll_count++;
+
+    if(slots[slot_id].poll_count == 3) {
+      uart_send('!');
+      return PAMELA_HANDLER_OK;
+    } else {
+      uart_send('*');
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
@@ -85,7 +84,6 @@ static void my_end(u08 chan, pamela_buf_t *buf)
 REQ_HANDLER_BEGIN(my_handler, TEST_PORT, TEST_NUM_SLOTS, TEST_MAX_ARG_SIZE)
   .begin = my_begin,
   .handle = my_handle,
-  .handle_poll = my_handle_poll,
   .end = my_end
 REQ_HANDLER_END
 

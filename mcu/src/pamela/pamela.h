@@ -19,8 +19,15 @@
    if its another value it is assumed to be an error code
    typically a PAMELA_WIRE_ERROR_*
 */
-#define PAMELA_OK 0
-#define PAMELA_POLL 0xff
+#define PAMELA_HANDLER_OK 0
+#define PAMELA_HANDLER_POLL 0xff
+
+/* handler state values
+   first call is PAMELA_CALL_fIRST then PAMELA_CALL_nEXT
+*/
+#define PAMELA_CALL_FIRST 0
+#define PAMELA_CALL_NEXT  1
+
 
 #define PAMELA_NO_SLOT       0xff
 #define PAMELA_NO_SERVICE_ID 0xff

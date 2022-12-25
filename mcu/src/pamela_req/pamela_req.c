@@ -50,7 +50,7 @@ static pamela_req_slot_t *find_slot(u08 chan)
 
 // ----- pamela req service -----
 
-u08 pamela_req_open(u08 chan, u16 port)
+u08 pamela_req_open(u08 chan, u08 state, u16 port)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -66,7 +66,7 @@ u08 pamela_req_open(u08 chan, u16 port)
   slot->global_buf.size = HANDLER_GET_MAX_MTU(handler);
 
   /* call req handler open */
-  u08 result = PAMELA_OK;
+  u08 result = PAMELA_HANDLER_OK;
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_open_func_t open_func = REQ_HANDLER_FUNC_OPEN(req_handler);
   if(open_func != NULL) {
@@ -78,7 +78,7 @@ u08 pamela_req_open(u08 chan, u16 port)
   return result;
 }
 
-u08 pamela_req_close(u08 chan)
+u08 pamela_req_close(u08 chan, u08 state)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -96,10 +96,10 @@ u08 pamela_req_close(u08 chan)
     DC('}'); DNL;
   }
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-u08 pamela_req_reset(u08 chan)
+u08 pamela_req_reset(u08 chan, u08 state)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -113,7 +113,7 @@ u08 pamela_req_reset(u08 chan)
   slot->state = PAMELA_REQ_STATE_IDLE;
 
   /* call req handler reset */
-  u08 result = PAMELA_OK;
+  u08 result = PAMELA_HANDLER_OK;
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_reset_func_t reset_func = REQ_HANDLER_FUNC_RESET(req_handler);
   if(reset_func != NULL) {
@@ -122,12 +122,12 @@ u08 pamela_req_reset(u08 chan)
     DC('}'); DB(result); DNL;
   }
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 // ----- write -----
 
-u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_write_pre(u08 chan, u08 state, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -151,7 +151,7 @@ u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
   if(begin_func != NULL) {
     u08 result = begin_func(chan, buf);
     DS("begin: "); DW(buf->size); DC('^'); DB(result);
-    if(result != PAMELA_OK) {
+    if(result != PAMELA_HANDLER_OK) {
       // error needs reset of channel
       DS(" failed!"); DNL;
       return result;
@@ -162,10 +162,10 @@ u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf)
   slot->state = PAMELA_REQ_STATE_IN_WRITE;
 
   DNL;
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-u08 pamela_req_write_done(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_write_post(u08 chan, u08 state, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -191,11 +191,11 @@ u08 pamela_req_write_done(u08 chan, pamela_buf_t *buf)
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
   hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE(req_handler);
   DS("handle: "); DW(slot->buf.size);
-  u08 result = handle_func(chan, &slot->buf);
-  if(result == PAMELA_OK) {
+  u08 result = handle_func(chan, PAMELA_CALL_FIRST, &slot->buf);
+  if(result == PAMELA_HANDLER_OK) {
     DS(" -> "); DW(slot->buf.size); DNL;
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
-  } else if(result != PAMELA_POLL) {
+  } else if(result != PAMELA_HANDLER_POLL) {
     DS("ERR!"); DNL;
     return result;
   } else {
@@ -204,12 +204,12 @@ u08 pamela_req_write_done(u08 chan, pamela_buf_t *buf)
     slot->state = PAMELA_REQ_STATE_POLLING;
     pamela_channel_task_control(chan, PAMELA_TASK_ON);
   }
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 // ----- read -----
 
-u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_read_pre(u08 chan, u08 state, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -233,10 +233,10 @@ u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf)
   buf->data = slot->buf.data;
   buf->size = slot->buf.size;
 
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
-u08 pamela_req_read_done(u08 chan, pamela_buf_t *buf)
+u08 pamela_req_read_post(u08 chan, u08 state, pamela_buf_t *buf)
 {
   pamela_req_slot_t *slot = find_slot(chan);
   if(slot == NULL) {
@@ -255,7 +255,7 @@ u08 pamela_req_read_done(u08 chan, pamela_buf_t *buf)
   DNL;
 
   slot->state = PAMELA_REQ_STATE_IDLE;
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 // ----- channel task -----
@@ -277,16 +277,16 @@ void pamela_req_channel_task(u08 chan)
 
   // call req handler handle_poll()
   pamela_req_handler_ptr_t req_handler = find_req_handler(chan);
-  hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE_POLL(req_handler);
+  hnd_req_handle_func_t handle_func = REQ_HANDLER_FUNC_HANDLE(req_handler);
   DS("handle_poll: "); DW(slot->buf.size);
-  u08 result = handle_func(chan, &slot->buf);
+  u08 result = handle_func(chan, PAMELA_CALL_NEXT, &slot->buf);
 
-  if(result == PAMELA_OK) {
+  if(result == PAMELA_HANDLER_OK) {
     // stop task
     DS(" -> "); DW(slot->buf.size); DNL;
     pamela_channel_task_control(chan, PAMELA_TASK_OFF);
     slot->state = PAMELA_REQ_STATE_READ_WAIT;
-  } else if(result != PAMELA_POLL) {
+  } else if(result != PAMELA_HANDLER_POLL) {
     DS("ERR!"); DNL;
     // stop task
     pamela_channel_task_control(chan, PAMELA_TASK_OFF);
@@ -310,7 +310,7 @@ u08 pamela_req_open_malloc(u08 chan, pamela_buf_t *buf)
     return PAMELA_WIRE_ERROR_NO_MEM;
   }
   DNL;
-  return PAMELA_OK;
+  return PAMELA_HANDLER_OK;
 }
 
 void pamela_req_close_free(u08 chan, pamela_buf_t *buf)

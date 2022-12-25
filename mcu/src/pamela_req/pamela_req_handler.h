@@ -19,7 +19,7 @@ typedef u08 (*hnd_req_reset_func_t)(u08 chn);
 typedef u08 (*hnd_req_begin_func_t)(u08 chan, pamela_buf_t *buf);
 
 /* process the request */
-typedef u08 (*hnd_req_handle_func_t)(u08 chan, pamela_buf_t *buf);
+typedef u08 (*hnd_req_handle_func_t)(u08 chan, u08 state, pamela_buf_t *buf);
 
 /* the request is done  */
 typedef void (*hnd_req_end_func_t)(u08 chan, pamela_buf_t *buf);
@@ -56,9 +56,6 @@ struct pamela_req_handler {
      is returned. */
   hnd_req_handle_func_t    handle;
 
-  /* for long running operations call the handle_poll() */
-  hnd_req_handle_func_t    handle_poll;
-
   /* (optional) finally a request is completed when the response was sent and the
      response buffer is free to be used again. */
   hnd_req_end_func_t      end;
@@ -82,10 +79,10 @@ typedef const pamela_req_handler_t *pamela_req_handler_ptr_t;
       .open = pamela_req_open, \
       .close = pamela_req_close, \
       .reset = pamela_req_reset, \
-      .read_request = pamela_req_read_request, \
-      .read_done = pamela_req_read_done, \
-      .write_request = pamela_req_write_request, \
-      .write_done = pamela_req_write_done, \
+      .read_pre = pamela_req_read_pre, \
+      .read_post = pamela_req_read_post, \
+      .write_pre = pamela_req_write_pre, \
+      .write_post = pamela_req_write_post, \
       .channel_task = pamela_req_channel_task, \
     }; \
     pamela_req_slot_t name ## _slots[num_slots]; \
@@ -104,7 +101,6 @@ typedef const pamela_req_handler_t *pamela_req_handler_ptr_t;
 
 #define REQ_HANDLER_FUNC_BEGIN(hnd)       ((hnd_req_begin_func_t)read_rom_rom_ptr(&hnd->begin))
 #define REQ_HANDLER_FUNC_HANDLE(hnd)      ((hnd_req_handle_func_t)read_rom_rom_ptr(&hnd->handle))
-#define REQ_HANDLER_FUNC_HANDLE_POLL(hnd) ((hnd_req_handle_func_t)read_rom_rom_ptr(&hnd->handle_poll))
 #define REQ_HANDLER_FUNC_END(hnd)         ((hnd_req_end_func_t)read_rom_rom_ptr(&hnd->end))
 
 /* ----- macros for req handler table ----- */

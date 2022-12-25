@@ -143,6 +143,31 @@ TEST_FUNC(test_open_own_error)
   return 0;
 }
 
+TEST_FUNC(test_reset)
+{
+  pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
+  pamela_channel_t *chn = NULL;
+  int res = 0;
+
+  chn = pamela_open(pam, p->port, &res);
+  CHECK_PAM_RES(res, "open");
+  CHECK_NOT_NULL(chn, "open");
+  CHECK_WAIT_EVENT(pam, chn, "open");
+  CHECK_CHANNEL_STATE(chn, "open", PAMELA_STATUS_ACTIVE);
+
+  res = pamela_reset(chn);
+  CHECK_PAM_RES(res, "reset");
+  CHECK_WAIT_EVENT(pam, chn, "reset");
+  CHECK_CHANNEL_STATE(chn, "reset", PAMELA_STATUS_ACTIVE);
+
+  res = pamela_close(chn);
+  CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
+
+  return 0;
+}
+
 static int test_read_helper(test_param_t *p, UWORD read_size)
 {
   pamela_handle_t *pam = (pamela_handle_t *)p->user_data;
@@ -191,17 +216,26 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
      CHECK_PAM_RES_VAL(pamela_error(chn), "error code", TEST_ERROR_READ);
   } else {
     UWORD exp = PAMELA_STATUS_ACTIVE | PAMELA_STATUS_READ_READY;
+
+    if(read_size == TEST_SHORT_SIZE) {
+      exp |= PAMELA_STATUS_READ_SIZE;
+      read_size = TEST_REDUCED_SIZE;
+    }
+
     CHECK_EQUAL(status, exp, "channel status");
 
     // read data
     res = pamela_read_data(chn, buf);
     CHECK_PAM_RES_VAL(res, "read_data", read_size);
 
+    CHECK_WAIT_EVENT(pam, chn, "after read");
+
     // error after read
     if(read_size == TEST_ERROR_DONE_SIZE) {
-      CHECK_WAIT_EVENT(pam, chn, "after read");
       CHECK_CHANNEL_STATE(chn, "after read", PAMELA_STATUS_ERROR);
       CHECK_PAM_RES_VAL(pamela_error(chn), "error code", TEST_ERROR_READ);
+    } else {
+      CHECK_CHANNEL_STATE(chn, "aftre read", PAMELA_STATUS_ACTIVE);
     }
   }
 
@@ -237,6 +271,11 @@ TEST_FUNC(test_read)
 TEST_FUNC(test_read_odd)
 {
   return test_read_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_read_short)
+{
+  return test_read_helper(p, TEST_SHORT_SIZE);
 }
 
 TEST_FUNC(test_read_error_req)
@@ -307,17 +346,26 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
      CHECK_PAM_RES_VAL(pamela_error(chn), "error code", TEST_ERROR_WRITE);
   } else {
     UWORD exp = PAMELA_STATUS_ACTIVE | PAMELA_STATUS_WRITE_READY;
+
+    if(write_size == TEST_SHORT_SIZE) {
+      exp |= PAMELA_STATUS_WRITE_SIZE;
+      write_size = TEST_REDUCED_SIZE;
+    }
+
     CHECK_EQUAL(status, exp, "channel status");
 
     // write data
     res = pamela_write_data(chn, buf);
     CHECK_PAM_RES_VAL(res, "write_data", write_size);
 
+    CHECK_WAIT_EVENT(pam, chn, "after write");
+
     // error after write
     if(write_size == TEST_ERROR_DONE_SIZE) {
-      CHECK_WAIT_EVENT(pam, chn, "after write");
       CHECK_CHANNEL_STATE(chn, "after write", PAMELA_STATUS_ERROR);
       CHECK_PAM_RES_VAL(pamela_error(chn), "error code", TEST_ERROR_WRITE);
+    } else {
+      CHECK_CHANNEL_STATE(chn, "after write", PAMELA_STATUS_ACTIVE);
     }
   }
 
@@ -340,6 +388,11 @@ TEST_FUNC(test_write)
 TEST_FUNC(test_write_odd)
 {
   return test_write_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_write_short)
+{
+  return test_write_helper(p, TEST_SHORT_SIZE);
 }
 
 TEST_FUNC(test_write_error_req)
@@ -389,6 +442,8 @@ TEST_FUNC(test_seek_tell)
   // close channel
   res = pamela_close(chn);
   CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   return 0;
 }
@@ -437,6 +492,8 @@ TEST_FUNC(test_get_set_mtu)
   // close channel
   res = pamela_close(chn);
   CHECK_PAM_RES(res, "close");
+  CHECK_WAIT_EVENT(pam, chn, "close");
+  CHECK_CHANNEL_STATE(chn, "close", PAMELA_STATUS_INACTIVE);
 
   return 0;
 }

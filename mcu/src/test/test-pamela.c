@@ -36,127 +36,118 @@ struct slot slots[TEST_NUM_SLOTS];
 
 // ----- handler functions -----
 
-static u08 my_open(u08 chan, u16 port)
-{
-  u16 delay = port % 1000;
-  u08 slot = pamela_get_slot(chan);
-
-#ifdef VERBOSE
-  uart_send_pstring(PSTR("<open:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send(':');
-  uart_send_hex_word(port);
-  uart_send('+');
-  uart_send_hex_word(delay);
-  uart_send('>');
-#endif
-
-  if(port == TEST_OPEN_ERROR_PORT) {
-    return PAMELA_WIRE_ERROR_OPEN;
-  }
-
-  slots[slot].chan = chan;
-  slots[slot].port = port;
-  slots[slot].delay = delay;
-  slots[slot].start = hw_timer_millis();
-
-  if(delay > 0) {
-    return PAMELA_POLL;
-  } else {
-    return PAMELA_OK;
-  }
-}
-
-static u08 my_open_poll(u08 chan, u16 port)
+static u08 my_open(u08 chan, u08 state, u16 port)
 {
   u08 slot = pamela_get_slot(chan);
+  if(state == PAMELA_CALL_FIRST) {
+    u16 delay = port % 1000;
 
 #ifdef VERBOSE
-  uart_send('O');
+    uart_send_pstring(PSTR("<open:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send(':');
+    uart_send_hex_word(port);
+    uart_send('+');
+    uart_send_hex_word(delay);
+    uart_send('>');
 #endif
-  if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
-#ifdef VERBOSE
-    uart_send('!');
-#endif
-    return PAMELA_OK;
+
+    if(port == TEST_OPEN_ERROR_PORT) {
+      return PAMELA_WIRE_ERROR_OPEN;
+    }
+
+    slots[slot].chan = chan;
+    slots[slot].port = port;
+    slots[slot].delay = delay;
+    slots[slot].start = hw_timer_millis();
+
+    if(delay > 0) {
+      return PAMELA_HANDLER_POLL;
+    } else {
+      return PAMELA_HANDLER_OK;
+    }
   } else {
-    return PAMELA_POLL;
+#ifdef VERBOSE
+    uart_send('O');
+#endif
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
-static u08 my_close(u08 chan)
+static u08 my_close(u08 chan, u08 state)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
 #ifdef VERBOSE
-  uart_send_pstring(PSTR("<close:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send('>');
+    uart_send_pstring(PSTR("<close:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send('>');
 #endif
 
-  slots[slot].start = hw_timer_millis();
-  if(slots[slot].delay > 0) {
-    return PAMELA_POLL;
+    slots[slot].start = hw_timer_millis();
+    if(slots[slot].delay > 0) {
+      return PAMELA_HANDLER_POLL;
+    } else {
+      return PAMELA_HANDLER_OK;
+    }
   } else {
-    return PAMELA_OK;
+#ifdef VERBOSE
+    uart_send('C');
+#endif
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
-static u08 my_close_poll(u08 chan)
+static u08 my_reset(u08 chan, u08 state)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
 #ifdef VERBOSE
-  uart_send('C');
+    uart_send_pstring(PSTR("<reset:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send('>');
 #endif
-  if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
-#ifdef VERBOSE
-    uart_send('!');
-#endif
-    return PAMELA_OK;
+
+    slots[slot].start = hw_timer_millis();
+    if(slots[slot].delay > 0) {
+      return PAMELA_HANDLER_POLL;
+    } else {
+      return PAMELA_HANDLER_OK;
+    }
   } else {
-    return PAMELA_POLL;
-  }
-}
-
-static u08 my_reset(u08 chan)
-{
-  u08 slot = pamela_get_slot(chan);
-
 #ifdef VERBOSE
-  uart_send_pstring(PSTR("<reset:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send('>');
+    uart_send('R');
 #endif
-
-  slots[slot].start = hw_timer_millis();
-  if(slots[slot].delay > 0) {
-    return PAMELA_POLL;
-  } else {
-    return PAMELA_OK;
-  }
-}
-
-static u08 my_reset_poll(u08 chan)
-{
-  u08 slot = pamela_get_slot(chan);
-
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
 #ifdef VERBOSE
-  uart_send('R');
+      uart_send('!');
 #endif
-  if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
-#ifdef VERBOSE
-    uart_send('!');
-#endif
-    return PAMELA_OK;
-  } else {
-    return PAMELA_POLL;
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
@@ -196,174 +187,216 @@ u32 my_tell(u08 chan)
 
 // ----- read -----
 
-u08 my_read_request(u08 chan, pamela_buf_t *buf)
+u08 my_read_pre(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
 #ifdef VERBOSE
-  uart_send_pstring(PSTR("<rr:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send(':');
-  uart_send_hex_word(buf->size);
-  uart_send('>');
+    uart_send_pstring(PSTR("<rr:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send(':');
+    uart_send_hex_word(buf->size);
+    uart_send('>');
 #endif
 
-  // simulate read error on error channel
-  if(buf->size == TEST_ERROR_REQ_SIZE) {
+    // simulate read error on error channel
+    if(buf->size == TEST_ERROR_REQ_SIZE) {
 #ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_REQ!"));
+      uart_send_pstring(PSTR("ERR_REQ!"));
 #endif
-    return TEST_ERROR_READ;
-  }
+      return TEST_ERROR_READ;
+    }
 
-  // set read buffer
-  buf->data = read_buf;
+    // set read buffer
+    buf->data = read_buf;
 
-  slots[slot].start = hw_timer_millis();
-  if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
-    return PAMELA_POLL;
+    // short read
+    if(buf->size == TEST_SHORT_SIZE) {
+      buf->size = TEST_REDUCED_SIZE;
+    }
+
+    slots[slot].start = hw_timer_millis();
+    if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
+      return PAMELA_HANDLER_POLL;
+    } else {
+      return PAMELA_HANDLER_OK;
+    }
   } else {
-    return PAMELA_OK;
+#ifdef VERBOSE
+    uart_send('X');
+#endif
+
+    // simulate read error on error channel
+    if(buf->size == TEST_ERROR_POLL_SIZE) {
+#ifdef VERBOSE
+      uart_send_pstring(PSTR("ERR_POLL!"));
+#endif
+      return TEST_ERROR_READ;
+    }
+
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
-u08 my_read_poll(u08 chan, pamela_buf_t *buf)
+u08 my_read_post(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
+    // simulate read error on error channel
+    if(buf->size == TEST_ERROR_DONE_SIZE) {
 #ifdef VERBOSE
-  uart_send('X');
+      uart_send_pstring(PSTR("ERR_DONE!"));
+#endif
+      return TEST_ERROR_READ;
+    }
+
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("<rd:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send(':');
+    uart_send_hex_word(buf->size);
+    uart_send('>');
 #endif
 
-  // simulate read error on error channel
-  if(buf->size == TEST_ERROR_POLL_SIZE) {
-#ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_POLL!"));
-#endif
-    return TEST_ERROR_READ;
-  }
-
-  if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
-#ifdef VERBOSE
-    uart_send('!');
-#endif
-    return PAMELA_OK;
+    slots[slot].start = hw_timer_millis();
+    if(slots[slot].delay > 0)
+      return PAMELA_HANDLER_POLL;
+    else
+      return PAMELA_HANDLER_OK;
   } else {
-    return PAMELA_POLL;
-  }
-}
-
-u08 my_read_done(u08 chan, pamela_buf_t *buf)
-{
-  u08 slot = pamela_get_slot(chan);
-
-  // simulate read error on error channel
-  if(buf->size == TEST_ERROR_DONE_SIZE) {
 #ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_DONE!"));
-#endif
-    return TEST_ERROR_READ;
-  }
-
-#ifdef VERBOSE
-  uart_send_pstring(PSTR("<rd:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send(':');
-  uart_send_hex_word(buf->size);
-  uart_send('>');
+    uart_send('x');
 #endif
 
-  return PAMELA_OK;
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
+  }
 }
 
 // ----- write -----
 
-u08 my_write_request(u08 chan, pamela_buf_t *buf)
+u08 my_write_pre(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
 #ifdef VERBOSE
-  uart_send_pstring(PSTR("<wr:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send(':');
-  uart_send_hex_word(buf->size);
-  uart_send('>');
+    uart_send_pstring(PSTR("<wr:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send(':');
+    uart_send_hex_word(buf->size);
+    uart_send('>');
 #endif
 
-  // simulate write error on error channel
-  if(buf->size == TEST_ERROR_REQ_SIZE) {
+    // simulate write error on error channel
+    if(buf->size == TEST_ERROR_REQ_SIZE) {
 #ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_REQ!"));
+      uart_send_pstring(PSTR("ERR_REQ!"));
 #endif
-    return TEST_ERROR_WRITE;
-  }
+      return TEST_ERROR_WRITE;
+    }
 
-  // set write buffer
-  buf->data = read_buf;
+    // set write buffer
+    buf->data = read_buf;
 
-  slots[slot].start_w = hw_timer_millis();
-  if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
-    return PAMELA_POLL;
+    // short write
+    if(buf->size == TEST_SHORT_SIZE) {
+      buf->size = TEST_REDUCED_SIZE;
+    }
+
+    slots[slot].start_w = hw_timer_millis();
+    if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
+      return PAMELA_HANDLER_POLL;
+    } else {
+      return PAMELA_HANDLER_OK;
+    }
   } else {
-    return PAMELA_OK;
+#ifdef VERBOSE
+    uart_send('Y');
+#endif
+
+    // simulate read error on error channel
+    if(buf->size == TEST_ERROR_POLL_SIZE) {
+#ifdef VERBOSE
+      uart_send_pstring(PSTR("ERR_POLL!"));
+#endif
+      return TEST_ERROR_WRITE;
+    }
+
+    if(hw_timer_millis_timed_out(slots[slot].start_w, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
   }
 }
 
-u08 my_write_poll(u08 chan, pamela_buf_t *buf)
+u08 my_write_post(u08 chan, u08 state, pamela_buf_t *buf)
 {
   u08 slot = pamela_get_slot(chan);
 
+  if(state == PAMELA_CALL_FIRST) {
+    // simulate read error on error channel
+    if(buf->size == TEST_ERROR_DONE_SIZE) {
 #ifdef VERBOSE
-  uart_send('Y');
+      uart_send_pstring(PSTR("ERR_DONE!"));
+#endif
+      return TEST_ERROR_WRITE;
+    }
+
+#ifdef VERBOSE
+    uart_send_pstring(PSTR("<wd:"));
+    uart_send_hex_byte(slot);
+    uart_send('@');
+    uart_send_hex_byte(chan);
+    uart_send(':');
+    uart_send_hex_word(buf->size);
+    uart_send('>');
 #endif
 
-  // simulate read error on error channel
-  if(buf->size == TEST_ERROR_POLL_SIZE) {
-#ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_POLL!"));
-#endif
-    return TEST_ERROR_WRITE;
-  }
-
-  if(hw_timer_millis_timed_out(slots[slot].start_w, slots[slot].delay)) {
-#ifdef VERBOSE
-    uart_send('!');
-#endif
-    return PAMELA_OK;
+    slots[slot].start = hw_timer_millis();
+    if(slots[slot].delay > 0)
+      return PAMELA_HANDLER_POLL;
+    else
+      return PAMELA_HANDLER_OK;
   } else {
-    return PAMELA_POLL;
-  }
-}
-
-u08 my_write_done(u08 chan, pamela_buf_t *buf)
-{
-  u08 slot = pamela_get_slot(chan);
-
-  // simulate read error on error channel
-  if(buf->size == TEST_ERROR_DONE_SIZE) {
 #ifdef VERBOSE
-    uart_send_pstring(PSTR("ERR_DONE!"));
-#endif
-    return TEST_ERROR_WRITE;
-  }
-
-#ifdef VERBOSE
-  uart_send_pstring(PSTR("<wd:"));
-  uart_send_hex_byte(slot);
-  uart_send('@');
-  uart_send_hex_byte(chan);
-  uart_send(':');
-  uart_send_hex_word(buf->size);
-  uart_send('>');
+    uart_send('y');
 #endif
 
-  return PAMELA_OK;
+    if(hw_timer_millis_timed_out(slots[slot].start, slots[slot].delay)) {
+#ifdef VERBOSE
+      uart_send('!');
+#endif
+      return PAMELA_HANDLER_OK;
+    } else {
+      return PAMELA_HANDLER_POLL;
+    }
+  }
 }
 
 u16 my_set_mtu(u08 chan, u16 new_mtu)
@@ -399,24 +432,19 @@ HANDLER_BEGIN(my_handler)
   .config.max_slots = TEST_NUM_SLOTS,
 
   .open = my_open,
-  .open_poll = my_open_poll,
   .close = my_close,
-  .close_poll = my_close_poll,
   .reset = my_reset,
-  .reset_poll = my_reset_poll,
 
   .set_mtu = my_set_mtu,
 
   .seek = my_seek,
   .tell = my_tell,
 
-  .read_request = my_read_request,
-  .read_poll = my_read_poll,
-  .read_done = my_read_done,
+  .read_pre = my_read_pre,
+  .read_post = my_read_post,
 
-  .write_request = my_write_request,
-  .write_poll = my_write_poll,
-  .write_done = my_write_done,
+  .write_pre = my_write_pre,
+  .write_post = my_write_post,
 HANDLER_END
 
 HANDLER_TABLE_BEGIN

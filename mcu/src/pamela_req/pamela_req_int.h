@@ -18,13 +18,13 @@ typedef struct pamela_req_slot pamela_req_slot_t;
 
 /* generic service handler for all req services */
 
-extern u08 pamela_req_open(u08 chan, u16 port);
-extern u08 pamela_req_close(u08 chan);
-extern u08 pamela_req_reset(u08 chan);
-extern u08 pamela_req_read_request(u08 chan, pamela_buf_t *buf);
-extern u08 pamela_req_read_done(u08 chan, pamela_buf_t *buf);
-extern u08 pamela_req_write_request(u08 chan, pamela_buf_t *buf);
-extern u08 pamela_req_write_done(u08 chan, pamela_buf_t *buf);
+extern u08 pamela_req_open(u08 chan, u08 state, u16 port);
+extern u08 pamela_req_close(u08 chan, u08 state);
+extern u08 pamela_req_reset(u08 chan, u08 state);
+extern u08 pamela_req_read_pre(u08 chan, u08 state, pamela_buf_t *buf);
+extern u08 pamela_req_read_post(u08 chan, u08 state, pamela_buf_t *buf);
+extern u08 pamela_req_write_pre(u08 chan, u08 state, pamela_buf_t *buf);
+extern u08 pamela_req_write_post(u08 chan, u08 state, pamela_buf_t *buf);
 extern void pamela_req_channel_task(u08 chan);
 
 #endif
