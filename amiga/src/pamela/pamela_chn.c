@@ -307,7 +307,7 @@ int pamela_read_setup(pamela_channel_t *ch)
     ch->status &= ~PAMELA_STATUS_READ_MASK;
   }
 
-  return PAMELA_OK;
+  return ch->read_bytes;
 }
 
 int pamela_read_block(pamela_channel_t *ch)
@@ -400,7 +400,7 @@ int pamela_write_setup(pamela_channel_t *ch)
     ch->status &= ~PAMELA_STATUS_WRITE_MASK;
   }
 
-  return PAMELA_OK;
+  return ch->write_bytes;
 }
 
 int pamela_write_block(pamela_channel_t *ch)

@@ -233,7 +233,7 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
 
     // read setup
     res = pamela_read_setup(chn);
-    CHECK_PAM_RES(res, "read_setup");
+    CHECK_PAM_RES_VAL(res, "read_setup", read_size);
 
     // read block loop
     int sum_size = 0;
@@ -385,7 +385,7 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
 
     // write setup
     res = pamela_write_setup(chn);
-    CHECK_PAM_RES(res, "write_setup");
+    CHECK_PAM_RES_VAL(res, "write_setup", write_size);
 
     // write block loop
     int sum_size = 0;

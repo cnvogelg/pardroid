@@ -96,7 +96,7 @@ int pamela_tell(pamela_channel_t *pc, ULONG *pos);
 /* ----- read ----- */
 /* post read request. give max size */
 int pamela_read_request(pamela_channel_t *pc, UBYTE *buf, UWORD size);
-/* setup read operation */
+/* setup read operation and return actual size of transfer */
 int pamela_read_setup(pamela_channel_t *pc);
 /* read next block. return >0 if more blocks need to be read */
 int pamela_read_block(pamela_channel_t *pc);
@@ -104,7 +104,7 @@ int pamela_read_block(pamela_channel_t *pc);
 /* ----- write ----- */
 /* post write requst. give max size */
 int pamela_write_request(pamela_channel_t *pc, UBYTE *buf, UWORD size);
-/* setup write operation */
+/* setup write operation and return actual size of transfer */
 int pamela_write_setup(pamela_channel_t *pc);
 /* write next block. return >0 if more blocks need to be written */
 int pamela_write_block(pamela_channel_t *pc);

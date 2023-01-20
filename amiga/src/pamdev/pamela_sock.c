@@ -51,7 +51,7 @@ static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL
     pamela_channel_t *channel = sock->channel;
     int res = pamela_read_setup(channel);
     int sum = 0;
-    if(res == PAMELA_OK) {
+    if(res > 0) {
       while(1) {
         res = pamela_read_block(channel);
         if(res <= 0) {
@@ -105,7 +105,7 @@ static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOO
     pamela_channel_t *channel = sock->channel;
     int res = pamela_write_setup(channel);
     int sum = 0;
-    if(res == PAMELA_OK) {
+    if(res > 0) {
       while(1) {
         res = pamela_write_block(channel);
         if(res <= 0) {
