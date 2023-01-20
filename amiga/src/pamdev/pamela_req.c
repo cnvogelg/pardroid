@@ -18,6 +18,10 @@
 #include "pamela_engine.h"
 #include "pamela_engine_int.h"
 #include "pamela_req.h"
+#include "pamela_sock.h"
+
+#undef SysBase
+#define SysBase eng->sys_base
 
 static pamela_socket_t *get_socket(pamela_engine_t *eng, pamela_req_t *req)
 {
@@ -29,7 +33,7 @@ static pamela_socket_t *get_socket(pamela_engine_t *eng, pamela_req_t *req)
   return &eng->sockets[channel];
 }
 
-int pamela_req_open(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_open(pamela_engine_t *eng, pamela_req_t *req)
 {
   // open channel in pamela
   UWORD port = req->iopam_Port;
@@ -60,7 +64,7 @@ int pamela_req_open(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_client_t *client = pamela_req_get_client(req);
   pamela_socket_t *socket = get_socket(eng, req);
@@ -86,7 +90,7 @@ int pamela_req_close(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_reset(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_reset(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -103,12 +107,12 @@ int pamela_req_reset(pamela_engine_t *eng, pamela_req_t *req)
   socket->cmd_req = req;
 
   // cancel all pending requests at socket
-  pamela_engine_cancel_read_write(eng, socket);
+  pamela_sock_cancel_read_write(eng, socket);
 
   return PAMELA_OK;
 }
 
-int pamela_req_seek(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_seek(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -127,7 +131,7 @@ int pamela_req_seek(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_tell(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_tell(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -147,7 +151,7 @@ int pamela_req_tell(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_read(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_read(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -180,7 +184,7 @@ int pamela_req_read(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_write(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_write(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -212,7 +216,7 @@ int pamela_req_write(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_devinfo(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_devinfo(pamela_engine_t *eng, pamela_req_t *req)
 {
   APTR data = req->iopam_Req.io_Data;
   ULONG length = req->iopam_Req.io_Length;
@@ -227,7 +231,7 @@ int pamela_req_devinfo(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_get_mtu(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_get_mtu(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -246,7 +250,7 @@ int pamela_req_get_mtu(pamela_engine_t *eng, pamela_req_t *req)
   return PAMELA_OK;
 }
 
-int pamela_req_set_mtu(pamela_engine_t *eng, pamela_req_t *req)
+static int pamela_req_set_mtu(pamela_engine_t *eng, pamela_req_t *req)
 {
   pamela_socket_t *socket = get_socket(eng, req);
   if(socket == NULL) {
@@ -261,4 +265,76 @@ int pamela_req_set_mtu(pamela_engine_t *eng, pamela_req_t *req)
     return res;
   }
   return PAMELA_OK;
+}
+
+void pamela_req_handle(pamela_engine_t *eng, pamela_req_t *req)
+{
+  BOOL post_reply = TRUE;
+  int error = PAMELA_OK;
+
+  // clear error state
+  req->iopam_PamelaError = PAMELA_OK;
+  req->iopam_WireError = 0;
+  req->iopam_Req.io_Error = 0;
+
+  D(("handle_req { cmd=%ld\n", req->iopam_Req.io_Command));
+  switch(req->iopam_Req.io_Command) {
+    case PAMCMD_OPEN_CHANNEL:
+      error = pamela_req_open(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
+      break;
+    case PAMCMD_CLOSE_CHANNEL:
+      error = pamela_req_close(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
+      break;
+    case PAMCMD_RESET_CHANNEL:
+      error = pamela_req_reset(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
+      break;
+    case PAMCMD_READ:
+      error = pamela_req_read(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
+      break;
+    case PAMCMD_WRITE:
+      error = pamela_req_write(eng, req);
+      if(error == PAMELA_OK) {
+        post_reply = FALSE;
+      }
+      break;
+    case PAMCMD_SEEK:
+      error = pamela_req_seek(eng, req);
+      break;
+    case PAMCMD_TELL:
+      error = pamela_req_tell(eng, req);
+      break;
+    case PAMCMD_DEVINFO:
+      error = pamela_req_devinfo(eng, req);
+      break;
+    case PAMCMD_GET_MTU:
+      error = pamela_req_get_mtu(eng, req);
+      break;
+    case PAMCMD_SET_MTU:
+      error = pamela_req_set_mtu(eng, req);
+      break;
+    default:
+      break;
+  }
+  D(("} error=%ld, post=%ld\n", error, post_reply));
+
+  if(error != PAMELA_OK) {
+    req->iopam_Req.io_Error = IOERR_PAMELA;
+    req->iopam_PamelaError = error;
+  }
+
+  if(post_reply) {
+    ReplyMsg((struct Message *)req);
+  }
 }

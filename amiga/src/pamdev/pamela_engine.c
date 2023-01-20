@@ -18,6 +18,7 @@
 #include "pamela_engine.h"
 #include "pamela_engine_int.h"
 #include "pamela_req.h"
+#include "pamela_sock.h"
 
 #define TIMEOUT_US  500000
 #define TIMEOUT_S   0
@@ -113,318 +114,26 @@ void pamela_engine_exit(pamela_engine_t *eng)
   D(("done\n"));
 }
 
-static void handle_req(pamela_engine_t *eng, pamela_req_t *req)
-{
-  BOOL post_reply = TRUE;
-  int error = PAMELA_OK;
-
-  // clear error state
-  req->iopam_PamelaError = PAMELA_OK;
-  req->iopam_WireError = 0;
-  req->iopam_Req.io_Error = 0;
-
-  D(("handle_req { cmd=%ld\n", req->iopam_Req.io_Command));
-  switch(req->iopam_Req.io_Command) {
-    case PAMCMD_OPEN_CHANNEL:
-      error = pamela_req_open(eng, req);
-      if(error == PAMELA_OK) {
-        post_reply = FALSE;
-      }
-      break;
-    case PAMCMD_CLOSE_CHANNEL:
-      error = pamela_req_close(eng, req);
-      if(error == PAMELA_OK) {
-        post_reply = FALSE;
-      }
-      break;
-    case PAMCMD_RESET_CHANNEL:
-      error = pamela_req_reset(eng, req);
-      if(error == PAMELA_OK) {
-        post_reply = FALSE;
-      }
-      break;
-    case PAMCMD_READ:
-      error = pamela_req_read(eng, req);
-      if(error == PAMELA_OK) {
-        post_reply = FALSE;
-      }
-      break;
-    case PAMCMD_WRITE:
-      error = pamela_req_write(eng, req);
-      if(error == PAMELA_OK) {
-        post_reply = FALSE;
-      }
-      break;
-    case PAMCMD_SEEK:
-      error = pamela_req_seek(eng, req);
-      break;
-    case PAMCMD_TELL:
-      error = pamela_req_tell(eng, req);
-      break;
-    case PAMCMD_DEVINFO:
-      error = pamela_req_devinfo(eng, req);
-      break;
-    case PAMCMD_GET_MTU:
-      error = pamela_req_get_mtu(eng, req);
-      break;
-    case PAMCMD_SET_MTU:
-      error = pamela_req_set_mtu(eng, req);
-      break;
-    default:
-      break;
-  }
-  D(("} error=%ld, post=%ld\n", error, post_reply));
-
-  if(error != PAMELA_OK) {
-    req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = error;
-  }
-
-  if(post_reply) {
-    ReplyMsg((struct Message *)req);
-  }
-}
-
-static void handle_timeout(pamela_engine_t *eng)
-{
-}
-
-static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL ok)
-{
-  D(("sock read: ok=%ld\n", ok));
-
-  // make sure a read req is associated
-  pamela_req_t *req = sock->read_req;
-  if(req == NULL) {
-    D(("no read req??\n"));
-    return;
-  }
-
-  // buffer
-  APTR buf = req->iopam_Req.io_Data;
-  if(buf == NULL) {
-    D(("no data??\n"));
-    ok = FALSE;
-  }
-
-  // already error?
-  if(!ok) {
-    req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
-    req->iopam_WireError = pamela_error(sock->channel);
-  }
-  else {
-    // try to process buffer
-    pamela_channel_t *channel = sock->channel;
-    int res = pamela_read_setup(channel);
-    int sum = 0;
-    if(res == PAMELA_OK) {
-      while(1) {
-        res = pamela_read_block(channel);
-        if(res <= 0) {
-          break;
-        }
-        sum += res;
-      }
-    }
-    if(res < 0) {
-      D(("read err: %ld\n", res));
-      req->iopam_Req.io_Error = IOERR_PAMELA;
-      req->iopam_PamelaError = res;
-    } else {
-      D(("read ok: %ld\n", res));
-      req->iopam_Req.io_Actual = sum;
-      req->iopam_Req.io_Error = 0;
-    }
-  }
-
-  ReplyMsg((struct Message *)req);
-
-  sock->read_req = NULL;
-}
-
-static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOOL ok)
-{
-  D(("sock write: ok=%ld\n", ok));
-
-  // make sure a write req is associated
-  pamela_req_t *req = sock->write_req;
-  if(req == NULL) {
-    D(("no read req??\n"));
-    return;
-  }
-
-  // buffer
-  APTR buf = req->iopam_Req.io_Data;
-  if(buf == NULL) {
-    D(("no data??\n"));
-    ok = FALSE;
-  }
-
-  // already error?
-  if(!ok) {
-    req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
-    req->iopam_WireError = pamela_error(sock->channel);
-  }
-  else {
-    // try to process buffer
-    pamela_channel_t *channel = sock->channel;
-    int res = pamela_write_setup(channel);
-    int sum = 0;
-    if(res == PAMELA_OK) {
-      while(1) {
-        res = pamela_write_block(channel);
-        if(res <= 0) {
-          break;
-        }
-        sum += res;
-      }
-    }
-    if(res < 0) {
-      D(("write err: %ld\n", res));
-      req->iopam_Req.io_Error = IOERR_PAMELA;
-      req->iopam_PamelaError = res;
-    } else {
-      D(("write ok: %ld\n", res));
-      req->iopam_Req.io_Actual = sum;
-      req->iopam_Req.io_Error = 0;
-    }
-  }
-
-  ReplyMsg((struct Message *)req);
-
-  sock->write_req = NULL;
-}
-
-static void handle_socket_eos(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  D(("sock eos\n"));
-}
-
-static void handle_socket_error(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  D(("sock error\n"));
-
-  // pending read request?
-  if(sock->read_req != NULL) {
-    handle_socket_read(eng, sock, FALSE);
-  }
-  // pending write request?
-  if(sock->write_req != NULL) {
-    handle_socket_write(eng, sock, FALSE);
-  }
-}
-
-static void set_wire_error(pamela_socket_t *sock, UWORD wire_error)
-{
-  pamela_req_t *req = sock->cmd_req;
-  if(req != NULL) {
-    D(("set cmd req=%lx wire error %ld\n", req, (ULONG)wire_error));
-    req->iopam_Req.io_Error = IOERR_PAMELA;
-    req->iopam_PamelaError = PAMELA_ERROR_WIRE;
-    req->iopam_WireError = wire_error;
-  }
-}
-
-static void reply_cmd_req(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  pamela_req_t *req = sock->cmd_req;
-  if(req != NULL) {
-    D(("  -> reply cmd req=%lx\n", req));
-    ReplyMsg((struct Message *)req);
-    sock->cmd_req = NULL;
-  }
-}
-
-static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  pamela_channel_t *channel = sock->channel;
-
-  UWORD status = pamela_status(channel);
-  D(("sock #%ld: status=%04lx\n", pamela_channel_id(channel), status));
-
-  // the read request is ready to be performed
-  if((status & PAMELA_STATUS_READ_READY) == PAMELA_STATUS_READ_READY) {
-    handle_socket_read(eng, sock, TRUE);
-  }
-
-  // the write request is ready to be performed
-  if((status & PAMELA_STATUS_WRITE_READY) == PAMELA_STATUS_WRITE_READY) {
-    handle_socket_write(eng, sock, TRUE);
-  }
-
-  // get changed state
-  UBYTE state = status & PAMELA_STATUS_STATE_MASK;
-  UBYTE old_state = sock->last_status & PAMELA_STATUS_STATE_MASK;
-  if(state != old_state) {
-    D((" -> new_state=%ld\n", state));
-    switch(state) {
-      case PAMELA_STATUS_EOS:
-        handle_socket_eos(eng, sock);
-        break;
-      case PAMELA_STATUS_ERROR:
-        handle_socket_error(eng, sock);
-        break;
-      default:
-        break;
-    }
-  }
-
-  // reply command requests like open/close/reset
-  if(state == PAMELA_STATUS_ACTIVE) {
-    D((" -> ACTIVE\n"));
-
-    // get mtu - for read/write to work
-    UWORD mtu = 0;
-    int res =pamela_get_mtu(channel, &mtu);
-    if(res != PAMELA_OK) {
-      D(("  MTU failed!"));
-      set_wire_error(sock, res);
-      pamela_close(sock->channel);
-    }
-
-    reply_cmd_req(eng, sock);
-  }
-  else if(state == PAMELA_STATUS_INACTIVE) {
-    D((" -> INACTIVE\n"));
-    // cleanup socket
-    pamela_engine_shutdown_socket(eng, sock);
-    // answer req
-    reply_cmd_req(eng, sock);
-  }
-  else if(state == PAMELA_STATUS_OPEN_ERROR) {
-    D((" -> OPEN ERROR\n"));
-    // set wire error in cmd_req
-    set_wire_error(sock, pamela_error(sock->channel));
-    // close channel... cmd req reply and cleanup will be done in inactive state
-    pamela_close(sock->channel);
-  }
-
-  sock->last_status = status;
-}
-
-static void handle_event(pamela_engine_t *eng)
-{
-  UWORD event_mask = 0;
-  pamela_event_update(eng->pamela, &event_mask);
-
-  // run through sockets
-  UWORD sock_mask = 1;
-  for(int i=0;i<eng->num_sockets;i++) {
-    if((event_mask & sock_mask) == sock_mask) {
-      pamela_socket_t *sock = &eng->sockets[i];
-      handle_socket_status(eng, sock);
-    }
-    sock_mask <<= 1;
-  }
-}
-
 ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
 {
   ULONG quit_sigmask = 1 << eng->quit_signal;
   while(1) {
     ULONG sigmask = extra_sigmask | eng->port_sigmask | quit_sigmask;
+
+    // first run work loop of engine
+    // end the loop if no more work has to be done or if signals have arrived
+    D(("work loop\n"));
+    while(1) {
+      BOOL done = pamela_sock_work(eng);
+      if(done) {
+        break;
+      }
+      ULONG cur_mask = SetSignal(0,0);
+      if((cur_mask & sigmask)!=0) {
+        break;
+      }
+    }
+
     // wait for pamela event, port or timeout
     D(("event wait: sigmask=%lx\n", sigmask));
     int res = pamela_event_wait(eng->pamela, TIMEOUT_S, TIMEOUT_US, &sigmask);
@@ -432,13 +141,13 @@ ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
     // timeout?
     if((res & PAMELA_WAIT_TIMEOUT) == PAMELA_WAIT_TIMEOUT) {
       D(("-> time out!\n"));
-      handle_timeout(eng);
+      pamela_sock_timeout(eng);
     }
 
     // pamela event?
     if((res & PAMELA_WAIT_EVENT) == PAMELA_WAIT_EVENT) {
       D(("-> pam event!\n"));
-      handle_event(eng);
+      pamela_sock_event(eng);
     }
 
     // some signal was hit
@@ -448,7 +157,7 @@ ULONG pamela_engine_work(pamela_engine_t *eng, ULONG extra_sigmask)
         pamela_req_t *req = (pamela_req_t *)GetMsg(eng->req_port);
         D(("-> got req: %lx\n", req));
         if(req != NULL) {
-          handle_req(eng, req);
+          pamela_req_handle(eng, req);
         }
       }
       // external signal hit?
@@ -499,7 +208,7 @@ int pamela_engine_exit_request(pamela_engine_t *eng, pamela_req_t *req)
   }
 
   D(("exit_request: req=%lx -> client=%lx\n", req, pc));
-  pamela_engine_shutdown_client(eng, pc);
+  pamela_sock_shutdown_client(eng, pc);
 
   Remove((struct Node *)pc);
 
@@ -534,60 +243,9 @@ BOOL pamela_engine_post_request(pamela_engine_t *eng, pamela_req_t *req)
   }
 }
 
-void pamela_engine_shutdown_client(pamela_engine_t *eng, pamela_client_t *pc)
-{
-  UWORD channel_mask = pc->channel_mask;
-  UWORD mask = 1;
-  for(int i=0;i<eng->num_sockets;i++) {
-    /* channel was opened by client/req */
-    if((channel_mask & mask) == mask) {
-      pamela_socket_t *sock = &eng->sockets[i];
-      D(("shutdown_client: sock=%lx\n", sock));
-      pamela_close(sock->channel);
-      pamela_engine_shutdown_socket(eng, sock);
-    }
-    mask <<= 1;
-  }
-  pc->request = NULL;
-  pc->channel_mask = 0;
-}
-
 BOOL pamela_engine_cancel_request(pamela_engine_t *eng, pamela_req_t *req)
 {
   // TODO
   req->iopam_Req.io_Error = IOERR_ABORTED;
   return FALSE;
 }
-
-void pamela_engine_shutdown_socket(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  D(("shutdown_socket: sock=%lx\n", sock));
-
-  // remove channel from mask
-  sock->client->channel_mask &= ~(1 << pamela_channel_id(sock->channel));
-
-  sock->client = NULL;
-  sock->channel = NULL;
-
-  pamela_engine_cancel_read_write(eng, sock);
-}
-
-void pamela_engine_cancel_read_write(pamela_engine_t *eng, pamela_socket_t *sock)
-{
-  // abort read socket
-  if(sock->read_req != NULL) {
-    D(("cancel_read: req=%lx\n", sock->read_req));
-    sock->read_req->iopam_Req.io_Error = IOERR_ABORTED;
-    ReplyMsg((struct Message *)sock->read_req);
-    sock->read_req = NULL;
-  }
-
-  // abort write socket
-  if(sock->write_req != NULL) {
-    D(("cancel_write: req=%lx\n", sock->write_req));
-    sock->write_req->iopam_Req.io_Error = IOERR_ABORTED;
-    ReplyMsg((struct Message *)sock->write_req);
-    sock->write_req = NULL;
-  }
-}
-

@@ -34,8 +34,4 @@ struct pamela_engine {
   BYTE              quit_signal;
 };
 
-void pamela_engine_shutdown_client(pamela_engine_t *eng, pamela_client_t *pc);
-void pamela_engine_shutdown_socket(pamela_engine_t *eng, pamela_socket_t *sock);
-void pamela_engine_cancel_read_write(pamela_engine_t *eng, pamela_socket_t *sock);
-
 #endif

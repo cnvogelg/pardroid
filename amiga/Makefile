@@ -40,7 +40,7 @@ PROTO_BOOT_SRCS = $(PROTO_DEV_SRCS) proto_boot.c
 
 # pamela
 PAMELA_SRCS = $(PROTO_IO_SRCS) pamela.c pamela_err.c pamela_chn.c
-PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c
+PAMELA_ENGINE_SRCS = $(PAMELA_SRCS) pamela_engine.c pamela_req.c pamela_sock.c
 
 # pamlib
 PAMLIB_SRCS = pamlib.c pamela_err.c
