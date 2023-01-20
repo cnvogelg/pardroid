@@ -11,6 +11,10 @@ TEST_FUNC(test_write);
 TEST_FUNC(test_read);
 TEST_FUNC(test_write_odd);
 TEST_FUNC(test_read_odd);
+TEST_FUNC(test_write_multi);
+TEST_FUNC(test_read_multi);
+TEST_FUNC(test_write_multi_odd);
+TEST_FUNC(test_read_multi_odd);
 TEST_FUNC(test_write_error_req);
 TEST_FUNC(test_read_error_req);
 TEST_FUNC(test_write_error_poll);
@@ -28,6 +32,10 @@ TEST_FUNC(test_seek_tell);
   { test_read, "r", "read message from channel" }, \
   { test_write_odd, "wo", "write odd sized message on channel" }, \
   { test_read_odd, "ro", "read odd sized message from channel" }, \
+  { test_write_multi, "wm", "write multi block message on channel" }, \
+  { test_read_multi, "rm", "read multi block message from channel" }, \
+  { test_write_multi_odd, "wmo", "write odd sized multi block message on channel" }, \
+  { test_read_multi_odd, "rmo", "read odd sized multi block message from channel" }, \
   { test_write_error_req, "wer", "write req error on channel" }, \
   { test_read_error_req, "rer", "read req error on channel" }, \
   { test_write_error_poll, "wep", "write poll error on channel" }, \

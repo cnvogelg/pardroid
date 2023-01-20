@@ -155,7 +155,7 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
   pamela_req_t *req = pet->req;
   int res = 0;
 
-  UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
+  UBYTE *buf = test_buffer_alloc(TEST_MAX_BUF_SIZE, p);
   if (buf == NULL)
   {
     return 1;
@@ -213,6 +213,16 @@ TEST_FUNC(test_read_odd)
   return test_read_helper(p, TEST_BUF_SIZE - 1);
 }
 
+TEST_FUNC(test_read_multi)
+{
+  return test_read_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_read_multi_odd)
+{
+  return test_read_helper(p, TEST_MAX_BUF_SIZE - 3);
+}
+
 TEST_FUNC(test_read_error_req)
 {
   return test_read_helper(p, TEST_ERROR_REQ_SIZE);
@@ -234,7 +244,7 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
   pamela_req_t *req = pet->req;
   int res = 0;
 
-  UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
+  UBYTE *buf = test_buffer_alloc(TEST_MAX_BUF_SIZE, p);
   if (buf == NULL)
   {
     return 1;
@@ -278,6 +288,16 @@ TEST_FUNC(test_write)
 TEST_FUNC(test_write_odd)
 {
   return test_write_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_write_multi)
+{
+  return test_write_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_write_multi_odd)
+{
+  return test_write_helper(p, TEST_MAX_BUF_SIZE - 3);
 }
 
 TEST_FUNC(test_write_error_req)

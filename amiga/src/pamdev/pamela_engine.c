@@ -217,8 +217,15 @@ static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL
     // try to process buffer
     pamela_channel_t *channel = sock->channel;
     int res = pamela_read_setup(channel);
+    int sum = 0;
     if(res == PAMELA_OK) {
-      res = pamela_read_block(channel);
+      while(1) {
+        res = pamela_read_block(channel);
+        if(res <= 0) {
+          break;
+        }
+        sum += res;
+      }
     }
     if(res < 0) {
       D(("read err: %ld\n", res));
@@ -226,7 +233,7 @@ static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL
       req->iopam_PamelaError = res;
     } else {
       D(("read ok: %ld\n", res));
-      req->iopam_Req.io_Actual = res;
+      req->iopam_Req.io_Actual = sum;
       req->iopam_Req.io_Error = 0;
     }
   }
@@ -264,8 +271,15 @@ static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOO
     // try to process buffer
     pamela_channel_t *channel = sock->channel;
     int res = pamela_write_setup(channel);
+    int sum = 0;
     if(res == PAMELA_OK) {
-      res = pamela_write_block(channel);
+      while(1) {
+        res = pamela_write_block(channel);
+        if(res <= 0) {
+          break;
+        }
+        sum += res;
+      }
     }
     if(res < 0) {
       D(("write err: %ld\n", res));
@@ -273,7 +287,7 @@ static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOO
       req->iopam_PamelaError = res;
     } else {
       D(("write ok: %ld\n", res));
-      req->iopam_Req.io_Actual = res;
+      req->iopam_Req.io_Actual = sum;
       req->iopam_Req.io_Error = 0;
     }
   }
