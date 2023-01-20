@@ -13,6 +13,10 @@ TEST_FUNC(test_write_odd);
 TEST_FUNC(test_read_odd);
 TEST_FUNC(test_write_multi);
 TEST_FUNC(test_read_multi);
+TEST_FUNC(test_write_short);
+TEST_FUNC(test_read_short);
+TEST_FUNC(test_write_zero);
+TEST_FUNC(test_read_zero);
 TEST_FUNC(test_write_multi_odd);
 TEST_FUNC(test_read_multi_odd);
 TEST_FUNC(test_write_error_req);
@@ -35,6 +39,10 @@ TEST_FUNC(test_get_set_mtu);
   { test_read_odd, "ro", "read odd sized message from channel" }, \
   { test_write_multi, "wm", "write multi block message on channel" }, \
   { test_read_multi, "rm", "read multi block message from channel" }, \
+  { test_write_short, "ws", "write short sized message on channel" }, \
+  { test_read_short, "rs", "read short sized message from channel" }, \
+  { test_write_zero, "wz", "write zero sized message on channel" }, \
+  { test_read_zero, "rz", "read zero sized message from channel" }, \
   { test_write_multi_odd, "wmo", "write odd sized multi block message on channel" }, \
   { test_read_multi_odd, "rmo", "read odd sized multi block message from channel" }, \
   { test_write_error_req, "wer", "write req error on channel" }, \

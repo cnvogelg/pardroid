@@ -222,6 +222,12 @@ u16 proto_io_api_read_res(u08 chn)
   pamela_channel_t *pc = pamela_get_channel(chn);
   u16 size = pc->rx_buf.size;
   DS("[RS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
+
+  // terminate empty read
+  if(size == 0) {
+    proto_io_api_read_done(chn, 0, NULL);
+  }
+
   return size;
 }
 
@@ -279,6 +285,12 @@ u16  proto_io_api_write_res(u08 chn)
   pamela_channel_t *pc = pamela_get_channel(chn);
   u16 size = pc->tx_buf.size;
   DS("[WS:"); DB(chn); DC('='); DW(size); DC(']'); DNL;
+
+  // terminate empty write
+  if(size == 0) {
+    proto_io_api_write_done(chn, 0, NULL);
+  }
+
   return size;
 }
 

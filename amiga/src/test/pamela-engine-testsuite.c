@@ -176,6 +176,12 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
     CHECK_PAM_REQ_WIRE_ERROR(res, pet, "read", TEST_ERROR_READ);
     check = 0;
   } else {
+    if(read_size == TEST_SHORT_SIZE) {
+      read_size = TEST_REDUCED_SIZE;
+    }
+    if(read_size == TEST_ZERO_SIZE) {
+      read_size = 0;
+    }
     CHECK_PAM_REQ_VAL(res, pet, "read", read_size);
   }
 
@@ -216,6 +222,16 @@ TEST_FUNC(test_read_odd)
 TEST_FUNC(test_read_multi)
 {
   return test_read_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_read_short)
+{
+  return test_read_helper(p, TEST_SHORT_SIZE);
+}
+
+TEST_FUNC(test_read_zero)
+{
+  return test_read_helper(p, TEST_ZERO_SIZE);
 }
 
 TEST_FUNC(test_read_multi_odd)
@@ -268,6 +284,12 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
   if((write_size == TEST_ERROR_REQ_SIZE) || (write_size == TEST_ERROR_POLL_SIZE)) {
     CHECK_PAM_REQ_WIRE_ERROR(res, pet, "write", TEST_ERROR_WRITE);
   } else {
+    if(write_size == TEST_SHORT_SIZE) {
+      write_size = TEST_REDUCED_SIZE;
+    }
+    if(write_size == TEST_ZERO_SIZE) {
+      write_size = 0;
+    }
     CHECK_PAM_REQ_VAL(res, pet, "write", write_size);
   }
 
@@ -293,6 +315,16 @@ TEST_FUNC(test_write_odd)
 TEST_FUNC(test_write_multi)
 {
   return test_write_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_write_short)
+{
+  return test_write_helper(p, TEST_SHORT_SIZE);
+}
+
+TEST_FUNC(test_write_zero)
+{
+  return test_write_helper(p, TEST_ZERO_SIZE);
 }
 
 TEST_FUNC(test_write_multi_odd)

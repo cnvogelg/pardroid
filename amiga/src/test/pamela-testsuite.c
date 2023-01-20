@@ -224,9 +224,14 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
   } else {
     UWORD exp = PAMELA_STATUS_ACTIVE | PAMELA_STATUS_READ_READY;
 
-    if(read_size == TEST_SHORT_SIZE) {
+    if((read_size == TEST_SHORT_SIZE)) {
       exp |= PAMELA_STATUS_READ_SIZE;
       read_size = TEST_REDUCED_SIZE;
+    }
+
+    if((read_size == TEST_ZERO_SIZE)) {
+      exp |= PAMELA_STATUS_READ_SIZE;
+      read_size = 0;
     }
 
     CHECK_EQUAL(status, exp, "channel status");
@@ -307,6 +312,11 @@ TEST_FUNC(test_read_short)
   return test_read_helper(p, TEST_SHORT_SIZE);
 }
 
+TEST_FUNC(test_read_zero)
+{
+  return test_read_helper(p, TEST_ZERO_SIZE);
+}
+
 TEST_FUNC(test_read_error_req)
 {
   return test_read_helper(p, TEST_ERROR_REQ_SIZE);
@@ -381,6 +391,11 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
       write_size = TEST_REDUCED_SIZE;
     }
 
+    if(write_size == TEST_ZERO_SIZE) {
+      exp |= PAMELA_STATUS_WRITE_SIZE;
+      write_size = 0;
+    }
+
     CHECK_EQUAL(status, exp, "channel status");
 
     // write setup
@@ -444,6 +459,11 @@ TEST_FUNC(test_write_multi_odd)
 TEST_FUNC(test_write_short)
 {
   return test_write_helper(p, TEST_SHORT_SIZE);
+}
+
+TEST_FUNC(test_write_zero)
+{
+  return test_write_helper(p, TEST_ZERO_SIZE);
 }
 
 TEST_FUNC(test_write_error_req)

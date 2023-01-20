@@ -218,6 +218,11 @@ u08 my_read_pre(u08 chan, u08 state, pamela_buf_t *buf)
       buf->size = TEST_REDUCED_SIZE;
     }
 
+    // zero read
+    if(buf->size == TEST_ZERO_SIZE) {
+      buf->size = 0;
+    }
+
     slots[slot].start = hw_timer_millis();
     if((slots[slot].delay > 0) || (buf->size == TEST_ERROR_POLL_SIZE)) {
       return PAMELA_HANDLER_POLL;
@@ -323,6 +328,11 @@ u08 my_write_pre(u08 chan, u08 state, pamela_buf_t *buf)
     // short write
     if(buf->size == TEST_SHORT_SIZE) {
       buf->size = TEST_REDUCED_SIZE;
+    }
+
+    // zero read
+    if(buf->size == TEST_ZERO_SIZE) {
+      buf->size = 0;
     }
 
     slots[slot].start_w = hw_timer_millis();

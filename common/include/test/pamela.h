@@ -9,6 +9,7 @@
 #define TEST_ERROR_POLL_SIZE  114
 #define TEST_ERROR_DONE_SIZE  115
 #define TEST_SHORT_SIZE       116
+#define TEST_ZERO_SIZE        117
 #define TEST_REDUCED_SIZE     72
 
 #define TEST_ERROR_READ      0x88

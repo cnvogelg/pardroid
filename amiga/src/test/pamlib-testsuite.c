@@ -123,6 +123,12 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
     CHECK_PAMLIB_RES_WIRE_ERROR(res, "read", TEST_ERROR_READ);
     check = 0;
   } else {
+    if(read_size == TEST_SHORT_SIZE) {
+      read_size = TEST_REDUCED_SIZE;
+    }
+    if(read_size == TEST_ZERO_SIZE) {
+      read_size = 0;
+    }
     CHECK_PAMLIB_RES_VAL(res, "read", read_size);
   }
 
@@ -170,6 +176,16 @@ TEST_FUNC(test_read_multi_odd)
   return test_read_helper(p, TEST_MAX_BUF_SIZE - 3);
 }
 
+TEST_FUNC(test_read_short)
+{
+  return test_read_helper(p, TEST_SHORT_SIZE);
+}
+
+TEST_FUNC(test_read_zero)
+{
+  return test_read_helper(p, TEST_ZERO_SIZE);
+}
+
 TEST_FUNC(test_read_error_req)
 {
   return test_read_helper(p, TEST_ERROR_REQ_SIZE);
@@ -212,6 +228,12 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
   if((write_size == TEST_ERROR_REQ_SIZE) || (write_size == TEST_ERROR_POLL_SIZE)) {
     CHECK_PAMLIB_RES_WIRE_ERROR(res, "write", TEST_ERROR_WRITE);
   } else {
+    if(write_size == TEST_SHORT_SIZE) {
+      write_size = TEST_REDUCED_SIZE;
+    }
+    if(write_size == TEST_ZERO_SIZE) {
+      write_size = 0;
+    }
     CHECK_PAMLIB_RES_VAL(res, "write", write_size);
   }
 
@@ -242,6 +264,16 @@ TEST_FUNC(test_write_multi)
 TEST_FUNC(test_write_multi_odd)
 {
   return test_write_helper(p, TEST_MAX_BUF_SIZE - 3);
+}
+
+TEST_FUNC(test_write_short)
+{
+  return test_write_helper(p, TEST_SHORT_SIZE);
+}
+
+TEST_FUNC(test_write_zero)
+{
+  return test_write_helper(p, TEST_ZERO_SIZE);
 }
 
 TEST_FUNC(test_write_error_req)
