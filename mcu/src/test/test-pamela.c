@@ -404,10 +404,10 @@ u16 my_set_mtu(u08 chan, u16 new_mtu)
   u08 slot = pamela_get_slot(chan);
 
   u16 mtu;
-  if(new_mtu < TEST_MAX_BUF_SIZE) {
+  if(new_mtu < TEST_DEFAULT_MTU) {
     mtu = new_mtu;
   } else {
-    mtu = TEST_MAX_BUF_SIZE;
+    mtu = TEST_DEFAULT_MTU;
   }
 
 #ifdef VERBOSE
@@ -428,7 +428,7 @@ HANDLER_BEGIN(my_handler)
   .config.port_begin = TEST_PORT_MIN,
   .config.port_end = TEST_PORT_MAX,
   .config.def_mtu = TEST_DEFAULT_MTU,
-  .config.max_mtu = TEST_MAX_BUF_SIZE,
+  .config.max_mtu = TEST_DEFAULT_MTU,
   .config.max_slots = TEST_NUM_SLOTS,
 
   .open = my_open,

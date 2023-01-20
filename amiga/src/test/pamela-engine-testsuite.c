@@ -60,7 +60,6 @@
     return -1; \
   }
 
-#define TEST_BUF_SIZE  128
 #define TEST_BYTE_OFFSET 3
 #define TEST_SEEK       0xdeadbeefUL
 

@@ -30,6 +30,14 @@
     return res; \
   }
 
+#define CHECK_PAM_RES_NEG(res, sec) \
+  if (res < 0) \
+  { \
+    p->error = pamela_perror(res); \
+    p->section = sec; \
+    return res; \
+  }
+
 #define CHECK_PAM_RES_VAL(res, sec, val) \
   if (res != val) \
   { \
@@ -57,7 +65,6 @@
     } \
   }
 
-#define TEST_BUF_SIZE  512
 #define TEST_BYTE_OFFSET 3
 
 static int wait_event(pamela_handle_t *ph, pamela_channel_t *ch)
@@ -174,7 +181,7 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
   pamela_channel_t *chn = NULL;
   int res = 0;
 
-  UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
+  UBYTE *buf = test_buffer_alloc(TEST_MAX_BUF_SIZE, p);
   if (buf == NULL)
   {
     return 1;
@@ -228,9 +235,17 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
     res = pamela_read_setup(chn);
     CHECK_PAM_RES(res, "read_setup");
 
-    // read block
-    res = pamela_read_block(chn);
-    CHECK_PAM_RES_VAL(res, "read_block", read_size);
+    // read block loop
+    int sum_size = 0;
+    while(1) {
+      res = pamela_read_block(chn);
+      CHECK_PAM_RES_NEG(res, "read_block");
+      if(res == 0) {
+        break;
+      }
+      sum_size += res;
+    }
+    CHECK_PAM_RES_VAL(sum_size, "read_block_sum", read_size);
 
     CHECK_WAIT_EVENT(pam, chn, "after read");
 
@@ -277,6 +292,16 @@ TEST_FUNC(test_read_odd)
   return test_read_helper(p, TEST_BUF_SIZE - 1);
 }
 
+TEST_FUNC(test_read_multi)
+{
+  return test_read_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_read_multi_odd)
+{
+  return test_read_helper(p, TEST_MAX_BUF_SIZE - 3);
+}
+
 TEST_FUNC(test_read_short)
 {
   return test_read_helper(p, TEST_SHORT_SIZE);
@@ -303,7 +328,7 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
   pamela_channel_t *chn = NULL;
   int res = 0;
 
-  UBYTE *buf = test_buffer_alloc(TEST_BUF_SIZE, p);
+  UBYTE *buf = test_buffer_alloc(TEST_MAX_BUF_SIZE, p);
   if (buf == NULL)
   {
     return 1;
@@ -362,9 +387,17 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
     res = pamela_write_setup(chn);
     CHECK_PAM_RES(res, "write_setup");
 
-    // write block
-    res = pamela_write_block(chn);
-    CHECK_PAM_RES_VAL(res, "write_block", write_size);
+    // write block loop
+    int sum_size = 0;
+    while(1) {
+      res = pamela_write_block(chn);
+      CHECK_PAM_RES_NEG(res, "write_block");
+      if(res == 0) {
+        break;
+      }
+      sum_size += res;
+    }
+    CHECK_PAM_RES_VAL(sum_size, "write_block_sum", write_size);
 
     CHECK_WAIT_EVENT(pam, chn, "after write");
 
@@ -396,6 +429,16 @@ TEST_FUNC(test_write)
 TEST_FUNC(test_write_odd)
 {
   return test_write_helper(p, TEST_BUF_SIZE - 1);
+}
+
+TEST_FUNC(test_write_multi)
+{
+  return test_write_helper(p, TEST_MAX_BUF_SIZE - 2);
+}
+
+TEST_FUNC(test_write_multi_odd)
+{
+  return test_write_helper(p, TEST_MAX_BUF_SIZE - 3);
 }
 
 TEST_FUNC(test_write_short)

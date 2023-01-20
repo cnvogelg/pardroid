@@ -233,7 +233,7 @@ void proto_io_api_read_blk(u08 chn, u16 *size, u08 **raw_buf)
   *size = buf->blk_size;
   *raw_buf = buf->data + buf->offset;
 
-  DS("[RB:"); DB(chn); DC('+'); DW(*size); DC('@'); DW(buf->offset); DC(']'); DNL;
+  DS("[RB:"); DB(chn); DC('='); DW(buf->size); DC('+'); DW(buf->blk_size); DC('@'); DW(buf->offset); DC(']'); DNL;
 
   setup_next_blk(buf, pc->mtu);
 }
@@ -243,11 +243,14 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  pc->status |= PAMELA_STATUS_READ_POST;
+  // was last block
+  if(pc->rx_buf.blk_size == 0) {
+    pc->status |= PAMELA_STATUS_READ_POST;
 
-  DS("[RD:"); DB(chn); DC('+'); DW(pc->rx_buf.blk_size); DC('@'); DW(pc->rx_buf.offset);
-  pamela_read_post_work(pc, handler, PAMELA_CALL_FIRST);
-  DC(']'); DNL;
+    DS("[RD:"); DB(chn); DC('+'); DW(pc->rx_buf.blk_size); DC('@'); DW(pc->rx_buf.offset);
+    pamela_read_post_work(pc, handler, PAMELA_CALL_FIRST);
+    DC(']'); DNL;
+  }
 }
 
 // ---------- write ----------
@@ -287,7 +290,7 @@ void proto_io_api_write_blk(u08 chn, u16 *size, u08 **raw_buf)
   *size = buf->blk_size;
   *raw_buf = buf->data + buf->offset;
 
-  DS("[WB:"); DB(chn); DC('+'); DW(*size); DC('@'); DW(buf->offset); DC(']'); DNL;
+  DS("[WB:"); DB(chn); DC('='); DW(buf->size); DC('+'); DW(buf->blk_size); DC('@'); DW(buf->offset); DC(']'); DNL;
 
   setup_next_blk(buf, pc->mtu);
 }
@@ -297,9 +300,12 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
 
-  pc->status |= PAMELA_STATUS_WRITE_POST;
+  // was last block
+  if(pc->tx_buf.blk_size == 0) {
+    pc->status |= PAMELA_STATUS_WRITE_POST;
 
-  DS("[WD:"); DB(chn); DC('+'); DW(pc->tx_buf.blk_size); DC('@'); DW(pc->tx_buf.offset);
-  pamela_write_post_work(pc, handler, PAMELA_CALL_FIRST);
-  DC(']'); DNL;
+    DS("[WD:"); DB(chn); DC('+'); DW(pc->tx_buf.blk_size); DC('@'); DW(pc->tx_buf.offset);
+    pamela_write_post_work(pc, handler, PAMELA_CALL_FIRST);
+    DC(']'); DNL;
+  }
 }
