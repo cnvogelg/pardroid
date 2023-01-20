@@ -183,12 +183,32 @@ u16  proto_io_api_status(u08 chn)
 
 // ---------- read ----------
 
+static void setup_next_blk(pamela_buf_t *buf, u16 mtu)
+{
+  buf->offset += buf->blk_size;
+  if(buf->offset < buf->size) {
+    u16 left = buf->size - buf->offset;
+    if(left <= mtu) {
+      buf->blk_size = left;
+    } else {
+      buf->blk_size = mtu;
+    }
+  } else {
+    buf->blk_size = 0;
+  }
+}
+
 void proto_io_api_read_req(u08 chn, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
+  pamela_buf_t *buf = &pc->rx_buf;
 
-  pc->rx_buf.size = size;
+  /* setup rx buf */
+  buf->size = size;
+  buf->offset = 0;
+  buf->blk_size = 0;
+
   pc->rx_org_size = size;
   pc->status |= PAMELA_STATUS_READ_PRE;
 
@@ -205,14 +225,17 @@ u16 proto_io_api_read_res(u08 chn)
   return size;
 }
 
-void proto_io_api_read_blk(u08 chn, u16 *size, u08 **buf)
+void proto_io_api_read_blk(u08 chn, u16 *size, u08 **raw_buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
+  pamela_buf_t *buf = &pc->rx_buf;
 
-  *size = pc->rx_buf.size;
-  *buf = pc->rx_buf.data;
+  *size = buf->blk_size;
+  *raw_buf = buf->data + buf->offset;
 
-  DS("[RB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
+  DS("[RB:"); DB(chn); DC('+'); DW(*size); DC('@'); DW(buf->offset); DC(']'); DNL;
+
+  setup_next_blk(buf, pc->mtu);
 }
 
 void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
@@ -222,7 +245,7 @@ void proto_io_api_read_done(u08 chn, u16 size, u08 *buf)
 
   pc->status |= PAMELA_STATUS_READ_POST;
 
-  DS("[RD:"); DB(chn); DC('='); DW(pc->rx_buf.size);
+  DS("[RD:"); DB(chn); DC('+'); DW(pc->rx_buf.blk_size); DC('@'); DW(pc->rx_buf.offset);
   pamela_read_post_work(pc, handler, PAMELA_CALL_FIRST);
   DC(']'); DNL;
 }
@@ -233,8 +256,13 @@ void proto_io_api_write_req(u08 chn, u16 size)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
   pamela_handler_ptr_t handler = HANDLER_TABLE_GET_ENTRY(pc->service->srv_id);
+  pamela_buf_t *buf = &pc->tx_buf;
 
-  pc->tx_buf.size = size;
+  /* setup tx buf */
+  buf->size = size;
+  buf->offset = 0;
+  buf->blk_size = 0;
+
   pc->tx_org_size = size;
   pc->status |= PAMELA_STATUS_WRITE_PRE;
 
@@ -251,14 +279,17 @@ u16  proto_io_api_write_res(u08 chn)
   return size;
 }
 
-void proto_io_api_write_blk(u08 chn, u16 *size, u08 **buf)
+void proto_io_api_write_blk(u08 chn, u16 *size, u08 **raw_buf)
 {
   pamela_channel_t *pc = pamela_get_channel(chn);
+  pamela_buf_t *buf = &pc->tx_buf;
 
-  *size = pc->tx_buf.size;
-  *buf = pc->tx_buf.data;
+  *size = buf->blk_size;
+  *raw_buf = buf->data + buf->offset;
 
-  DS("[WB:"); DB(chn); DC('='); DW(*size); DC(']'); DNL;
+  DS("[WB:"); DB(chn); DC('+'); DW(*size); DC('@'); DW(buf->offset); DC(']'); DNL;
+
+  setup_next_blk(buf, pc->mtu);
 }
 
 void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
@@ -268,7 +299,7 @@ void proto_io_api_write_done(u08 chn, u16 size, u08 *buf)
 
   pc->status |= PAMELA_STATUS_WRITE_POST;
 
-  DS("[WD:"); DB(chn); DC('='); DW(pc->tx_buf.size);
+  DS("[WD:"); DB(chn); DC('+'); DW(pc->tx_buf.blk_size); DC('@'); DW(pc->tx_buf.offset);
   pamela_write_post_work(pc, handler, PAMELA_CALL_FIRST);
   DC(']'); DNL;
 }

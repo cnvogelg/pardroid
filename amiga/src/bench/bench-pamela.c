@@ -104,7 +104,7 @@ static ULONG run_kbps_loop(bench_data_t *data,
 static int loop_msg_write(bench_data_t *data, ULONG iter,
                           UBYTE *buffer, UWORD num_bytes)
 {
-  int res = pamela_write_request(data->ch, num_bytes);
+  int res = pamela_write_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -114,7 +114,12 @@ static int loop_msg_write(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_data(data->ch, buffer);
+  res = pamela_write_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_write_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
@@ -125,7 +130,7 @@ static int loop_msg_write(bench_data_t *data, ULONG iter,
 static int loop_msg_read(bench_data_t *data, ULONG iter,
                          UBYTE *buffer, UWORD num_bytes)
 {
-  int res = pamela_read_request(data->ch, num_bytes);
+  int res = pamela_read_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -135,7 +140,12 @@ static int loop_msg_read(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_read_data(data->ch, buffer);
+  res = pamela_read_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_read_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
@@ -146,7 +156,7 @@ static int loop_msg_read(bench_data_t *data, ULONG iter,
 static int loop_msg_write_read(bench_data_t *data, ULONG iter,
                                UBYTE *buffer, UWORD num_bytes)
 {
-  int res = pamela_write_request(data->ch, num_bytes);
+  int res = pamela_write_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -156,12 +166,17 @@ static int loop_msg_write_read(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_data(data->ch, buffer);
+  res = pamela_write_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_write_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
 
-  res = pamela_read_request(data->ch, num_bytes);
+  res = pamela_read_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -171,7 +186,12 @@ static int loop_msg_write_read(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_read_data(data->ch, buffer);
+  res = pamela_read_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_read_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
@@ -189,7 +209,7 @@ static int loop_msg_write_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_request(data->ch, num_bytes);
+  res = pamela_write_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -199,7 +219,12 @@ static int loop_msg_write_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_data(data->ch, buffer);
+  res = pamela_write_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_write_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
@@ -215,7 +240,7 @@ static int loop_msg_read_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_read_request(data->ch, num_bytes);
+  res = pamela_read_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -225,7 +250,12 @@ static int loop_msg_read_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_read_data(data->ch, buffer);
+  res = pamela_read_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_read_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
@@ -241,7 +271,7 @@ static int loop_msg_write_read_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_request(data->ch, num_bytes);
+  res = pamela_write_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -251,12 +281,17 @@ static int loop_msg_write_read_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_write_data(data->ch, buffer);
+  res = pamela_write_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_write_block(data->ch);
   if(res != num_bytes) {
     return res;
   }
 
-  res = pamela_read_request(data->ch, num_bytes);
+  res = pamela_read_request(data->ch, buffer, num_bytes);
   if(res != PAMELA_OK) {
     return res;
   }
@@ -266,7 +301,12 @@ static int loop_msg_write_read_seek(bench_data_t *data, ULONG iter,
     return res;
   }
 
-  res = pamela_read_data(data->ch, buffer);
+  res = pamela_read_setup(data->ch);
+  if(res != PAMELA_OK) {
+    return res;
+  }
+
+  res = pamela_read_block(data->ch);
   if(res != num_bytes) {
     return res;
   }

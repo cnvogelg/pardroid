@@ -155,8 +155,10 @@ void pamela_set_open_error(pamela_channel_t *pc, u08 error)
 
 static void pamela_read_reply(pamela_channel_t *pc)
 {
+  pamela_buf_t *buf = &pc->rx_buf;
+
   // size is not the requested size
-  if(pc->rx_org_size != pc->rx_buf.size) {
+  if(pc->rx_org_size != buf->size) {
     pc->status |= PAMELA_STATUS_READ_SIZE;
   }
 
@@ -164,7 +166,15 @@ static void pamela_read_reply(pamela_channel_t *pc)
   pc->status |= PAMELA_STATUS_READ_READY;
   pc->status &= ~PAMELA_STATUS_READ_PRE;
 
-  DS("[rp:"); DB(pc->chan_id); DC('='); DW(pc->rx_buf.size); DC(']');
+  // setup next block transfer
+  buf->offset = 0;
+  if(buf->size <= pc->mtu) {
+    buf->blk_size = buf->size;
+  } else {
+    buf->blk_size = pc->mtu;
+  }
+
+  DS("[rp:"); DB(pc->chan_id); DC('='); DW(buf->size); DC('+'); DW(buf->blk_size); DC(']');
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);
@@ -237,8 +247,10 @@ void pamela_read_post_work(pamela_channel_t *chn, pamela_handler_ptr_t handler,
 
 static void pamela_write_reply(pamela_channel_t *pc)
 {
+  pamela_buf_t *buf = &pc->tx_buf;
+
   // size is not the requested size
-  if(pc->tx_org_size != pc->tx_buf.size) {
+  if(pc->tx_org_size != buf->size) {
     pc->status |= PAMELA_STATUS_WRITE_SIZE;
   }
 
@@ -246,7 +258,15 @@ static void pamela_write_reply(pamela_channel_t *pc)
   pc->status |= PAMELA_STATUS_WRITE_READY;
   pc->status &= ~PAMELA_STATUS_WRITE_PRE;
 
-  DS("[wp:"); DB(pc->chan_id); DC('='); DW(pc->tx_buf.size); DC(']');
+  // setup next block transfer
+  buf->offset = 0;
+  if(buf->size <= pc->mtu) {
+    buf->blk_size = buf->size;
+  } else {
+    buf->blk_size = pc->mtu;
+  }
+
+  DS("[wp:"); DB(pc->chan_id); DC('='); DW(buf->size); DC('+'); DW(buf->blk_size); DC(']');
 
   // notify host
   proto_io_event_mask_add_chn(pc->chan_id);

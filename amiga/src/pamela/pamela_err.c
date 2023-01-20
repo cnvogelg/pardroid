@@ -65,6 +65,8 @@ const char *pamela_perror(int res)
       return "odd mtu";
     case PAMELA_ERROR_NO_HANDLE:
       return "no handle";
+    case PAMELA_ERROR_WIRE:
+      return "wire error";
     default:
       return "unkown";
   }

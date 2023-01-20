@@ -46,6 +46,7 @@ pamela_channel_t *pamela_open(pamela_handle_t *ph, UWORD port, int *error)
 
   // update state
   ch->port = port;
+  ch->mtu = 0;
 
   return ch;
 }
@@ -63,6 +64,7 @@ int pamela_close(pamela_channel_t *ch)
 
   // update state
   ch->port = 0;
+  ch->mtu = 0;
 
   return PAMELA_OK;
 }
@@ -181,6 +183,8 @@ int pamela_get_mtu(pamela_channel_t *ch, UWORD *mtu)
     return pamela_map_proto_error(res);
   }
 
+  ch->mtu = *mtu;
+
   return PAMELA_OK;
 }
 
@@ -209,6 +213,8 @@ int pamela_set_mtu(pamela_channel_t *ch, UWORD mtu)
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
+
+  ch->mtu = got_mtu;
 
   if(mtu != got_mtu) {
     return PAMELA_ERROR_INVALID_MTU;
@@ -249,7 +255,9 @@ int pamela_tell(pamela_channel_t *ch, ULONG *pos)
   return PAMELA_OK;
 }
 
-int pamela_read_request(pamela_channel_t *ch, UWORD size)
+// ----- read -----
+
+int pamela_read_request(pamela_channel_t *ch, UBYTE *buf, UWORD size)
 {
   // first make sure no request is pending
   int res = check_channel_status(ch, 0, PAMELA_STATUS_READ_MASK);
@@ -265,12 +273,19 @@ int pamela_read_request(pamela_channel_t *ch, UWORD size)
 
   // update my state
   ch->status |= PAMELA_STATUS_READ_PRE;
+  ch->read_buf = buf;
   ch->read_bytes = size;
+  ch->read_offset = 0;
   return PAMELA_OK;
 }
 
-int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
+int pamela_read_setup(pamela_channel_t *ch)
 {
+  // make sure mtu is available
+  if(ch->mtu == 0) {
+    return PAMELA_ERROR_INVALID_MTU;
+  }
+
   // first make sure a request is ready
   int res = check_channel_status(ch, PAMELA_STATUS_READ_READY, 0);
   if(res != PAMELA_OK) {
@@ -280,34 +295,62 @@ int pamela_read_data(pamela_channel_t *ch, UBYTE *buf)
   proto_handle_t *proto = ch->pamela->proto;
 
   // do new need to retreive an updated size?
-  UWORD size = ch->read_bytes;
   if((ch->status & PAMELA_STATUS_READ_SIZE) != 0) {
-    res = proto_io_read_result(proto, ch->channel_id, &size);
+    res = proto_io_read_result(proto, ch->channel_id, &ch->read_bytes);
     if(res != PROTO_RET_OK) {
       return pamela_map_proto_error(res);
     }
   }
 
+  // nothing to read?
+  if(ch->read_bytes == 0) {
+    ch->status &= ~PAMELA_STATUS_READ_MASK;
+  }
+
+  return PAMELA_OK;
+}
+
+int pamela_read_block(pamela_channel_t *ch)
+{
+  // no more blocks to read
+  if(ch->read_bytes == 0) {
+    return 0;
+  }
+
+  // size of next block
+  UWORD block_size = ch->read_bytes;
+  if(block_size > ch->mtu) {
+    block_size = ch->mtu;
+  }
+
   // if odd size is requested we have to pad to even
-  UWORD transfer_size = size;
-  if((size & 1) != 0) {
+  UWORD transfer_size = block_size;
+  if((block_size & 1) != 0) {
     transfer_size++;
   }
 
+  proto_handle_t *proto = ch->pamela->proto;
+
   // retrieve data
-  res = proto_io_read_data(proto, ch->channel_id, buf, transfer_size);
+  UBYTE *buf = ch->read_buf + ch->read_offset;
+  int res = proto_io_read_data(proto, ch->channel_id, buf, transfer_size);
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
 
   // update state
-  ch->status &= ~PAMELA_STATUS_READ_MASK;
-  ch->read_bytes = 0;
+  ch->read_offset += block_size;
+  ch->read_bytes -= block_size;
+  if(ch->read_bytes == 0) {
+    ch->status &= ~PAMELA_STATUS_READ_MASK;
+  }
 
-  return size;
+  return block_size;
 }
 
-int pamela_write_request(pamela_channel_t *ch, UWORD size)
+// ----- write -----
+
+int pamela_write_request(pamela_channel_t *ch, UBYTE *buf, UWORD size)
 {
   // first make sure no request is pending
   int res = check_channel_status(ch, 0, PAMELA_STATUS_WRITE_MASK);
@@ -323,12 +366,19 @@ int pamela_write_request(pamela_channel_t *ch, UWORD size)
 
   // update my state
   ch->status |= PAMELA_STATUS_WRITE_PRE;
+  ch->write_buf = buf;
   ch->write_bytes = size;
+  ch->write_offset = 0;
   return PAMELA_OK;
 }
 
-int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
+int pamela_write_setup(pamela_channel_t *ch)
 {
+  // make sure mtu is available
+  if(ch->mtu == 0) {
+    return PAMELA_ERROR_INVALID_MTU;
+  }
+
   // first make sure a request is ready
   int res = check_channel_status(ch, PAMELA_STATUS_WRITE_READY, 0);
   if(res != PAMELA_OK) {
@@ -338,29 +388,55 @@ int pamela_write_data(pamela_channel_t *ch, UBYTE *buf)
   proto_handle_t *proto = ch->pamela->proto;
 
   // do new need to retreive an updated size?
-  UWORD size = ch->write_bytes;
   if((ch->status & PAMELA_STATUS_WRITE_SIZE) != 0) {
-    res = proto_io_write_result(proto, ch->channel_id, &size);
+    res = proto_io_write_result(proto, ch->channel_id, &ch->write_bytes);
     if(res != PROTO_RET_OK) {
       return pamela_map_proto_error(res);
     }
   }
 
-  // odd size? pad to even
-  UWORD transfer_size = size;
-  if((size & 1) != 0) {
+  // nothing to write?
+  if(ch->write_bytes == 0) {
+    ch->status &= ~PAMELA_STATUS_WRITE_MASK;
+  }
+
+  return PAMELA_OK;
+}
+
+int pamela_write_block(pamela_channel_t *ch)
+{
+  // no more blocks to write
+  if(ch->write_bytes == 0) {
+    return 0;
+  }
+
+  // size of next block
+  UWORD block_size = ch->write_bytes;
+  if(block_size > ch->mtu) {
+    block_size = ch->mtu;
+  }
+
+  // if odd size is requested we have to pad to even
+  UWORD transfer_size = block_size;
+  if((block_size & 1) != 0) {
     transfer_size++;
   }
 
+  proto_handle_t *proto = ch->pamela->proto;
+
   // write data
-  res = proto_io_write_data(proto, ch->channel_id, buf, transfer_size);
+  UBYTE *buf = ch->write_buf + ch->write_offset;
+  int res = proto_io_write_data(proto, ch->channel_id, buf, transfer_size);
   if(res != PROTO_RET_OK) {
     return pamela_map_proto_error(res);
   }
 
   // update state
-  ch->status &= ~PAMELA_STATUS_WRITE_MASK;
-  ch->write_bytes = 0;
+  ch->write_offset += block_size;
+  ch->write_bytes -= block_size;
+  if(ch->write_bytes == 0) {
+    ch->status &= ~PAMELA_STATUS_WRITE_MASK;
+  }
 
-  return size;
+  return block_size;
 }

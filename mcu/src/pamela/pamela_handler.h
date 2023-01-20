@@ -4,7 +4,10 @@
 /* data buffer used in pamela */
 struct pamela_buf {
   u08  *data;
-  u16   size;
+  u16   size;       /* total size of transfer */
+
+  u16   blk_size;   /* size of next block */
+  u16   offset;     /* offset of next block */
 };
 typedef struct pamela_buf pamela_buf_t;
 

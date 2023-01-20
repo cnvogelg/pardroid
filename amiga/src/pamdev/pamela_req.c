@@ -160,11 +160,15 @@ int pamela_req_read(pamela_engine_t *eng, pamela_req_t *req)
   }
 
   UWORD size = (UWORD)req->iopam_Req.io_Length;
-  D(("req_read: size=%ld\n", size));
+  APTR buf = req->iopam_Req.io_Data;
+  D(("req_read: size=%ld buf=%lx\n", size, buf));
+  if(buf == NULL) {
+    return PAMELA_ERROR_NO_MEM;
+  }
 
   // start read
   pamela_channel_t *channel = socket->channel;
-  int res = pamela_read_request(channel, size);
+  int res = pamela_read_request(channel, buf, size);
   if(res != PAMELA_OK) {
     D(("-> res=%ld\n", res));
     return res;
@@ -189,10 +193,15 @@ int pamela_req_write(pamela_engine_t *eng, pamela_req_t *req)
   }
 
   UWORD size = (UWORD)req->iopam_Req.io_Length;
+  APTR buf = req->iopam_Req.io_Data;
+  D(("req_write: size=%ld buf=%lx\n", size, buf));
+  if(buf == NULL) {
+    return PAMELA_ERROR_NO_MEM;
+  }
 
   // start write
   pamela_channel_t *channel = socket->channel;
-  int res = pamela_write_request(channel, size);
+  int res = pamela_write_request(channel, buf, size);
   if(res != PAMELA_OK) {
     return res;
   }

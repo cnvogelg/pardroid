@@ -98,25 +98,31 @@ int dosmain(void)
 
       // write something
       PutStr("write req\n");
-      error = pamela_write_request(ch, SIZE);
+      error = pamela_write_request(ch, hello, SIZE);
       handle_error(error);
 
       error = wait_event(ph, ch);
       if(error == PAMELA_OK) {
-        PutStr("write data\n");
-        error = pamela_write_data(ch, hello);
+        PutStr("write setup\n");
+        error = pamela_write_setup(ch);
+        handle_error(error);
+        PutStr("write block\n");
+        error = pamela_write_block(ch);
         handle_error(error);
       }
 
       // read something
       PutStr("read req\n");
-      error = pamela_read_request(ch, SIZE);
+      error = pamela_read_request(ch, hello, SIZE);
       handle_error(error);
 
       error = wait_event(ph, ch);
       if(error == PAMELA_OK) {
-        PutStr("read data\n");
-        error = pamela_read_data(ch, hello);
+        PutStr("read setup\n");
+        error = pamela_read_setup(ch);
+        handle_error(error);
+        PutStr("read block\n");
+        error = pamela_read_block(ch);
         handle_error(error);
       }
 

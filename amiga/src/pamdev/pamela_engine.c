@@ -216,7 +216,10 @@ static void handle_socket_read(pamela_engine_t *eng, pamela_socket_t *sock, BOOL
   else {
     // try to process buffer
     pamela_channel_t *channel = sock->channel;
-    int res = pamela_read_data(channel, buf);
+    int res = pamela_read_setup(channel);
+    if(res == PAMELA_OK) {
+      res = pamela_read_block(channel);
+    }
     if(res < 0) {
       D(("read err: %ld\n", res));
       req->iopam_Req.io_Error = IOERR_PAMELA;
@@ -260,7 +263,10 @@ static void handle_socket_write(pamela_engine_t *eng, pamela_socket_t *sock, BOO
   else {
     // try to process buffer
     pamela_channel_t *channel = sock->channel;
-    int res = pamela_write_data(channel, buf);
+    int res = pamela_write_setup(channel);
+    if(res == PAMELA_OK) {
+      res = pamela_write_block(channel);
+    }
     if(res < 0) {
       D(("write err: %ld\n", res));
       req->iopam_Req.io_Error = IOERR_PAMELA;
@@ -353,15 +359,28 @@ static void handle_socket_status(pamela_engine_t *eng, pamela_socket_t *sock)
 
   // reply command requests like open/close/reset
   if(state == PAMELA_STATUS_ACTIVE) {
+    D((" -> ACTIVE\n"));
+
+    // get mtu - for read/write to work
+    UWORD mtu = 0;
+    int res =pamela_get_mtu(channel, &mtu);
+    if(res != PAMELA_OK) {
+      D(("  MTU failed!"));
+      set_wire_error(sock, res);
+      pamela_close(sock->channel);
+    }
+
     reply_cmd_req(eng, sock);
   }
   else if(state == PAMELA_STATUS_INACTIVE) {
+    D((" -> INACTIVE\n"));
     // cleanup socket
     pamela_engine_shutdown_socket(eng, sock);
     // answer req
     reply_cmd_req(eng, sock);
   }
   else if(state == PAMELA_STATUS_OPEN_ERROR) {
+    D((" -> OPEN ERROR\n"));
     // set wire error in cmd_req
     set_wire_error(sock, pamela_error(sock->channel));
     // close channel... cmd req reply and cleanup will be done in inactive state

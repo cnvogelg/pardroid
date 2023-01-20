@@ -16,6 +16,11 @@ struct pamela_channel {
   UWORD               port;
   UWORD               read_bytes;
   UWORD               write_bytes;
+  UWORD               read_offset;
+  UWORD               write_offset;
+  UWORD               mtu;
+  UBYTE              *read_buf;
+  UBYTE              *write_buf;
 };
 
 struct pamela_handle {

@@ -195,7 +195,7 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
   CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post read request
-  res = pamela_read_request(chn, read_size);
+  res = pamela_read_request(chn, buf, read_size);
   CHECK_PAM_RES(res, "read_req");
 
   // wait for event
@@ -224,9 +224,13 @@ static int test_read_helper(test_param_t *p, UWORD read_size)
 
     CHECK_EQUAL(status, exp, "channel status");
 
-    // read data
-    res = pamela_read_data(chn, buf);
-    CHECK_PAM_RES_VAL(res, "read_data", read_size);
+    // read setup
+    res = pamela_read_setup(chn);
+    CHECK_PAM_RES(res, "read_setup");
+
+    // read block
+    res = pamela_read_block(chn);
+    CHECK_PAM_RES_VAL(res, "read_block", read_size);
 
     CHECK_WAIT_EVENT(pam, chn, "after read");
 
@@ -325,7 +329,7 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
   CHECK_EQUAL(mtu, TEST_BUF_SIZE, "mtu mismatch");
 
   // post write request
-  res = pamela_write_request(chn, write_size);
+  res = pamela_write_request(chn, buf, write_size);
   CHECK_PAM_RES(res, "write_req");
 
   // wait for event
@@ -354,9 +358,13 @@ static int test_write_helper(test_param_t *p, UWORD write_size)
 
     CHECK_EQUAL(status, exp, "channel status");
 
-    // write data
-    res = pamela_write_data(chn, buf);
-    CHECK_PAM_RES_VAL(res, "write_data", write_size);
+    // write setup
+    res = pamela_write_setup(chn);
+    CHECK_PAM_RES(res, "write_setup");
+
+    // write block
+    res = pamela_write_block(chn);
+    CHECK_PAM_RES_VAL(res, "write_block", write_size);
 
     CHECK_WAIT_EVENT(pam, chn, "after write");
 
